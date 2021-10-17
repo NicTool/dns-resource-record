@@ -57,9 +57,8 @@ class RR extends Map {
 
   type (t) {
     const types = [
-      'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NS',
-      'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
-      // 'NAPTR',
+      'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NAPTR', 'NS',
+      'PTR', 'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
     ]
     if (!types.includes(t)) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
@@ -262,6 +261,39 @@ class MX extends RR {
   }
 }
 
+class NAPTR extends RR {
+  constructor (obj) {
+    super(obj)
+
+    this.order(obj?.order)
+    this.preference(obj?.preference)
+    this.flags(obj?.flags)
+    this.service(obj?.service)
+  }
+
+  order (val) {
+    if (!this.is16bitInt('NAPTR', 'order', val)) return
+
+    this.set('order', val)
+  }
+
+  preference (val) {
+    if (!this.is16bitInt('NAPTR', 'preference', val)) return
+    this.set('preference', val)
+  }
+
+  flags (val) {
+    if (![ 'S', 'A', 'U', 'P' ].includes(val))
+      throw new Error (`NAPTR flags are invalid: RFC 2915`)
+
+    this.set('flags', val)
+  }
+
+  service (val) {
+    this.set('service', val)
+  }
+}
+
 class NS extends RR {
   constructor (opts) {
     super(opts)
@@ -269,6 +301,29 @@ class NS extends RR {
     if (!this.fullyQualified('NS', 'address', opts.address)) return
     if (!this.validHostname('NS', 'address', opts.address)) return
     this.set('address', opts.address)
+  }
+}
+
+class PTR extends RR {
+  constructor (obj) {
+    super(obj)
+
+    if (obj?.dname) {
+      this.dname(obj?.dname)
+    }
+    else if (obj?.rdata) { // Generic DNS packet content
+      this.dname(obj?.rdata)
+    }
+    else if (obj?.ptrdname) { // RFC 1035
+      this.dname(obj?.ptrdname)
+    }
+  }
+
+  dname (val) {
+    if (!this.fullyQualified('PTR', 'dname', val)) return
+    if (!this.validHostname('PTR', 'dname', val)) return
+
+    this.set('dname', val)
   }
 }
 
@@ -453,11 +508,11 @@ module.exports.CNAME = CNAME
 module.exports.DNAME = DNAME
 module.exports.LOC   = LOC
 module.exports.MX    = MX
+module.exports.NAPTR = NAPTR
 module.exports.NS    = NS
+module.exports.PTR   = PTR
 module.exports.SSHFP = SSHFP
 module.exports.SOA   = SOA
-module.exports.SRV = SRV
+module.exports.SRV   = SRV
 module.exports.TXT   = TXT
-module.exports.URI = URI
-
-// module.exports.NAPTR = NAPTR
+module.exports.URI   = URI
