@@ -13,10 +13,11 @@ class RR extends Map {
   }
 
   class (c) {
-    if (c === undefined) return
-
     switch (c) {
       case 'IN':
+      case undefined:
+        this.set('class', 'IN')
+        break
       case 'CS':
       case 'CH':
       case 'HS':
