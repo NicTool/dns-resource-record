@@ -56,6 +56,12 @@ class RR extends Map {
   }
 
   type (t) {
+    const types = [
+      'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NS',
+      'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
+      // 'NAPTR',
+    ]
+    if (!types.includes(t)) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
   }
 
@@ -66,14 +72,29 @@ class RR extends Map {
     }
   }
 
+  is8bitInt (type, field, value) {
+    if (typeof value === 'number'
+      && parseInt(value, 10) === value  // assure integer
+      && value >= 0
+      && value <= 255) return true
+
+    throw new Error(`$type} {field} must be a 8-bit integer (in the range 0-255)`)
+  }
+
   is16bitInt (type, field, value) {
-    if (typeof value === 'number' && value >= 0 && value <= 65535) return true
+    if (typeof value === 'number'
+      && parseInt(value, 10) === value  // assure integer
+      && value >= 0
+      && value <= 65535) return true
 
     throw new Error(`$type} {field} must be a 16-bit integer (in the range 0-65535)`)
   }
 
   is32bitInt (type, field, value) {
-    if (typeof value === 'number' && value >= 0 && value <= 2147483647) return true
+    if (typeof value === 'number'
+      && parseInt(value, 10) === value  // assure integer
+      && value >= 0
+      && value <= 2147483647) return true
 
     throw new Error(`$type} {field} must be a 32-bit integer (in the range 0-2147483647)`)
   }
@@ -119,9 +140,57 @@ class AAAA extends RR {
   }
 }
 
+class CAA extends RR {
+  constructor (opts) {
+    super(opts)
+
+    this.flags(opts?.flags)
+    this.tags(opts?.tags)
+    this.value(opts?.value)
+  }
+
+  flags (val) {
+    if (!this.is8bitInt('CAA', 'flags', val)) return
+
+    if ([ 0, 128 ].includes(val)) {
+      console.warn(`CAA flags ${val} not recognized: RFC 6844`)
+    }
+
+    this.set('flags', val)
+  }
+
+  tags (val) {
+    if (typeof val !== 'string'
+      || val.length < 1
+      || /[A-Z]/.test(val)
+      || /^[a-z0-9]/.test(val))
+      throw new Error('CAA flags must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
+
+    if ([ 'issue', 'issuewild', 'iodef' ].includes(val)) {
+      console.warn(`CAA tags ${val} not recognized: RFC 6844`)
+    }
+    this.set('tags', val)
+  }
+
+  value (val) {
+    // either (2) a quoted string or
+    // (1) a contiguous set of characters without interior spaces
+    if (!/["']/.test(val) && /\s/.test(val)) {
+      throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
+    }
+
+    // const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
+    // TODO: check if val starts with one of iodefSchemes, RFC 6844
+
+    this.set('value', val)
+  }
+}
+
 class CNAME extends RR {
   constructor (opts) {
     super(opts)
+
+    this.address(opts?.address)
   }
 
   address (val) {
@@ -132,6 +201,38 @@ class CNAME extends RR {
 
     if (!this.fullyQualified('CNAME', 'address', val)) return
     if (!this.validHostname('CNAME', 'address', val)) return
+    this.set('address', val)
+  }
+}
+
+class DNAME extends RR {
+  constructor (opts) {
+    super(opts)
+
+    this.target(opts?.target)
+  }
+
+  target (val) {
+    if (!val) throw new Error('DNAME: target is required')
+
+    if (net.isIPv4(val) || net.isIPv6(val))
+      throw new Error(`DNAME: target must be a domain name: RFC 6672`)
+
+    if (!this.fullyQualified('DNAME', 'target', val)) return
+    if (!this.validHostname('DNAME', 'target', val)) return
+    this.set('target', val)
+  }
+}
+
+class LOC extends RR {
+  constructor (opts) {
+    super(opts)
+
+    this.address(opts?.address)
+  }
+
+  address (val) {
+    // todo: validate this with https://datatracker.ietf.org/doc/html/rfc1876
     this.set('address', val)
   }
 }
@@ -168,6 +269,75 @@ class NS extends RR {
     if (!this.fullyQualified('NS', 'address', opts.address)) return
     if (!this.validHostname('NS', 'address', opts.address)) return
     this.set('address', opts.address)
+  }
+}
+
+class SRV extends RR {
+  constructor (opts) {
+    super(opts)
+
+    this.priority(opts?.priority)
+    this.weight(opts?.weight)
+    this.port(opts?.port)
+    this.target(opts?.target)
+  }
+
+  priority (val) {
+    if (!this.is16bitInt('SRV', 'priority', val)) return
+
+    this.set('priority', val)
+  }
+
+  port (val) {
+    if (!this.is16bitInt('SRV', 'port', val)) return
+
+    this.set('port', val)
+  }
+
+  weight (val) {
+    if (!this.is16bitInt('SRV', 'weight', val)) return
+
+    this.set('weight', val)
+  }
+
+  target (val) {
+
+    if (!val) throw new Error('SRV: target is required')
+
+    if (net.isIPv4(val) || net.isIPv6(val))
+      throw new Error(`SRV: target must be a FQDN: RFC 2782`)
+
+    if (!this.fullyQualified('SRV', 'target', val)) return
+    if (!this.validHostname('SRV', 'target', val)) return
+    this.set('target', val)
+  }
+}
+
+class SSHFP extends RR {
+  constructor (opts) {
+    super(opts)
+
+    this.algorithm(opts?.algorithm)
+    this.type(opts?.type)
+    this.fingerprint(opts?.fingerprint)
+  }
+
+  algorithm (val) {
+    // (0: reserved; 1: RSA 2: DSA 3: ECDSA 4: Ed25519 6:Ed448
+    if (!this.is8bitInt('SSHFP', 'algorithm', val)) return
+
+    this.set('algorithm', val)
+  }
+
+  type (val) {
+    // 0: reserved, 1: SHA-1
+    if (!this.is8bitInt('SSHFP', 'type', val)) return
+
+    this.set('type', val)
+  }
+
+  fingerprint (val) {
+    this.set('fingerprint', val)
   }
 }
 
@@ -248,18 +418,46 @@ class TXT extends RR {
   }
 }
 
-module.exports.A    = A
-module.exports.AAAA = AAAA
-module.exports.CNAME = CNAME
-module.exports.MX   = MX
-module.exports.NS   = NS
-module.exports.SOA  = SOA
-module.exports.TXT  = TXT
+class URI extends RR {
+  constructor (opts) {
+    super(opts)
 
-// module.exports.CAA = CAA
-// module.exports.DNAME = DNAME
-// module.exports.LOC = LOC
+    this.priority(opts?.priority)
+    this.weight(opts?.weight)
+    this.target(opts?.target)
+  }
+
+  priority (val) {
+    if (!this.is16bitInt('URI', 'priority', val)) return
+
+    this.set('priority', val)
+  }
+
+  weight (val) {
+    if (!this.is16bitInt('URI', 'weight', val)) return
+
+    this.set('weight', val)
+  }
+
+  target (val) {
+    if (!val) throw new Error('URI: target is required')
+
+    this.set('target', val)
+  }
+}
+
+module.exports.A     = A
+module.exports.AAAA  = AAAA
+module.exports.CAA   = CAA
+module.exports.CNAME = CNAME
+module.exports.DNAME = DNAME
+module.exports.LOC   = LOC
+module.exports.MX    = MX
+module.exports.NS    = NS
+module.exports.SSHFP = SSHFP
+module.exports.SOA   = SOA
+module.exports.SRV = SRV
+module.exports.TXT   = TXT
+module.exports.URI = URI
+
 // module.exports.NAPTR = NAPTR
-// module.exports.SSHFP = SSHFP
-// module.exports.SRV = SRV
-// module.exports.URI = URI
