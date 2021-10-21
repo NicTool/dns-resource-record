@@ -5,31 +5,31 @@ class NAPTR extends RR {
   constructor (obj) {
     super(obj)
 
-    this.order(obj?.order)
-    this.preference(obj?.preference)
-    this.flags(obj?.flags)
-    this.service(obj?.service)
+    this.setOrder(obj?.order)
+    this.setPreference(obj?.preference)
+    this.setFlags(obj?.flags)
+    this.setService(obj?.service)
   }
 
-  order (val) {
+  setOrder (val) {
     if (!this.is16bitInt('NAPTR', 'order', val)) return
 
     this.set('order', val)
   }
 
-  preference (val) {
+  setPreference (val) {
     if (!this.is16bitInt('NAPTR', 'preference', val)) return
     this.set('preference', val)
   }
 
-  flags (val) {
+  setFlags (val) {
     if (![ 'S', 'A', 'U', 'P' ].includes(val))
       throw new Error (`NAPTR flags are invalid: RFC 2915`)
 
     this.set('flags', val)
   }
 
-  service (val) {
+  setService (val) {
     this.set('service', val)
   }
 }

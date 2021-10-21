@@ -7,10 +7,10 @@ class TXT extends RR {
   constructor (opts) {
     super(opts)
 
-    this.address(opts?.address)
+    this.setAddress(opts?.address)
   }
 
-  address (val) {
+  setAddress (val) {
     this.set('address', val)
   }
 

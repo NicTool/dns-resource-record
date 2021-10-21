@@ -1,6 +1,6 @@
 # dns-resource-record
 
-DNS resource record parser, validator, and (soon) importer and exporter.
+DNS resource record parser, validator, exporter, and (soon) importer.
 
 
 ## SYNOPSIS
@@ -73,3 +73,6 @@ A(5) [Map] {
 }
 ```
 
+## TODO
+
+See the file [TODO](TODO.md)
