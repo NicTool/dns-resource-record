@@ -17,7 +17,7 @@ class A extends RR {
   }
 
   toBind () {
-    return `${this.get('name')}  ${this.get('ttl')} ${this.get('class')}  ${this.get('type')} ${this.get('address')}\n`
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}\t${this.get('address')}\n`
   }
 
   toTinydns () {

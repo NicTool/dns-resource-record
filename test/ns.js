@@ -12,6 +12,7 @@ const validRecords = [
     type   : 'NS',
     address: 'ns1.example.com.',
     ttl    : 3600,
+    testR  : 'example.com\t3600\tIN\tNS\tns1.example.com.\n',
   },
 ]
 
@@ -33,7 +34,7 @@ describe('NS record', function () {
     it('converts to BIND format', async function () {
       const r = new NS(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'example.com 3600 IN  NS  ns1.example.com.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {

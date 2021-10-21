@@ -28,7 +28,7 @@ class MX extends RR {
   }
 
   toBind () {
-    return `${this.get('name')} ${this.get('ttl')} ${this.get('class')}  MX  ${this.get('weight')}  ${this.get('address')}\n`
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tMX\t${this.get('weight')}\t${this.get('address')}\n`
   }
 
   toTinydns () {

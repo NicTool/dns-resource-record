@@ -6,9 +6,11 @@ class NAPTR extends RR {
     super(obj)
 
     this.setOrder(obj?.order)
-    this.setPreference(obj?.preference)
+    this.setPref(obj?.pref)
     this.setFlags(obj?.flags)
     this.setService(obj?.service)
+    this.setRegexp(obj?.regexp)
+    this.setReplacement(obj?.replacement)
   }
 
   setOrder (val) {
@@ -17,13 +19,13 @@ class NAPTR extends RR {
     this.set('order', val)
   }
 
-  setPreference (val) {
-    if (!this.is16bitInt('NAPTR', 'preference', val)) return
-    this.set('preference', val)
+  setPref (val) {
+    if (!this.is16bitInt('NAPTR', 'pref', val)) return
+    this.set('pref', val)
   }
 
   setFlags (val) {
-    if (![ 'S', 'A', 'U', 'P' ].includes(val))
+    if (![ '', 'S', 'A', 'U', 'P' ].includes(val))
       throw new Error (`NAPTR flags are invalid: RFC 2915`)
 
     this.set('flags', val)
@@ -31,6 +33,25 @@ class NAPTR extends RR {
 
   setService (val) {
     this.set('service', val)
+  }
+
+  setRegexp (val) {
+    this.set('regexp', val)
+  }
+
+  setReplacement (val) {
+    this.set('replacement', val)
+  }
+
+  getRFCs () {
+    return [ 2915, 3403 ]
+  }
+
+  toBind () {
+    // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
+
+    // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tNAPTR\t${this.get('order')}\t${this.get('pref')}\t"${this.get('flags')}"\t"${this.get('service')}"\t"${this.get('regexp')}"\t${this.get('replacement')}\n`
   }
 }
 

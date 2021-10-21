@@ -32,7 +32,7 @@ describe('A record', function () {
     it('converts to BIND format', async function () {
       const r = new A(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'test.example.com  3600 IN  A 127.0.0.127\n')
+      assert.strictEqual(r, 'test.example.com\t3600\tIN\tA\t127.0.0.127\n')
     })
 
     it('converts to tinydns format', async function () {

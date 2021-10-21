@@ -13,6 +13,7 @@ const validRecords = [
     address: 'mail.example.com.',
     weight : 0,
     ttl    : 3600,
+    testR  : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
   },
 ]
 
@@ -41,7 +42,7 @@ describe('MX record', function () {
     it('converts to BIND format', async function () {
       const r = new MX(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'test.example.com 3600 IN  MX  0  mail.example.com.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {

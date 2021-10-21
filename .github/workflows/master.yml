@@ -40,3 +40,13 @@ jobs:
       - name: GitHub Release
         uses: justincy/github-action-npm-release@2.0.1
         id: release
+
+      - name: Coverage Run
+        run: |
+          npm install --no-save nyc codecov
+          npm run cover
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}

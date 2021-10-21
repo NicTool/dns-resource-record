@@ -32,7 +32,7 @@ describe('AAAA record', function () {
     it('converts to BIND format', async function () {
       const r = new AAAA(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'test.example.com  3600 IN  AAAA 2605:7900:20:a::4\n')
+      assert.strictEqual(r, 'test.example.com\t3600\tIN\tAAAA\t2605:7900:20:a::4\n')
     })
 
     it('converts to tinydns format', async function () {
