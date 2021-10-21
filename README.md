@@ -1,6 +1,9 @@
+[![Module Tests](https://github.com/msimerson/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/msimerson/dns-resource-record/actions/workflows/ci-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/msimerson/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/msimerson/dns-resource-record?branch=master)
+
 # dns-resource-record
 
-DNS resource record parser, validator, and (soon) importer and exporter.
+DNS resource record parser, validator, exporter, and (soon) importer.
 
 
 ## SYNOPSIS
@@ -73,3 +76,6 @@ A(5) [Map] {
 }
 ```
 
+## TODO
+
+See the file [TODO](TODO.md)

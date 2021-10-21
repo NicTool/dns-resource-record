@@ -1,8 +1,8 @@
 
 const assert = require('assert')
 
-const base = require('./index')
-const ResourceRecord = require('../index.js')
+const base = require('./base')
+const A = require('../rr/a.js')
 
 const validRecords = [
   {
@@ -25,18 +25,18 @@ const invalidRecords = [
 ]
 
 describe('A record', function () {
-  base.valid(validRecords)
-  base.invalid(invalidRecords)
+  base.valid(A, validRecords)
+  base.invalid(A, invalidRecords)
 
   for (const val of validRecords) {
     it('converts to BIND format', async function () {
-      const r = new ResourceRecord[val.type](val).toBind()
+      const r = new A(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, 'test.example.com  3600 IN  A 127.0.0.127\n')
     })
 
     it('converts to tinydns format', async function () {
-      const r = new ResourceRecord[val.type](val).toTinydns()
+      const r = new A(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
       // console.dir(r)
       assert.strictEqual(r, '+test.example.com:127.0.0.127:3600::\n')
