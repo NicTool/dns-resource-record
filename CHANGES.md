@@ -2,8 +2,8 @@
 #### 1.N.N - YYYY-MM-DD
 
 - refactored classes into separate files
-- TXT: add toBIND and toTinydns
-- SOA: add toBIND and toTinydns, add setMinimum
+- TXT, SOA, MX: add toBIND and toTinydns
+- SOA: add setMinimum
 
 
 #### 0.2.2 - 2021-10-20

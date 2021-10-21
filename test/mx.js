@@ -36,4 +36,18 @@ const invalidRecords = [
 describe('MX record', function () {
   base.valid(MX, validRecords)
   base.invalid(MX, invalidRecords)
+
+  for (const val of validRecords) {
+    it('converts to BIND format', async function () {
+      const r = new MX(val).toBind()
+      if (process.env.DEBUG) console.dir(r)
+      assert.strictEqual(r, 'test.example.com 3600 IN  MX  0  mail.example.com.\n')
+    })
+
+    it('converts to tinydns format', async function () {
+      const r = new MX(val).toTinydns()
+      if (process.env.DEBUG) console.dir(r)
+      assert.strictEqual(r, '@test.example.com::mail.example.com.:0:3600::\n')
+    })
+  }
 })

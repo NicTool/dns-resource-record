@@ -7,11 +7,11 @@ class MX extends RR {
   constructor (opts) {
     super(opts)
 
-    this.address(opts?.address)
-    this.weight(opts?.weight)
+    this.setAddress(opts?.address)
+    this.setWeight(opts?.weight)
   }
 
-  address (val) {
+  setAddress (val) {
     if (!val) throw new Error('MX: address is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
@@ -22,9 +22,17 @@ class MX extends RR {
     this.set('address', val)
   }
 
-  weight (val) {
+  setWeight (val) {
     if (!this.is16bitInt('MX', 'weight', val)) return
     this.set('weight', val)
+  }
+
+  toBind () {
+    return `${this.get('name')} ${this.get('ttl')} ${this.get('class')}  MX  ${this.get('weight')}  ${this.get('address')}\n`
+  }
+
+  toTinydns () {
+    return `@${this.get('name')}::${this.get('address')}:${this.get('weight')}:${this.get('ttl')}:${this.get('timestamp')}:${this.get('location')}\n`
   }
 }
 
