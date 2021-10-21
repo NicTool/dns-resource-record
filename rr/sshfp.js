@@ -4,6 +4,7 @@ const RR = require('./index')
 class SSHFP extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 44)
 
     this.setAlgorithm(opts?.algorithm)
     this.setFpType(opts?.fptype)
@@ -26,6 +27,10 @@ class SSHFP extends RR {
 
   setFingerprint (val) {
     this.set('fingerprint', val)
+  }
+
+  getRFCs () {
+    return [ 4255 ]
   }
 
   toBind () {

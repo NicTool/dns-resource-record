@@ -8,15 +8,20 @@ const RR = require('./index')
 class AAAA extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 28)
 
-    this.address(opts?.address)
+    this.setAddress(opts?.address)
   }
 
-  address (val) {
+  setAddress (val) {
     if (!val) throw new Error('AAAA: address is required')
     if (!net.isIPv6(val)) throw new Error('AAAA: address must be IPv6')
 
     this.set('address', val.toLowerCase()) // IETFs suggest only lower case
+  }
+
+  getRFCs () {
+    return [ 3596 ]
   }
 
   toBind () {

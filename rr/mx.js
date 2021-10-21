@@ -6,6 +6,7 @@ const RR = require('./index')
 class MX extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 15)
 
     this.setAddress(opts?.address)
     this.setWeight(opts?.weight)
@@ -25,6 +26,10 @@ class MX extends RR {
   setWeight (val) {
     if (!this.is16bitInt('MX', 'weight', val)) return
     this.set('weight', val)
+  }
+
+  getRFCs () {
+    return [ 1035, 7505 ]
   }
 
   toBind () {

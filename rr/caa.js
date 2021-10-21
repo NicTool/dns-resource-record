@@ -4,6 +4,7 @@ const RR = require('./index')
 class CAA extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 257)
 
     this.setFlags(opts?.flags)
     this.setTags(opts?.tags)
@@ -44,6 +45,10 @@ class CAA extends RR {
     // TODO: check if val starts with one of iodefSchemes, RFC 6844
 
     this.set('value', val)
+  }
+
+  getRFCs () {
+    return [ 6844 ]
   }
 
   toBind () {

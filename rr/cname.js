@@ -6,6 +6,7 @@ const RR = require('./index')
 class CNAME extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 5)
 
     this.address(opts?.address)
   }
@@ -19,6 +20,10 @@ class CNAME extends RR {
     if (!this.fullyQualified('CNAME', 'address', val)) return
     if (!this.validHostname('CNAME', 'address', val)) return
     this.set('address', val)
+  }
+
+  getRFCs () {
+    return [ 1035 ]
   }
 
   toBind () {

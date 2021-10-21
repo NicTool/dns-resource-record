@@ -4,6 +4,7 @@ const RR = require('./index')
 class LOC extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 29)
 
     this.setAddress(opts?.address)
   }

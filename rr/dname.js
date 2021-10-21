@@ -5,6 +5,7 @@ const RR = require('./index')
 class DNAME extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 39)
 
     if (opts?.address) {
       this.setTarget(opts?.address)

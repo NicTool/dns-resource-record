@@ -4,6 +4,7 @@ const RR = require('./index')
 class PTR extends RR {
   constructor (obj) {
     super(obj)
+    this.set('id', 12)
 
     if (obj?.dname) {
       this.setDname(obj?.dname)
@@ -24,6 +25,10 @@ class PTR extends RR {
     if (!this.validHostname('PTR', 'dname', val)) return
 
     this.set('dname', val)
+  }
+
+  getRFCs () {
+    return [ 1035 ]
   }
 
   toBind () {

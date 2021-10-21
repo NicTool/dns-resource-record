@@ -6,6 +6,7 @@ const RR = require('./index')
 class A extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 1)
 
     this.setAddress(opts.address)
   }
@@ -14,6 +15,10 @@ class A extends RR {
     if (!val) throw new Error('A: address is required')
     if (!net.isIPv4(val)) throw new Error('A address must be IPv4')
     this.set('address', val)
+  }
+
+  getRFCs () {
+    return [ 1035 ]
   }
 
   toBind () {

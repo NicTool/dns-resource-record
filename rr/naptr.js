@@ -4,6 +4,7 @@ const RR = require('./index')
 class NAPTR extends RR {
   constructor (obj) {
     super(obj)
+    this.set('id', 35)
 
     this.setOrder(obj?.order)
     this.setPref(obj?.pref)
