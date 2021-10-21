@@ -5,8 +5,8 @@
   "main": "rr/index.js",
   "scripts": {
     "cover": "NODE_ENV=cov npx nyc --reporter=lcovonly npm run test",
-    "lint": "npx eslint *.js test/*.js",
-    "lintfix": "npx eslint --fix *.js test/*.js",
+    "lint": "npx eslint lib/*.js rr/*.js test/*.js",
+    "lintfix": "npx eslint --fix lib/*/js rr/*.js test/*.js",
     "test": "npx mocha"
   },
   "repository": {
