@@ -4,6 +4,7 @@ const RR = require('./index')
 class URI extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 256)
 
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
@@ -26,6 +27,14 @@ class URI extends RR {
     if (!val) throw new Error('URI: target is required')
 
     this.set('target', val)
+  }
+
+  getRFCs () {
+    return [ 7553 ]
+  }
+
+  toBind () {
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tURI\t${this.get('priority')}\t${this.get('weight')}\t${this.get('target')}\n`
   }
 }
 

@@ -6,6 +6,7 @@ const RR = require('./index')
 class A extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 1)
 
     this.setAddress(opts.address)
   }
@@ -16,8 +17,12 @@ class A extends RR {
     this.set('address', val)
   }
 
+  getRFCs () {
+    return [ 1035 ]
+  }
+
   toBind () {
-    return `${this.get('name')}  ${this.get('ttl')} ${this.get('class')}  ${this.get('type')} ${this.get('address')}\n`
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}\t${this.get('address')}\n`
   }
 
   toTinydns () {

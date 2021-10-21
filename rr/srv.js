@@ -9,6 +9,7 @@ const TINYDNS = require('../lib/tinydns')
 class SRV extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 33)
 
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
@@ -49,6 +50,10 @@ class SRV extends RR {
     if (!this.fullyQualified('SRV', 'target', val)) return
     if (!this.validHostname('SRV', 'target', val)) return
     this.set('target', val)
+  }
+
+  getRFCs () {
+    return [ 2782 ]
   }
 
   toBind () {

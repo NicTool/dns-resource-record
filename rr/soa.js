@@ -4,6 +4,7 @@ const RR = require('./index')
 class SOA extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 6)
 
     // name is the zone name
 
@@ -68,6 +69,10 @@ class SOA extends RR {
     if (!this.is32bitInt('SOA', 'serial', val)) return
 
     this.set('expire', val)
+  }
+
+  getRFCs () {
+    return [ 1035, 2308 ]
   }
 
   toBind () {

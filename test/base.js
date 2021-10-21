@@ -10,6 +10,7 @@ exports.valid = (type, validRecords) => {
       if (process.env.DEBUG) console.dir(r)
 
       for (const k of Object.keys(val)) {
+        if (k === 'testR') continue
         assert.strictEqual(r.get(k), val[k], `${k} ${r.get(k)} !== ${val[k]}`)
       }
     })

@@ -110,7 +110,7 @@ class RR extends Map {
       && value >= 0
       && value <= 65535) return true
 
-    throw new Error(`$type} {field} must be a 16-bit integer (in the range 0-65535)`)
+    throw new Error(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`)
   }
 
   is32bitInt (type, field, value) {

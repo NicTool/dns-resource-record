@@ -6,6 +6,7 @@ const RR = require('./index')
 class MX extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 15)
 
     this.setAddress(opts?.address)
     this.setWeight(opts?.weight)
@@ -27,8 +28,12 @@ class MX extends RR {
     this.set('weight', val)
   }
 
+  getRFCs () {
+    return [ 1035, 7505 ]
+  }
+
   toBind () {
-    return `${this.get('name')} ${this.get('ttl')} ${this.get('class')}  MX  ${this.get('weight')}  ${this.get('address')}\n`
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tMX\t${this.get('weight')}\t${this.get('address')}\n`
   }
 
   toTinydns () {

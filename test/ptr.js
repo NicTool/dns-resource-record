@@ -12,6 +12,7 @@ const validRecords = [
     type : 'PTR',
     dname: 'dhcp.example.com.',
     ttl  : 86400,
+    testR: '2.1.0.10.in-addr.arpa\t86400\tIN\tPTR\tdhcp.example.com.\n',
   },
 ]
 
@@ -33,7 +34,7 @@ describe('PTR record', function () {
     it('converts to BIND format', async function () {
       const r = new PTR(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '2.1.0.10.in-addr.arpa\t86400\tIN\tPTR\tdhcp.example.com.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {

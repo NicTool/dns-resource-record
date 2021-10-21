@@ -6,12 +6,17 @@ const TINYDNS = require('../lib/tinydns')
 class TXT extends RR {
   constructor (opts) {
     super(opts)
+    this.set('id', 16)
 
     this.setAddress(opts?.address)
   }
 
   setAddress (val) {
     this.set('address', val)
+  }
+
+  getRFCs () {
+    return [ 1035 ]
   }
 
   toBind () {

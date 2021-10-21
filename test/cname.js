@@ -12,6 +12,7 @@ const validRecords = [
     type   : 'CNAME',
     address: 'ns2.example.com.',
     ttl    : 3600,
+    testR  : 'ns1.example.com\t3600\tIN\tCNAME\tns2.example.com.\n',
   },
 ]
 
@@ -33,7 +34,7 @@ describe('CNAME record', function () {
     it('converts to BIND format', async function () {
       const r = new CNAME(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'ns1.example.com\t3600\tIN\tCNAME\tns2.example.com.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {

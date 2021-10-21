@@ -15,6 +15,7 @@ const validRecords = [
     weight  : 0,
     port    : 993,
     ttl     : 3600,
+    testR   : '_imaps._tcp.example.com\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
   },
 ]
 
@@ -43,7 +44,7 @@ describe('SRV record', function () {
     it('converts to BIND format', async function () {
       const r = new SRV(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '_imaps._tcp.example.com\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {
