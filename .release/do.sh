@@ -44,4 +44,5 @@ update_changes
 
 if command -v open; then open CHANGES.md; fi
 
+echo
 echo "AFTER editing changes, run: .release/push.sh"
