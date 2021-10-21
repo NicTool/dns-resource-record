@@ -43,7 +43,7 @@ class AAAA extends RR {
       rdata += sprintf('\\%03o', parseInt(val.slice(i, i+2), 16))
     }
 
-    return `:${this.get('name')}:28:${rdata}:${this.get('ttl')}:${this.get('timestamp')}:${this.get('location')}\n`
+    return `:${this.get('name')}:28:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

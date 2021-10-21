@@ -4,7 +4,7 @@ class RR extends Map {
   constructor (opts) {
     super()
 
-    // tinydns supports these, default to empty string
+    // tinydns supports these
     this.setLocation(opts?.location)
     this.setTimestamp(opts?.timestamp)
 
@@ -33,8 +33,7 @@ class RR extends Map {
   setLocation (l) {
     switch (l) {
       case undefined:
-        this.set('location', '')
-        break
+        return
       default:
         this.set('location', l)
     }
@@ -43,8 +42,7 @@ class RR extends Map {
   setTimestamp (l) {
     switch (l) {
       case undefined:
-        this.set('timestamp', '')
-        break
+        return
       default:
         this.set('timestamp', l)
     }
@@ -84,6 +82,10 @@ class RR extends Map {
     ]
     if (!types.includes(t)) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
+  }
+
+  getEmpty (prop) {
+    return this.get(prop) === undefined ? '' : this.get(prop)
   }
 
   hasValidLabels (hostname) {

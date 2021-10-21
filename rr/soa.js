@@ -81,7 +81,7 @@ class SOA extends RR {
   }
 
   toTinydns () {
-    return `Z${this.get('name')}:${this.get('mname')}:${this.get('rname')}:${this.get('serial')}:${this.get('refresh')}:${this.get('retry')}:${this.get('expire')}:${this.get('minimum')}:${this.get('ttl')}:${this.get('timestamp')}:${this.get('location')}\n`
+    return `Z${this.get('name')}:${this.get('mname')}:${this.getEmpty('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

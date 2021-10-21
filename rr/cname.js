@@ -20,6 +20,14 @@ class CNAME extends RR {
     if (!this.validHostname('CNAME', 'address', val)) return
     this.set('address', val)
   }
+
+  toBind () {
+    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tCNAME\t${this.get('address')}\n`
+  }
+
+  toTinydns () {
+    return `C${this.get('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+  }
 }
 
 module.exports = CNAME

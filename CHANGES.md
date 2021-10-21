@@ -2,14 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 - refactored classes into separate files
-- TXT, SOA, MX: add toBIND and toTinydns
+- TXT, SOA, MX, CNAME, PTR: add toBind and toTinydns
 - SOA: add setMinimum
 
 
 #### 0.2.2 - 2021-10-20
 
 - add tests/*
-- add toBind and toTinydns for A and AAAA
+- A, AAAA, add toBind and toTinydns()
 - add .release
 
 

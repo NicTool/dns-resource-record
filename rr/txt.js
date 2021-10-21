@@ -32,7 +32,7 @@ class TXT extends RR {
   }
 
   toTinydns () {
-    return `'${this.get('name')}:${this.escapeOct(this.get('address'))}:${this.get('ttl')}:${this.get('timestamp')}:${this.get('location')}\n`
+    return `'${this.get('name')}:${this.escapeOct(this.get('address'))}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 
