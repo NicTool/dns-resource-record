@@ -11,6 +11,7 @@ const validRecords = [
     type   : 'A',
     address: '127.0.0.127',
     ttl    : 3600,
+    testR  : 'test.example.com\t3600\tIN\tA\t127.0.0.127\n',
   },
 ]
 
@@ -32,7 +33,7 @@ describe('A record', function () {
     it('converts to BIND format', async function () {
       const r = new A(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'test.example.com\t3600\tIN\tA\t127.0.0.127\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {

@@ -12,6 +12,7 @@ const validRecords = [
     type  : 'DNAME',
     target: '_tcp.example.net.',
     ttl   : 86400,
+    testR : '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n',
   },
 ]
 
@@ -32,7 +33,7 @@ describe('DNAME record', function () {
     it('converts to BIND format', async function () {
       const r = new DNAME(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n')
+      assert.strictEqual(r, val.testR)
     })
 
     it.skip('converts to tinydns format', async function () {

@@ -18,6 +18,15 @@ const validRecords = [
     expire : 1209600,
     minimum: 3600,
     ttl    : 3600,
+    testR  : `$TTL    3600
+$ORIGIN example.com.
+example.com.   IN  SOA ns1.example.com.    matt.example.com. (
+          1
+          7200
+          3600
+          1209600
+          3600
+          )\n\n`,
   },
 ]
 
@@ -44,15 +53,7 @@ describe('SOA record', function () {
     it('converts to BIND format', async function () {
       const r = new SOA(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, `$TTL    3600
-$ORIGIN example.com.
-example.com.   IN  SOA ns1.example.com.    matt.example.com. (
-          1
-          7200
-          3600
-          1209600
-          3600
-          )\n\n`)
+      assert.strictEqual(r, val.testR)
     })
 
     it('converts to tinydns format', async function () {
