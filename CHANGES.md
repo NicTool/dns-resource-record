@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.3.0 - 2021-10-21
+
+- add getRFCs to all RR types
+- populate this.id with IANA type ID
+- toBind: use tabs for exported WS
+- CAA, DNAME, NAPTR, SSHFP, URI: add toBind, tests
+
+
 #### 0.2.3 - 2021-10-21
 
 - refactored classes into separate files
