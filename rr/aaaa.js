@@ -39,7 +39,7 @@ class AAAA extends RR {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
     let rdata = ''
     for (var i = 0; i < 32; i = i+2) {
-      // console.log(`i: ${i} .. ${i+1}, ${val.slice(i, i+2)}, ${parseInt(val.slice(i, i+2), 16)}`)
+      // nibble off 2 hex bytes, encode to octal
       rdata += sprintf('\\%03o', parseInt(val.slice(i, i+2), 16))
     }
 
