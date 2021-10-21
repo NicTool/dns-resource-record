@@ -1,14 +1,12 @@
 
 const assert = require('assert')
 
-const ResourceRecord = require('../index.js')
-
-exports.valid = validRecords => {
+exports.valid = (type, validRecords) => {
 
   for (const val of validRecords) {
     // console.log(val)
     it(`parses valid ${val.type} record`, async function () {
-      const r = new ResourceRecord[val.type](val)
+      const r = new type(val)
       if (process.env.DEBUG) console.dir(r)
 
       for (const k of Object.keys(val)) {
@@ -18,14 +16,14 @@ exports.valid = validRecords => {
   }
 }
 
-exports.invalid = invalidRecords => {
+exports.invalid = (type, invalidRecords) => {
   for (const inv of invalidRecords) {
 
-    const ucType = inv.type.toUpperCase()
+    // const ucType = inv.type.toUpperCase()
 
-    it(`throws on invalid ${ucType} record`, async function () {
+    it(`throws on invalid ${type.name} record`, async function () {
       try {
-        new ResourceRecord[ucType](inv)
+        new type(inv)
       }
       catch (e) {
         if (process.env.DEBUG) console.error(e.message)
@@ -36,4 +34,3 @@ exports.invalid = invalidRecords => {
     })
   }
 }
-

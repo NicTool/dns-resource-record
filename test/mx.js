@@ -1,5 +1,9 @@
 
-const base = require('./index')
+const assert = require('assert')
+
+const base = require('./base')
+
+const MX = require('../rr/mx')
 
 const validRecords = [
   {
@@ -30,6 +34,6 @@ const invalidRecords = [
 ]
 
 describe('MX record', function () {
-  base.valid(validRecords)
-  base.invalid(invalidRecords)
+  base.valid(MX, validRecords)
+  base.invalid(MX, invalidRecords)
 })

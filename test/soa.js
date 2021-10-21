@@ -1,5 +1,9 @@
 
-const base = require('./index')
+const assert = require('assert')
+
+const base = require('./base')
+
+const SOA = require('../rr/soa')
 
 const validRecords = [
   {
@@ -32,6 +36,6 @@ const invalidRecords = [
 ]
 
 describe('SOA record', function () {
-  base.valid(validRecords)
-  base.invalid(invalidRecords)
+  base.valid(SOA, validRecords)
+  base.invalid(SOA, invalidRecords)
 })

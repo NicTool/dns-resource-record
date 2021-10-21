@@ -2,8 +2,9 @@
   "name": "dns-resource-record",
   "version": "0.2.2",
   "description": "DNS Resource Records",
-  "main": "index.js",
+  "main": "rr/index.js",
   "scripts": {
+    "cover": "NODE_ENV=cov npx nyc --reporter=lcovonly npm run test",
     "lint": "npx eslint *.js test/*.js",
     "lintfix": "npx eslint --fix *.js test/*.js",
     "test": "npx mocha"
