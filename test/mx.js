@@ -7,30 +7,30 @@ const MX = require('../rr/mx')
 
 const validRecords = [
   {
-    class  : 'IN',
-    name   : 'test.example.com',
-    type   : 'MX',
-    address: 'mail.example.com.',
-    weight : 0,
-    ttl    : 3600,
-    testR  : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
+    class   : 'IN',
+    name    : 'test.example.com',
+    type    : 'MX',
+    exchange: 'mail.example.com.',
+    weight  : 0,
+    ttl     : 3600,
+    testR   : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
   },
 ]
 
 const invalidRecords = [
   {
-    class  : 'IN',
-    name   : 'test.example.com',
-    type   : 'MX',
-    address: 'not-full-qualified.example.com',
-    ttl    : 3600,
+    class   : 'IN',
+    name    : 'test.example.com',
+    type    : 'MX',
+    exchange: 'not-full-qualified.example.com',
+    ttl     : 3600,
   },
   {
-    class  : 'IN',
-    name   : 'test.example.com',
-    type   : 'MX',
-    address: '192.168.0.1',
-    ttl    : 3600,
+    class   : 'IN',
+    name    : 'test.example.com',
+    type    : 'MX',
+    exchange: '192.168.0.1',
+    ttl     : 3600,
   },
 ]
 

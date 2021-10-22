@@ -11,6 +11,7 @@ class A extends RR {
     this.setAddress(opts.address)
   }
 
+  /****** Resource record specific setters   *******/
   setAddress (val) {
     if (!val) throw new Error('A: address is required')
     if (!net.isIPv4(val)) throw new Error('A address must be IPv4')
@@ -21,8 +22,19 @@ class A extends RR {
     return [ 1035 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // A          =>  + fqdn : ip : ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

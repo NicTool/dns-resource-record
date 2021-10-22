@@ -23,6 +23,13 @@ const invalidRecords = [
     address: 'hosts.not.valid.here',
     ttl    : 3600,
   },
+  {
+    class  : 'IN',
+    name   : 'test.example.com',
+    type   : 'A',
+    address: '127.0.0.127',
+    // ttl    : 3600,  // missing TTL
+  },
 ]
 
 describe('A record', function () {

@@ -7,22 +7,22 @@ const CNAME = require('../rr/cname')
 
 const validRecords = [
   {
-    class  : 'IN',
-    name   : 'ns1.example.com',
-    type   : 'CNAME',
-    address: 'ns2.example.com.',
-    ttl    : 3600,
-    testR  : 'ns1.example.com\t3600\tIN\tCNAME\tns2.example.com.\n',
+    class: 'IN',
+    name : 'ns1.example.com',
+    type : 'CNAME',
+    cname: 'ns2.example.com.',
+    ttl  : 3600,
+    testR: 'ns1.example.com\t3600\tIN\tCNAME\tns2.example.com.\n',
   },
 ]
 
 const invalidRecords = [
   {
-    class  : 'IN',
-    name   : 'example.com',
-    type   : 'CNAME',
-    address: '1.2.3.4',  // FQDN required
-    ttl    : 3600,
+    class: 'IN',
+    name : 'example.com',
+    type : 'CNAME',
+    cname: '1.2.3.4',  // FQDN required
+    ttl  : 3600,
   },
 ]
 

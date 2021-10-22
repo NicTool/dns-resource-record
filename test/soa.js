@@ -18,9 +18,9 @@ const validRecords = [
     expire : 1209600,
     minimum: 3600,
     ttl    : 3600,
-    testR  : `$TTL    3600
-$ORIGIN example.com.
-example.com.   IN  SOA ns1.example.com.    matt.example.com. (
+    testR  : `$TTL\t3600
+$ORIGIN\texample.com.
+example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
           1
           7200
           3600

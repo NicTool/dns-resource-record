@@ -8,19 +8,20 @@ class MX extends RR {
     super(opts)
     this.set('id', 15)
 
-    this.setAddress(opts?.address)
+    this.setExchange(opts?.exchange)
     this.setWeight(opts?.weight)
   }
 
-  setAddress (val) {
-    if (!val) throw new Error('MX: address is required')
+  /****** Resource record specific setters   *******/
+  setExchange (val) {
+    if (!val) throw new Error('MX: exchange is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`MX: address must be a FQDN: RFC 2181`)
+      throw new Error(`MX: exchange must be a FQDN: RFC 2181`)
 
-    if (!this.fullyQualified('MX', 'address', val)) return
-    if (!this.validHostname('MX', 'address', val)) return
-    this.set('address', val)
+    if (!this.fullyQualified('MX', 'exchange', val)) return
+    if (!this.validHostname('MX', 'exchange', val)) return
+    this.set('exchange', val)
   }
 
   setWeight (val) {
@@ -32,12 +33,23 @@ class MX extends RR {
     return [ 1035, 7505 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // MX         =>  @ fqdn : ip : x:dist:ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tMX\t${this.get('weight')}\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'weight', 'exchange' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {
-    return `@${this.get('name')}::${this.get('address')}:${this.get('weight')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `@${this.get('name')}::${this.get('exchange')}:${this.get('weight')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

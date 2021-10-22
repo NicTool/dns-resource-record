@@ -15,6 +15,7 @@ const validRecords = [
     fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
     ttl        : 86400,
     testR      : 'mail.example.com\t86400\t1\t1\ted8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26\n',
+    testT      : ':mail.example.com:44:\\000\\000\\000\\000\\355\\214\\156\\026\\375\\256\\117\\143\\076\\356\\152\\173\\217\\144\\375\\323\\126\\273\\263\\050\\101\\325\\065\\126\\135\\167\\160\\024\\311\\352\\114\\046:86400::\n',
   },
 ]
 
@@ -32,10 +33,10 @@ describe('SSHFP record', function () {
       assert.strictEqual(r, val.testR)
     })
 
-    it.skip('converts to tinydns format', async function () {
+    it('converts to tinydns format', async function () {
       const r = new SSHFP(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n')
+      assert.strictEqual(r, val.testT)
     })
   }
 })

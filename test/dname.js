@@ -13,6 +13,7 @@ const validRecords = [
     target: '_tcp.example.net.',
     ttl   : 86400,
     testR : '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n',
+    testT : ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
   },
 ]
 
@@ -36,10 +37,10 @@ describe('DNAME record', function () {
       assert.strictEqual(r, val.testR)
     })
 
-    it.skip('converts to tinydns format', async function () {
+    it('converts to tinydns format', async function () {
       const r = new DNAME(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '\n')
+      assert.strictEqual(r, val.testT)
     })
   }
 })

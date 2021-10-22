@@ -8,30 +8,45 @@ class CNAME extends RR {
     super(opts)
     this.set('id', 5)
 
-    this.address(opts?.address)
+    this.setCname(opts?.cname)
   }
 
-  address (val) {
-    if (!val) throw new Error('CNAME: address is required')
+  /****** Resource record specific setters   *******/
+  setCname (val) {
+    // A <domain-name> which specifies the canonical or primary
+    // name for the owner.  The owner name is an alias.
+
+    if (!val) throw new Error('CNAME: cname is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`CNAME: address must be a FQDN: RFC 2181`)
+      throw new Error(`CNAME: cname must be a FQDN: RFC 2181`)
 
-    if (!this.fullyQualified('CNAME', 'address', val)) return
-    if (!this.validHostname('CNAME', 'address', val)) return
-    this.set('address', val)
+    if (!this.fullyQualified('CNAME', 'cname', val)) return
+    if (!this.validHostname('CNAME', 'cname', val)) return
+    this.set('cname', val)
   }
 
   getRFCs () {
-    return [ 1035 ]
+    return [ 1035, 2181 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // CNAME      =>  C fqdn :  p : ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tCNAME\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'cname' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {
-    return `C${this.get('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `C${this.get('name')}:${this.get('cname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

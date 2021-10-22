@@ -91,12 +91,10 @@ console.log(new RR.A({
 
 ```js
 console.log(new RR.AAAA({
-    class  : 'IN',
     name   : 'test.example.com',
     type   : 'AAAA',
     address: '2605:7900:20:a::4',
     ttl    : 3600,
-    testR  : 'test.example.com\t3600\tIN\tAAAA\t2605:7900:20:a::4\n',
 }).toBind())
 test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 ```

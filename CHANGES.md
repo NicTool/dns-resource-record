@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.4.0 - 2021-10-22
+
+- CAA, DNAME, SSHFP, URI: add toTinydns
+- lib/tinydns: added packHex and UInt16AsOctal
+
+
 #### 0.3.1 - 2021-10-21
 
 - update index.js to also export RR sub classes

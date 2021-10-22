@@ -6,7 +6,9 @@ class SOA extends RR {
     super(opts)
     this.set('id', 6)
 
-    // name is the zone name
+    // name  = zone name
+    // rname = zone contact
+    // mname = primary NS
 
     const fields = [ 'minimum', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire' ]
     for (const f of fields) {
@@ -14,24 +16,25 @@ class SOA extends RR {
     }
   }
 
-  // minimum (used for negative caching, since RFC 2308)
-  // RFC 1912 sugggests 1-5 days
-  // RIPE recommends 3600 (1 hour)
+  /****** Resource record specific setters   *******/
   setMinimum (val) {
+    // minimum (used for negative caching, since RFC 2308)
+    // RFC 1912 sugggests 1-5 days
+    // RIPE recommends 3600 (1 hour)
     if (!this.is32bitInt('SOA', 'minimum', val)) return
 
     this.set('minimum', val)
   }
 
-  // MNAME (primary NS)
   setMname (val) {
+    // MNAME (primary NS)
     if (!this.validHostname('SOA', 'MNAME', val)) return
     if (!this.fullyQualified('SOA', 'MNAME', val)) return
     this.set('mname', val)
   }
 
-  // RNAME (email of admin)  (escape . with \)
   setRname (val) {
+    // RNAME (email of admin)  (escape . with \)
     if (!this.validHostname('SOA', 'RNAME', val)) return
     if (!this.fullyQualified('SOA', 'RNAME', val)) return
     if (/@/.test(val)) throw new Error('SOA RNAME replaces @ with a . (dot).')
@@ -75,8 +78,20 @@ class SOA extends RR {
     return [ 1035, 2308 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // SOA        =>  Z fqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `$TTL    ${this.get('ttl')}\n$ORIGIN ${this.get('name')}.\n${this.get('name')}.   ${this.get('class')}  SOA ${this.get('mname')}    ${this.get('rname')} (
+    return `$TTL\t${this.get('ttl')}
+$ORIGIN\t${this.get('name')}.
+${this.get('name')}.\t${this.get('class')}\tSOA\t${this.get('mname')}\t${this.get('rname')} (
           ${this.get('serial')}
           ${this.get('refresh')}
           ${this.get('retry')}
