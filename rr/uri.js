@@ -1,5 +1,5 @@
 
-const RR = require('./index')
+const RR = require('./index').RR
 
 class URI extends RR {
   constructor (opts) {

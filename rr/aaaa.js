@@ -3,7 +3,7 @@ const net = require('net')
 
 const sprintf = require('sprintf-js').sprintf
 
-const RR = require('./index')
+const RR = require('./index').RR
 
 class AAAA extends RR {
   constructor (opts) {

@@ -1,6 +1,6 @@
 const net = require('net')
 
-const RR = require('./index')
+const RR = require('./index').RR
 
 class DNAME extends RR {
   constructor (opts) {
