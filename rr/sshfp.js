@@ -1,5 +1,6 @@
 
-const RR = require('./index').RR
+const RR      = require('./index').RR
+const TINYDNS = require('../lib/tinydns')
 
 class SSHFP extends RR {
   constructor (opts) {
@@ -47,6 +48,17 @@ class SSHFP extends RR {
   toBind () {
     const fields = [ 'name', 'ttl', 'algorithm', 'fptype', 'fingerprint' ]
     return `${fields.map(f => this.get(f)).join('\t')}\n`
+  }
+
+  toTinydns () {
+    let rdata = ''
+
+    for (const e of [ 'algo', 'type' ]) {
+      rdata += TINYDNS.UInt16AsOctal(this.get(e))
+    }
+
+    rdata += TINYDNS.packHex(this.get('fingerprint'))
+    return `:${this.get('name')}:44:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

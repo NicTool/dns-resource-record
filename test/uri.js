@@ -14,7 +14,19 @@ const validRecords = [
     priority: 1,
     weight  : 0,
     ttl     : 3600,
-    testR   : 'www.example.com\t3600\tIN\tURI\t1\t0\twww2.example.com.\n',
+    testR   : 'www.example.com\t3600\tIN\tURI\t1\t0\t"www2.example.com."\n',
+    testT   : ':www.example.com:256:\\000\\001\\000\\000www2.example.com.:3600::\n',
+  },
+  {
+    class   : 'IN',
+    name    : '_http.github.dog',
+    type    : 'URI',
+    target  : 'http://github.com/dog',
+    priority: 2,
+    weight  : 100,
+    ttl     : 3600,
+    testR   : '_http.github.dog\t3600\tIN\tURI\t2\t100\t"http://github.com/dog"\n',
+    testT   : ':_http.github.dog:256:\\000\\002\\000\\144http\\072\\057\\057github.com\\057dog:3600::\n',
   },
 ]
 
@@ -27,16 +39,16 @@ describe('URI record', function () {
   base.invalid(URI, invalidRecords)
 
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
+    it(`converts to BIND format: ${val.name}`, async function () {
       const r = new URI(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testR)
     })
 
-    it.skip('converts to tinydns format', async function () {
+    it('converts to tinydns format', async function () {
       const r = new URI(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '\n')
+      assert.strictEqual(r, val.testT)
     })
   }
 })

@@ -30,7 +30,7 @@ describe('AAAA record', function () {
   base.invalid(AAAA, invalidRecords)
 
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
+    it(`converts to BIND format: ${val.name}`, async function () {
       const r = new AAAA(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testR)

@@ -1,8 +1,6 @@
 
 const net = require('net')
 
-const sprintf = require('sprintf-js').sprintf
-
 const RR = require('./index').RR
 const TINYDNS = require('../lib/tinydns')
 
@@ -77,10 +75,7 @@ class SRV extends RR {
     let rdata = ''
 
     for (const e of [ 'priority', 'weight', 'port' ]) {
-      const pri = Buffer.alloc(2)
-      pri.writeUInt16BE(this.get(e))
-      rdata += sprintf('\\%03o', pri.readUInt8(0))
-      rdata += sprintf('\\%03o', pri.readUInt8(1))
+      rdata += TINYDNS.UInt16AsOctal(this.get(e))
     }
 
     rdata += TINYDNS.packDomainName(this.get('target'))
