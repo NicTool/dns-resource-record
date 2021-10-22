@@ -1,4 +1,10 @@
 
+
+const supportedTypes = [
+  'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NAPTR', 'NS',
+  'PTR', 'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
+]
+
 class RR extends Map {
 
   constructor (opts) {
@@ -76,11 +82,7 @@ class RR extends Map {
   }
 
   setType (t) {
-    const types = [
-      'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NAPTR', 'NS',
-      'PTR', 'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
-    ]
-    if (!types.includes(t)) throw new Error(`type ${t} not supported (yet)`)
+    if (!supportedTypes.includes(t)) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
   }
 
@@ -101,7 +103,7 @@ class RR extends Map {
       && value >= 0
       && value <= 255) return true
 
-    throw new Error(`$type} {field} must be a 8-bit integer (in the range 0-255)`)
+    throw new Error(`${type} ${field} must be a 8-bit integer (in the range 0-255)`)
   }
 
   is16bitInt (type, field, value) {
@@ -119,7 +121,7 @@ class RR extends Map {
       && value >= 0
       && value <= 2147483647) return true
 
-    throw new Error(`$type} {field} must be a 32-bit integer (in the range 0-2147483647)`)
+    throw new Error(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
   }
 
   fullyQualified (type, blah, hostname) {
@@ -135,4 +137,10 @@ class RR extends Map {
   }
 }
 
-module.exports = RR
+module.exports = {
+  RR,
+}
+
+for (const t of supportedTypes) {
+  module.exports[t] = require(`./${t.toLowerCase()}`)
+}

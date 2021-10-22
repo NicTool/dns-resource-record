@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.3.1 - 2021-10-21
+
+- update index.js to also export RR sub classes
+- update README examples
+
+
 #### 0.3.0 - 2021-10-21
 
 - add getRFCs to all RR types

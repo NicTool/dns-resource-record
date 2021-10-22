@@ -1,5 +1,5 @@
 
-const RR = require('./index')
+const RR = require('./index').RR
 
 class NAPTR extends RR {
   constructor (obj) {

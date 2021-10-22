@@ -26,7 +26,7 @@ This module intends to import and export wholly RFC compliant DNS resourse recor
 ```js
 const RR = require('dns-resource-record')
 try {
-    console.log(RR.SOA({
+    console.log(new RR.SOA({
         name   : 'example.com',
         type   : 'SOA',
         mname  : 'matt.example.com.',
@@ -35,13 +35,16 @@ try {
         refresh: 7200,
         retry  : 3600,
         expire : 1209600,
+        minimum: 3600,
         ttl    : 3600,
     }))
-    SOA(10) [Map] {
+    SOA(12) [Map] {
       'class' => 'IN',
       'name' => 'example.com',
       'ttl' => 3600,
       'type' => 'SOA',
+      'id' => 6,
+      'minimum' => 3600,
       'mname' => 'matt.example.com.',
       'rname' => 'ns1.example.com.',
       'serial' => 1,
@@ -60,20 +63,42 @@ catch (e) {
 
 ### A
 
+in BIND format:
+
 ```js
-console.log(RR.A({
+console.log(new RR.A({
     name   : 'test.example.com',
     type   : 'A',
     address: '127.0.0.127',
     ttl    : 3600,
-}))
-A(5) [Map] {
-  'class' => 'IN',
-  'name' => 'test.example.com',
-  'ttl' => 3600,
-  'type' => 'A',
-  'address' => '127.0.0.127'
-}
+}).toBind())
+test.example.com    3600    IN  A   127.0.0.127
+```
+
+in tinydns format:
+
+```js
+console.log(new RR.A({
+    name   : 'test.example.com',
+    type   : 'A',
+    address: '127.0.0.127',
+    ttl    : 3600,
+}).toTinydns())
++test.example.com:127.0.0.127:3600::
+```
+
+### AAAA
+
+```js
+console.log(new RR.AAAA({
+    class  : 'IN',
+    name   : 'test.example.com',
+    type   : 'AAAA',
+    address: '2605:7900:20:a::4',
+    ttl    : 3600,
+    testR  : 'test.example.com\t3600\tIN\tAAAA\t2605:7900:20:a::4\n',
+}).toBind())
+test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 ```
 
 ## TODO

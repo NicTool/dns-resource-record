@@ -1,5 +1,5 @@
 
-const RR = require('./index')
+const RR = require('./index').RR
 
 class CAA extends RR {
   constructor (opts) {
