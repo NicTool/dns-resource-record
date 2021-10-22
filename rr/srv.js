@@ -23,6 +23,7 @@ class SRV extends RR {
     }
   }
 
+  /****** Resource record specific setters   *******/
   setPriority (val) {
     if (!this.is16bitInt('SRV', 'priority', val)) return
 
@@ -56,8 +57,19 @@ class SRV extends RR {
     return [ 2782 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tSRV\t${this.get('priority')}\t${this.get('weight')}\t${this.get('port')}\t${this.get('target')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'port', 'target' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

@@ -1,8 +1,8 @@
 
-
 const supportedTypes = [
-  'A', 'AAAA', 'CAA', 'CNAME', 'DNAME', 'LOC', 'MX', 'NAPTR', 'NS',
-  'PTR', 'SSHFP', 'SOA', 'SRV', 'TXT', 'URI',
+  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME',
+  'LOC'  , 'MX'  , 'NAPTR', 'NS'   , 'PTR'  ,
+  'SSHFP', 'SOA' , 'SRV'  , 'TXT'  , 'URI'  ,
 ]
 
 class RR extends Map {
@@ -10,13 +10,15 @@ class RR extends Map {
   constructor (opts) {
     super()
 
-    // tinydns supports these
+    if (opts.default) this.default = opts.default
+
+    // tinydns specific
     this.setLocation(opts?.location)
     this.setTimestamp(opts?.timestamp)
 
-    this.setClass(opts?.class)
     this.setName (opts?.name)
     this.setTtl  (opts?.ttl)
+    this.setClass(opts?.class)
     this.setType (opts?.type)
   }
 
@@ -67,7 +69,15 @@ class RR extends Map {
 
   setTtl (t) {
 
-    if (t === undefined) return
+    if (t === undefined) {
+      if (this?.default?.ttl) {
+        t = this.default.ttl
+      }
+      else {
+        if ('SSHPF' === this.get('type')) return
+        throw new Error('TTL is required, no default available')
+      }
+    }
 
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
 

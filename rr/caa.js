@@ -7,10 +7,11 @@ class CAA extends RR {
     this.set('id', 257)
 
     this.setFlags(opts?.flags)
-    this.setTags(opts?.tags)
+    this.setTag(opts?.tag)
     this.setValue(opts?.value)
   }
 
+  /****** Resource record specific setters   *******/
   setFlags (val) {
     if (!this.is8bitInt('CAA', 'flags', val)) return
 
@@ -21,7 +22,7 @@ class CAA extends RR {
     this.set('flags', val)
   }
 
-  setTags (val) {
+  setTag (val) {
     if (typeof val !== 'string'
       || val.length < 1
       || /[A-Z]/.test(val)
@@ -29,9 +30,9 @@ class CAA extends RR {
       throw new Error('CAA flags must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
-      console.warn(`CAA tags ${val} not recognized: RFC 6844`)
+      console.warn(`CAA tag ${val} not recognized: RFC 6844`)
     }
-    this.set('tags', val)
+    this.set('tag', val)
   }
 
   setValue (val) {
@@ -51,10 +52,22 @@ class CAA extends RR {
     return [ 6844 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    let val = this.get('value')
-    if (val[0] !== '"') val = `"${val}"` // add enclosing quotes
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tCAA\t${this.get('flags')}\t${this.get('tags')}\t${val}\n`
+    let value = this.get('value')
+    if (value[0] !== '"') value = `"${value}"` // add enclosing quotes
+
+    const fields = [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\t${value}\n`
   }
 }
 

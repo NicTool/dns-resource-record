@@ -11,6 +11,7 @@ class SSHFP extends RR {
     this.setFingerprint(opts?.fingerprint)
   }
 
+  /****** Resource record specific setters   *******/
   setAlgorithm (val) {
     // 0: reserved; 1: RSA 2: DSA 3: ECDSA 4: Ed25519 6:Ed448
     if (!this.is8bitInt('SSHFP', 'algorithm', val)) return
@@ -33,8 +34,19 @@ class SSHFP extends RR {
     return [ 4255 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('algorithm')}\t${this.get('fptype')}\t${this.get('fingerprint')}\n`
+    const fields = [ 'name', 'ttl', 'algorithm', 'fptype', 'fingerprint' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 }
 

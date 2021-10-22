@@ -11,6 +11,7 @@ class URI extends RR {
     this.setTarget(opts?.target)
   }
 
+  /****** Resource record specific setters   *******/
   setPriority (val) {
     if (!this.is16bitInt('URI', 'priority', val)) return
 
@@ -29,12 +30,24 @@ class URI extends RR {
     this.set('target', val)
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  MISC   *******/
   getRFCs () {
     return [ 7553 ]
   }
 
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tURI\t${this.get('priority')}\t${this.get('weight')}\t${this.get('target')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'target' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 }
 

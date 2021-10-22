@@ -6,21 +6,48 @@ class NS extends RR {
     super(opts)
     this.set('id', 2)
 
-    if (!this.fullyQualified('NS', 'address', opts.address)) return
-    if (!this.validHostname('NS', 'address', opts.address)) return
-    this.set('address', opts.address)
+    if (opts?.address) {
+      this.setDname(opts?.address)
+    }
+    else if (opts?.nsdname) {
+      this.setDname(opts?.nsdname)
+    }
+    else {
+      this.setDname(opts?.dname)
+    }
+  }
+
+  /****** Resource record specific setters   *******/
+  setDname (val) {
+    if (!val) throw new Error('NS: dname is required')
+
+    if (!this.fullyQualified('NS', 'dname', val)) return
+    if (!this.validHostname('NS', 'dname', val)) return
+
+    this.set('dname', val)
   }
 
   getRFCs () {
     return [ 1035 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // NS         =>  & fqdn : ip : x:ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tNS\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'dname' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {
-    return `&${this.get('name')}::${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `&${this.get('name')}::${this.get('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

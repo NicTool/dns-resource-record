@@ -15,6 +15,7 @@ class DNAME extends RR {
     }
   }
 
+  /****** Resource record specific setters   *******/
   setTarget (val) {
     if (!val) throw new Error('DNAME: target is required')
 
@@ -30,8 +31,19 @@ class DNAME extends RR {
     return [ 2672, 6672 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tDNAME\t${this.get('target')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'target' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 }
 

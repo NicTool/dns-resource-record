@@ -9,10 +9,11 @@ class LOC extends RR {
     this.setAddress(opts?.address)
   }
 
+  /****** Resource record specific setters   *******/
   setAddress (val) {
     if (!val) throw new Error('LOC: address is required')
 
-    // todo: validate this with https://datatracker.ietf.org/doc/html/rfc1876
+    // todo: validate this
     this.set('address', val)
   }
 
@@ -20,8 +21,19 @@ class LOC extends RR {
     return [ 1876 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tLOC\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 }
 

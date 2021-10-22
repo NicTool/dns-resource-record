@@ -7,22 +7,22 @@ const NS = require('../rr/ns')
 
 const validRecords = [
   {
-    class  : 'IN',
-    name   : 'example.com',
-    type   : 'NS',
-    address: 'ns1.example.com.',
-    ttl    : 3600,
-    testR  : 'example.com\t3600\tIN\tNS\tns1.example.com.\n',
+    class: 'IN',
+    name : 'example.com',
+    type : 'NS',
+    dname: 'ns1.example.com.',
+    ttl  : 3600,
+    testR: 'example.com\t3600\tIN\tNS\tns1.example.com.\n',
   },
 ]
 
 const invalidRecords = [
   {
-    class  : 'IN',
-    name   : 'example.com',
-    type   : 'NS',
-    address: '1.2.3.4',  // FQDN required
-    ttl    : 3600,
+    class: 'IN',
+    name : 'example.com',
+    type : 'NS',
+    dname: '1.2.3.4',  // FQDN required
+    ttl  : 3600,
   },
 ]
 

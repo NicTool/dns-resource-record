@@ -14,6 +14,7 @@ class NAPTR extends RR {
     this.setReplacement(obj?.replacement)
   }
 
+  /****** Resource record specific setters   *******/
   setOrder (val) {
     if (!this.is16bitInt('NAPTR', 'order', val)) return
 
@@ -44,15 +45,30 @@ class NAPTR extends RR {
     this.set('replacement', val)
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    //
+  }
+
+  fromBind () {
+    //
+  }
+
   getRFCs () {
     return [ 2915, 3403 ]
   }
 
+  /******  EXPORTERS   *******/
   toBind () {
     // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
 
     // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tNAPTR\t${this.get('order')}\t${this.get('pref')}\t"${this.get('flags')}"\t"${this.get('service')}"\t"${this.get('regexp')}"\t${this.get('replacement')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'order', 'pref' ]
+    const quoted = [ 'flags', 'service', 'regexp' ]
+
+    return `${fields.map(f => this.get(f)).join('\t')}\t`
+      + `"${quoted.map(f => this.get(f)).join('"\t"')}"\t`
+      + `${this.get('replacement')}\n`
   }
 }
 

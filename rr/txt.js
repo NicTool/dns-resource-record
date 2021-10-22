@@ -8,28 +8,40 @@ class TXT extends RR {
     super(opts)
     this.set('id', 16)
 
-    this.setAddress(opts?.address)
+    this.setData(opts?.data)
   }
 
-  setAddress (val) {
-    this.set('address', val)
+  /****** Resource record specific setters   *******/
+  setData (val) {
+    this.set('data', val)
   }
 
   getRFCs () {
     return [ 1035 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // TXT        =>  ' fqdn :  s : ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    let addr = this.get('address')
-    if (addr.length > 255) {
-      // BIND croaks when any string in the TXT RR address is longer than 255
-      addr = addr.match(/(.{1,255})/g).join('" "')
+    let data = this.get('data')
+    if (data.length > 255) {
+      // BIND croaks when any string in the TXT RR data is longer than 255
+      data = data.match(/(.{1,255})/g).join('" "')
     }
-    return `${this.get('name')}  ${this.get('ttl')} ${this.get('class')}  ${this.get('type')} ${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\t"${data}"\n`
   }
 
   toTinydns () {
-    const rdata = TINYDNS.escapeOct(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('address'))
+    const rdata = TINYDNS.escapeOct(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return `'${this.get('name')}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }

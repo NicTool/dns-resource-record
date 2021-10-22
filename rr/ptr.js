@@ -6,20 +6,18 @@ class PTR extends RR {
     super(obj)
     this.set('id', 12)
 
-    if (obj?.dname) {
-      this.setDname(obj?.dname)
+    if (obj?.address) { // RFC 1035
+      this.setDname(obj?.address)
     }
-    else if (obj?.rdata) { // Generic DNS packet content
-      this.setDname(obj?.rdata)
-    }
-    else if (obj?.ptrdname) { // RFC 1035
+    else if (obj?.ptrdname) {
       this.setDname(obj?.ptrdname)
     }
-    else if (obj?.address) { // RFC 1035
-      this.setDname(obj?.address)
+    else { // RFC 1035
+      this.setDname(obj?.dname)
     }
   }
 
+  /****** Resource record specific setters   *******/
   setDname (val) {
     if (!this.fullyQualified('PTR', 'dname', val)) return
     if (!this.validHostname('PTR', 'dname', val)) return
@@ -31,8 +29,19 @@ class PTR extends RR {
     return [ 1035 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // PTR        =>  ^ fqdn :  p : ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\tPTR\t${this.get('dname')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'dname' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

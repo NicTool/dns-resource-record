@@ -13,6 +13,7 @@ class AAAA extends RR {
     this.setAddress(opts?.address)
   }
 
+  /****** Resource record specific setters   *******/
   setAddress (val) {
     if (!val) throw new Error('AAAA: address is required')
     if (!net.isIPv6(val)) throw new Error('AAAA: address must be IPv6')
@@ -24,8 +25,21 @@ class AAAA extends RR {
     return [ 3596 ]
   }
 
+  /******  IMPORTERS   *******/
+  fromTinydns () {
+    // GENERIC =>  :fqdn:28:rdata:ttl:timestamp:lo
+    // AAAA       =>  3 fqdn : ip : x:ttl:timestamp:lo
+    // AAAA,PTR   =>  6 fqdn : ip : x:ttl:timestamp:lo
+  }
+
+  fromBind () {
+    //
+  }
+
+  /******  EXPORTERS   *******/
   toBind () {
-    return `${this.get('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}\t${this.get('address')}\n`
+    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
+    return `${fields.map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {
