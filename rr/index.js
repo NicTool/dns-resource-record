@@ -64,6 +64,10 @@ class RR extends Map {
 
     this.hasValidLabels(n)
 
+    if (/\*/.test(n)) {
+      if (!/^\*\./.test(n) && !/\.\*\./.test(n)) throw new Error('only *.something or * (by itself) is a valid wildcard')
+    }
+
     this.set('name', n)
   }
 

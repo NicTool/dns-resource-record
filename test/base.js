@@ -5,7 +5,7 @@ exports.valid = (type, validRecords) => {
 
   for (const val of validRecords) {
     // console.log(val)
-    it(`parses valid ${val.type} record`, async function () {
+    it(`parses valid ${val.type} record (${val.name})`, async function () {
       const r = new type(val)
       if (process.env.DEBUG) console.dir(r)
 
