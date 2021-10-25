@@ -41,7 +41,7 @@ class TXT extends RR {
   }
 
   toTinydns () {
-    const rdata = TINYDNS.escapeOct(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
+    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return `'${this.get('name')}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }

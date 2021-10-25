@@ -75,7 +75,7 @@ class SRV extends RR {
     let rdata = ''
 
     for (const e of [ 'priority', 'weight', 'port' ]) {
-      rdata += TINYDNS.UInt16AsOctal(this.get(e))
+      rdata += TINYDNS.UInt16toOctal(this.get(e))
     }
 
     rdata += TINYDNS.packDomainName(this.get('target'))

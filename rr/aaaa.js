@@ -1,8 +1,6 @@
 
 const net = require('net')
 
-const sprintf = require('sprintf-js').sprintf
-
 const RR      = require('./index').RR
 const TINYDNS = require('../lib/tinydns')
 
@@ -54,7 +52,7 @@ class AAAA extends RR {
     }
 
     // restore compressed leading zeros
-    val = val.split(':').map(s => sprintf('%04s', s)).join('')
+    val = val.split(':').map(s => s.padStart(4, 0)).join('')
 
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
     const rdata = TINYDNS.packHex(val)
