@@ -100,6 +100,11 @@ class RR extends Map {
     return this.get(prop) === undefined ? '' : this.get(prop)
   }
 
+  getQuoted (prop) {
+    if (/['"]/.test(this.get(prop)[0])) return this.get(prop) // already quoted
+    return `"${this.get(prop)}"`
+  }
+
   hasValidLabels (hostname) {
     for (const label of hostname.split('.')) {
       if (label.length < 1 || label.length > 63)

@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.5.0 - 2021-10-24
+
+- NAPTR: add toTinydns
+- tinydns: remove sprintf-js dependency
+
+
 #### 0.4.0 - 2021-10-22
 
 - CAA, DNAME, SSHFP, URI: add toTinydns

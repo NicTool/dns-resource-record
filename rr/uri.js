@@ -56,10 +56,10 @@ class URI extends RR {
     let rdata = ''
 
     for (const e of [ 'priority', 'weight' ]) {
-      rdata += TINYDNS.UInt16AsOctal(this.get(e))
+      rdata += TINYDNS.UInt16toOctal(this.get(e))
     }
 
-    rdata += TINYDNS.escapeOct(dataRe, this.get('target'))
+    rdata += TINYDNS.escapeOctal(dataRe, this.get('target'))
     return `:${this.get('name')}:256:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }

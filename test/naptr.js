@@ -11,13 +11,14 @@ const validRecords = [
     name       : 'cid.urn.arpa',
     type       : 'NAPTR',
     order      : 100,
-    pref       : 10,
+    preference : 10,
     flags      : '',
     service    : '',
     regexp     : '!^urn:cid:.+@([^\\.]+\\.)(.*)$!\2!i',
     replacement: '.',
     ttl        : 86400,
     testR      : 'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
+    testT      : ':cid.urn.arpa:35:\\000\\144\\000\\012\\000\\000\\040!^urn\\072cid\\072.+@([^\\134.]+\\134.)(.*)$!\x02!i\\001.``000:86400::',
   },
 ]
 
@@ -35,10 +36,10 @@ describe('NAPTR record', function () {
       assert.strictEqual(r, val.testR)
     })
 
-    it.skip('converts to tinydns format', async function () {
+    it('converts to tinydns format', async function () {
       const r = new NAPTR(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '::35:::::\n')
+      assert.strictEqual(r, val.testT)
     })
   }
 })

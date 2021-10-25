@@ -54,7 +54,7 @@ class SSHFP extends RR {
     let rdata = ''
 
     for (const e of [ 'algo', 'type' ]) {
-      rdata += TINYDNS.UInt16AsOctal(this.get(e))
+      rdata += TINYDNS.UInt16toOctal(this.get(e))
     }
 
     rdata += TINYDNS.packHex(this.get('fingerprint'))

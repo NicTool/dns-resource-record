@@ -1,6 +1,6 @@
 {
   "name": "dns-resource-record",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "DNS Resource Records",
   "main": "rr/index.js",
   "scripts": {
@@ -32,7 +32,5 @@
     "eslint": "^8.0.1",
     "mocha": "^9.1.3"
   },
-  "dependencies": {
-    "sprintf-js": "^1.1.2"
-  }
+  "dependencies": {}
 }

@@ -1,6 +1,4 @@
 
-const sprintf = require('sprintf-js').sprintf
-
 const RR = require('./index').RR
 const TINYDNS = require('../lib/tinydns')
 
@@ -75,12 +73,12 @@ class CAA extends RR {
 
   toTinydns () {
     let rdata = ''
-    rdata += sprintf('\\%03o', this.get('flags'))
+    rdata += TINYDNS.UInt8toOctal(this.get('flags'))
 
-    rdata += sprintf('\\%03o', this.get('tag').length)
-    rdata += TINYDNS.escapeOct(/[\r\n\t:\\/]/, this.get('tag'))
+    rdata += TINYDNS.UInt8toOctal(this.get('tag').length)
+    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag'))
 
-    rdata += TINYDNS.escapeOct(/[\r\n\t:\\/]/, this.get('value'))
+    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value'))
 
     return `:${this.get('name')}:257:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

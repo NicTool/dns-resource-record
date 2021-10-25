@@ -1,5 +1,6 @@
 
 const RR = require('./index').RR
+const TINYDNS = require('../lib/tinydns')
 
 class NAPTR extends RR {
   constructor (obj) {
@@ -7,7 +8,7 @@ class NAPTR extends RR {
     this.set('id', 35)
 
     this.setOrder(obj?.order)
-    this.setPref(obj?.pref)
+    this.setPreference(obj?.preference)
     this.setFlags(obj?.flags)
     this.setService(obj?.service)
     this.setRegexp(obj?.regexp)
@@ -21,9 +22,9 @@ class NAPTR extends RR {
     this.set('order', val)
   }
 
-  setPref (val) {
-    if (!this.is16bitInt('NAPTR', 'pref', val)) return
-    this.set('pref', val)
+  setPreference (val) {
+    if (!this.is16bitInt('NAPTR', 'preference', val)) return
+    this.set('preference', val)
   }
 
   setFlags (val) {
@@ -63,12 +64,35 @@ class NAPTR extends RR {
     // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
 
     // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
-    const fields = [ 'name', 'ttl', 'class', 'type', 'order', 'pref' ]
+    const fields = [ 'name', 'ttl', 'class', 'type', 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
     const quoted = [ 'flags', 'service', 'regexp' ]
 
-    return `${fields.map(f => this.get(f)).join('\t')}\t`
-      + `"${quoted.map(f => this.get(f)).join('"\t"')}"\t`
-      + `${this.get('replacement')}\n`
+    return `${fields.map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
+  }
+
+  toTinydns () {
+    const rdataRe = /[\r\n\t:\\/]/
+
+    let rdata = ''
+    rdata += TINYDNS.UInt16toOctal(this.get('order'))
+    rdata += TINYDNS.UInt16toOctal(this.get('preference'))
+
+    rdata += TINYDNS.UInt8toOctal(this.get('flags').length)
+    rdata += this.get('flags')
+
+    rdata += TINYDNS.UInt8toOctal(this.get('service').length)
+    rdata += TINYDNS.escapeOctal(rdataRe, this.get('service'))
+
+    rdata += TINYDNS.UInt8toOctal(this.get('regexp').length)
+    rdata += TINYDNS.escapeOctal(rdataRe, this.get('regexp'))
+
+    if (this.set('replacement' !== '')) {
+      rdata += TINYDNS.UInt8toOctal(this.get('replacement').length)
+      rdata += TINYDNS.escapeOctal(rdataRe, this.get('replacement'))
+    }
+    rdata += '``000'
+
+    return `:${this.get('name')}:35:${rdata}:${this.get('ttl')}::`
   }
 }
 
