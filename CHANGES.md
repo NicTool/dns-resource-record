@@ -2,6 +2,13 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.5.1 - 2021-10-25
+
+- LOC: added toTinydns
+- tinydns: add UInt32toOctal
+- SRV: added support
+
+
 #### 0.5.0 - 2021-10-24
 
 - NAPTR: add toTinydns
