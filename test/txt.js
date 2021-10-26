@@ -23,25 +23,15 @@ describe('TXT record', function () {
   base.valid(TXT, validRecords)
   base.invalid(TXT, invalidRecords)
 
+  base.toBind(TXT, validRecords)
+  base.toTinydns(TXT, validRecords)
+
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new TXT(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new TXT(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-
     it(`imports tinydns TXT (') record (${val.name})`, async function () {
       const r = new TXT({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
       for (const f of [ 'name', 'data', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
       }
     })
   }

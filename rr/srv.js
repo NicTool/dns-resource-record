@@ -7,8 +7,10 @@ const TINYDNS = require('../lib/tinydns')
 class SRV extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 33)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 33)
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
     this.setPort(opts?.port)
@@ -56,8 +58,35 @@ class SRV extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    //
+  fromTinydns (str) {
+    let fqdn, addr, port, pri, weight, ttl, ts, loc, n, rdata
+
+    if (str[0] === 'S') {
+      // patched tinydns with S records
+      [ fqdn, addr, port, pri, weight, ttl, ts, loc ] = str.substring(1).split(':')
+    }
+    else {
+      // tinydns generic record format
+      [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+      if (n != 33) throw new Error('SRV fromTinydns: invalid n')
+
+      pri    = TINYDNS.octalToUInt16(rdata.substring(0, 8))
+      weight = TINYDNS.octalToUInt16(rdata.substring(8, 16))
+      port   = TINYDNS.octalToUInt16(rdata.substring(16, 24))
+      addr   = TINYDNS.unpackDomainName(rdata.substring(24))
+    }
+
+    return new this.constructor({
+      type     : 'SRV',
+      name     : fqdn,
+      target   : `${addr}.`,
+      port     : parseInt(port,   10),
+      priority : parseInt(pri,    10),
+      weight   : parseInt(weight, 10),
+      ttl      : parseInt(ttl,    10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

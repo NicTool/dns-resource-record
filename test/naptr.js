@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const base = require('./base')
 
@@ -29,17 +29,6 @@ describe('NAPTR record', function () {
   base.valid(NAPTR, validRecords)
   base.invalid(NAPTR, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new NAPTR(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new NAPTR(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-  }
+  base.toBind(NAPTR, validRecords)
+  base.toTinydns(NAPTR, validRecords)
 })

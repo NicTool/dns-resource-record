@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const base = require('./base')
 
@@ -55,17 +55,6 @@ describe('LOC record', function () {
   base.valid(LOC, validRecords)
   base.invalid(LOC, invalidRecords)
 
-  for (const val of validRecords) {
-    it(`converts to BIND format (${val.name})`, async function () {
-      const r = new LOC(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it(`converts to tinydns format (${val.name})`, async function () {
-      const r = new LOC(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-  }
+  base.toBind(LOC, validRecords)
+  base.toTinydns(LOC, validRecords)
 })

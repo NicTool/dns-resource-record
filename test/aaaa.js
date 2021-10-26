@@ -12,6 +12,7 @@ const validRecords = [
     address: '2605:7900:20:a::4',
     ttl    : 3600,
     testR  : 'test.example.com\t3600\tIN\tAAAA\t2605:7900:20:a::4\n',
+    testT  : ':test.example.com:28:\\046\\005\\171\\000\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:3600::\n',
   },
 ]
 
@@ -29,18 +30,16 @@ describe('AAAA record', function () {
   base.valid(AAAA, validRecords)
   base.invalid(AAAA, invalidRecords)
 
-  for (const val of validRecords) {
-    it(`converts to BIND format: ${val.name}`, async function () {
-      const r = new AAAA(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(AAAA, validRecords)
+  base.toTinydns(AAAA, validRecords)
 
-    it('converts to tinydns format', async function () {
-      const r = new AAAA(val).toTinydns()
+  for (const val of validRecords) {
+    it(`imports tinydns AAAA (6) record (${val.name})`, async function () {
+      const r = new AAAA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      // console.dir(r)
-      assert.strictEqual(r, ':test.example.com:28:\\046\\005\\171\\000\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:3600::\n')
+      for (const f of [ 'name', 'address', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
     })
   }
 })

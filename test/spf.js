@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const base = require('./base')
 
@@ -23,17 +23,6 @@ describe('SPF record', function () {
   base.valid(SPF, validRecords)
   base.invalid(SPF, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new SPF(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new SPF(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-  }
+  base.toBind(SPF, validRecords)
+  base.toTinydns(SPF, validRecords)
 })

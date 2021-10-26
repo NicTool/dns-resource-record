@@ -31,25 +31,16 @@ describe('PTR record', function () {
   base.valid(PTR, validRecords)
   base.invalid(PTR, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new PTR(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(PTR, validRecords)
+  base.toTinydns(PTR, validRecords)
 
-    it('converts to tinydns format', async function () {
-      const r = new PTR(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
+  for (const val of validRecords) {
 
     it(`imports tinydns PTR (^) record (${val.name})`, async function () {
       const r = new PTR({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
       for (const f of [ 'name', 'dname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
       }
     })
   }

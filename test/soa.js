@@ -50,25 +50,15 @@ describe('SOA record', function () {
   base.valid(SOA, validRecords)
   base.invalid(SOA, invalidRecords)
 
+  base.toBind(SOA, validRecords)
+  base.toTinydns(SOA, validRecords)
+
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new SOA(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new SOA(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-
     it(`imports tinydns SOA (Z) record (${val.name})`, async function () {
       const r = new SOA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
       for (const f of [ 'name', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
       }
     })
   }

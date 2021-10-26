@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const base = require('./base')
 
@@ -56,17 +56,9 @@ describe('CAA record', function () {
   base.valid(CAA, validRecords)
   base.invalid(CAA, invalidRecords)
 
-  for (const val of validRecords) {
-    it(`converts to BIND format ${val.name}`, async function () {
-      const r = new CAA(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(CAA, validRecords)
+  base.toTinydns(CAA, validRecords)
 
-    it(`converts to tinydns format ${val.name}`, async function () {
-      const r = new CAA(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-  }
+  // for (const val of validRecords) {
+  // }
 })

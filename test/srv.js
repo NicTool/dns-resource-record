@@ -16,6 +16,7 @@ const validRecords = [
     port    : 993,
     ttl     : 3600,
     testR   : '_imaps._tcp.example.com\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
+    testT   : ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n',
   },
 ]
 
@@ -40,17 +41,25 @@ describe('SRV record', function () {
   base.valid(SRV, validRecords)
   base.invalid(SRV, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new SRV(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(SRV, validRecords)
+  base.toTinydns(SRV, validRecords)
 
-    it('converts to tinydns format', async function () {
-      const r = new SRV(val).toTinydns()
+  for (const val of validRecords) {
+    it(`imports tinydns SRV (generic) record (${val.name})`, async function () {
+      const r = new SRV({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n')
+      for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
+      }
     })
   }
+
+  it(`imports tinydns SRV (S) record`, async function () {
+    const val = validRecords[0]
+    const r = new SRV({ tinyline: 'S_imaps._tcp.example.com:mail.example.com:993:1:0:3600::' })
+    if (process.env.DEBUG) console.dir(r)
+    for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
+      assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
+    }
+  })
 })

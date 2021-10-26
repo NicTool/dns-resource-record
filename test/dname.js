@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const base = require('./base')
 
@@ -30,17 +30,9 @@ describe('DNAME record', function () {
   base.valid(DNAME, validRecords)
   base.invalid(DNAME, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new DNAME(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(DNAME, validRecords)
+  base.toTinydns(DNAME, validRecords)
 
-    it('converts to tinydns format', async function () {
-      const r = new DNAME(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-  }
+  // for (const val of validRecords) {
+  // }
 })

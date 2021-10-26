@@ -6,8 +6,10 @@ const RR = require('./index').RR
 class CNAME extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 5)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 5)
     this.setCname(opts?.cname)
   }
 
@@ -31,8 +33,18 @@ class CNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
+  fromTinydns (str) {
     // Cfqdn:p:ttl:timestamp:lo
+    const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'CNAME',
+      name     : fqdn,
+      cname    : p,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {
