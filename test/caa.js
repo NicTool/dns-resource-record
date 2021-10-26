@@ -1,5 +1,5 @@
 
-// const assert = require('assert')
+const assert = require('assert')
 
 const base = require('./base')
 
@@ -59,6 +59,13 @@ describe('CAA record', function () {
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)
 
-  // for (const val of validRecords) {
-  // }
+  for (const val of validRecords) {
+    it(`imports tinydns CAA (generic) record`, async function () {
+      const r = new CAA({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of [ 'name', 'flags', 'tag', 'value', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
 })

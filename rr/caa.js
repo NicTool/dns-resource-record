@@ -5,8 +5,10 @@ const TINYDNS = require('../lib/tinydns')
 class CAA extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 257)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 257)
     this.setFlags(opts?.flags)
     this.setTag(opts?.tag)
     this.setValue(opts?.value)
@@ -54,8 +56,28 @@ class CAA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    //
+  fromTinydns (str) {
+    // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 257) throw new Error('CAA fromTinydns, invalid n')
+
+    const flags  = TINYDNS.octalToUInt8(rdata.substring(0, 4))
+    const taglen = TINYDNS.octalToUInt8(rdata.substring(4, 8))
+
+    const unescaped   = TINYDNS.octalToChar(rdata.substring(8))
+    const tag         = unescaped.substring(0, taglen)
+    const fingerprint = unescaped.substring(taglen)
+
+    return new this.constructor({
+      type     : 'CAA',
+      name     : fqdn,
+      flags    : flags,
+      tag      : tag,
+      value    : fingerprint,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

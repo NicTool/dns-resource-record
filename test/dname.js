@@ -1,5 +1,5 @@
 
-// const assert = require('assert')
+const assert = require('assert')
 
 const base = require('./base')
 
@@ -33,6 +33,13 @@ describe('DNAME record', function () {
   base.toBind(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)
 
-  // for (const val of validRecords) {
-  // }
+  for (const val of validRecords) {
+    it(`imports tinydns DNAME (generic) record (${val.name})`, async function () {
+      const r = new DNAME({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of [ 'name', 'target', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
 })

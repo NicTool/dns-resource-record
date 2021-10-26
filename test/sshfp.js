@@ -22,7 +22,7 @@ const validRecords = [
 const invalidRecords = [
 ]
 
-describe.only('SSHFP record', function () {
+describe('SSHFP record', function () {
   base.valid(SSHFP, validRecords)
   base.invalid(SSHFP, invalidRecords)
 
