@@ -26,7 +26,7 @@ class A extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    // A =>  + fqdn:ip:ttl:timestamp:lo
+    // +fqdn:ip:ttl:timestamp:lo
     const [ name, ip, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({

@@ -79,7 +79,7 @@ class SOA extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    // SOA        =>  Z fqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
+    // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
     const [ fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({

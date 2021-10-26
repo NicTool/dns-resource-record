@@ -37,7 +37,7 @@ class MX extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    // MX =>  @ fqdn:ip:x:dist:ttl:timestamp:lo
+    // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
     const [ name, ip, x, weight, ttl, ts, loc ] = str.substring(1).split(':')
 

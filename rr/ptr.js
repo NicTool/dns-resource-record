@@ -34,7 +34,7 @@ class PTR extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    // PTR        =>  ^ fqdn:p:ttl:timestamp:lo
+    // ^fqdn:p:ttl:timestamp:lo
     const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({

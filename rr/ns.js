@@ -36,7 +36,7 @@ class NS extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    // NS         =>  &fqdn:ip:x:ttl:timestamp:lo
+    // &fqdn:ip:x:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
     const [ fqdn, ip, dname, ttl, ts, loc ] = str.substring(1).split(':')
 
