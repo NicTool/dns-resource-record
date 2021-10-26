@@ -49,7 +49,7 @@ describe('SRV record', function () {
       const r = new SRV({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }
@@ -59,7 +59,7 @@ describe('SRV record', function () {
     const r = new SRV({ tinyline: 'S_imaps._tcp.example.com:mail.example.com:993:1:0:3600::' })
     if (process.env.DEBUG) console.dir(r)
     for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
-      assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
+      assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
     }
   })
 })

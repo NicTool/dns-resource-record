@@ -40,7 +40,7 @@ describe('CNAME record', function () {
       const r = new CNAME({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'cname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r[f]} !== ${val[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

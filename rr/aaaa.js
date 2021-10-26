@@ -44,9 +44,10 @@ class AAAA extends RR {
         break
       case '3':
       case '6':
-        // AAAA     =>  3 fqdn:ip:x:ttl:timestamp:lo
-        // AAAA,PTR =>  6 fqdn:ip:x:ttl:timestamp:lo
-        [ fqdn, ip, ttl, ts, loc ] = str.substring(1).split(':')
+        // AAAA     =>  3 fqdn:rdata:x:ttl:timestamp:lo
+        // AAAA,PTR =>  6 fqdn:rdata:x:ttl:timestamp:lo
+        [ fqdn, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+        ip = rdata.match(/(.{4})/g).join(':')
         break
     }
 
