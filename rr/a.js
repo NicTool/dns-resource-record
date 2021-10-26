@@ -30,9 +30,9 @@ class A extends RR {
     const [ name, ip, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
+      type     : 'A',
       name     : name,
       address  : ip,
-      type     : 'A',
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',

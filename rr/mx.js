@@ -44,7 +44,6 @@ class MX extends RR {
     return new this.constructor({
       type     : 'MX',
       name     : name,
-      // address  : ip,
       exchange : x,
       weight   : parseInt(weight, 10) || 0,
       ttl      : parseInt(ttl, 10),
