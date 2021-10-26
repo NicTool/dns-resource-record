@@ -4,11 +4,10 @@ const RR = require('./index').RR
 class SOA extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 6)
 
-    // name  = zone name
-    // rname = zone contact
-    // mname = primary NS
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 6)
 
     const fields = [ 'minimum', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire' ]
     for (const f of fields) {
@@ -79,8 +78,24 @@ class SOA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // SOA        =>  Z fqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
+  fromTinydns (str) {
+    // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
+    const [ fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'SOA',
+      name     : fqdn,
+      mname    : mname,
+      rname    : rname,
+      serial   : parseInt(ser, 10),
+      refresh  : parseInt(ref, 10) || 16384,
+      retry    : parseInt(ret, 10) || 2048,
+      expire   : parseInt(exp, 10) || 1048576,
+      minimum  : parseInt(min, 10) || 2560,
+      ttl      : parseInt(ttl, 10),
+      timestamp: parseInt(ts) || '',
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

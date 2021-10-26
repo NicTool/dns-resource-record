@@ -14,6 +14,8 @@ class RR extends Map {
 
     if (opts.default) this.default = opts.default
 
+    if (opts.tinyline) return // pass through
+
     // tinydns specific
     this.setLocation(opts?.location)
     this.setTimestamp(opts?.timestamp)

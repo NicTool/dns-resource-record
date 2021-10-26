@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.6.0 - 2021-10-25
+
+- tinydns: added octalToChar
+- A, MX, NS, PTR, SOA, TXT: added fromTinydns
+
+
 #### 0.5.1 - 2021-10-25
 
 - LOC: added toTinydns

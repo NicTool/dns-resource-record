@@ -1,8 +1,8 @@
 
 const assert = require('assert')
 
+const A    = require('../rr/a.js')
 const base = require('./base')
-const A = require('../rr/a.js')
 
 const validRecords = [
   {
@@ -65,17 +65,26 @@ describe('A record', function () {
   base.invalid(A, invalidRecords)
 
   for (const val of validRecords) {
-    it(`converts to BIND format (${val.name})`, async function () {
+    it(`exports to BIND format (${val.name})`, async function () {
       const r = new A(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testR)
     })
 
-    it(`converts to tinydns format (${val.name})`, async function () {
+    it(`exports to tinydns format (${val.name})`, async function () {
       const r = new A(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
       // console.dir(r)
       assert.strictEqual(r, val.testT)
+    })
+
+    it(`imports tinydns A (+) record (${val.name})`, async function () {
+      const r = new A({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      const expected = JSON.parse(JSON.stringify(val))
+      for (const f of [ 'address', 'name', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+      }
     })
   }
 })

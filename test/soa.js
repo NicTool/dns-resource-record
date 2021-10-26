@@ -27,6 +27,7 @@ example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
           1209600
           3600
           )\n\n`,
+    testT: 'Zexample.com:ns1.example.com.:matt.example.com.:1:7200:3600:1209600:3600:3600::\n',
   },
 ]
 
@@ -59,7 +60,16 @@ describe('SOA record', function () {
     it('converts to tinydns format', async function () {
       const r = new SOA(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, 'Zexample.com:ns1.example.com.:matt.example.com.:1:7200:3600:1209600:3600:3600::\n')
+      assert.strictEqual(r, val.testT)
+    })
+
+    it(`imports tinydns SOA (Z) record (${val.name})`, async function () {
+      const r = new SOA({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      const expected = JSON.parse(JSON.stringify(val))
+      for (const f of [ 'name', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+      }
     })
   }
 })

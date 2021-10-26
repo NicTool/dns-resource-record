@@ -32,7 +32,7 @@ class CNAME extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns () {
-    // CNAME      =>  C fqdn :  p : ttl:timestamp:lo
+    // Cfqdn:p:ttl:timestamp:lo
   }
 
   fromBind () {

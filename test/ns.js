@@ -13,6 +13,7 @@ const validRecords = [
     dname: 'ns1.example.com.',
     ttl  : 3600,
     testR: 'example.com\t3600\tIN\tNS\tns1.example.com.\n',
+    testT: '&example.com::ns1.example.com.:3600::\n',
   },
 ]
 
@@ -40,7 +41,16 @@ describe('NS record', function () {
     it('converts to tinydns format', async function () {
       const r = new NS(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '&example.com::ns1.example.com.:3600::\n')
+      assert.strictEqual(r, val.testT)
+    })
+
+    it(`imports tinydns NS (&) record (${val.name})`, async function () {
+      const r = new NS({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      const expected = JSON.parse(JSON.stringify(val))
+      for (const f of [ 'name', 'dname', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+      }
     })
   }
 })
