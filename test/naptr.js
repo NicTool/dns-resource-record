@@ -31,4 +31,7 @@ describe('NAPTR record', function () {
 
   base.toBind(NAPTR, validRecords)
   base.toTinydns(NAPTR, validRecords)
+
+  base.getRFCs(NAPTR, validRecords[0])
+
 })

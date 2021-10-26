@@ -33,6 +33,8 @@ describe('DNAME record', function () {
   base.toBind(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)
 
+  base.getRFCs(DNAME, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns DNAME (generic) record (${val.name})`, async function () {
       const r = new DNAME({ tinyline: val.testT })

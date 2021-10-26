@@ -44,6 +44,8 @@ describe('SRV record', function () {
   base.toBind(SRV, validRecords)
   base.toTinydns(SRV, validRecords)
 
+  base.getRFCs(SRV, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns SRV (generic) record (${val.name})`, async function () {
       const r = new SRV({ tinyline: val.testT })

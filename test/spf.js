@@ -26,6 +26,8 @@ describe('SPF record', function () {
   base.toBind(SPF, validRecords)
   base.toTinydns(SPF, validRecords)
 
+  base.getRFCs(SPF, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns SPF (generic) record`, async function () {
       const r = new SPF({ tinyline: val.testT })

@@ -57,4 +57,7 @@ describe('LOC record', function () {
 
   base.toBind(LOC, validRecords)
   base.toTinydns(LOC, validRecords)
+
+  base.getRFCs(LOC, validRecords[0])
+
 })

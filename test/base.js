@@ -55,3 +55,10 @@ exports.toTinydns = (type, validRecords) => {
     })
   }
 }
+
+exports.getRFCs = (type, valid) => {
+  it(`can retrieve RFCs for ${valid.type}`, async function () {
+    const r = new type(valid)
+    assert.ok(r.getRFCs().length)
+  })
+}

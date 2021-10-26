@@ -42,6 +42,8 @@ describe('MX record', function () {
   base.toBind(MX, validRecords)
   base.toTinydns(MX, validRecords)
 
+  base.getRFCs(MX, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns MX (@) record (${val.name})`, async function () {
       const r = new MX({ tinyline: val.testT })

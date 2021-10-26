@@ -1,5 +1,5 @@
 
-// const assert = require('assert')
+const assert = require('assert')
 
 const base = require('./base')
 
@@ -40,4 +40,16 @@ describe('URI record', function () {
 
   base.toBind(URI, validRecords)
   base.toTinydns(URI, validRecords)
+
+  base.getRFCs(URI, validRecords[0])
+
+  for (const val of validRecords) {
+    it(`imports tinydns URI (generic) record`, async function () {
+      const r = new URI({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of [ 'name', 'priority', 'weight', 'target', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
 })

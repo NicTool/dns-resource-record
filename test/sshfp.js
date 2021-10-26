@@ -29,6 +29,8 @@ describe('SSHFP record', function () {
   base.toBind(SSHFP, validRecords)
   base.toTinydns(SSHFP, validRecords)
 
+  base.getRFCs(SSHFP, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns SSHFP (generic) record`, async function () {
       const r = new SSHFP({ tinyline: val.testT })

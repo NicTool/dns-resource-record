@@ -59,6 +59,8 @@ describe('CAA record', function () {
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)
 
+  base.getRFCs(CAA, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns CAA (generic) record`, async function () {
       const r = new CAA({ tinyline: val.testT })

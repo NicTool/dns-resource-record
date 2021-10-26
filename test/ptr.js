@@ -34,6 +34,8 @@ describe('PTR record', function () {
   base.toBind(PTR, validRecords)
   base.toTinydns(PTR, validRecords)
 
+  base.getRFCs(PTR, validRecords[0])
+
   for (const val of validRecords) {
 
     it(`imports tinydns PTR (^) record (${val.name})`, async function () {

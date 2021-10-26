@@ -34,6 +34,8 @@ describe('NS record', function () {
   base.toBind(NS, validRecords)
   base.toTinydns(NS, validRecords)
 
+  base.getRFCs(NS, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns NS (&) record (${val.name})`, async function () {
       const r = new NS({ tinyline: val.testT })

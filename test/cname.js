@@ -34,6 +34,8 @@ describe('CNAME record', function () {
   base.toBind(CNAME, validRecords)
   base.toTinydns(CNAME, validRecords)
 
+  base.getRFCs(CNAME, validRecords[0])
+
   for (const val of validRecords) {
 
     it(`imports tinydns CNAME (C) record (${val.name})`, async function () {

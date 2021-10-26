@@ -53,6 +53,8 @@ describe('SOA record', function () {
   base.toBind(SOA, validRecords)
   base.toTinydns(SOA, validRecords)
 
+  base.getRFCs(SOA, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns SOA (Z) record (${val.name})`, async function () {
       const r = new SOA({ tinyline: val.testT })

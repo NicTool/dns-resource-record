@@ -33,6 +33,8 @@ describe('AAAA record', function () {
   base.toBind(AAAA, validRecords)
   base.toTinydns(AAAA, validRecords)
 
+  base.getRFCs(AAAA, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns AAAA (6) record (${val.name})`, async function () {
       const r = new AAAA({ tinyline: val.testT })

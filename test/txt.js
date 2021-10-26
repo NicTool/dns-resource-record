@@ -26,6 +26,8 @@ describe('TXT record', function () {
   base.toBind(TXT, validRecords)
   base.toTinydns(TXT, validRecords)
 
+  base.getRFCs(TXT, validRecords[0])
+
   for (const val of validRecords) {
     it(`imports tinydns TXT (') record (${val.name})`, async function () {
       const r = new TXT({ tinyline: val.testT })
