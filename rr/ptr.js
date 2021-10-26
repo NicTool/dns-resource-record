@@ -2,18 +2,21 @@
 const RR = require('./index').RR
 
 class PTR extends RR {
-  constructor (obj) {
-    super(obj)
+  constructor (opts) {
+    super(opts)
+
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
     this.set('id', 12)
 
-    if (obj?.address) { // RFC 1035
-      this.setDname(obj?.address)
+    if (opts?.address) { // RFC 1035
+      this.setDname(opts?.address)
     }
-    else if (obj?.ptrdname) {
-      this.setDname(obj?.ptrdname)
+    else if (opts?.ptrdname) {
+      this.setDname(opts?.ptrdname)
     }
     else { // RFC 1035
-      this.setDname(obj?.dname)
+      this.setDname(opts?.dname)
     }
   }
 
@@ -30,8 +33,18 @@ class PTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // PTR        =>  ^ fqdn :  p : ttl:timestamp:lo
+  fromTinydns (str) {
+    // PTR        =>  ^ fqdn:p:ttl:timestamp:lo
+    const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'PTR',
+      name     : fqdn,
+      dname    : p,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

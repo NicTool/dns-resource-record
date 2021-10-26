@@ -4,6 +4,9 @@ const RR = require('./index').RR
 class NS extends RR {
   constructor (opts) {
     super(opts)
+
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
     this.set('id', 2)
 
     if (opts?.address) {
@@ -32,8 +35,19 @@ class NS extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // NS         =>  & fqdn : ip : x:ttl:timestamp:lo
+  fromTinydns (str) {
+    // NS         =>  &fqdn:ip:x:ttl:timestamp:lo
+    // eslint-disable-next-line no-unused-vars
+    const [ fqdn, ip, dname, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'NS',
+      name     : fqdn,
+      dname    : dname,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

@@ -11,10 +11,12 @@ DNS resource record parser, validator, exporter, and (soon) importer.
 This module will be used by a web client UI and a server side DNS Resource Record validator to:
 
 - validate formatting, values, and RFC compliance of each RR
-- export RRs to BIND zone file format
-- export RRs to tinydns file format
-- import RRs from BIND zone file lines
-- import RRs from tinydns entries
+- export RRs to
+    - BIND zone file format
+    - tinydns file format
+- import RRs from:
+    - BIND zone file lines
+    - tinydns entries
 
 This module intends to import and export wholly RFC compliant DNS resourse records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
 

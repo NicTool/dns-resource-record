@@ -6,6 +6,9 @@ const TINYDNS = require('../lib/tinydns')
 class TXT extends RR {
   constructor (opts) {
     super(opts)
+
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
     this.set('id', 16)
 
     this.setData(opts?.data)
@@ -21,8 +24,18 @@ class TXT extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // TXT        =>  ' fqdn :  s : ttl:timestamp:lo
+  fromTinydns (str) {
+    // 'fqdn:s:ttl:timestamp:lo
+    const [ fqdn, s, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'TXT',
+      name     : fqdn,
+      data     : TINYDNS.octalToChar(s),
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

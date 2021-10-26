@@ -6,8 +6,10 @@ const RR = require('./index').RR
 class MX extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 15)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 15)
     this.setExchange(opts?.exchange)
     this.setWeight(opts?.weight)
   }
@@ -34,8 +36,21 @@ class MX extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // MX         =>  @ fqdn : ip : x:dist:ttl:timestamp:lo
+  fromTinydns (str) {
+    // MX =>  @ fqdn:ip:x:dist:ttl:timestamp:lo
+    // eslint-disable-next-line no-unused-vars
+    const [ name, ip, x, weight, ttl, ts, loc ] = str.substring(1).split(':')
+
+    return new this.constructor({
+      type     : 'MX',
+      name     : name,
+      // address  : ip,
+      exchange : x,
+      weight   : parseInt(weight, 10) || 0,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

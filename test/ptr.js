@@ -13,6 +13,7 @@ const validRecords = [
     dname: 'dhcp.example.com.',
     ttl  : 86400,
     testR: '2.1.0.10.in-addr.arpa\t86400\tIN\tPTR\tdhcp.example.com.\n',
+    testT: '^2.1.0.10.in-addr.arpa:dhcp.example.com.:86400::\n',
   },
 ]
 
@@ -40,7 +41,16 @@ describe('PTR record', function () {
     it('converts to tinydns format', async function () {
       const r = new PTR(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, '^2.1.0.10.in-addr.arpa:dhcp.example.com.:86400::\n')
+      assert.strictEqual(r, val.testT)
+    })
+
+    it(`imports tinydns PTR (^) record (${val.name})`, async function () {
+      const r = new PTR({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      const expected = JSON.parse(JSON.stringify(val))
+      for (const f of [ 'name', 'dname', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+      }
     })
   }
 })

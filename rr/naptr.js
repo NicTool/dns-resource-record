@@ -47,7 +47,7 @@ class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
+  fromTinydns (str) {
     //
   }
 
