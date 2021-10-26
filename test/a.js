@@ -65,13 +65,13 @@ describe('A record', function () {
   base.invalid(A, invalidRecords)
 
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
+    it(`converts to BIND format (${val.name})`, async function () {
       const r = new A(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testR)
     })
 
-    it('converts to tinydns format', async function () {
+    it(`converts to tinydns format (${val.name})`, async function () {
       const r = new A(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
       // console.dir(r)

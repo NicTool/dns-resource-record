@@ -26,4 +26,16 @@ describe('TINYDNS', function () {
       })
     }
   })
+
+  describe('UInt32toOctal', function () {
+    it('converts a 32-bit number to escaped octal', function (done) {
+      assert.strictEqual(TINYDNS.UInt32toOctal(2319310648), '\\212\\075\\337\\070')
+      done()
+    })
+
+    it('converts a 32-bit number to escaped octal', function (done) {
+      assert.strictEqual(TINYDNS.UInt32toOctal(1706988648), '\\145\\276\\224\\150')
+      done()
+    })
+  })
 })
