@@ -15,14 +15,13 @@ exports.valid = (type, validRecords) => {
       }
     })
   }
+
 }
 
 exports.invalid = (type, invalidRecords) => {
+
   for (const inv of invalidRecords) {
-
-    // const ucType = inv.type.toUpperCase()
-
-    it(`throws on invalid ${type.name} record`, async function () {
+    it(`throws on invalid ${type.name} record (${inv.name})`, async function () {
       try {
         new type(inv)
       }
@@ -34,4 +33,5 @@ exports.invalid = (type, invalidRecords) => {
       throw new Error(`failed to throw`)
     })
   }
+
 }
