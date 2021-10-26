@@ -64,26 +64,17 @@ describe('A record', function () {
   base.valid(A, validRecords)
   base.invalid(A, invalidRecords)
 
+  base.toBind(A, validRecords)
+  base.toTinydns(A, validRecords)
+
+  base.getRFCs(A, validRecords[0])
+
   for (const val of validRecords) {
-    it(`exports to BIND format (${val.name})`, async function () {
-      const r = new A(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it(`exports to tinydns format (${val.name})`, async function () {
-      const r = new A(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      // console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-
     it(`imports tinydns A (+) record (${val.name})`, async function () {
       const r = new A({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
-      for (const f of [ 'address', 'name', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+      for (const f of [ 'name', 'address', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

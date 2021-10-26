@@ -6,8 +6,10 @@ const TINYDNS = require('../lib/tinydns')
 class SPF extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 99)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 99)
     this.setData(opts?.data)
   }
 
@@ -21,8 +23,19 @@ class SPF extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    // SPF        =>
+  fromTinydns (str) {
+    // SPF via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 99) throw new Error('SPF fromTinydns, invalid n')
+
+    return new this.constructor({
+      type     : 'SPF',
+      name     : fqdn,
+      data     : TINYDNS.octalToChar(rdata),
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {
@@ -42,7 +55,7 @@ class SPF extends RR {
 
   toTinydns () {
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
-    return `${this.get('name')}:99:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `:${this.get('name')}:99:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

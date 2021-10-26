@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.7.0 - 2021-10-26
+
+- tinydns: added octalToHex, octalToUInt16, unpackDomainName, octalToInt8
+- AAAA: added fromTinydns, compress, expand
+- CAA, CNAME, DNAME, SPF, SSHFP, SRV, URI: added fromTinydns
+- add tests for getRFCs
+
+
 #### 0.6.0 - 2021-10-25
 
 - tinydns: added octalToChar

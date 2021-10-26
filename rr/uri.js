@@ -5,8 +5,10 @@ const TINYDNS = require('../lib/tinydns')
 class URI extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 256)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 256)
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
     this.setTarget(opts?.target)
@@ -32,8 +34,21 @@ class URI extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    //
+  fromTinydns (str) {
+    // URI via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 256) throw new Error('URI fromTinydns, invalid n')
+
+    return new this.constructor({
+      type     : 'URI',
+      name     : fqdn,
+      priority : TINYDNS.octalToUInt16(rdata.substring(0, 8)),
+      weight   : TINYDNS.octalToUInt16(rdata.substring(8, 16)),
+      target   : TINYDNS.octalToChar(rdata.substring(16)),
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

@@ -7,12 +7,12 @@ const SPF = require('../rr/spf')
 
 const validRecords = [
   {
-    name : 'example.com',
     type : 'SPF',
+    name : 'example.com',
     data : 'v=spf1 mx a include:mx.example.com -all',
     ttl  : 86400,
     testR: 'example.com\t86400\tIN\tSPF\t"v=spf1 mx a include:mx.example.com -all"\n',
-    testT: 'example.com:99:v=spf1 mx a include\\072mx.example.com -all:86400::\n',
+    testT: ':example.com:99:v=spf1 mx a include\\072mx.example.com -all:86400::\n',
   },
 ]
 
@@ -23,17 +23,18 @@ describe('SPF record', function () {
   base.valid(SPF, validRecords)
   base.invalid(SPF, invalidRecords)
 
-  for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new SPF(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
+  base.toBind(SPF, validRecords)
+  base.toTinydns(SPF, validRecords)
 
-    it('converts to tinydns format', async function () {
-      const r = new SPF(val).toTinydns()
+  base.getRFCs(SPF, validRecords[0])
+
+  for (const val of validRecords) {
+    it(`imports tinydns SPF (generic) record`, async function () {
+      const r = new SPF({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
+      for (const f of [ 'name', 'data', 'ttl' ]) {
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
     })
   }
 })

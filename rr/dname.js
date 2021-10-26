@@ -6,6 +6,9 @@ const TINYDNS = require('../lib/tinydns')
 class DNAME extends RR {
   constructor (opts) {
     super(opts)
+
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
     this.set('id', 39)
 
     if (opts?.address) {
@@ -33,8 +36,19 @@ class DNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    //
+  fromTinydns (str) {
+    // DNAME via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 39) throw new Error('DNAME fromTinydns, invalid n')
+
+    return new this.constructor({
+      type     : 'DNAME',
+      name     : fqdn,
+      target   : `${TINYDNS.unpackDomainName(rdata)}.`,
+      ttl      : parseInt(ttl, 10),
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {

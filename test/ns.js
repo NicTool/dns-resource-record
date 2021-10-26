@@ -31,25 +31,17 @@ describe('NS record', function () {
   base.valid(NS, validRecords)
   base.invalid(NS, invalidRecords)
 
+  base.toBind(NS, validRecords)
+  base.toTinydns(NS, validRecords)
+
+  base.getRFCs(NS, validRecords[0])
+
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new NS(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new NS(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-
     it(`imports tinydns NS (&) record (${val.name})`, async function () {
       const r = new NS({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
       for (const f of [ 'name', 'dname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

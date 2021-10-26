@@ -39,25 +39,17 @@ describe('MX record', function () {
   base.valid(MX, validRecords)
   base.invalid(MX, invalidRecords)
 
+  base.toBind(MX, validRecords)
+  base.toTinydns(MX, validRecords)
+
+  base.getRFCs(MX, validRecords[0])
+
   for (const val of validRecords) {
-    it('converts to BIND format', async function () {
-      const r = new MX(val).toBind()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
-    })
-
-    it('converts to tinydns format', async function () {
-      const r = new MX(val).toTinydns()
-      if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testT)
-    })
-
     it(`imports tinydns MX (@) record (${val.name})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      const expected = JSON.parse(JSON.stringify(val))
       for (const f of [ 'name', 'exchange', 'weight', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), expected[f], `${f}: ${r[f]} !== ${expected[f]}`)
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

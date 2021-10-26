@@ -39,11 +39,11 @@ class MX extends RR {
   fromTinydns (str) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [ name, ip, x, weight, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, ip, x, weight, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
       type     : 'MX',
-      name     : name,
+      name     : fqdn,
       exchange : x,
       weight   : parseInt(weight, 10) || 0,
       ttl      : parseInt(ttl, 10),

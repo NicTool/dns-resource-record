@@ -5,8 +5,10 @@ const TINYDNS = require('../lib/tinydns')
 class SSHFP extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 44)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+
+    this.set('id', 44)
     this.setAlgorithm(opts?.algorithm)
     this.setFpType(opts?.fptype)
     this.setFingerprint(opts?.fingerprint)
@@ -36,8 +38,26 @@ class SSHFP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns () {
-    //
+  fromTinydns (str) {
+    // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 44) throw new Error('SSHFP fromTinydns, invalid n')
+
+    const algo   = TINYDNS.octalToUInt16(rdata.substring(0, 8))
+    const fptype = TINYDNS.octalToUInt16(rdata.substring(8, 16))
+
+    const fingerprint = TINYDNS.octalToHex(rdata.substring(16))
+
+    return new this.constructor({
+      type       : 'SSHFP',
+      name       : fqdn,
+      algorithm  : algo,
+      fptype     : fptype,
+      fingerprint: fingerprint,
+      ttl        : parseInt(ttl, 10),
+      timestamp  : ts,
+      location   : loc !== '' && loc !== '\n' ? loc : '',
+    })
   }
 
   fromBind () {
@@ -53,7 +73,7 @@ class SSHFP extends RR {
   toTinydns () {
     let rdata = ''
 
-    for (const e of [ 'algo', 'type' ]) {
+    for (const e of [ 'algorithm', 'fptype' ]) {
       rdata += TINYDNS.UInt16toOctal(this.get(e))
     }
 
