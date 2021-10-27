@@ -7,6 +7,7 @@ class CAA extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 257)
     this.setFlags(opts?.flags)
@@ -51,6 +52,10 @@ class CAA extends RR {
     this.set('value', val)
   }
 
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
+  }
+
   getRFCs () {
     return [ 6844 ]
   }
@@ -89,8 +94,7 @@ class CAA extends RR {
     let value = this.get('value')
     if (value[0] !== '"') value = `"${value}"` // add enclosing quotes
 
-    const fields = [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\t${value}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\t${value}\n`
   }
 
   toTinydns () {

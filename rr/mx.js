@@ -8,6 +8,7 @@ class MX extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 15)
     this.setExchange(opts?.exchange)
@@ -29,6 +30,10 @@ class MX extends RR {
   setWeight (val) {
     if (!this.is16bitInt('MX', 'weight', val)) return
     this.set('weight', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'weight', 'exchange' ]
   }
 
   getRFCs () {
@@ -58,8 +63,7 @@ class MX extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'weight', 'exchange' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

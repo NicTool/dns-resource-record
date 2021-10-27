@@ -40,7 +40,7 @@ exports.toBind = (type, validRecords) => {
     it(`exports ${val.type} to BIND (${val.name})`, async function () {
       const r = new type(val).toBind()
       if (process.env.DEBUG) console.dir(r)
-      assert.strictEqual(r, val.testR)
+      assert.strictEqual(r, val.testB)
     })
   }
 }
@@ -61,4 +61,17 @@ exports.getRFCs = (type, valid) => {
     const r = new type(valid)
     assert.ok(r.getRFCs().length)
   })
+}
+
+exports.fromTinydns = (type, validRecords) => {
+  for (const val of validRecords) {
+    it(`imports tinydns ${val.type} record (${val.name})`, async function () {
+      const r = new type({ tinyline: val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of r.getFields()) {
+        if (f === 'class') continue
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
 }

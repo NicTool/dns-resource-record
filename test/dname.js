@@ -12,7 +12,7 @@ const validRecords = [
     type  : 'DNAME',
     target: '_tcp.example.net.',
     ttl   : 86400,
-    testR : '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n',
+    testB : '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n',
     testT : ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
   },
 ]
@@ -33,10 +33,12 @@ describe('DNAME record', function () {
   base.toBind(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)
 
+  base.fromTinydns(DNAME, validRecords)
+
   base.getRFCs(DNAME, validRecords[0])
 
   for (const val of validRecords) {
-    it(`imports tinydns DNAME (generic) record (${val.name})`, async function () {
+    it.skip(`imports tinydns DNAME (generic) record (${val.name})`, async function () {
       const r = new DNAME({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'target', 'ttl' ]) {

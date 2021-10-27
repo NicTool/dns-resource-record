@@ -3,16 +3,19 @@ const RR = require('./index').RR
 const TINYDNS = require('../lib/tinydns')
 
 class NAPTR extends RR {
-  constructor (obj) {
-    super(obj)
+  constructor (opts) {
+    super(opts)
     this.set('id', 35)
 
-    this.setOrder(obj?.order)
-    this.setPreference(obj?.preference)
-    this.setFlags(obj?.flags)
-    this.setService(obj?.service)
-    this.setRegexp(obj?.regexp)
-    this.setReplacement(obj?.replacement)
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
+
+    this.setOrder(opts?.order)
+    this.setPreference(opts?.preference)
+    this.setFlags(opts?.flags)
+    this.setService(opts?.service)
+    this.setRegexp(opts?.regexp)
+    this.setReplacement(opts?.replacement)
   }
 
   /****** Resource record specific setters   *******/
@@ -55,6 +58,11 @@ class NAPTR extends RR {
     //
   }
 
+  getFields () {
+    // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
+    return [ 'name', 'ttl', 'class', 'type', 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
+  }
+
   getRFCs () {
     return [ 2915, 3403 ]
   }
@@ -62,12 +70,9 @@ class NAPTR extends RR {
   /******  EXPORTERS   *******/
   toBind () {
     // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
-
-    // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
-    const fields = [ 'name', 'ttl', 'class', 'type', 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
     const quoted = [ 'flags', 'service', 'regexp' ]
 
-    return `${fields.map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

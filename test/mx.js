@@ -13,7 +13,7 @@ const validRecords = [
     exchange: 'mail.example.com.',
     weight  : 0,
     ttl     : 3600,
-    testR   : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
+    testB   : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
     testT   : '@test.example.com::mail.example.com.:0:3600::\n',
   },
 ]
@@ -42,10 +42,12 @@ describe('MX record', function () {
   base.toBind(MX, validRecords)
   base.toTinydns(MX, validRecords)
 
+  base.fromTinydns(MX, validRecords)
+
   base.getRFCs(MX, validRecords[0])
 
   for (const val of validRecords) {
-    it(`imports tinydns MX (@) record (${val.name})`, async function () {
+    it.skip(`imports tinydns MX (@) record (${val.name})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'exchange', 'weight', 'ttl' ]) {

@@ -5,8 +5,11 @@ const TINYDNS = require('../lib/tinydns')
 class LOC extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 29)
 
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
+
+    this.set('id', 29)
     this.setAddress(opts?.address)
   }
 
@@ -22,6 +25,10 @@ class LOC extends RR {
     this.parseLoc(val)
 
     this.set('address', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'address' ]
   }
 
   getRFCs () {
@@ -110,8 +117,7 @@ class LOC extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

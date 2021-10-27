@@ -6,6 +6,7 @@ class NS extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 2)
 
@@ -28,6 +29,10 @@ class NS extends RR {
     if (!this.validHostname('NS', 'dname', val)) return
 
     this.set('dname', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
   }
 
   getRFCs () {
@@ -56,8 +61,7 @@ class NS extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'dname' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

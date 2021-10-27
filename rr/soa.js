@@ -6,6 +6,7 @@ class SOA extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 6)
 
@@ -71,6 +72,10 @@ class SOA extends RR {
     if (!this.is32bitInt('SOA', 'serial', val)) return
 
     this.set('expire', val)
+  }
+
+  getFields () {
+    return [ 'name', 'class', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
   }
 
   getRFCs () {

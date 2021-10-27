@@ -6,6 +6,7 @@ class PTR extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 12)
 
@@ -26,6 +27,10 @@ class PTR extends RR {
     if (!this.validHostname('PTR', 'dname', val)) return
 
     this.set('dname', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
   }
 
   getRFCs () {
@@ -53,8 +58,7 @@ class PTR extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'dname' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

@@ -8,6 +8,7 @@ class CNAME extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 5)
     this.setCname(opts?.cname)
@@ -26,6 +27,10 @@ class CNAME extends RR {
     if (!this.fullyQualified('CNAME', 'cname', val)) return
     if (!this.validHostname('CNAME', 'cname', val)) return
     this.set('cname', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'cname' ]
   }
 
   getRFCs () {
@@ -53,8 +58,7 @@ class CNAME extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'cname' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

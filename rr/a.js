@@ -8,6 +8,7 @@ class A extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 1)
     this.setAddress(opts.address)
@@ -18,6 +19,10 @@ class A extends RR {
     if (!val) throw new Error('A: address is required')
     if (!net.isIPv4(val)) throw new Error('A address must be IPv4')
     this.set('address', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'address' ]
   }
 
   getRFCs () {
@@ -45,8 +50,7 @@ class A extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

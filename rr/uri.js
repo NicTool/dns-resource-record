@@ -7,6 +7,7 @@ class URI extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 256)
     this.setPriority(opts?.priority)
@@ -56,6 +57,10 @@ class URI extends RR {
   }
 
   /******  MISC   *******/
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'target' ]
+  }
+
   getRFCs () {
     return [ 7553 ]
   }

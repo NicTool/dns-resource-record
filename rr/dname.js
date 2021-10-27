@@ -8,6 +8,7 @@ class DNAME extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 39)
 
@@ -29,6 +30,10 @@ class DNAME extends RR {
     if (!this.fullyQualified('DNAME', 'target', val)) return
     if (!this.validHostname('DNAME', 'target', val)) return
     this.set('target', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'target' ]
   }
 
   getRFCs () {
@@ -57,8 +62,7 @@ class DNAME extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'target' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

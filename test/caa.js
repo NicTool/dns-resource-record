@@ -14,7 +14,7 @@ const validRecords = [
     tag  : 'issue',
     value: 'letsencrypt.org',
     ttl  : 3600,
-    testR: `ns1.example.com\t3600\tIN\tCAA\t0\tissue\t"letsencrypt.org"\n`,
+    testB: `ns1.example.com\t3600\tIN\tCAA\t0\tissue\t"letsencrypt.org"\n`,
     testT: ':ns1.example.com:257:\\000\\005issueletsencrypt.org:3600::\n',
   },
   {
@@ -25,7 +25,7 @@ const validRecords = [
     tag  : 'issue',
     value: '"lets crypt.org"',
     ttl  : 3600,
-    testR: `ns2.example.com\t3600\tIN\tCAA\t0\tissue\t"lets crypt.org"\n`,
+    testB: `ns2.example.com\t3600\tIN\tCAA\t0\tissue\t"lets crypt.org"\n`,
     testT: ':ns2.example.com:257:\\000\\005issue"lets crypt.org":3600::\n',
   },
   {
@@ -35,7 +35,7 @@ const validRecords = [
     flags: 0,
     tag  : 'issuewild',
     value: 'letsencrypt.org',
-    testR: 'example.net\t86400\tIN\tCAA\t0\tissuewild\t"letsencrypt.org"\n',
+    testB: 'example.net\t86400\tIN\tCAA\t0\tissuewild\t"letsencrypt.org"\n',
     testT: ':example.net:257:\\000\\011issuewildletsencrypt.org:86400::\n',
   },
 ]
@@ -58,6 +58,8 @@ describe('CAA record', function () {
 
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)
+
+  base.fromTinydns(CAA, validRecords)
 
   base.getRFCs(CAA, validRecords[0])
 

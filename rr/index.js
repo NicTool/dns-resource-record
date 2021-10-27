@@ -2,7 +2,7 @@
 // [...Array(128).keys()].map(n => { return String.fromCharCode(n) }).map(c => /[^0-9A-Za-z]/.test(c) ? c : 0)
 
 const supportedTypes = [
-  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME',
+  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME', 'HINFO',
   'LOC'  , 'MX'  , 'NAPTR', 'NS'   , 'PTR'  ,
   'SSHFP', 'SOA' , 'SPF'  , 'SRV'  , 'TXT'  , 'URI',
 ]
