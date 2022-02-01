@@ -1,7 +1,7 @@
 # TODO
 
 | **RR**    | **new**            | **toBind**         | **toTinydns**      | **test**           | **fromBind** | **fromTinydns** | getRFCs |
-|:---------:| :----------------: | :----------------: | :----------------: | :----------------: | ------------ | --------------- | :-----: |
+|:---------:| :----------------: | :----------------: | :----------------: | :----------------: | :----------: | :-------------: | :-----: |
 | **A**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |       | :white_check_mark: | :white_check_mark: |
 | **AAAA**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |       | :white_check_mark: | :white_check_mark: |
 | **CAA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |       | :white_check_mark: | :white_check_mark: |
