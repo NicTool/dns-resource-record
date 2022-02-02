@@ -50,12 +50,13 @@ describe('SOA record', function () {
   base.valid(SOA, validRecords)
   base.invalid(SOA, invalidRecords)
 
+  base.getRFCs(SOA, validRecords[0])
+
   base.toBind(SOA, validRecords)
   base.toTinydns(SOA, validRecords)
 
+  base.fromBind(SOA, validRecords)
   base.fromTinydns(SOA, validRecords)
-
-  base.getRFCs(SOA, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns SOA (Z) record (${val.name})`, async function () {

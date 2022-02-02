@@ -17,7 +17,7 @@
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
 | **SMIMEA** |                  |                  |                  |                  |                  |                  |                  |
-| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
+| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
 | **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
 | **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
