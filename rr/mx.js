@@ -57,8 +57,18 @@ class MX extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  MX  weight exchange
+    const [ fqdn, ttl, c, type, weight, exchange ] = str.split(/\s+/)
+
+    return new this.constructor({
+      class   : c,
+      type    : type,
+      name    : fqdn,
+      weight  : parseInt(weight),
+      exchange: exchange,
+      ttl     : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/

@@ -11,8 +11,8 @@
 | **DS**     |                  |                  |                  |                  |                  |                  |                  |
 | **HINFO**  |:white_check_mark:|:white_check_mark:|                  |                  |                  |                  |:white_check_mark:|
 |**IPSECKEY**|                  |                  |                  |                  |                  |                  |                  |
-| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |                  |:white_check_mark:|
-| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
+| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |                  |:white_check_mark:|
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|:white_check_mark:|

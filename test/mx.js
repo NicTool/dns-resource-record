@@ -39,12 +39,13 @@ describe('MX record', function () {
   base.valid(MX, validRecords)
   base.invalid(MX, invalidRecords)
 
+  base.getRFCs(MX, validRecords[0])
+
   base.toBind(MX, validRecords)
   base.toTinydns(MX, validRecords)
 
+  base.fromBind(MX, validRecords)
   base.fromTinydns(MX, validRecords)
-
-  base.getRFCs(MX, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns MX (@) record (${val.name})`, async function () {
