@@ -31,12 +31,13 @@ describe('NS record', function () {
   base.valid(NS, validRecords)
   base.invalid(NS, invalidRecords)
 
+  base.getRFCs(NS, validRecords[0])
+
   base.toBind(NS, validRecords)
   base.toTinydns(NS, validRecords)
 
+  base.fromBind(NS, validRecords)
   base.fromTinydns(NS, validRecords)
-
-  base.getRFCs(NS, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns NS (&) record (${val.name})`, async function () {

@@ -55,8 +55,17 @@ class NS extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  NS dname
+    const [ fqdn, ttl, c, type, dname ] = str.split(/\s+/)
+
+    return new this.constructor({
+      class: c,
+      type : type,
+      name : fqdn,
+      dname: dname,
+      ttl  : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/
