@@ -31,21 +31,11 @@ describe('CNAME record', function () {
   base.valid(CNAME, validRecords)
   base.invalid(CNAME, invalidRecords)
 
+  base.getRFCs(CNAME, validRecords[0])
+
   base.toBind(CNAME, validRecords)
   base.toTinydns(CNAME, validRecords)
 
   base.fromTinydns(CNAME, validRecords)
-
-  base.getRFCs(CNAME, validRecords[0])
-
-  for (const val of validRecords) {
-
-    it.skip(`imports tinydns CNAME (C) record (${val.name})`, async function () {
-      const r = new CNAME({ tinyline: val.testT })
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'cname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
+  base.fromBind(CNAME, validRecords)
 })

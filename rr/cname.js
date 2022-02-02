@@ -52,8 +52,16 @@ class CNAME extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  CNAME  ...
+    const [ fqdn, ttl, c, type, cname ] = str.split(/\s+/)
+    return new this.constructor({
+      class: c,
+      type : type,
+      name : fqdn,
+      cname: cname,
+      ttl  : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/

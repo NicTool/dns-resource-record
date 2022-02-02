@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const A    = require('../rr/a.js')
 const base = require('./base')
