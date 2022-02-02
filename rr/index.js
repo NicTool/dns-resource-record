@@ -13,6 +13,7 @@ class RR extends Map {
     if (opts.default) this.default = opts.default
 
     if (opts.tinyline) return // pass through
+    if (opts.bindline) return
 
     // tinydns specific
     this.setLocation(opts?.location)

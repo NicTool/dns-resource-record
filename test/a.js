@@ -76,7 +76,8 @@ describe('A record', function () {
     it(`imports BIND A record (${val.name})`, async function () {
       const r = new A({ bindline: val.testB })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'type', 'address', 'ttl' ]) {
+      for (const f of r.getFields()) {
+        if (f === 'class') continue
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
