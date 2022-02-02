@@ -37,7 +37,7 @@ exports.invalid = (type, invalidRecords) => {
 exports.toBind = (type, validRecords) => {
 
   for (const val of validRecords) {
-    it(`exports ${val.type} to BIND (${val.name})`, async function () {
+    it(`toBind: exports ${val.type} to BIND (${val.name})`, async function () {
       const r = new type(val).toBind()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testB)
@@ -48,7 +48,7 @@ exports.toBind = (type, validRecords) => {
 exports.toTinydns = (type, validRecords) => {
 
   for (const val of validRecords) {
-    it(`exports ${val.type} to tinydns (${val.name})`, async function () {
+    it(`toTinydns: exports ${val.type} to tinydns (${val.name})`, async function () {
       const r = new type(val).toTinydns()
       if (process.env.DEBUG) console.dir(r)
       assert.strictEqual(r, val.testT)
@@ -57,7 +57,7 @@ exports.toTinydns = (type, validRecords) => {
 }
 
 exports.getRFCs = (type, valid) => {
-  it(`can retrieve RFCs for ${valid.type}`, async function () {
+  it(`getRFCs: can retrieve RFCs for ${valid.type}`, async function () {
     const r = new type(valid)
     assert.ok(r.getRFCs().length)
   })
@@ -65,7 +65,7 @@ exports.getRFCs = (type, valid) => {
 
 exports.fromTinydns = (type, validRecords) => {
   for (const val of validRecords) {
-    it(`imports tinydns ${val.type} record (${val.name})`, async function () {
+    it(`fromTindns: imports tinydns ${val.type} record (${val.name})`, async function () {
       const r = new type({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
@@ -78,7 +78,7 @@ exports.fromTinydns = (type, validRecords) => {
 
 exports.fromBind = (type, validRecords) => {
   for (const val of validRecords) {
-    it(`imports BIND ${val.type} record (${val.name})`, async function () {
+    it(`fromBind: imports BIND ${val.type} record (${val.name})`, async function () {
       const r = new type({ bindline: val.testB })
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
