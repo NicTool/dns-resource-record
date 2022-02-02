@@ -20,12 +20,33 @@ describe('TINYDNS', function () {
     }
 
     for (const c of Object.keys(specialChars)) {
-      it(`escapes tinydns rdata special char ${c}`, async function () {
+      it(`escapes tinydns rdata special char ${c}`, function () {
         const e = TINYDNS.escapeOctal(rdataRe, c)
         assert.strictEqual(e, specialChars[c])
       })
     }
   })
+
+  describe('UInt16toOctal', function () {
+    it('converts a 16-bit number to escaped octal', function () {
+      assert.strictEqual(TINYDNS.UInt16toOctal(65535), '\\377\\377')
+    })
+
+    it('converts a 16-bit number to escaped octal', function () {
+      assert.strictEqual(TINYDNS.UInt16toOctal(1), '\\000\\001')
+    })
+  })
+
+  describe('octalToUInt16', function () {
+    it('converts a 16-bit number to escaped octal', function () {
+      assert.strictEqual(TINYDNS.octalToUInt16('\\377\\377'), 65535)
+    })
+
+    it('converts a 16-bit number to escaped octal', function () {
+      assert.strictEqual(TINYDNS.octalToUInt16('\\000\\001'), 1)
+    })
+  })
+
 
   describe('UInt32toOctal', function () {
     it('converts a 32-bit number to escaped octal', function (done) {
@@ -36,6 +57,12 @@ describe('TINYDNS', function () {
     it('converts a 32-bit number to escaped octal', function (done) {
       assert.strictEqual(TINYDNS.UInt32toOctal(1706988648), '\\145\\276\\224\\150')
       done()
+    })
+  })
+
+  describe('octalToUInt32', function () {
+    it('converts escaped octal to 32-bit integer', function () {
+      assert.strictEqual(TINYDNS.octalToUInt32('\\145\\276\\224\\150'), 1706988648)
     })
   })
 })
