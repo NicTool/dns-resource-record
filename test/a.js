@@ -73,10 +73,10 @@ describe('A record', function () {
 
   for (const val of validRecords) {
 
-    it.skip(`imports BIND A record (${val.name})`, async function () {
+    it(`imports BIND A record (${val.name})`, async function () {
       const r = new A({ bindline: val.testB })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'address', 'ttl' ]) {
+      for (const f of [ 'name', 'type', 'address', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
