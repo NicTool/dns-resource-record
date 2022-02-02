@@ -30,15 +30,16 @@ describe('AAAA record', function () {
   base.valid(AAAA, validRecords)
   base.invalid(AAAA, invalidRecords)
 
+  base.getRFCs(AAAA, validRecords[0])
+
   base.toBind(AAAA, validRecords)
   base.toTinydns(AAAA, validRecords)
 
+  base.fromBind(AAAA, validRecords)
   base.fromTinydns(AAAA, validRecords)
 
-  base.getRFCs(AAAA, validRecords[0])
-
   for (const val of validRecords) {
-    it.skip(`imports tinydns AAAA (generic) record (${val.name})`, async function () {
+    it(`imports tinydns AAAA (generic) record (${val.name})`, async function () {
       const r = new AAAA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'address', 'ttl' ]) {

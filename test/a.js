@@ -64,23 +64,11 @@ describe('A record', function () {
   base.valid(A, validRecords)
   base.invalid(A, invalidRecords)
 
+  base.getRFCs(A, validRecords[0])
+
   base.toBind(A, validRecords)
   base.toTinydns(A, validRecords)
 
-  base.getRFCs(A, validRecords[0])
-
+  base.fromBind(A, validRecords)
   base.fromTinydns(A, validRecords)
-
-  for (const val of validRecords) {
-
-    it(`imports BIND A record (${val.name})`, async function () {
-      const r = new A({ bindline: val.testB })
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of r.getFields()) {
-        if (f === 'class') continue
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-
-  }
 })

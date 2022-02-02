@@ -75,3 +75,16 @@ exports.fromTinydns = (type, validRecords) => {
     })
   }
 }
+
+exports.fromBind = (type, validRecords) => {
+  for (const val of validRecords) {
+    it(`imports BIND ${val.type} record (${val.name})`, async function () {
+      const r = new type({ bindline: val.testB })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of r.getFields()) {
+        if (f === 'class') continue
+        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
+}
