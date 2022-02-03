@@ -35,7 +35,7 @@ class SSHFP extends RR {
   }
 
   getFields () {
-    return [ 'name', 'ttl', 'algorithm', 'fptype', 'fingerprint' ]
+    return [ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
   }
 
   getRFCs () {
@@ -65,8 +65,18 @@ class SSHFP extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  SSHFP  algo fptype fp
+    const [ fqdn, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
+    return new this.constructor({
+      class      : c,
+      type       : type,
+      name       : fqdn,
+      algorithm  : parseInt(algo, 10),
+      fptype     : parseInt(fptype, 10),
+      fingerprint: fp,
+      ttl        : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/
