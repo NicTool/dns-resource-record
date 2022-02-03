@@ -31,12 +31,13 @@ describe('PTR record', function () {
   base.valid(PTR, validRecords)
   base.invalid(PTR, invalidRecords)
 
+  base.getRFCs(PTR, validRecords[0])
+
   base.toBind(PTR, validRecords)
   base.toTinydns(PTR, validRecords)
 
+  base.fromBind(PTR, validRecords)
   base.fromTinydns(PTR, validRecords)
-
-  base.getRFCs(PTR, validRecords[0])
 
   for (const val of validRecords) {
 

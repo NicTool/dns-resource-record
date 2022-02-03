@@ -31,12 +31,13 @@ describe('HINFO record', function () {
   base.valid(HINFO, validRecords)
   base.invalid(HINFO, invalidRecords)
 
+  base.getRFCs(HINFO, validRecords[0])
+
   base.toBind(HINFO, validRecords)
   // base.toTinydns(HINFO, validRecords)
 
+  // base.fromBind(HINFO, validRecords)
   // base.fromTinydns(HINFO, validRecords)
-
-  base.getRFCs(HINFO, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns HINFO (generic) record (${val.name})`, async function () {
