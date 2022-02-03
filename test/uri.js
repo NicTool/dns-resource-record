@@ -38,12 +38,13 @@ describe('URI record', function () {
   base.valid(URI, validRecords)
   base.invalid(URI, invalidRecords)
 
+  base.getRFCs(URI, validRecords[0])
+
   base.toBind(URI, validRecords)
   base.toTinydns(URI, validRecords)
 
+  base.fromBind(URI, validRecords)
   base.fromTinydns(URI, validRecords)
-
-  base.getRFCs(URI, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns URI (generic) record`, async function () {
