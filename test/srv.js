@@ -41,12 +41,13 @@ describe('SRV record', function () {
   base.valid(SRV, validRecords)
   base.invalid(SRV, invalidRecords)
 
+  base.getRFCs(SRV, validRecords[0])
+
   base.toBind(SRV, validRecords)
   base.toTinydns(SRV, validRecords)
 
+  base.fromBind(SRV, validRecords)
   base.fromTinydns(SRV, validRecords)
-
-  base.getRFCs(SRV, validRecords[0])
 
   for (const val of validRecords) {
     it(`imports tinydns SRV (generic) record (${val.name})`, async function () {

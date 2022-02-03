@@ -94,8 +94,19 @@ class SRV extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  SRV Priority Weight Port Target
+    const [ fqdn, ttl, c, type, pri, weight, port, target ] = str.split(/\s+/)
+    return new this.constructor({
+      class   : c,
+      type    : type,
+      name    : fqdn,
+      target  : target,
+      port    : parseInt(port,   10),
+      priority: parseInt(pri,    10),
+      weight  : parseInt(weight, 10),
+      ttl     : parseInt(ttl,    10),
+    })
   }
 
   /******  EXPORTERS   *******/
