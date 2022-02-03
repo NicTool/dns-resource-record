@@ -56,12 +56,13 @@ describe('CAA record', function () {
   base.valid(CAA, validRecords)
   base.invalid(CAA, invalidRecords)
 
+  base.getRFCs(CAA, validRecords[0])
+
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)
 
+  base.fromBind(CAA, validRecords)
   base.fromTinydns(CAA, validRecords)
-
-  base.getRFCs(CAA, validRecords[0])
 
   for (const val of validRecords) {
     it(`imports tinydns CAA (generic) record`, async function () {
