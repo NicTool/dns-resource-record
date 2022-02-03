@@ -23,12 +23,13 @@ describe('SPF record', function () {
   base.valid(SPF, validRecords)
   base.invalid(SPF, invalidRecords)
 
+  base.getRFCs(SPF, validRecords[0])
+
   base.toBind(SPF, validRecords)
   base.toTinydns(SPF, validRecords)
 
+  base.fromBind(SPF, validRecords)
   base.fromTinydns(SPF, validRecords)
-
-  base.getRFCs(SPF, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns SPF (generic) record`, async function () {

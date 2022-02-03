@@ -43,8 +43,16 @@ class SPF extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  SPF  "...""
+    const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+    return new this.constructor({
+      class: c,
+      type : type,
+      name : fqdn,
+      data : str.split(/\s+/).slice(4).map(s => s.replace(/^"|"$/g, '')).join(''),
+      ttl  : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/
