@@ -7,6 +7,7 @@ class URI extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 256)
     this.setPriority(opts?.priority)
@@ -51,11 +52,25 @@ class URI extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  URI  priority, weight, target
+    const [ fqdn, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
+    return new this.constructor({
+      class   : c,
+      type    : type,
+      name    : fqdn,
+      priority: parseInt(priority, 10),
+      weight  : parseInt(weight, 10),
+      target  : target.replace(/^"|"$/g, ''),
+      ttl     : parseInt(ttl, 10),
+    })
   }
 
   /******  MISC   *******/
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'target' ]
+  }
+
   getRFCs () {
     return [ 7553 ]
   }

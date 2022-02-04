@@ -8,6 +8,7 @@ class DNAME extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 39)
 
@@ -31,6 +32,10 @@ class DNAME extends RR {
     this.set('target', val)
   }
 
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'target' ]
+  }
+
   getRFCs () {
     return [ 2672, 6672 ]
   }
@@ -51,14 +56,21 @@ class DNAME extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  DNAME  ...
+    const [ fqdn, ttl, c, type, target ] = str.split(/\s+/)
+    return new this.constructor({
+      class : c,
+      type  : type,
+      name  : fqdn,
+      target: target,
+      ttl   : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'target' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

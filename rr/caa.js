@@ -7,6 +7,7 @@ class CAA extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 257)
     this.setFlags(opts?.flags)
@@ -30,7 +31,7 @@ class CAA extends RR {
       || val.length < 1
       || /[A-Z]/.test(val)
       || /[^a-z0-9]/.test(val))
-      throw new Error('CAA flags must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
+      throw new Error('CAA tag must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
       console.warn(`CAA tag ${val} not recognized: RFC 6844`)
@@ -49,6 +50,10 @@ class CAA extends RR {
     // TODO: check if val starts with one of iodefSchemes, RFC 6844
 
     this.set('value', val)
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
   }
 
   getRFCs () {
@@ -80,8 +85,18 @@ class CAA extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  CAA flags, tags, value
+    const [ fqdn, ttl, c, type, flags, tag, value ] = str.split(/\s+/)
+    return new this.constructor({
+      class: c,
+      type : type,
+      name : fqdn,
+      flags: parseInt(flags, 10),
+      tag  : tag,
+      value: value,
+      ttl  : parseInt(ttl,    10),
+    })
   }
 
   /******  EXPORTERS   *******/
@@ -89,8 +104,7 @@ class CAA extends RR {
     let value = this.get('value')
     if (value[0] !== '"') value = `"${value}"` // add enclosing quotes
 
-    const fields = [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\t${value}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\t${value}\n`
   }
 
   toTinydns () {

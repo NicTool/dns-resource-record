@@ -1,5 +1,5 @@
 
-const assert = require('assert')
+// const assert = require('assert')
 
 const A    = require('../rr/a.js')
 const base = require('./base')
@@ -11,7 +11,7 @@ const validRecords = [
     type   : 'A',
     address: '127.0.0.127',
     ttl    : 3600,
-    testR  : 'test.example.com\t3600\tIN\tA\t127.0.0.127\n',
+    testB  : 'test.example.com\t3600\tIN\tA\t127.0.0.127\n',
     testT  : '+test.example.com:127.0.0.127:3600::\n',
   },
   {
@@ -20,7 +20,7 @@ const validRecords = [
     type   : 'A',
     address: '127.0.0.127',
     ttl    : 2147483647,
-    testR  : 'test.example.com\t2147483647\tIN\tA\t127.0.0.127\n',
+    testB  : 'test.example.com\t2147483647\tIN\tA\t127.0.0.127\n',
     testT  : '+test.example.com:127.0.0.127:2147483647::\n',
   },
 ]
@@ -28,7 +28,7 @@ const validRecords = [
 const moreValid = [
   {
     name : '*.example.com',
-    testR: '*.example.com\t3600\tIN\tA\t127.0.0.127\n',
+    testB: '*.example.com\t3600\tIN\tA\t127.0.0.127\n',
     testT: '+*.example.com:127.0.0.127:3600::\n',
   },
 ]
@@ -64,18 +64,11 @@ describe('A record', function () {
   base.valid(A, validRecords)
   base.invalid(A, invalidRecords)
 
+  base.getRFCs(A, validRecords[0])
+
   base.toBind(A, validRecords)
   base.toTinydns(A, validRecords)
 
-  base.getRFCs(A, validRecords[0])
-
-  for (const val of validRecords) {
-    it(`imports tinydns A (+) record (${val.name})`, async function () {
-      const r = new A({ tinyline: val.testT })
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'address', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
+  base.fromBind(A, validRecords)
+  base.fromTinydns(A, validRecords)
 })

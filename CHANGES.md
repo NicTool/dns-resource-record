@@ -2,6 +2,13 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.8.0 - 2022-02-01
+
+- fromBind for: A, AAAA, CNAME, TXT, CNAME, TXT, LOC, MX, NS, SOA, PTR, SPF, SSHFP, URI, CAA, DNAME, NAPTR
+- add fromTinydns: LOC
+- rr/\*: add getFields
+
+
 #### 0.7.0 - 2021-10-26
 
 - tinydns: added octalToHex, octalToUInt16, unpackDomainName, octalToInt8

@@ -9,6 +9,7 @@ class AAAA extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 28)
     this.setAddress(opts?.address)
@@ -24,6 +25,10 @@ class AAAA extends RR {
 
   getCompressed (f) {
     this.compress(this.get(f))
+  }
+
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'address' ]
   }
 
   getRFCs () {
@@ -61,8 +66,16 @@ class AAAA extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  AAAA  ...
+    const [ fqdn, ttl, c, type, ip ] = str.split(/\s+/)
+    return new this.constructor({
+      class  : c,
+      type   : type,
+      name   : fqdn,
+      address: ip,
+      ttl    : parseInt(ttl, 10),
+    })
   }
 
   compress (val) {
@@ -88,8 +101,7 @@ class AAAA extends RR {
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'address' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {

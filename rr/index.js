@@ -1,6 +1,6 @@
 
 const supportedTypes = [
-  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME',
+  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME', 'HINFO',
   'LOC'  , 'MX'  , 'NAPTR', 'NS'   , 'PTR'  ,
   'SSHFP', 'SOA' , 'SPF'  , 'SRV'  , 'TXT'  , 'URI',
 ]
@@ -13,6 +13,7 @@ class RR extends Map {
     if (opts.default) this.default = opts.default
 
     if (opts.tinyline) return // pass through
+    if (opts.bindline) return
 
     // tinydns specific
     this.setLocation(opts?.location)

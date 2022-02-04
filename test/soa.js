@@ -18,7 +18,7 @@ const validRecords = [
     expire : 1209600,
     minimum: 3600,
     ttl    : 3600,
-    testR  : `$TTL\t3600
+    testB  : `$TTL\t3600
 $ORIGIN\texample.com.
 example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
           1
@@ -50,13 +50,16 @@ describe('SOA record', function () {
   base.valid(SOA, validRecords)
   base.invalid(SOA, invalidRecords)
 
+  base.getRFCs(SOA, validRecords[0])
+
   base.toBind(SOA, validRecords)
   base.toTinydns(SOA, validRecords)
 
-  base.getRFCs(SOA, validRecords[0])
+  base.fromBind(SOA, validRecords)
+  base.fromTinydns(SOA, validRecords)
 
   for (const val of validRecords) {
-    it(`imports tinydns SOA (Z) record (${val.name})`, async function () {
+    it.skip(`imports tinydns SOA (Z) record (${val.name})`, async function () {
       const r = new SOA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl' ]) {

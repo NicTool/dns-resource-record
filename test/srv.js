@@ -15,7 +15,7 @@ const validRecords = [
     weight  : 0,
     port    : 993,
     ttl     : 3600,
-    testR   : '_imaps._tcp.example.com\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
+    testB   : '_imaps._tcp.example.com\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
     testT   : ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n',
   },
 ]
@@ -41,10 +41,13 @@ describe('SRV record', function () {
   base.valid(SRV, validRecords)
   base.invalid(SRV, invalidRecords)
 
+  base.getRFCs(SRV, validRecords[0])
+
   base.toBind(SRV, validRecords)
   base.toTinydns(SRV, validRecords)
 
-  base.getRFCs(SRV, validRecords[0])
+  base.fromBind(SRV, validRecords)
+  base.fromTinydns(SRV, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns SRV (generic) record (${val.name})`, async function () {

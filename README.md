@@ -3,7 +3,7 @@
 
 # dns-resource-record
 
-DNS resource record parser, validator, exporter, and (soon) importer.
+DNS resource record parser, validator, exporter, and importer.
 
 
 ## SYNOPSIS
@@ -11,15 +11,21 @@ DNS resource record parser, validator, exporter, and (soon) importer.
 This module will be used by a web client UI and a server side DNS Resource Record validator to:
 
 - validate formatting, values, and RFC compliance of each RR
-- export RRs to
-    - BIND zone file format
-    - tinydns file format
+- export RRs to:
+    - [x] BIND zone file format
+    - [x] tinydns file format
 - import RRs from:
-    - BIND zone file lines
-    - tinydns entries
+    - [ ] BIND zone file lines
+    - [x] tinydns entries
 
 This module intends to import and export wholly RFC compliant DNS resourse records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
 
+
+## SUPPORTED RECORDS
+
+Look in the `rr` directory for an up-to-date list. This module intends to include support for all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
+
+PRs are welcome, especially PRs with tests.
 
 ## USAGE
 
@@ -65,27 +71,23 @@ catch (e) {
 
 ### A
 
-in BIND format:
+Export to BIND format:
 
 ```js
-console.log(new RR.A({
+const aAsJSON = {
     name   : 'test.example.com',
     type   : 'A',
     address: '127.0.0.127',
     ttl    : 3600,
-}).toBind())
+}
+console.log(new RR.A(aAsJSON).toBind())
 test.example.com    3600    IN  A   127.0.0.127
 ```
 
-in tinydns format:
+Export to tinydns format:
 
 ```js
-console.log(new RR.A({
-    name   : 'test.example.com',
-    type   : 'A',
-    address: '127.0.0.127',
-    ttl    : 3600,
-}).toTinydns())
+console.log(new RR.A(aAsJSON).toTinydns())
 +test.example.com:127.0.0.127:3600::
 ```
 
@@ -100,6 +102,18 @@ console.log(new RR.AAAA({
 }).toBind())
 test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 ```
+
+### CAA
+
+Convert a tinydns line to BIND:
+
+```js
+console.log(new RR.CAA({
+    tinyline: ':ns1.example.com:257:\\000\\005issueletsencrypt.org:3600::'
+}).toBind())
+ns1.example.com 3600    IN  CAA 0   issue   "letsencrypt.org"
+```
+
 
 ## TODO
 

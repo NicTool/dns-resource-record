@@ -6,6 +6,7 @@ class SOA extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 6)
 
@@ -73,6 +74,10 @@ class SOA extends RR {
     this.set('expire', val)
   }
 
+  getFields () {
+    return [ 'name', 'class', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
+  }
+
   getRFCs () {
     return [ 1035, 2308 ]
   }
@@ -98,8 +103,29 @@ class SOA extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    /*
+       $TTL 3600
+       $ORIGIN example.com
+       example.com  IN  SOA mname rname ( serial refresh retry expire minimum )
+    */
+    const [ , ttl, , fqdn, , c, type, mname, rname, , serial, refresh, retry, expire, minimum ] = str.split(/\s+/)
+
+    const bits = {
+      class  : c,
+      type   : type,
+      name   : fqdn.replace(/\.$/, ''),
+      mname  : mname,
+      rname  : rname,
+      serial : parseInt(serial, 10),
+      refresh: parseInt(refresh, 10),
+      retry  : parseInt(retry, 10),
+      expire : parseInt(expire, 10),
+      minimum: parseInt(minimum, 10 ),
+      ttl    : parseInt(ttl, 10),
+    }
+    // console.log(bits)
+    return new this.constructor(bits)
   }
 
   /******  EXPORTERS   *******/

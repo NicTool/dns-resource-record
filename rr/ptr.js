@@ -6,6 +6,7 @@ class PTR extends RR {
     super(opts)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 12)
 
@@ -28,6 +29,10 @@ class PTR extends RR {
     this.set('dname', val)
   }
 
+  getFields () {
+    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
+  }
+
   getRFCs () {
     return [ 1035 ]
   }
@@ -47,14 +52,21 @@ class PTR extends RR {
     })
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  PTR  dname
+    const [ fqdn, ttl, c, type, dname ] = str.split(/\s+/)
+    return new this.constructor({
+      class: c,
+      type : type,
+      name : fqdn,
+      dname: dname,
+      ttl  : parseInt(ttl, 10),
+    })
   }
 
   /******  EXPORTERS   *******/
   toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'dname' ]
-    return `${fields.map(f => this.get(f)).join('\t')}\n`
+    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
   }
 
   toTinydns () {
