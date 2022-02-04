@@ -2,6 +2,8 @@
 const RR = require('./index').RR
 const TINYDNS = require('../lib/tinydns')
 
+const rdataRe = /[\r\n\t:\\/]/
+
 class NAPTR extends RR {
   constructor (opts) {
     super(opts)
@@ -51,11 +53,64 @@ class NAPTR extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    //
+    // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 35) throw new Error('NAPTR fromTinydns, invalid n')
+
+    const rec = {
+      type      : 'NAPTR',
+      name      : fqdn,
+      ttl       : parseInt(ttl, 10),
+      timestamp : ts,
+      location  : loc !== '' && loc !== '\n' ? loc : '',
+      order     : TINYDNS.octalToUInt16(rdata.substr(0, 8)),
+      preference: TINYDNS.octalToUInt16(rdata.substr(8, 8)),
+    }
+    /*
+  TODO: incomplete, need to remove octal escapes from regexp
+'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
+':cid.urn.arpa:35:
+\000\144\000\012\000\000\040!^urn\072cid\072.+@([^\134.]+\134.)(.*)$!\x02!i\001.``000:86400::'
+*/
+
+    let idx = 16
+    const flagsLength = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
+    rec.flags = rdata.substr(idx+4, flagsLength)
+    idx += 4 + flagsLength
+
+    const serviceLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
+    rec.service = TINYDNS.octalToChar(rdata.substr(idx+4, serviceLen))
+    idx += 4 + serviceLen
+
+    const regexpLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
+    rec.regexp = TINYDNS.octalToChar(rdata.substr(idx+4, regexpLen))
+    idx += 4 + regexpLen
+
+    const replaceLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
+    rec.replacement = TINYDNS.octalToChar(rdata.substr(idx+4, replaceLen))
+
+    return new this.constructor(rec)
   }
 
-  fromBind () {
-    //
+  fromBind (str) {
+    // test.example.com  3600  IN  NAPTR order, preference, "flags", "service", "regexp", replacement
+    const [ fqdn, ttl, c, type, order, preference ] = str.split(/\s+/)
+    const [ flags, service, regexp ] = str.match(/(?:").*?(?:"\s)/g)
+    const replacement = str.trim().split(/\s+/).pop()
+
+    const bits = {
+      class      : c,
+      type       : type,
+      name       : fqdn,
+      order      : parseInt(order, 10),
+      preference : parseInt(preference, 10),
+      flags      : flags.trim().replace(/^"|"$/g, ''),
+      service    : service.trim().replace(/^"|"$/g, ''),
+      regexp     : regexp.trim().replace(/^"|"$/g, ''),
+      replacement: replacement,
+      ttl        : parseInt(ttl, 10),
+    }
+    return new this.constructor(bits)
   }
 
   getFields () {
@@ -76,7 +131,6 @@ class NAPTR extends RR {
   }
 
   toTinydns () {
-    const rdataRe = /[\r\n\t:\\/]/
 
     let rdata = ''
     rdata += TINYDNS.UInt16toOctal(this.get('order'))

@@ -56,13 +56,13 @@ class URI extends RR {
     // test.example.com  3600  IN  URI  priority, weight, target
     const [ fqdn, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
     return new this.constructor({
-      class      : c,
-      type       : type,
-      name       : fqdn,
+      class   : c,
+      type    : type,
+      name    : fqdn,
       priority: parseInt(priority, 10),
-      weight     : parseInt(weight, 10),
-      target     : target.replace(/^"|"$/g, ''),
-      ttl        : parseInt(ttl, 10),
+      weight  : parseInt(weight, 10),
+      target  : target.replace(/^"|"$/g, ''),
+      ttl     : parseInt(ttl, 10),
     })
   }
 

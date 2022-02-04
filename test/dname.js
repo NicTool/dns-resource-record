@@ -30,12 +30,13 @@ describe('DNAME record', function () {
   base.valid(DNAME, validRecords)
   base.invalid(DNAME, invalidRecords)
 
+  base.getRFCs(DNAME, validRecords[0])
+
   base.toBind(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)
 
+  base.fromBind(DNAME, validRecords)
   base.fromTinydns(DNAME, validRecords)
-
-  base.getRFCs(DNAME, validRecords[0])
 
   for (const val of validRecords) {
     it.skip(`imports tinydns DNAME (generic) record (${val.name})`, async function () {
