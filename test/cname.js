@@ -22,7 +22,7 @@ const invalidRecords = [
     class: 'IN',
     name : 'example.com',
     type : 'CNAME',
-    cname: '1.2.3.4',  // FQDN required
+    cname: '192.0.2.4',  // FQDN required
     ttl  : 3600,
   },
 ]

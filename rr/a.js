@@ -45,7 +45,7 @@ class A extends RR {
   }
 
   fromBind (str) {
-    // test.example.com  3600  IN  A  127.0.0.127
+    // test.example.com  3600  IN  A  192.0.2.127
     const [ fqdn, ttl, c, type, ip ] = str.split(/\s+/)
     return new this.constructor({
       class  : c,

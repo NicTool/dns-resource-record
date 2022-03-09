@@ -15,7 +15,7 @@ This module will be used by a web client UI and a server side DNS Resource Recor
     - [x] BIND zone file format
     - [x] tinydns file format
 - import RRs from:
-    - [ ] BIND zone file lines
+    - [x] BIND zone file lines
     - [x] tinydns entries
 
 This module intends to import and export wholly RFC compliant DNS resourse records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
@@ -77,18 +77,18 @@ Export to BIND format:
 const aAsJSON = {
     name   : 'test.example.com',
     type   : 'A',
-    address: '127.0.0.127',
+    address: '192.0.2.127',
     ttl    : 3600,
 }
 console.log(new RR.A(aAsJSON).toBind())
-test.example.com    3600    IN  A   127.0.0.127
+test.example.com    3600    IN  A   192.0.2.127
 ```
 
 Export to tinydns format:
 
 ```js
 console.log(new RR.A(aAsJSON).toTinydns())
-+test.example.com:127.0.0.127:3600::
++test.example.com:192.0.2.127:3600::
 ```
 
 ### AAAA

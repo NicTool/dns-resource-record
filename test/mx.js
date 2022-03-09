@@ -30,7 +30,7 @@ const invalidRecords = [
     class   : 'IN',
     name    : 'test.example.com',
     type    : 'MX',
-    exchange: '192.168.0.1',
+    exchange: '192.0.2.1',
     ttl     : 3600,
   },
 ]
