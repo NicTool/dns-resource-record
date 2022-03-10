@@ -124,6 +124,10 @@ class NAPTR extends RR {
     }
   }
 
+  getQuotedFields () {
+    return [ 'flags', 'service', 'regexp' ]
+  }
+
   getRFCs () {
     return [ 2915, 3403 ]
   }
@@ -133,13 +137,6 @@ class NAPTR extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
-    const quoted = [ 'flags', 'service', 'regexp' ]
-
-    return `${this.getFields().map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
 
     let rdata = ''

@@ -97,8 +97,7 @@ class TXT extends RR {
       // BIND croaks when any string in the TXT RR data is longer than 255
       data = data.match(/(.{1,255})/g).join('" "')
     }
-    const fields = this.getFields().filter(f => f !== 'data')  // remove data
-    return `${fields.map(f => this.get(f)).join('\t')}\t"${data}"\n`
+    return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
   }
 
   toTinydns () {

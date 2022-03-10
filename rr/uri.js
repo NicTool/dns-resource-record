@@ -86,12 +86,11 @@ class URI extends RR {
     return 256
   }
 
-  /******  EXPORTERS   *******/
-  toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'priority', 'weight' ] // 'target'
-    return `${fields.map(f => this.get(f)).join('\t')}\t"${this.get('target')}"\n`
+  getQuotedFields () {
+    return [ 'target' ]
   }
 
+  /******  EXPORTERS   *******/
   toTinydns () {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     let rdata = ''

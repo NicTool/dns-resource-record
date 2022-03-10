@@ -43,6 +43,10 @@ class HINFO extends RR {
     return 13
   }
 
+  getQuotedFields () {
+    return [ 'cpu', 'os' ]
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns (str) {
     // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
@@ -52,11 +56,6 @@ class HINFO extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    const quoted = [ 'cpu', 'os' ]
-    return `${this.getFields().map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
   }
 }

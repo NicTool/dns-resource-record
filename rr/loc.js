@@ -124,10 +124,6 @@ class LOC extends RR {
   }
 
   fromBind (str) {
-    // console.log(str)
-    // const r = this.parseLoc(str)
-    // console.log(r)
-
     const [ fqdn, ttl, c, type ] = str.split(/\s+/)
 
     return new this.constructor({
@@ -210,9 +206,6 @@ class LOC extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     const loc = this.parseLoc(this.get('address'))

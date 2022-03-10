@@ -111,9 +111,6 @@ class AAAA extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals

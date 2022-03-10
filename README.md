@@ -21,12 +21,6 @@ This module is used to:
 This module intends to import and export wholly RFC compliant DNS resource records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
 
 
-## SUPPORTED RECORDS
-
-Look in the `rr` directory for an up-to-date list. This module intends to include support for all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
-
-PRs are welcome, especially PRs with tests.
-
 ## USAGE
 
 ### SOA
@@ -51,7 +45,6 @@ try {
       'name' => 'example.com',
       'ttl' => 3600,
       'type' => 'SOA',
-      'id' => 6,
       'minimum' => 3600,
       'mname' => 'matt.example.com.',
       'rname' => 'ns1.example.com.',
@@ -114,31 +107,35 @@ console.log(new RR.CAA({
 ns1.example.com 3600    IN  CAA 0   issue   "letsencrypt.org"
 ```
 
-## RR support
+## Supported Records
 
-| **RR**     | **new**          | **toBind**       | **toTinydns**    | **test**         | **fromBind**     |  **fromTinydns** |   getRFCs   |
-|:---------: |:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|:-----------:|
-| **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNSKEY** |                  |                  |                  |                  |                  |                  |                  |
-| **DS**     |                  |                  |                  |                  |                  |                  |                  |
-| **HINFO**  |:white_check_mark:|:white_check_mark:|                  |                  |                  |                  |:white_check_mark:|
-|**IPSECKEY**|                  |                  |                  |                  |                  |                  |                  |
-| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|
-| **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SMIMEA** |                  |                  |                  |                  |                  |                  |                  |
-| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+This module intends to include support for all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
+
+PRs are welcome, especially PRs with tests.
+
+| **RR**     | **toBind**       | **toTinydns**    | **fromBind**     |  **fromTinydns** |     getRFCs      |
+|:---------: |:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|
+| **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **DNSKEY** |                  |                  |                  |                  |                  |
+| **DS**     |                  |                  |                  |                  |                  |
+| **HINFO**  |:white_check_mark:|                  |                  |                  |:white_check_mark:|
+|**IPSECKEY**|                  |                  |                  |                  |                  |
+| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|
+| **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SMIMEA** |                  |                  |                  |                  |                  |
+| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 
 ## TODO
 

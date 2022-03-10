@@ -1,9 +1,5 @@
-
-const supportedTypes = [
-  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME', 'HINFO',
-  'LOC'  , 'MX'  , 'NAPTR', 'NS'   , 'PTR'  ,
-  'SSHFP', 'SOA' , 'SPF'  , 'SRV'  , 'TXT'  , 'URI',
-]
+const fs = require('fs')
+const path = require('path')
 
 class RR extends Map {
 
@@ -96,7 +92,7 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (!supportedTypes.includes(t)) throw new Error(`type ${t} not supported (yet)`)
+    if (!module.exports[t]) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
   }
 
@@ -111,8 +107,17 @@ class RR extends Map {
   }
 
   getQuoted (prop) {
-    if (/['"]/.test(this.get(prop)[0])) return this.get(prop) // already quoted
-    return `"${this.get(prop)}"`
+    // if prop is not in quoted list, return bare
+    if (!this.getQuotedFields().includes(prop)) return this.get(prop)
+
+    // if it's already quoted, return as-is
+    if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
+
+    return `"${this.get(prop)}"` // add double quotes
+  }
+
+  getQuotedFields () {
+    return []
   }
 
   hasValidLabels (hostname) {
@@ -149,10 +154,18 @@ class RR extends Map {
     throw new Error(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
   }
 
+  isQuoted (val) {
+    return /^["']/.test(val) && /["']$/.test(val)
+  }
+
   fullyQualified (type, blah, hostname) {
     if (hostname.slice(-1) === '.') return true
 
     throw new Error(`${type}: ${blah} must be fully qualified`)
+  }
+
+  toBind () {
+    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
 
   validHostname (type, field, hostname) {
@@ -166,6 +179,8 @@ module.exports = {
   RR,
 }
 
-for (const t of supportedTypes) {
-  module.exports[t] = require(`./${t.toLowerCase()}`)
+const files = fs.readdirSync('./rr')
+for (let f of files) {
+  f = path.basename(f, '.js')
+  module.exports[f.toUpperCase()] = require(`./${f}`)
 }

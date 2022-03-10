@@ -11,12 +11,7 @@ class DNAME extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    if (opts?.address) {
-      this.setTarget(opts?.address)
-    }
-    else {
-      this.setTarget(opts?.target)
-    }
+    this.setTarget(opts?.target || opts?.address)
   }
 
   /****** Resource record specific setters   *******/
@@ -79,10 +74,6 @@ class DNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
     const rdata = TINYDNS.packDomainName(this.get('target'))
     return `:${this.get('name')}:39:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`

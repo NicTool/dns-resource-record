@@ -42,12 +42,18 @@ class CAA extends RR {
   setValue (val) {
     // either (2) a quoted string or
     // (1) a contiguous set of characters without interior spaces
-    if (!/["']/.test(val) && /\s/.test(val)) {
-      throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
+    if (this.isQuoted(val)) {
+      val = val.replace(/^["']|["']$/g, '') // strip quotes
+    }
+    else {
+      // if (/\s/.test(val)) throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
     }
 
-    // const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
-    // TODO: check if val starts with one of iodefSchemes, RFC 6844
+    // check if val starts with one of iodefSchemes
+    const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
+    if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
+      throw new Error(`CAA value must have valid iodefScheme prefix: RFC 6844`)
+    }
 
     this.set('value', val)
   }
@@ -57,10 +63,14 @@ class CAA extends RR {
       case 'common':
         return this.getCommonFields()
       case 'rdata':
-        return [ 'flags', 'tag' ]
+        return [ 'flags', 'tag', 'value' ]
       default:
-        return this.getCommonFields().concat([ 'flags', 'tag' ])
+        return this.getCommonFields().concat([ 'flags', 'tag', 'value' ])
     }
+  }
+
+  getQuotedFields () {
+    return [ 'value' ]
   }
 
   getRFCs () {
@@ -98,25 +108,19 @@ class CAA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const [ fqdn, ttl, c, type, flags, tag, value ] = str.split(/\s+/)
+    const [ fqdn, ttl, c, type, flags, tag ] = str.split(/\s+/)
     return new this.constructor({
       class: c,
       type : type,
       name : fqdn,
       flags: parseInt(flags, 10),
       tag  : tag,
-      value: value,
+      value: str.split(/\s+/).slice(6).join(' ').trim(),
       ttl  : parseInt(ttl,    10),
     })
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    let value = this.get('value')
-    if (value[0] !== '"') value = `"${value}"` // add enclosing quotes
-
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\t${value}\n`
-  }
 
   toTinydns () {
     let rdata = ''
@@ -125,7 +129,7 @@ class CAA extends RR {
     rdata += TINYDNS.UInt8toOctal(this.get('tag').length)
     rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag'))
 
-    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value'))
+    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value'))
 
     return `:${this.get('name')}:257:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
