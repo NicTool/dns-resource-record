@@ -69,7 +69,6 @@ class LOC extends RR {
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
     const r = string.match(locRe)
     if (!r) throw new Error('LOC address: invalid format, see RFC 1876')
-    // console.log(r)
 
     const loc = {
       latitude: {

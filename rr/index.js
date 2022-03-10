@@ -89,10 +89,6 @@ class RR extends Map {
 
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
 
-    if (parseInt(t, 10) !== t) {
-      throw new Error('TTL must be a an unsigned integer')
-    }
-
     // RFC 1035, 2181
     if (!this.is32bitInt(this.name, 'TTL', t)) return
 
