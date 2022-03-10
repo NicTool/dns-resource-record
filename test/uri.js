@@ -48,7 +48,7 @@ describe('URI record', function () {
   base.fromTinydns(URI, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns URI (generic) record`, async function () {
+    it.skip(`imports tinydns (generic) record`, async function () {
       const r = new URI({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'priority', 'weight', 'target', 'ttl' ]) {

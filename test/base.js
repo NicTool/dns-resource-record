@@ -5,7 +5,7 @@ exports.valid = (type, validRecords) => {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
-      it(`parses ${val.type} record (${val.name})`, async function () {
+      it(`parses record: ${val.name}`, async function () {
         const r = new type(val)
         if (process.env.DEBUG) console.dir(r)
 
@@ -39,7 +39,7 @@ exports.invalid = (type, invalidRecords) => {
 exports.toBind = (type, validRecords) => {
   describe('toBind', function () {
     for (const val of validRecords) {
-      it(`exports ${val.type} to BIND (${val.name})`, async function () {
+      it(`exports to BIND: ${val.name}`, async function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testB)
@@ -51,7 +51,7 @@ exports.toBind = (type, validRecords) => {
 exports.toTinydns = (type, validRecords) => {
   describe('toTinydns', function () {
     for (const val of validRecords) {
-      it(`exports ${val.type} to tinydns (${val.name})`, async function () {
+      it(`exports to tinydns: ${val.name}`, async function () {
         const r = new type(val).toTinydns()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testT)
@@ -62,8 +62,8 @@ exports.toTinydns = (type, validRecords) => {
 
 exports.getRFCs = (type, valid) => {
   describe('getRFCs', function () {
-    it(`can retrieve RFCs for ${valid.type}`, async function () {
-      const r = new type(valid)
+    it(`can retrieve RFCs`, async function () {
+      const r = new type(null)
       assert.ok(r.getRFCs().length)
     })
   })
@@ -72,7 +72,7 @@ exports.getRFCs = (type, valid) => {
 exports.fromTinydns = (type, validRecords) => {
   describe('fromTinydns', function () {
     for (const val of validRecords) {
-      it(`imports tinydns ${val.type} record (${val.name})`, async function () {
+      it(`imports tinydns record: ${val.name}`, async function () {
         const r = new type({ tinyline: val.testT })
         if (process.env.DEBUG) console.dir(r)
         for (const f of r.getFields()) {
@@ -87,7 +87,7 @@ exports.fromTinydns = (type, validRecords) => {
 exports.fromBind = (type, validRecords) => {
   describe('fromBind', function () {
     for (const val of validRecords) {
-      it(`imports BIND ${val.type} record (${val.name})`, async function () {
+      it(`imports BIND record: ${val.name}`, async function () {
         const r = new type({ bindline: val.testB })
         if (process.env.DEBUG) console.dir(r)
         for (const f of r.getFields()) {
@@ -101,7 +101,7 @@ exports.fromBind = (type, validRecords) => {
 
 exports.getFields = (type, rdataFields) => {
   describe('getFields', function () {
-    it(`can retrieve ${type.name} record fields`, async function () {
+    it(`can retrieve record fields`, async function () {
       const r = new type(null)
       // console.log(new type(null).getFields('rdata'))
       assert.deepEqual(r.getFields('rdata'), rdataFields)
