@@ -6,6 +6,7 @@ const RR = require('./index').RR
 class MX extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -32,8 +33,15 @@ class MX extends RR {
     this.set('weight', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'weight', 'exchange' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'weight', 'exchange' ]
+      default:
+        return this.getCommonFields().concat([ 'weight', 'exchange' ])
+    }
   }
 
   getRFCs () {

@@ -4,6 +4,7 @@ const RR = require('./index').RR
 class NS extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -31,8 +32,15 @@ class NS extends RR {
     this.set('dname', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'dname' ]
+      default:
+        return this.getCommonFields().concat([ 'dname' ])
+    }
   }
 
   getRFCs () {

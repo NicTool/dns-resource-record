@@ -7,6 +7,7 @@ const rdataRe = /[\r\n\t:\\/]/
 class NAPTR extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
     this.set('id', 35)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
@@ -113,9 +114,15 @@ class NAPTR extends RR {
     return new this.constructor(bits)
   }
 
-  getFields () {
-    // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
-    return [ 'name', 'ttl', 'class', 'type', 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
+      default:
+        return this.getCommonFields().concat([ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ])
+    }
   }
 
   getRFCs () {

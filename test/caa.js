@@ -57,6 +57,7 @@ describe('CAA record', function () {
   base.invalid(CAA, invalidRecords)
 
   base.getRFCs(CAA, validRecords[0])
+  base.getFields(CAA, [ 'flags', 'tag' ])
 
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)

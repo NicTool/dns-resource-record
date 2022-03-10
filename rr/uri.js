@@ -5,6 +5,7 @@ const TINYDNS = require('../lib/tinydns')
 class URI extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -67,8 +68,15 @@ class URI extends RR {
   }
 
   /******  MISC   *******/
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'target' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'priority', 'weight', 'target' ]
+      default:
+        return this.getCommonFields().concat([ 'priority', 'weight', 'target' ])
+    }
   }
 
   getRFCs () {

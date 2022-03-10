@@ -27,6 +27,7 @@ describe('SSHFP record', function () {
   base.invalid(SSHFP, invalidRecords)
 
   base.getRFCs(SSHFP, validRecords[0])
+  base.getFields(SSHFP, [ 'algorithm', 'fptype', 'fingerprint' ])
 
   base.toBind(SSHFP, validRecords)
   base.toTinydns(SSHFP, validRecords)

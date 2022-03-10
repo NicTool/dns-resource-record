@@ -31,6 +31,7 @@ describe('AAAA record', function () {
   base.invalid(AAAA, invalidRecords)
 
   base.getRFCs(AAAA, validRecords[0])
+  base.getFields(AAAA, [ 'address' ])
 
   base.toBind(AAAA, validRecords)
   base.toTinydns(AAAA, validRecords)

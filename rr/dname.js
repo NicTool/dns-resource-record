@@ -6,6 +6,7 @@ const TINYDNS = require('../lib/tinydns')
 class DNAME extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -32,8 +33,15 @@ class DNAME extends RR {
     this.set('target', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'target' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'target' ]
+      default:
+        return this.getCommonFields().concat([ 'target' ])
+    }
   }
 
   getRFCs () {

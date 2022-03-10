@@ -5,6 +5,7 @@ const TINYDNS = require('../lib/tinydns')
 class CAA extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -52,8 +53,15 @@ class CAA extends RR {
     this.set('value', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'flags', 'tag' ]
+      default:
+        return this.getCommonFields().concat([ 'flags', 'tag' ])
+    }
   }
 
   getRFCs () {

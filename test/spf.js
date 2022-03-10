@@ -24,6 +24,7 @@ describe('SPF record', function () {
   base.invalid(SPF, invalidRecords)
 
   base.getRFCs(SPF, validRecords[0])
+  base.getFields(SPF, [ 'data' ])
 
   base.toBind(SPF, validRecords)
   base.toTinydns(SPF, validRecords)

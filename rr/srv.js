@@ -7,6 +7,7 @@ const TINYDNS = require('../lib/tinydns')
 class SRV extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -54,8 +55,15 @@ class SRV extends RR {
     this.set('target', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'port', 'target' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'priority', 'weight', 'port', 'target' ]
+      default:
+        return this.getCommonFields().concat([ 'priority', 'weight', 'port', 'target' ])
+    }
   }
 
   getRFCs () {

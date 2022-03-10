@@ -6,6 +6,7 @@ const TINYDNS = require('../lib/tinydns')
 class TXT extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -19,8 +20,15 @@ class TXT extends RR {
     this.set('data', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'data' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'data' ]
+      default:
+        return this.getCommonFields().concat([ 'data' ])
+    }
   }
 
   getRFCs () {

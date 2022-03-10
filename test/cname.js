@@ -32,6 +32,7 @@ describe('CNAME record', function () {
   base.invalid(CNAME, invalidRecords)
 
   base.getRFCs(CNAME, validRecords[0])
+  base.getFields(CNAME, [ 'cname' ])
 
   base.toBind(CNAME, validRecords)
   base.toTinydns(CNAME, validRecords)

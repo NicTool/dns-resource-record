@@ -5,6 +5,7 @@ const TINYDNS = require('../lib/tinydns')
 class SSHFP extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -34,8 +35,15 @@ class SSHFP extends RR {
     this.set('fingerprint', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'algorithm', 'fptype', 'fingerprint' ]
+      default:
+        return this.getCommonFields().concat([ 'algorithm', 'fptype', 'fingerprint' ])
+    }
   }
 
   getRFCs () {

@@ -8,17 +8,17 @@ DNS resource record parser, validator, exporter, and importer.
 
 ## SYNOPSIS
 
-This module will be used by a web client UI and a server side DNS Resource Record validator to:
+This module is used to:
 
 - validate formatting, values, and RFC compliance of each RR
-- export RRs to:
-    - [x] BIND zone file format
-    - [x] tinydns file format
 - import RRs from:
     - [x] BIND zone file lines
     - [x] tinydns entries
+- export RRs to:
+    - [x] [BIND](https://www.isc.org/bind/) [zone file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
+    - [x] tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
 
-This module intends to import and export wholly RFC compliant DNS resourse records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
+This module intends to import and export wholly RFC compliant DNS resource records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
 
 
 ## SUPPORTED RECORDS

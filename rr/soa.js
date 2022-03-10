@@ -4,15 +4,16 @@ const RR = require('./index').RR
 class SOA extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
     this.set('id', 6)
 
-    const fields = [ 'minimum', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire' ]
-    for (const f of fields) {
-      this[`set${f.charAt(0).toUpperCase() + f.slice(1)}`](opts[f])
+    for (const f of this.getFields('rdata')) {
+      const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
+      this[fnName](opts[f])
     }
   }
 
@@ -37,7 +38,7 @@ class SOA extends RR {
     // RNAME (email of admin)  (escape . with \)
     if (!this.validHostname('SOA', 'RNAME', val)) return
     if (!this.fullyQualified('SOA', 'RNAME', val)) return
-    if (/@/.test(val)) throw new Error('SOA RNAME replaces @ with a . (dot).')
+    if (/@/.test(val)) throw new Error('SOA rname replaces @ with a . (dot).')
     this.set('rname', val)
   }
 
@@ -51,7 +52,7 @@ class SOA extends RR {
     // refresh (seconds after which to check with master for update)
     // RFC 1912 suggests 20 min to 12 hours
     // RIPE recommends 86400 (24 hours)
-    if (!this.is32bitInt('SOA', 'serial', val)) return
+    if (!this.is32bitInt('SOA', 'refresh', val)) return
 
     this.set('refresh', val)
   }
@@ -60,7 +61,7 @@ class SOA extends RR {
     // seconds after which to retry serial # update
     // RIPE recommends 7200 seconds (2 hours)
 
-    if (!this.is32bitInt('SOA', 'serial', val)) return
+    if (!this.is32bitInt('SOA', 'retry', val)) return
 
     this.set('retry', val)
   }
@@ -69,13 +70,20 @@ class SOA extends RR {
     // seconds after which secondary should drop zone if no master response
     // RFC 1912 suggests 2-4 weeks
     // RIPE suggests 3600000 (1,000 hours, 6 weeks)
-    if (!this.is32bitInt('SOA', 'serial', val)) return
+    if (!this.is32bitInt('SOA', 'expire', val)) return
 
     this.set('expire', val)
   }
 
-  getFields () {
-    return [ 'name', 'class', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
+      default:
+        return this.getCommonFields().concat([ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ])
+    }
   }
 
   getRFCs () {

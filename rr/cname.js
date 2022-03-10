@@ -6,6 +6,7 @@ const RR = require('./index').RR
 class CNAME extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -29,8 +30,15 @@ class CNAME extends RR {
     this.set('cname', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'cname' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'cname' ]
+      default:
+        return this.getCommonFields().concat([ 'cname' ])
+    }
   }
 
   getRFCs () {

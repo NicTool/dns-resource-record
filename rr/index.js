@@ -9,6 +9,7 @@ class RR extends Map {
 
   constructor (opts) {
     super()
+    if (opts === null) return
 
     if (opts.default) this.default = opts.default
 
@@ -101,6 +102,12 @@ class RR extends Map {
   setType (t) {
     if (!supportedTypes.includes(t)) throw new Error(`type ${t} not supported (yet)`)
     this.set('type', t)
+  }
+
+  getCommonFields () {
+    const commonFields = [ 'name', 'ttl', 'class', 'type' ]
+    Object.freeze(commonFields)
+    return commonFields
   }
 
   getEmpty (prop) {

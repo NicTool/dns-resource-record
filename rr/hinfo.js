@@ -4,6 +4,7 @@ const RR = require('./index').RR
 class HINFO extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -24,8 +25,15 @@ class HINFO extends RR {
     this.set('os', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'cpu', 'os' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'cpu', 'os' ]
+      default:
+        return this.getCommonFields().concat([ 'cpu', 'os' ])
+    }
   }
 
   getRFCs () {

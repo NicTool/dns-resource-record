@@ -51,6 +51,7 @@ describe('SOA record', function () {
   base.invalid(SOA, invalidRecords)
 
   base.getRFCs(SOA, validRecords[0])
+  base.getFields(SOA, [ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ])
 
   base.toBind(SOA, validRecords)
   base.toTinydns(SOA, validRecords)

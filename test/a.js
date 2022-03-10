@@ -53,7 +53,7 @@ const invalidRecords = [
   { ttl: 2147483648 },
 ]
 
-// copy invalid properties to an valid object
+// copy invalid properties to a valid object
 for (let i = 0; i < invalidRecords.length; i++) {
   const temp = JSON.parse(JSON.stringify(validRecords[0]))
   Object.assign(temp, invalidRecords[i])
@@ -65,6 +65,7 @@ describe('A record', function () {
   base.invalid(A, invalidRecords)
 
   base.getRFCs(A, validRecords[0])
+  base.getFields(A, [ 'address' ])
 
   base.toBind(A, validRecords)
   base.toTinydns(A, validRecords)

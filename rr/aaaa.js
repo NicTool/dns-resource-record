@@ -7,6 +7,7 @@ const TINYDNS = require('../lib/tinydns')
 class AAAA extends RR {
   constructor (opts) {
     super(opts)
+    if (opts === null) return
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -27,8 +28,15 @@ class AAAA extends RR {
     this.compress(this.get(f))
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'address' ]
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return [ 'address' ]
+      default:
+        return this.getCommonFields().concat([ 'address' ])
+    }
   }
 
   getRFCs () {
