@@ -5,19 +5,6 @@ class NS extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    if (opts?.address) {
-      this.setDname(opts?.address)
-    }
-    else if (opts?.nsdname) {
-      this.setDname(opts?.nsdname)
-    }
-    else {
-      this.setDname(opts?.dname)
-    }
   }
 
   /****** Resource record specific setters   *******/

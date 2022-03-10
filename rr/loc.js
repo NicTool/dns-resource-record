@@ -16,12 +16,6 @@ const CONV = {
 class LOC extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setAddress(opts?.address)
   }
 
   /****** Resource record specific setters   *******/

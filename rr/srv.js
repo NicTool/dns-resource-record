@@ -7,21 +7,6 @@ const TINYDNS = require('../lib/tinydns')
 class SRV extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setPriority(opts?.priority)
-    this.setWeight(opts?.weight)
-    this.setPort(opts?.port)
-
-    if (this?.address) {
-      this.setTarget(opts?.address)
-    }
-    else {
-      this.setTarget(opts?.target)
-    }
   }
 
   /****** Resource record specific setters   *******/

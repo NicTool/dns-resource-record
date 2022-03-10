@@ -4,13 +4,6 @@ const RR = require('./index').RR
 class HINFO extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setCpu(opts?.cpu)
-    this.setOs(opts?.os)
   }
 
   /****** Resource record specific setters   *******/

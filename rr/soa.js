@@ -4,15 +4,6 @@ const RR = require('./index').RR
 class SOA extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    for (const f of this.getFields('rdata')) {
-      const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
-      this[fnName](opts[f])
-    }
   }
 
   /****** Resource record specific setters   *******/

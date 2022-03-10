@@ -7,17 +7,26 @@ const rdataRe = /[\r\n\t:\\/]/
 class NAPTR extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
+  }
 
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
+  getDescription () {
+    return 'Naming Authority Pointer'
+  }
 
-    this.setOrder(opts?.order)
-    this.setPreference(opts?.preference)
-    this.setFlags(opts?.flags)
-    this.setService(opts?.service)
-    this.setRegexp(opts?.regexp)
-    this.setReplacement(opts?.replacement)
+  getQuotedFields () {
+    return [ 'flags', 'service', 'regexp' ]
+  }
+
+  getRdataFields (arg) {
+    return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
+  }
+
+  getRFCs () {
+    return [ 2915, 3403 ]
+  }
+
+  getTypeId () {
+    return 35
   }
 
   /****** Resource record specific setters   *******/
@@ -111,26 +120,6 @@ class NAPTR extends RR {
       ttl        : parseInt(ttl, 10),
     }
     return new this.constructor(bits)
-  }
-
-  getDescription () {
-    return 'Naming Authority Pointer'
-  }
-
-  getQuotedFields () {
-    return [ 'flags', 'service', 'regexp' ]
-  }
-
-  getRdataFields (arg) {
-    return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
-  }
-
-  getRFCs () {
-    return [ 2915, 3403 ]
-  }
-
-  getTypeId () {
-    return 35
   }
 
   /******  EXPORTERS   *******/

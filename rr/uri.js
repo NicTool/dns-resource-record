@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class URI extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setPriority(opts?.priority)
-    this.setWeight(opts?.weight)
-    this.setTarget(opts?.target)
   }
 
   /****** Resource record specific setters   *******/

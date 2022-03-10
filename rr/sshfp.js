@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class SSHFP extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setAlgorithm(opts?.algorithm)
-    this.setFpType(opts?.fptype)
-    this.setFingerprint(opts?.fingerprint)
   }
 
   /****** Resource record specific setters   *******/
@@ -23,7 +15,7 @@ class SSHFP extends RR {
     this.set('algorithm', val)
   }
 
-  setFpType (val) {
+  setFptype (val) {
     // 0: reserved, 1: SHA-1, 2: SHA-256
     if (!this.is8bitInt('SSHFP', 'type', val)) return
 

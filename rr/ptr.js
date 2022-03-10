@@ -4,20 +4,6 @@ const RR = require('./index').RR
 class PTR extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    if (opts?.address) { // RFC 1035
-      this.setDname(opts?.address)
-    }
-    else if (opts?.ptrdname) {
-      this.setDname(opts?.ptrdname)
-    }
-    else { // RFC 1035
-      this.setDname(opts?.dname)
-    }
   }
 
   /****** Resource record specific setters   *******/

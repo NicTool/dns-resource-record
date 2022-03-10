@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class CAA extends RR {
   constructor (opts) {
     super(opts)
-    if (opts === null) return
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.setFlags(opts?.flags)
-    this.setTag(opts?.tag)
-    this.setValue(opts?.value)
   }
 
   /****** Resource record specific setters   *******/

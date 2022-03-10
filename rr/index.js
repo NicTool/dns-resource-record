@@ -9,8 +9,8 @@ class RR extends Map {
 
     if (opts.default) this.default = opts.default
 
-    if (opts.tinyline) return // pass through
-    if (opts.bindline) return
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     // tinydns specific
     this.setLocation(opts?.location)
@@ -20,6 +20,11 @@ class RR extends Map {
     this.setTtl  (opts?.ttl)
     this.setClass(opts?.class)
     this.setType (opts?.type)
+
+    for (const f of this.getFields('rdata')) {
+      const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
+      this[fnName](opts[f])
+    }
   }
 
   setClass (c) {
