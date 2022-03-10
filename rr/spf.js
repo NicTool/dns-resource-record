@@ -28,7 +28,7 @@ class SPF extends RR {
   }
 
   getRFCs () {
-    return [ 1035 ]
+    return [ 4408, 7208 ]
   }
 
   getTypeId () {
