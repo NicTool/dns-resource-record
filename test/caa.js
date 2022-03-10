@@ -56,6 +56,7 @@ describe('CAA record', function () {
   base.valid(CAA, validRecords)
   base.invalid(CAA, invalidRecords)
 
+  base.getDescription(CAA)
   base.getRFCs(CAA, validRecords[0])
   base.getFields(CAA, [ 'flags', 'tag', 'value' ])
   base.getTypeId(CAA, 257)

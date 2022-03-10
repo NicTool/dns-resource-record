@@ -26,6 +26,7 @@ describe('SSHFP record', function () {
   base.valid(SSHFP, validRecords)
   base.invalid(SSHFP, invalidRecords)
 
+  base.getDescription(SSHFP)
   base.getRFCs(SSHFP, validRecords[0])
   base.getFields(SSHFP, [ 'algorithm', 'fptype', 'fingerprint' ])
   base.getTypeId(SSHFP, 44)

@@ -31,6 +31,7 @@ describe('CNAME record', function () {
   base.valid(CNAME, validRecords)
   base.invalid(CNAME, invalidRecords)
 
+  base.getDescription(CNAME)
   base.getRFCs(CNAME, validRecords[0])
   base.getFields(CNAME, [ 'cname' ])
   base.getTypeId(CNAME, 5)

@@ -7,7 +7,7 @@ describe('RR', function () {
   const r = new RR(null)
 
   describe('fullyQualified', function () {
-    it('should detect FQDNs', async () => {
+    it('should detect FQDNs', async function () {
       assert.deepEqual(r.fullyQualified('$type', '$field', 'host.example.com.'), true)
 
       try {
@@ -24,13 +24,13 @@ describe('RR', function () {
     const invalid = [ -1, 'a', new Date(), undefined, 256 ]
 
     for (const i of valid) {
-      it(`returns true for valid int: ${i}`, async () => {
+      it(`returns true for valid int: ${i}`, async function () {
         assert.strictEqual(r.is8bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
-      it(`throws on invalid int: ${i}`, async () => {
+      it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is8bitInt('test', 'field', i), false)
         }
@@ -46,13 +46,13 @@ describe('RR', function () {
     const invalid = [ 'a', new Date(), undefined, 65536 ]
 
     for (const i of valid) {
-      it(`returns true for valid int: ${i}`, async () => {
+      it(`returns true for valid int: ${i}`, async function () {
         assert.strictEqual(r.is16bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
-      it(`throws on invalid int: ${i}`, async () => {
+      it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is16bitInt('test', 'field', i), false)
         }
@@ -68,13 +68,13 @@ describe('RR', function () {
     const invalid = [ 'a', new Date(), undefined, 2147483648 ]
 
     for (const i of valid) {
-      it(`returns true for valid int: ${i}`, async () => {
+      it(`returns true for valid int: ${i}`, async function () {
         assert.strictEqual(r.is32bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
-      it(`throws on invalid int: ${i}`, async () => {
+      it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is32bitInt('test', 'field', i), false)
         }
@@ -86,11 +86,11 @@ describe('RR', function () {
   })
 
   describe('isQuoted', function () {
-    it('detects a quoted strings', async () => {
+    it('detects a quoted strings', async function () {
       assert.deepEqual(r.isQuoted('"yes, this is"'), true)
     })
 
-    it('detects non-quoted strings', async () => {
+    it('detects non-quoted strings', async function () {
       assert.deepEqual(r.isQuoted('nope, not quoted'), false)
     })
   })

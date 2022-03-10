@@ -41,6 +41,7 @@ describe('SRV record', function () {
   base.valid(SRV, validRecords)
   base.invalid(SRV, invalidRecords)
 
+  base.getDescription(SRV)
   base.getRFCs(SRV, validRecords[0])
   base.getFields(SRV, [ 'priority', 'weight', 'port', 'target' ])
   base.getTypeId(SRV, 33)

@@ -38,6 +38,7 @@ describe('URI record', function () {
   base.valid(URI, validRecords)
   base.invalid(URI, invalidRecords)
 
+  base.getDescription(URI)
   base.getRFCs(URI, validRecords[0])
   base.getFields(URI, [ 'priority', 'weight', 'target' ])
   base.getTypeId(URI, 256)

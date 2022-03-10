@@ -31,6 +31,7 @@ describe('PTR record', function () {
   base.valid(PTR, validRecords)
   base.invalid(PTR, invalidRecords)
 
+  base.getDescription(PTR)
   base.getRFCs(PTR, validRecords[0])
   base.getFields(PTR, [ 'dname' ])
   base.getTypeId(PTR, 12)

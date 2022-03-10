@@ -31,6 +31,7 @@ describe('NS record', function () {
   base.valid(NS, validRecords)
   base.invalid(NS, invalidRecords)
 
+  base.getDescription(NS)
   base.getRFCs(NS, validRecords[0])
   base.getFields(NS, [ 'dname' ])
   base.getTypeId(NS, 2)

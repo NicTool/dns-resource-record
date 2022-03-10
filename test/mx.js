@@ -39,6 +39,7 @@ describe('MX record', function () {
   base.valid(MX, validRecords)
   base.invalid(MX, invalidRecords)
 
+  base.getDescription(MX)
   base.getRFCs(MX, validRecords[0])
   base.getFields(MX, [ 'weight', 'exchange' ])
   base.getTypeId(MX, 15)

@@ -60,6 +60,15 @@ exports.toTinydns = (type, validRecords) => {
   })
 }
 
+exports.getDescription = type => {
+  describe('getDescription', function () {
+    const desc = new type(null).getDescription()
+    it(`gets description: ${desc}`, async function () {
+      assert.ok(desc)
+    })
+  })
+}
+
 exports.getRFCs = (type, valid) => {
   describe('getRFCs', function () {
     it(`can retrieve RFCs`, async function () {

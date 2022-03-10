@@ -30,6 +30,7 @@ describe('AAAA record', function () {
   base.valid(AAAA, validRecords)
   base.invalid(AAAA, invalidRecords)
 
+  base.getDescription(AAAA)
   base.getRFCs(AAAA, validRecords[0])
   base.getFields(AAAA, [ 'address' ])
   base.getTypeId(AAAA, 28)
