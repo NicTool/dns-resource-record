@@ -54,15 +54,12 @@ class SRV extends RR {
     this.set('target', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'priority', 'weight', 'port', 'target' ]
-      default:
-        return this.getCommonFields().concat([ 'priority', 'weight', 'port', 'target' ])
-    }
+  getDescription () {
+    return 'Service'
+  }
+
+  getRdataFields (arg) {
+    return [ 'priority', 'weight', 'port', 'target' ]
   }
 
   getRFCs () {

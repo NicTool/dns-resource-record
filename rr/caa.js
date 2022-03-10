@@ -58,19 +58,16 @@ class CAA extends RR {
     this.set('value', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'flags', 'tag', 'value' ]
-      default:
-        return this.getCommonFields().concat([ 'flags', 'tag', 'value' ])
-    }
+  getDescription () {
+    return 'Certification Authority Authorization'
   }
 
   getQuotedFields () {
     return [ 'value' ]
+  }
+
+  getRdataFields (arg) {
+    return [ 'flags', 'tag', 'value' ]
   }
 
   getRFCs () {

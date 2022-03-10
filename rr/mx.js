@@ -32,15 +32,12 @@ class MX extends RR {
     this.set('weight', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'weight', 'exchange' ]
-      default:
-        return this.getCommonFields().concat([ 'weight', 'exchange' ])
-    }
+  getDescription () {
+    return 'Mail Exchanger'
+  }
+
+  getRdataFields (arg) {
+    return [ 'weight', 'exchange' ]
   }
 
   getRFCs () {

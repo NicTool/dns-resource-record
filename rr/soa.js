@@ -73,15 +73,12 @@ class SOA extends RR {
     this.set('expire', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
-      default:
-        return this.getCommonFields().concat([ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ])
-    }
+  getDescription () {
+    return 'Start Of Authority'
+  }
+
+  getRdataFields (arg) {
+    return [ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
   }
 
   getRFCs () {

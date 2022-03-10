@@ -120,6 +120,21 @@ class RR extends Map {
     return []
   }
 
+  getRdataFields () {
+    return [ ]
+  }
+
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return this.getRdataFields()
+      default:
+        return this.getCommonFields().concat(this.getRdataFields())
+    }
+  }
+
   hasValidLabels (hostname) {
     for (const label of hostname.split('.')) {
       if (label.length < 1 || label.length > 63)

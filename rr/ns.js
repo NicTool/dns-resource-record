@@ -30,15 +30,12 @@ class NS extends RR {
     this.set('dname', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'dname' ]
-      default:
-        return this.getCommonFields().concat([ 'dname' ])
-    }
+  getDescription () {
+    return 'Name Server'
+  }
+
+  getRdataFields (arg) {
+    return [ 'dname' ]
   }
 
   getRFCs () {

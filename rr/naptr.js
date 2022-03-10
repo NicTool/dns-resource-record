@@ -113,19 +113,16 @@ class NAPTR extends RR {
     return new this.constructor(bits)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
-      default:
-        return this.getCommonFields().concat([ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ])
-    }
+  getDescription () {
+    return 'Naming Authority Pointer'
   }
 
   getQuotedFields () {
     return [ 'flags', 'service', 'regexp' ]
+  }
+
+  getRdataFields (arg) {
+    return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
   }
 
   getRFCs () {

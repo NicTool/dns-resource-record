@@ -19,15 +19,12 @@ class TXT extends RR {
     this.set('data', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'data' ]
-      default:
-        return this.getCommonFields().concat([ 'data' ])
-    }
+  getDescription () {
+    return 'Text'
+  }
+
+  getRdataFields (arg) {
+    return [ 'data' ]
   }
 
   getRFCs () {

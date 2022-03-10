@@ -27,15 +27,12 @@ class AAAA extends RR {
     this.compress(this.get(f))
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'address' ]
-      default:
-        return this.getCommonFields().concat([ 'address' ])
-    }
+  getDescription () {
+    return 'Address IPv6'
+  }
+
+  getRdataFields (arg) {
+    return [ 'address' ]
   }
 
   getRFCs () {

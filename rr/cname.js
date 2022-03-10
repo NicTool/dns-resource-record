@@ -29,15 +29,12 @@ class CNAME extends RR {
     this.set('cname', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'cname' ]
-      default:
-        return this.getCommonFields().concat([ 'cname' ])
-    }
+  getDescription () {
+    return 'Canonical Name'
+  }
+
+  getRdataFields (arg) {
+    return [ 'cname' ]
   }
 
   getRFCs () {

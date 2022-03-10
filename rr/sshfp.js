@@ -34,15 +34,12 @@ class SSHFP extends RR {
     this.set('fingerprint', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'algorithm', 'fptype', 'fingerprint' ]
-      default:
-        return this.getCommonFields().concat([ 'algorithm', 'fptype', 'fingerprint' ])
-    }
+  getDescription () {
+    return 'Secure Shell Key Fingerprints'
+  }
+
+  getRdataFields () {
+    return [ 'algorithm', 'fptype', 'fingerprint' ]
   }
 
   getRFCs () {

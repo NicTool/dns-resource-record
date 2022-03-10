@@ -67,15 +67,12 @@ class URI extends RR {
   }
 
   /******  MISC   *******/
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'priority', 'weight', 'target' ]
-      default:
-        return this.getCommonFields().concat([ 'priority', 'weight', 'target' ])
-    }
+  getDescription () {
+    return 'URI'
+  }
+
+  getRdataFields (arg) {
+    return [ 'priority', 'weight', 'target' ]
   }
 
   getRFCs () {

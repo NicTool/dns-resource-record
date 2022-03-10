@@ -26,15 +26,12 @@ class DNAME extends RR {
     this.set('target', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'target' ]
-      default:
-        return this.getCommonFields().concat([ 'target' ])
-    }
+  getDescription () {
+    return 'Delegation Name'
+  }
+
+  getRdataFields (arg) {
+    return [ 'target' ]
   }
 
   getRFCs () {

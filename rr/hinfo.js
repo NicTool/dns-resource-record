@@ -24,15 +24,12 @@ class HINFO extends RR {
     this.set('os', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'cpu', 'os' ]
-      default:
-        return this.getCommonFields().concat([ 'cpu', 'os' ])
-    }
+  getDescription () {
+    return 'Host Info'
+  }
+
+  getRdataFields (arg) {
+    return [ 'cpu', 'os' ]
   }
 
   getRFCs () {

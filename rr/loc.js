@@ -38,15 +38,12 @@ class LOC extends RR {
     this.set('address', val)
   }
 
-  getFields (arg) {
-    switch (arg) {
-      case 'common':
-        return this.getCommonFields()
-      case 'rdata':
-        return [ 'address' ]
-      default:
-        return this.getCommonFields().concat([ 'address' ])
-    }
+  getDescription () {
+    return 'Location'
+  }
+
+  getRdataFields (arg) {
+    return [ 'address' ]
   }
 
   getRFCs () {
