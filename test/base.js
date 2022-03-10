@@ -109,3 +109,12 @@ exports.getFields = (type, rdataFields) => {
     })
   })
 }
+
+exports.getTypeId = (type, val) => {
+  describe('getTypeId', function () {
+    it(`can retrieve record type ID`, async function () {
+      const r = new type(null)
+      assert.deepEqual(r.getTypeId(), val)
+    })
+  })
+}

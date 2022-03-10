@@ -21,7 +21,6 @@ class LOC extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 29)
     this.setAddress(opts?.address)
   }
 
@@ -52,6 +51,10 @@ class LOC extends RR {
 
   getRFCs () {
     return [ 1876 ]
+  }
+
+  getTypeId () {
+    return 29
   }
 
   parseLoc (string) {

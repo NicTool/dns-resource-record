@@ -8,7 +8,6 @@ class NAPTR extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
-    this.set('id', 35)
 
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
@@ -127,6 +126,10 @@ class NAPTR extends RR {
 
   getRFCs () {
     return [ 2915, 3403 ]
+  }
+
+  getTypeId () {
+    return 35
   }
 
   /******  EXPORTERS   *******/

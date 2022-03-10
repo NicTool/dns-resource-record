@@ -9,8 +9,6 @@ class SOA extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 6)
-
     for (const f of this.getFields('rdata')) {
       const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
       this[fnName](opts[f])
@@ -88,6 +86,10 @@ class SOA extends RR {
 
   getRFCs () {
     return [ 1035, 2308 ]
+  }
+
+  getTypeId () {
+    return 6
   }
 
   /******  IMPORTERS   *******/

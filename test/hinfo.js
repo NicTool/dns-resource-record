@@ -33,6 +33,7 @@ describe('HINFO record', function () {
 
   base.getRFCs(HINFO, validRecords[0])
   base.getFields(HINFO, [ 'cpu', 'os' ])
+  base.getTypeId(HINFO, 13)
 
   base.toBind(HINFO, validRecords)
   // base.toTinydns(HINFO, validRecords)

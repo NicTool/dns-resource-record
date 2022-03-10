@@ -11,7 +11,6 @@ class SPF extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 99)
     this.setData(opts?.data)
   }
 
@@ -33,6 +32,10 @@ class SPF extends RR {
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 99
   }
 
   /******  IMPORTERS   *******/

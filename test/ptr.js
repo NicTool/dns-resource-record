@@ -33,6 +33,7 @@ describe('PTR record', function () {
 
   base.getRFCs(PTR, validRecords[0])
   base.getFields(PTR, [ 'dname' ])
+  base.getTypeId(PTR, 12)
 
   base.toBind(PTR, validRecords)
   base.toTinydns(PTR, validRecords)

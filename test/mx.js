@@ -41,6 +41,7 @@ describe('MX record', function () {
 
   base.getRFCs(MX, validRecords[0])
   base.getFields(MX, [ 'weight', 'exchange' ])
+  base.getTypeId(MX, 15)
 
   base.toBind(MX, validRecords)
   base.toTinydns(MX, validRecords)

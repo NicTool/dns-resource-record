@@ -10,7 +10,6 @@ class SSHFP extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 44)
     this.setAlgorithm(opts?.algorithm)
     this.setFpType(opts?.fptype)
     this.setFingerprint(opts?.fingerprint)
@@ -48,6 +47,10 @@ class SSHFP extends RR {
 
   getRFCs () {
     return [ 4255 ]
+  }
+
+  getTypeId () {
+    return 44
   }
 
   /******  IMPORTERS   *******/

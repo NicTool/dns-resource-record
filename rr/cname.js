@@ -11,7 +11,6 @@ class CNAME extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 5)
     this.setCname(opts?.cname)
   }
 
@@ -43,6 +42,10 @@ class CNAME extends RR {
 
   getRFCs () {
     return [ 1035, 2181 ]
+  }
+
+  getTypeId () {
+    return 5
   }
 
   /******  IMPORTERS   *******/

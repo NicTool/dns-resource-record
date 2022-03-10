@@ -40,6 +40,7 @@ describe('URI record', function () {
 
   base.getRFCs(URI, validRecords[0])
   base.getFields(URI, [ 'priority', 'weight', 'target' ])
+  base.getTypeId(URI, 256)
 
   base.toBind(URI, validRecords)
   base.toTinydns(URI, validRecords)

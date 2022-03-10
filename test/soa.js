@@ -52,6 +52,7 @@ describe('SOA record', function () {
 
   base.getRFCs(SOA, validRecords[0])
   base.getFields(SOA, [ 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum' ])
+  base.getTypeId(SOA, 6)
 
   base.toBind(SOA, validRecords)
   base.toTinydns(SOA, validRecords)

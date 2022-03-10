@@ -9,8 +9,6 @@ class PTR extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 12)
-
     if (opts?.address) { // RFC 1035
       this.setDname(opts?.address)
     }
@@ -43,6 +41,10 @@ class PTR extends RR {
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 12
   }
 
   /******  IMPORTERS   *******/

@@ -11,7 +11,6 @@ class TXT extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 16)
     this.setData(opts?.data)
   }
 
@@ -33,6 +32,10 @@ class TXT extends RR {
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 16
   }
 
   /******  IMPORTERS   *******/

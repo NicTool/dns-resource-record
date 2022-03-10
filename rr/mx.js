@@ -11,7 +11,6 @@ class MX extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 15)
     this.setExchange(opts?.exchange)
     this.setWeight(opts?.weight)
   }
@@ -46,6 +45,10 @@ class MX extends RR {
 
   getRFCs () {
     return [ 1035, 7505 ]
+  }
+
+  getTypeId () {
+    return 15
   }
 
   /******  IMPORTERS   *******/

@@ -33,6 +33,7 @@ describe('NS record', function () {
 
   base.getRFCs(NS, validRecords[0])
   base.getFields(NS, [ 'dname' ])
+  base.getTypeId(NS, 2)
 
   base.toBind(NS, validRecords)
   base.toTinydns(NS, validRecords)

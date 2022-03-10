@@ -25,6 +25,7 @@ describe('TXT record', function () {
 
   base.getRFCs(TXT, validRecords[0])
   base.getFields(TXT, [ 'data' ])
+  base.getTypeId(TXT, 16)
 
   base.toBind(TXT, validRecords)
   base.toTinydns(TXT, validRecords)

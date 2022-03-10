@@ -9,7 +9,6 @@ class HINFO extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 13)
     this.setCpu(opts?.cpu)
     this.setOs(opts?.os)
   }
@@ -38,6 +37,10 @@ class HINFO extends RR {
 
   getRFCs () {
     return [ 8482 ]
+  }
+
+  getTypeId () {
+    return 13
   }
 
   /******  IMPORTERS   *******/

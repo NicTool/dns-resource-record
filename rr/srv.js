@@ -12,7 +12,6 @@ class SRV extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 33)
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
     this.setPort(opts?.port)
@@ -68,6 +67,10 @@ class SRV extends RR {
 
   getRFCs () {
     return [ 2782 ]
+  }
+
+  getTypeId () {
+    return 33
   }
 
   /******  IMPORTERS   *******/

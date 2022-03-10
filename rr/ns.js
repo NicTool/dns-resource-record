@@ -9,8 +9,6 @@ class NS extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 2)
-
     if (opts?.address) {
       this.setDname(opts?.address)
     }
@@ -45,6 +43,10 @@ class NS extends RR {
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 2
   }
 
   /******  IMPORTERS   *******/

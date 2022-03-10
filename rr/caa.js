@@ -10,7 +10,6 @@ class CAA extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 257)
     this.setFlags(opts?.flags)
     this.setTag(opts?.tag)
     this.setValue(opts?.value)
@@ -66,6 +65,10 @@ class CAA extends RR {
 
   getRFCs () {
     return [ 6844 ]
+  }
+
+  getTypeId () {
+    return 257
   }
 
   /******  IMPORTERS   *******/

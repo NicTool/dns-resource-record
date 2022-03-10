@@ -43,6 +43,7 @@ describe('SRV record', function () {
 
   base.getRFCs(SRV, validRecords[0])
   base.getFields(SRV, [ 'priority', 'weight', 'port', 'target' ])
+  base.getTypeId(SRV, 33)
 
   base.toBind(SRV, validRecords)
   base.toTinydns(SRV, validRecords)

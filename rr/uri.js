@@ -10,7 +10,6 @@ class URI extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 256)
     this.setPriority(opts?.priority)
     this.setWeight(opts?.weight)
     this.setTarget(opts?.target)
@@ -81,6 +80,10 @@ class URI extends RR {
 
   getRFCs () {
     return [ 7553 ]
+  }
+
+  getTypeId () {
+    return 256
   }
 
   /******  EXPORTERS   *******/

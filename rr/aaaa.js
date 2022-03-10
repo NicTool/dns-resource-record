@@ -12,7 +12,6 @@ class AAAA extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 28)
     this.setAddress(opts?.address)
   }
 
@@ -41,6 +40,10 @@ class AAAA extends RR {
 
   getRFCs () {
     return [ 3596 ]
+  }
+
+  getTypeId () {
+    return 28
   }
 
   /******  IMPORTERS   *******/

@@ -11,8 +11,6 @@ class DNAME extends RR {
     if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
 
-    this.set('id', 39)
-
     if (opts?.address) {
       this.setTarget(opts?.address)
     }
@@ -46,6 +44,10 @@ class DNAME extends RR {
 
   getRFCs () {
     return [ 2672, 6672 ]
+  }
+
+  getTypeId () {
+    return 39
   }
 
   /******  IMPORTERS   *******/
