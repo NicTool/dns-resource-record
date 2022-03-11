@@ -6,12 +6,6 @@ const RR = require('./index').RR
 class A extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 1)
-    this.setAddress(opts.address)
   }
 
   /****** Resource record specific setters   *******/
@@ -21,12 +15,20 @@ class A extends RR {
     this.set('address', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'address' ]
+  getDescription () {
+    return 'Address'
+  }
+
+  getRdataFields (arg) {
+    return [ 'address' ]
   }
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 1
   }
 
   /******  IMPORTERS   *******/
@@ -35,8 +37,8 @@ class A extends RR {
     const [ fqdn, ip, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
-      type     : 'A',
       name     : fqdn,
+      type     : 'A',
       address  : ip,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -46,21 +48,17 @@ class A extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  A  192.0.2.127
-    const [ fqdn, ttl, c, type, ip ] = str.split(/\s+/)
+    const [ name, ttl, c, type, addr ] = str.split(/\s+/)
     return new this.constructor({
+      name   : name,
       class  : c,
       type   : type,
-      name   : fqdn,
-      address: ip,
+      address: addr,
       ttl    : parseInt(ttl, 10),
     })
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
     return `+${this.get('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

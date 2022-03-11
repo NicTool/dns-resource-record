@@ -7,17 +7,26 @@ const rdataRe = /[\r\n\t:\\/]/
 class NAPTR extends RR {
   constructor (opts) {
     super(opts)
-    this.set('id', 35)
+  }
 
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
+  getDescription () {
+    return 'Naming Authority Pointer'
+  }
 
-    this.setOrder(opts?.order)
-    this.setPreference(opts?.preference)
-    this.setFlags(opts?.flags)
-    this.setService(opts?.service)
-    this.setRegexp(opts?.regexp)
-    this.setReplacement(opts?.replacement)
+  getQuotedFields () {
+    return [ 'flags', 'service', 'regexp' ]
+  }
+
+  getRdataFields (arg) {
+    return [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
+  }
+
+  getRFCs () {
+    return [ 2915, 3403 ]
+  }
+
+  getTypeId () {
+    return 35
   }
 
   /****** Resource record specific setters   *******/
@@ -113,23 +122,7 @@ class NAPTR extends RR {
     return new this.constructor(bits)
   }
 
-  getFields () {
-    // Domain TTL Class Type Order Preference Flags Service Regexp Replacement
-    return [ 'name', 'ttl', 'class', 'type', 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ]
-  }
-
-  getRFCs () {
-    return [ 2915, 3403 ]
-  }
-
   /******  EXPORTERS   *******/
-  toBind () {
-    // TODO: regexp =~ s/\\/\\\\/g;  # escape any \ characters
-    const quoted = [ 'flags', 'service', 'regexp' ]
-
-    return `${this.getFields().map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
 
     let rdata = ''

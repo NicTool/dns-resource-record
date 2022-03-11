@@ -4,13 +4,6 @@ const RR = require('./index').RR
 class HINFO extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 13)
-    this.setCpu(opts?.cpu)
-    this.setOs(opts?.os)
   }
 
   /****** Resource record specific setters   *******/
@@ -24,12 +17,24 @@ class HINFO extends RR {
     this.set('os', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'cpu', 'os' ]
+  getDescription () {
+    return 'Host Info'
+  }
+
+  getRdataFields (arg) {
+    return [ 'cpu', 'os' ]
   }
 
   getRFCs () {
     return [ 8482 ]
+  }
+
+  getTypeId () {
+    return 13
+  }
+
+  getQuotedFields () {
+    return [ 'cpu', 'os' ]
   }
 
   /******  IMPORTERS   *******/
@@ -41,11 +46,6 @@ class HINFO extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    const quoted = [ 'cpu', 'os' ]
-    return `${this.getFields().map(f => quoted.includes(f) ? this.getQuoted(f) : this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
   }
 }

@@ -22,26 +22,23 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class : 'IN',
     name  : 'test.example.com',
-    type  : 'SRV',
     target: 'not-full-qualified.example.com',
-    ttl   : 3600,
   },
   {
-    class : 'IN',
     name  : 'test.example.com',
-    type  : 'SRV',
     target: '192.168.0.1',
-    ttl   : 3600,
   },
 ]
 
 describe('SRV record', function () {
   base.valid(SRV, validRecords)
-  base.invalid(SRV, invalidRecords)
+  base.invalid(SRV, invalidRecords, { ttl: 3600 })
 
+  base.getDescription(SRV)
   base.getRFCs(SRV, validRecords[0])
+  base.getFields(SRV, [ 'priority', 'weight', 'port', 'target' ])
+  base.getTypeId(SRV, 33)
 
   base.toBind(SRV, validRecords)
   base.toTinydns(SRV, validRecords)

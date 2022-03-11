@@ -12,10 +12,10 @@ const validRecords = [
     type : 'CAA',
     flags: 0,
     tag  : 'issue',
-    value: 'letsencrypt.org',
+    value: 'http://letsencrypt.org',
     ttl  : 3600,
-    testB: `ns1.example.com\t3600\tIN\tCAA\t0\tissue\t"letsencrypt.org"\n`,
-    testT: ':ns1.example.com:257:\\000\\005issueletsencrypt.org:3600::\n',
+    testB: `ns1.example.com\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n`,
+    testT: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
   },
   {
     class: 'IN',
@@ -23,10 +23,10 @@ const validRecords = [
     type : 'CAA',
     flags: 0,
     tag  : 'issue',
-    value: '"lets crypt.org"',
+    value: 'mailto:lets-crypt.org',
     ttl  : 3600,
-    testB: `ns2.example.com\t3600\tIN\tCAA\t0\tissue\t"lets crypt.org"\n`,
-    testT: ':ns2.example.com:257:\\000\\005issue"lets crypt.org":3600::\n',
+    testB: `ns2.example.com\t3600\tIN\tCAA\t0\tissue\t"mailto:lets-crypt.org"\n`,
+    testT: ':ns2.example.com:257:\\000\\005issue"mailto\\072lets-crypt.org":3600::\n',
   },
   {
     name : 'example.net',
@@ -34,29 +34,41 @@ const validRecords = [
     ttl  : 86400,
     flags: 0,
     tag  : 'issuewild',
-    value: 'letsencrypt.org',
-    testB: 'example.net\t86400\tIN\tCAA\t0\tissuewild\t"letsencrypt.org"\n',
-    testT: ':example.net:257:\\000\\011issuewildletsencrypt.org:86400::\n',
+    value: 'https://letsencrypt.org',
+    testB: 'example.net\t86400\tIN\tCAA\t0\tissuewild\t"https://letsencrypt.org"\n',
+    testT: ':example.net:257:\\000\\011issuewild"https\\072\\057\\057letsencrypt.org":86400::\n',
   },
 ]
 
 const invalidRecords = [
   {
-    class: 'IN',
     name : 'example.com',
-    type : 'CAA',
-    flags: 1,
+    flags: 128,
     tag  : 'issue',
-    value: 'lets encrypt.org', // spaces aren't allowed unless quoted
-    ttl  : 3600,
+    value: 'letsencrypt.org', // missing iodef prefix
+  },
+  {
+    name : 'example.com',
+    flags: 128,
+    tag  : 'invalid', // invalid
+    value: 'http://letsencrypt.org',
+  },
+  {
+    name : 'example.com',
+    flags: 15,  // invalid
+    tag  : 'issue',
+    value: 'http://letsencrypt.org',
   },
 ]
 
 describe('CAA record', function () {
   base.valid(CAA, validRecords)
-  base.invalid(CAA, invalidRecords)
+  base.invalid(CAA, invalidRecords, { ttl: 3600 })
 
+  base.getDescription(CAA)
   base.getRFCs(CAA, validRecords[0])
+  base.getFields(CAA, [ 'flags', 'tag', 'value' ])
+  base.getTypeId(CAA, 257)
 
   base.toBind(CAA, validRecords)
   base.toTinydns(CAA, validRecords)

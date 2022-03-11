@@ -7,12 +7,6 @@ const TINYDNS = require('../lib/tinydns')
 class AAAA extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 28)
-    this.setAddress(opts?.address)
   }
 
   /****** Resource record specific setters   *******/
@@ -27,12 +21,20 @@ class AAAA extends RR {
     this.compress(this.get(f))
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'address' ]
+  getDescription () {
+    return 'Address IPv6'
+  }
+
+  getRdataFields (arg) {
+    return [ 'address' ]
   }
 
   getRFCs () {
     return [ 3596 ]
+  }
+
+  getTypeId () {
+    return 28
   }
 
   /******  IMPORTERS   *******/
@@ -100,9 +102,6 @@ class AAAA extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals

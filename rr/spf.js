@@ -6,12 +6,6 @@ const TINYDNS = require('../lib/tinydns')
 class SPF extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 99)
-    this.setData(opts?.data)
   }
 
   /****** Resource record specific setters   *******/
@@ -19,12 +13,20 @@ class SPF extends RR {
     this.set('data', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type' ]
+  getDescription () {
+    return 'Sender Policy Framework'
+  }
+
+  getRdataFields (arg) {
+    return [ 'data' ]
   }
 
   getRFCs () {
-    return [ 1035 ]
+    return [ 4408, 7208 ]
+  }
+
+  getTypeId () {
+    return 99
   }
 
   /******  IMPORTERS   *******/
@@ -44,13 +46,13 @@ class SPF extends RR {
   }
 
   fromBind (str) {
-    // test.example.com  3600  IN  SPF  "...""
+    // test.example.com  3600  IN  SPF  "rdata"
     const [ fqdn, ttl, c, type ] = str.split(/\s+/)
     return new this.constructor({
       class: c,
       type : type,
       name : fqdn,
-      data : str.split(/\s+/).slice(4).map(s => s.replace(/^"|"$/g, '')).join(''),
+      data : str.split(/\s+/).slice(4).map(s => s.replace(/^"|"$/g, '')).join(' ').trim(),
       ttl  : parseInt(ttl, 10),
     })
   }
@@ -62,7 +64,7 @@ class SPF extends RR {
       // BIND croaks when any string in the SPF RR data is longer than 255
       data = data.match(/(.{1,255})/g).join('" "')
     }
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\t"${data}"\n`
+    return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
   }
 
   toTinydns () {

@@ -20,26 +20,29 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class   : 'IN',
     name    : 'test.example.com',
-    type    : 'MX',
     exchange: 'not-full-qualified.example.com',
-    ttl     : 3600,
   },
   {
-    class   : 'IN',
     name    : 'test.example.com',
-    type    : 'MX',
     exchange: '192.0.2.1',
-    ttl     : 3600,
+  },
+  {
+    name    : 'test.example.com',
+    exchange: '-blah',
   },
 ]
 
+const defaults = { ttl: 3600, weight: 0 }
+
 describe('MX record', function () {
   base.valid(MX, validRecords)
-  base.invalid(MX, invalidRecords)
+  base.invalid(MX, invalidRecords, defaults)
 
+  base.getDescription(MX)
   base.getRFCs(MX, validRecords[0])
+  base.getFields(MX, [ 'weight', 'exchange' ])
+  base.getTypeId(MX, 15)
 
   base.toBind(MX, validRecords)
   base.toTinydns(MX, validRecords)

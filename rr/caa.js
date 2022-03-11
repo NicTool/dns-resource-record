@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class CAA extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 257)
-    this.setFlags(opts?.flags)
-    this.setTag(opts?.tag)
-    this.setValue(opts?.value)
   }
 
   /****** Resource record specific setters   *******/
@@ -20,7 +12,7 @@ class CAA extends RR {
     if (!this.is8bitInt('CAA', 'flags', val)) return
 
     if (![ 0, 128 ].includes(val)) {
-      console.warn(`CAA flags ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA flags ${val} not recognized: RFC 6844`)
     }
 
     this.set('flags', val)
@@ -34,7 +26,7 @@ class CAA extends RR {
       throw new Error('CAA tag must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
-      console.warn(`CAA tag ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA tag ${val} not recognized: RFC 6844`)
     }
     this.set('tag', val)
   }
@@ -42,22 +34,40 @@ class CAA extends RR {
   setValue (val) {
     // either (2) a quoted string or
     // (1) a contiguous set of characters without interior spaces
-    if (!/["']/.test(val) && /\s/.test(val)) {
-      throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
+    if (this.isQuoted(val)) {
+      val = val.replace(/^["']|["']$/g, '') // strip quotes
+    }
+    else {
+      // if (/\s/.test(val)) throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
     }
 
-    // const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
-    // TODO: check if val starts with one of iodefSchemes, RFC 6844
+    // check if val starts with one of iodefSchemes
+    const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
+    if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
+      throw new Error(`CAA value must have valid iodefScheme prefix: RFC 6844`)
+    }
 
     this.set('value', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'flags', 'tag' ]
+  getDescription () {
+    return 'Certification Authority Authorization'
+  }
+
+  getQuotedFields () {
+    return [ 'value' ]
+  }
+
+  getRdataFields (arg) {
+    return [ 'flags', 'tag', 'value' ]
   }
 
   getRFCs () {
     return [ 6844 ]
+  }
+
+  getTypeId () {
+    return 257
   }
 
   /******  IMPORTERS   *******/
@@ -87,25 +97,19 @@ class CAA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const [ fqdn, ttl, c, type, flags, tag, value ] = str.split(/\s+/)
+    const [ fqdn, ttl, c, type, flags, tag ] = str.split(/\s+/)
     return new this.constructor({
       class: c,
       type : type,
       name : fqdn,
       flags: parseInt(flags, 10),
       tag  : tag,
-      value: value,
+      value: str.split(/\s+/).slice(6).join(' ').trim(),
       ttl  : parseInt(ttl,    10),
     })
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    let value = this.get('value')
-    if (value[0] !== '"') value = `"${value}"` // add enclosing quotes
-
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\t${value}\n`
-  }
 
   toTinydns () {
     let rdata = ''
@@ -114,7 +118,7 @@ class CAA extends RR {
     rdata += TINYDNS.UInt8toOctal(this.get('tag').length)
     rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag'))
 
-    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value'))
+    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value'))
 
     return `:${this.get('name')}:257:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

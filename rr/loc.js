@@ -16,12 +16,6 @@ const CONV = {
 class LOC extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 29)
-    this.setAddress(opts?.address)
   }
 
   /****** Resource record specific setters   *******/
@@ -38,12 +32,20 @@ class LOC extends RR {
     this.set('address', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'address' ]
+  getDescription () {
+    return 'Location'
+  }
+
+  getRdataFields (arg) {
+    return [ 'address' ]
   }
 
   getRFCs () {
     return [ 1876 ]
+  }
+
+  getTypeId () {
+    return 29
   }
 
   parseLoc (string) {
@@ -58,7 +60,6 @@ class LOC extends RR {
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
     const r = string.match(locRe)
     if (!r) throw new Error('LOC address: invalid format, see RFC 1876')
-    // console.log(r)
 
     const loc = {
       latitude: {
@@ -114,10 +115,6 @@ class LOC extends RR {
   }
 
   fromBind (str) {
-    // console.log(str)
-    // const r = this.parseLoc(str)
-    // console.log(r)
-
     const [ fqdn, ttl, c, type ] = str.split(/\s+/)
 
     return new this.constructor({
@@ -200,9 +197,6 @@ class LOC extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     const loc = this.parseLoc(this.get('address'))

@@ -6,13 +6,6 @@ const RR = require('./index').RR
 class MX extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 15)
-    this.setExchange(opts?.exchange)
-    this.setWeight(opts?.weight)
   }
 
   /****** Resource record specific setters   *******/
@@ -24,20 +17,30 @@ class MX extends RR {
 
     if (!this.fullyQualified('MX', 'exchange', val)) return
     if (!this.validHostname('MX', 'exchange', val)) return
+
     this.set('exchange', val)
   }
 
   setWeight (val) {
+    if (val === undefined) val = this?.default?.weight
     if (!this.is16bitInt('MX', 'weight', val)) return
     this.set('weight', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'weight', 'exchange' ]
+  getDescription () {
+    return 'Mail Exchanger'
+  }
+
+  getRdataFields (arg) {
+    return [ 'weight', 'exchange' ]
   }
 
   getRFCs () {
     return [ 1035, 7505 ]
+  }
+
+  getTypeId () {
+    return 15
   }
 
   /******  IMPORTERS   *******/
@@ -72,10 +75,6 @@ class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
     return `@${this.get('name')}::${this.get('exchange')}:${this.get('weight')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

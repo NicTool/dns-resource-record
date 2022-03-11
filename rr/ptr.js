@@ -4,21 +4,6 @@ const RR = require('./index').RR
 class PTR extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 12)
-
-    if (opts?.address) { // RFC 1035
-      this.setDname(opts?.address)
-    }
-    else if (opts?.ptrdname) {
-      this.setDname(opts?.ptrdname)
-    }
-    else { // RFC 1035
-      this.setDname(opts?.dname)
-    }
   }
 
   /****** Resource record specific setters   *******/
@@ -29,12 +14,20 @@ class PTR extends RR {
     this.set('dname', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
+  getDescription () {
+    return 'Pointer'
+  }
+
+  getRdataFields (arg) {
+    return [ 'dname' ]
   }
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 12
   }
 
   /******  IMPORTERS   *******/
@@ -65,10 +58,6 @@ class PTR extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
     return `^${this.get('name')}:${this.get('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

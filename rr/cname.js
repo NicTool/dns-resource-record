@@ -6,12 +6,6 @@ const RR = require('./index').RR
 class CNAME extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 5)
-    this.setCname(opts?.cname)
   }
 
   /****** Resource record specific setters   *******/
@@ -29,12 +23,20 @@ class CNAME extends RR {
     this.set('cname', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'cname' ]
+  getDescription () {
+    return 'Canonical Name'
+  }
+
+  getRdataFields (arg) {
+    return [ 'cname' ]
   }
 
   getRFCs () {
     return [ 1035, 2181 ]
+  }
+
+  getTypeId () {
+    return 5
   }
 
   /******  IMPORTERS   *******/
@@ -65,9 +67,6 @@ class CNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     return `C${this.get('name')}:${this.get('cname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`

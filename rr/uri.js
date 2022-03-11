@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class URI extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 256)
-    this.setPriority(opts?.priority)
-    this.setWeight(opts?.weight)
-    this.setTarget(opts?.target)
   }
 
   /****** Resource record specific setters   *******/
@@ -67,20 +59,27 @@ class URI extends RR {
   }
 
   /******  MISC   *******/
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'target' ]
+  getDescription () {
+    return 'URI'
+  }
+
+  getRdataFields (arg) {
+    return [ 'priority', 'weight', 'target' ]
   }
 
   getRFCs () {
     return [ 7553 ]
   }
 
-  /******  EXPORTERS   *******/
-  toBind () {
-    const fields = [ 'name', 'ttl', 'class', 'type', 'priority', 'weight' ] // 'target'
-    return `${fields.map(f => this.get(f)).join('\t')}\t"${this.get('target')}"\n`
+  getTypeId () {
+    return 256
   }
 
+  getQuotedFields () {
+    return [ 'target' ]
+  }
+
+  /******  EXPORTERS   *******/
   toTinydns () {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     let rdata = ''

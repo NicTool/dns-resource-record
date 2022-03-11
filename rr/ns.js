@@ -4,21 +4,7 @@ const RR = require('./index').RR
 class NS extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 2)
-
-    if (opts?.address) {
-      this.setDname(opts?.address)
-    }
-    else if (opts?.nsdname) {
-      this.setDname(opts?.nsdname)
-    }
-    else {
-      this.setDname(opts?.dname)
-    }
+    if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
@@ -31,12 +17,20 @@ class NS extends RR {
     this.set('dname', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'dname' ]
+  getDescription () {
+    return 'Name Server'
+  }
+
+  getRdataFields (arg) {
+    return [ 'dname' ]
   }
 
   getRFCs () {
     return [ 1035 ]
+  }
+
+  getTypeId () {
+    return 2
   }
 
   /******  IMPORTERS   *******/
@@ -69,10 +63,6 @@ class NS extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
-
   toTinydns () {
     return `&${this.get('name')}::${this.get('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }

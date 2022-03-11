@@ -1,19 +1,16 @@
-
-const supportedTypes = [
-  'A'    , 'AAAA', 'CAA'  , 'CNAME', 'DNAME', 'HINFO',
-  'LOC'  , 'MX'  , 'NAPTR', 'NS'   , 'PTR'  ,
-  'SSHFP', 'SOA' , 'SPF'  , 'SRV'  , 'TXT'  , 'URI',
-]
+const fs = require('fs')
+const path = require('path')
 
 class RR extends Map {
 
   constructor (opts) {
     super()
+    if (opts === null) return
 
     if (opts.default) this.default = opts.default
 
-    if (opts.tinyline) return // pass through
-    if (opts.bindline) return
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts.bindline)
 
     // tinydns specific
     this.setLocation(opts?.location)
@@ -23,6 +20,11 @@ class RR extends Map {
     this.setTtl  (opts?.ttl)
     this.setClass(opts?.class)
     this.setType (opts?.type)
+
+    for (const f of this.getFields('rdata')) {
+      const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
+      this[fnName](opts[f])
+    }
   }
 
   setClass (c) {
@@ -76,21 +78,13 @@ class RR extends Map {
 
   setTtl (t) {
 
+    if (t === undefined) t = this?.default?.ttl
     if (t === undefined) {
-      if (this?.default?.ttl) {
-        t = this.default.ttl
-      }
-      else {
-        if ('SSHPF' === this.get('type')) return
-        throw new Error('TTL is required, no default available')
-      }
+      if ('SSHPF' === this.get('type')) return
+      throw new Error('TTL is required, no default available')
     }
 
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
-
-    if (parseInt(t, 10) !== t) {
-      throw new Error('TTL must be a an unsigned integer')
-    }
 
     // RFC 1035, 2181
     if (!this.is32bitInt(this.name, 'TTL', t)) return
@@ -99,8 +93,16 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (!supportedTypes.includes(t)) throw new Error(`type ${t} not supported (yet)`)
-    this.set('type', t)
+    if (!module.exports[t || this.constructor.name])
+      throw new Error(`type ${t} not supported (yet)`)
+
+    this.set('type', t || this.constructor.name)
+  }
+
+  getCommonFields () {
+    const commonFields = [ 'name', 'ttl', 'class', 'type' ]
+    Object.freeze(commonFields)
+    return commonFields
   }
 
   getEmpty (prop) {
@@ -108,8 +110,32 @@ class RR extends Map {
   }
 
   getQuoted (prop) {
-    if (/['"]/.test(this.get(prop)[0])) return this.get(prop) // already quoted
-    return `"${this.get(prop)}"`
+    // if prop is not in quoted list, return bare
+    if (!this.getQuotedFields().includes(prop)) return this.get(prop)
+
+    // if it's already quoted, return as-is
+    if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
+
+    return `"${this.get(prop)}"` // add double quotes
+  }
+
+  getQuotedFields () {
+    return []
+  }
+
+  getRdataFields () {
+    return [ ]
+  }
+
+  getFields (arg) {
+    switch (arg) {
+      case 'common':
+        return this.getCommonFields()
+      case 'rdata':
+        return this.getRdataFields()
+      default:
+        return this.getCommonFields().concat(this.getRdataFields())
+    }
   }
 
   hasValidLabels (hostname) {
@@ -146,15 +172,22 @@ class RR extends Map {
     throw new Error(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
   }
 
+  isQuoted (val) {
+    return /^["']/.test(val) && /["']$/.test(val)
+  }
+
   fullyQualified (type, blah, hostname) {
     if (hostname.slice(-1) === '.') return true
 
     throw new Error(`${type}: ${blah} must be fully qualified`)
   }
 
+  toBind () {
+    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
+  }
+
   validHostname (type, field, hostname) {
     if (!/[^a-zA-Z0-9\-._]/.test(hostname)) return true
-
     throw new Error(`${type}, ${field} has invalid hostname characters`)
   }
 }
@@ -163,6 +196,8 @@ module.exports = {
   RR,
 }
 
-for (const t of supportedTypes) {
-  module.exports[t] = require(`./${t.toLowerCase()}`)
+const files = fs.readdirSync('./rr')
+for (let f of files) {
+  f = path.basename(f, '.js')
+  module.exports[f.toUpperCase()] = require(`./${f}`)
 }

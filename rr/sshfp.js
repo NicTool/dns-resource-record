@@ -5,14 +5,6 @@ const TINYDNS = require('../lib/tinydns')
 class SSHFP extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 44)
-    this.setAlgorithm(opts?.algorithm)
-    this.setFpType(opts?.fptype)
-    this.setFingerprint(opts?.fingerprint)
   }
 
   /****** Resource record specific setters   *******/
@@ -23,7 +15,7 @@ class SSHFP extends RR {
     this.set('algorithm', val)
   }
 
-  setFpType (val) {
+  setFptype (val) {
     // 0: reserved, 1: SHA-1, 2: SHA-256
     if (!this.is8bitInt('SSHFP', 'type', val)) return
 
@@ -34,12 +26,20 @@ class SSHFP extends RR {
     this.set('fingerprint', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
+  getDescription () {
+    return 'Secure Shell Key Fingerprints'
+  }
+
+  getRdataFields () {
+    return [ 'algorithm', 'fptype', 'fingerprint' ]
   }
 
   getRFCs () {
     return [ 4255 ]
+  }
+
+  getTypeId () {
+    return 44
   }
 
   /******  IMPORTERS   *******/
@@ -80,9 +80,6 @@ class SSHFP extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
     let rdata = ''

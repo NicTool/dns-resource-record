@@ -30,7 +30,10 @@ describe('DNAME record', function () {
   base.valid(DNAME, validRecords)
   base.invalid(DNAME, invalidRecords)
 
+  base.getDescription(DNAME)
   base.getRFCs(DNAME, validRecords[0])
+  base.getFields(DNAME, [ 'target' ])
+  base.getTypeId(DNAME, 39)
 
   base.toBind(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)

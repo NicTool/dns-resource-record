@@ -2,6 +2,25 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.0 - 2022-03-10
+
+- added null object instantiation
+- added `getTypeId`, `getDescription`, `getRdataFields`, `getQuotedFields`
+- tinydns: refactored fromTinydnsGeneric
+- add `RR.toBind()` for most
+- spf: corrected RFC IDs
+- rr/\*: refactor init into RR.constructor
+- ds,dnskey: add to/from BIND support
+- README: significant expansion
+- tests: more signal, less noise
+- tests: import tests from nictool 2
+
+
+#### 0.8.1 - 2022-03-08
+
+- use RFC example IPs and zone names
+
+
 #### 0.8.0 - 2022-02-01
 
 - fromBind for: A, AAAA, CNAME, TXT, CNAME, TXT, LOC, MX, NS, SOA, PTR, SPF, SSHFP, URI, CAA, DNAME, NAPTR

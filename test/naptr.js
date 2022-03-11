@@ -29,7 +29,10 @@ describe('NAPTR record', function () {
   base.valid(NAPTR, validRecords)
   base.invalid(NAPTR, invalidRecords)
 
+  base.getDescription(NAPTR)
   base.getRFCs(NAPTR, validRecords[0])
+  base.getFields(NAPTR, [ 'order', 'preference', 'flags', 'service', 'regexp', 'replacement' ])
+  base.getTypeId(NAPTR, 35)
 
   base.toBind(NAPTR, validRecords)
   base.toTinydns(NAPTR, validRecords)

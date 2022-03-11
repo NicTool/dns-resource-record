@@ -6,12 +6,6 @@ const TINYDNS = require('../lib/tinydns')
 class TXT extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 16)
-    this.setData(opts?.data)
   }
 
   /****** Resource record specific setters   *******/
@@ -19,46 +13,60 @@ class TXT extends RR {
     this.set('data', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'data' ]
+  getDescription () {
+    return 'Text'
+  }
+
+  getRdataFields (arg) {
+    return [ 'data' ]
   }
 
   getRFCs () {
     return [ 1035 ]
   }
 
+  getTypeId () {
+    return 16
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns (str) {
-    let fqdn, n, rdata, s, ttl, ts, loc
+    let fqdn, rdata, s, ttl, ts, loc
     // 'fqdn:s:ttl:timestamp:lo
     if (str[0] === "'") {
       [ fqdn, s, ttl, ts, loc ] = str.substring(1).split(':')
-      s = TINYDNS.octalToChar(s)
+      rdata = TINYDNS.octalToChar(s)
     }
     else {
-      // generic: :fqdn:n:rdata:ttl:timestamp:location
-      [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
-      if (n != 16) throw new Error('TXT fromTinydns, invalid n')
-
-      rdata = TINYDNS.octalToChar(rdata)
-      s = ''
-      let len = rdata[0].charCodeAt(0)
-      let pos = 1
-      while (pos < rdata.length) {
-        s += rdata.substring(pos, +(len + pos))
-        pos = len + pos
-        len = rdata.charCodeAt(pos + 1)
-      }
+      [ fqdn, rdata, ttl, ts, loc ] = this.fromTinydnsGeneric(str)
     }
 
     return new this.constructor({
       type     : 'TXT',
       name     : fqdn,
-      data     : s,
+      data     : rdata,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
+  }
+
+  fromTinydnsGeneric (str) {
+    // generic: :fqdn:n:rdata:ttl:timestamp:location
+    // eslint-disable-next-line prefer-const
+    let [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    if (n != 16) throw new Error('TXT fromTinydns, invalid n')
+
+    rdata = TINYDNS.octalToChar(rdata)
+    let s = ''
+    let len = rdata[0].charCodeAt(0)
+    let pos = 1
+    while (pos < rdata.length) {
+      s += rdata.substring(pos, +(len + pos))
+      pos = len + pos
+      len = rdata.charCodeAt(pos + 1)
+    }
+    return [ fqdn, s, ttl, ts, loc ]
   }
 
   fromBind (str) {
@@ -80,8 +88,7 @@ class TXT extends RR {
       // BIND croaks when any string in the TXT RR data is longer than 255
       data = data.match(/(.{1,255})/g).join('" "')
     }
-    const fields = this.getFields().filter(f => f !== 'data')  // remove data
-    return `${fields.map(f => this.get(f)).join('\t')}\t"${data}"\n`
+    return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
   }
 
   toTinydns () {

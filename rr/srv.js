@@ -7,21 +7,6 @@ const TINYDNS = require('../lib/tinydns')
 class SRV extends RR {
   constructor (opts) {
     super(opts)
-
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
-    if (opts.bindline) return this.fromBind(opts.bindline)
-
-    this.set('id', 33)
-    this.setPriority(opts?.priority)
-    this.setWeight(opts?.weight)
-    this.setPort(opts?.port)
-
-    if (this?.address) {
-      this.setTarget(opts?.address)
-    }
-    else {
-      this.setTarget(opts?.target)
-    }
   }
 
   /****** Resource record specific setters   *******/
@@ -51,15 +36,24 @@ class SRV extends RR {
 
     if (!this.fullyQualified('SRV', 'target', val)) return
     if (!this.validHostname('SRV', 'target', val)) return
+
     this.set('target', val)
   }
 
-  getFields () {
-    return [ 'name', 'ttl', 'class', 'type', 'priority', 'weight', 'port', 'target' ]
+  getDescription () {
+    return 'Service'
+  }
+
+  getRdataFields (arg) {
+    return [ 'priority', 'weight', 'port', 'target' ]
   }
 
   getRFCs () {
     return [ 2782 ]
+  }
+
+  getTypeId () {
+    return 33
   }
 
   /******  IMPORTERS   *******/
@@ -110,9 +104,6 @@ class SRV extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getFields().map(f => this.get(f)).join('\t')}\n`
-  }
 
   toTinydns () {
 

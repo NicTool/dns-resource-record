@@ -17,13 +17,17 @@ const validRecords = [
 ]
 
 const invalidRecords = [
+
 ]
 
 describe('SPF record', function () {
   base.valid(SPF, validRecords)
   base.invalid(SPF, invalidRecords)
 
+  base.getDescription(SPF)
   base.getRFCs(SPF, validRecords[0])
+  base.getFields(SPF, [ 'data' ])
+  base.getTypeId(SPF, 99)
 
   base.toBind(SPF, validRecords)
   base.toTinydns(SPF, validRecords)
