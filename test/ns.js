@@ -19,17 +19,14 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class: 'IN',
     name : 'example.com',
-    type : 'NS',
     dname: '1.2.3.4',  // FQDN required
-    ttl  : 3600,
   },
 ]
 
 describe('NS record', function () {
   base.valid(NS, validRecords)
-  base.invalid(NS, invalidRecords)
+  base.invalid(NS, invalidRecords, { ttl: 3600 })
 
   base.getDescription(NS)
   base.getRFCs(NS, validRecords[0])

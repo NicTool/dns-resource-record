@@ -17,6 +17,7 @@ const validRecords = [
 ]
 
 const invalidRecords = [
+
 ]
 
 describe('SPF record', function () {

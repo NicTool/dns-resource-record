@@ -6,6 +6,21 @@ const RR = require('../rr/index').RR
 describe('RR', function () {
   const r = new RR(null)
 
+  describe('setTtl', function () {
+    const invalid = [ -1, -4, -299, 2147483648 ]
+    for (const i of invalid) {
+      it(`throws on invalid TTL: ${i}`, async function () {
+        try {
+          assert.deepStrictEqual(r.setTtl(i), false)
+        }
+        catch (e) {
+          assert.ok(e.message)
+          console.error(e.message)
+        }
+      })
+    }
+  })
+
   describe('getFields', function () {
     it('gets common fields', async function () {
       assert.deepStrictEqual(r.getFields('common'), [ 'name', 'ttl', 'class', 'type' ])
@@ -103,5 +118,13 @@ describe('RR', function () {
     it('detects non-quoted strings', async function () {
       assert.deepEqual(r.isQuoted('nope, not quoted'), false)
     })
+  })
+
+  describe('validHostname', function () {
+    for (const n of [ 'x', '2x', '*', '*.something' ]) {
+      it(`passes name: ${n}`, async function () {
+        assert.deepEqual(r.validHostname(n), true)
+      })
+    }
   })
 })

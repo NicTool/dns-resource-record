@@ -12,7 +12,7 @@ class CAA extends RR {
     if (!this.is8bitInt('CAA', 'flags', val)) return
 
     if (![ 0, 128 ].includes(val)) {
-      console.warn(`CAA flags ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA flags ${val} not recognized: RFC 6844`)
     }
 
     this.set('flags', val)
@@ -26,7 +26,7 @@ class CAA extends RR {
       throw new Error('CAA tag must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
-      console.warn(`CAA tag ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA tag ${val} not recognized: RFC 6844`)
     }
     this.set('tag', val)
   }

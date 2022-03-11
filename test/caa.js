@@ -42,19 +42,28 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class: 'IN',
     name : 'example.com',
-    type : 'CAA',
-    flags: 1,
+    flags: 128,
     tag  : 'issue',
     value: 'letsencrypt.org', // missing iodef prefix
-    ttl  : 3600,
+  },
+  {
+    name : 'example.com',
+    flags: 128,
+    tag  : 'invalid', // invalid
+    value: 'http://letsencrypt.org',
+  },
+  {
+    name : 'example.com',
+    flags: 15,  // invalid
+    tag  : 'issue',
+    value: 'http://letsencrypt.org',
   },
 ]
 
 describe('CAA record', function () {
   base.valid(CAA, validRecords)
-  base.invalid(CAA, invalidRecords)
+  base.invalid(CAA, invalidRecords, { ttl: 3600 })
 
   base.getDescription(CAA)
   base.getRFCs(CAA, validRecords[0])
