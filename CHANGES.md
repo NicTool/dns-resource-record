@@ -5,13 +5,15 @@
 #### 0.9.0 - 2022-03-10
 
 - added null object instantiation
-- tests: more signal, less noise
-- added `getTypeId`, `getDescription`, `getRdataFields`
+- added `getTypeId`, `getDescription`, `getRdataFields`, `getQuotedFields`
 - tinydns: refactored fromTinydnsGeneric
-- add getQuotedFields, RR.toBind() for most
-- spf: corrected RFC ids
+- add `RR.toBind()` for most
+- spf: corrected RFC IDs
 - rr/\*: refactor init into RR.constructor
 - ds,dnskey: add to/from BIND support
+- README: significant expansion
+- tests: more signal, less noise
+- tests: import tests from nictool 2
 
 
 #### 0.8.1 - 2022-03-08
