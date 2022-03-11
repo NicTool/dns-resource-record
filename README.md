@@ -10,7 +10,7 @@ DNS resource record parser, validator, exporter, and importer.
 
 This module is used to:
 
-- validate well formedness and RFC compliance of resource records
+- validate well formedness and RFC compliance of DNS resource records
 - import RRs from:
     - [x] [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
     - [x] tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
@@ -29,7 +29,7 @@ Load the index for access to all RR types
 const RR = require('dns-resource-record')
 ```
 
-Validate a record by passing a correctly formatted JS object to the base class. To validate an A record:
+Validate a record by passing a correctly formatted JS object to the record-specific class. To validate an A record:
 
 ```js
 const A = require('dns-resource-record').A
@@ -156,5 +156,5 @@ PRs are welcome, especially PRs with tests.
 - [x] change all domains to use reserved doc names
 - [ ] import tests from nictool/server/t/12_records.t
 - [x] add defaults for empty values like TTL?
-- [x] DNSSEC RRs, probably not: RRSIG, NSEC, NSEC3, NSEC3PARAM
+- [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...

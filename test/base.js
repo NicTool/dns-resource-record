@@ -1,11 +1,12 @@
 
 const assert = require('assert')
 
-exports.valid = (type, validRecords) => {
+exports.valid = (type, validRecords, defaults) => {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
       it(`parses record: ${val.name}`, async function () {
+        if (defaults) val.default = defaults
         const r = new type(val)
         if (process.env.DEBUG) console.dir(r)
 
@@ -18,12 +19,13 @@ exports.valid = (type, validRecords) => {
   })
 }
 
-exports.invalid = (type, invalidRecords) => {
+exports.invalid = (type, invalidRecords, defaults) => {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
+      if (defaults) inv.default = defaults
       it(`throws on record (${inv.name})`, async function () {
         try {
-          new type(inv)
+          assert.deepEqual(new type(inv), null)
         }
         catch (e) {
           if (process.env.DEBUG) console.error(e.message)

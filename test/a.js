@@ -23,6 +23,15 @@ const validRecords = [
     testB  : 'test.example.com\t2147483647\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:2147483647::\n',
   },
+  {
+    class  : 'IN',
+    name   : 'a',
+    type   : 'A',
+    address: '192.0.2.127',
+    ttl    : 86400,
+    testB  : 'a\t86400\tIN\tA\t192.0.2.127\n',
+    testT  : '+a:192.0.2.127:86400::\n',
+  },
 ]
 
 const moreValid = [
@@ -45,9 +54,13 @@ const invalidRecords = [
   { name: 'some*thing' },
   { name: '*something' },
   { name: 'something.*' },
+  { name: 'a.m.' },
+  { name: 'something.test.' },
   { address: 'hosts.not.valid.here' },
   { address: '' },
+  { address: undefined },
   { type: '' },
+  { type: undefined },
   { ttl: ''   },
   { ttl: -299 },
   { ttl: 2147483648 },

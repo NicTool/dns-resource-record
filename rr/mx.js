@@ -17,10 +17,12 @@ class MX extends RR {
 
     if (!this.fullyQualified('MX', 'exchange', val)) return
     if (!this.validHostname('MX', 'exchange', val)) return
+
     this.set('exchange', val)
   }
 
   setWeight (val) {
+    if (val === undefined) val = this?.default?.weight
     if (!this.is16bitInt('MX', 'weight', val)) return
     this.set('weight', val)
   }

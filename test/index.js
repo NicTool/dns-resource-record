@@ -6,6 +6,16 @@ const RR = require('../rr/index').RR
 describe('RR', function () {
   const r = new RR(null)
 
+  describe('getFields', function () {
+    it('gets common fields', async function () {
+      assert.deepStrictEqual(r.getFields('common'), [ 'name', 'ttl', 'class', 'type' ])
+    })
+
+    it('gets rdata fields', async function () {
+      assert.deepStrictEqual(r.getFields('rdata'), [ ]) // none in the parent class
+    })
+  })
+
   describe('fullyQualified', function () {
     it('should detect FQDNs', async function () {
       assert.deepEqual(r.fullyQualified('$type', '$field', 'host.example.com.'), true)
@@ -42,7 +52,7 @@ describe('RR', function () {
   })
 
   describe('is16bitInt', function () {
-    const valid = [ 1, 2, 55555, 65535 ]
+    const valid = [ 0, 1, 2, 55555, 65535 ]
     const invalid = [ 'a', new Date(), undefined, 65536 ]
 
     for (const i of valid) {

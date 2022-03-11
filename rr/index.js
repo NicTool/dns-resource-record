@@ -78,14 +78,10 @@ class RR extends Map {
 
   setTtl (t) {
 
+    if (t === undefined) t = this?.default?.ttl
     if (t === undefined) {
-      if (this?.default?.ttl) {
-        t = this.default.ttl
-      }
-      else {
-        if ('SSHPF' === this.get('type')) return
-        throw new Error('TTL is required, no default available')
-      }
+      if ('SSHPF' === this.get('type')) return
+      throw new Error('TTL is required, no default available')
     }
 
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
@@ -97,8 +93,10 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (!module.exports[t]) throw new Error(`type ${t} not supported (yet)`)
-    this.set('type', t)
+    if (!module.exports[t || this.constructor.name])
+      throw new Error(`type ${t} not supported (yet)`)
+
+    this.set('type', t || this.constructor.name)
   }
 
   getCommonFields () {
@@ -190,7 +188,6 @@ class RR extends Map {
 
   validHostname (type, field, hostname) {
     if (!/[^a-zA-Z0-9\-._]/.test(hostname)) return true
-
     throw new Error(`${type}, ${field} has invalid hostname characters`)
   }
 }

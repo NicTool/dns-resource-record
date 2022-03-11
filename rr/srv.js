@@ -36,6 +36,7 @@ class SRV extends RR {
 
     if (!this.fullyQualified('SRV', 'target', val)) return
     if (!this.validHostname('SRV', 'target', val)) return
+
     this.set('target', val)
   }
 
