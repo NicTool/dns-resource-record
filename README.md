@@ -29,13 +29,6 @@ Load the index for access to all RR types
 const RR = require('dns-resource-record')
 ```
 
-Validate a record by passing a correctly formatted JS object to the record-specific class. To validate an A record:
-
-```js
-const A = require('dns-resource-record').A
-const validatedRR = new RR.A(exampleRRs.A)
-```
-
 ### EXAMPLES
 
 ```js
@@ -88,6 +81,33 @@ catch (e) {
 }
 ```
 
+Validate records by passing a properly formatted JS object to the record-specific class. To validate an A record:
+
+```js
+const A = require('dns-resource-record').A
+const validatedA = new A(exampleRRs.A)
+```
+
+We can also manipulate the validated record using specially named setter functions:
+
+```js
+console.log(validatedA.toBind())
+test.example.com    3600    IN  A   192.0.2.127
+
+validatedA.setAddress('192.0.2.128')
+console.log(validatedA.toBind())
+test.example.com    3600    IN  A   192.0.2.128
+```
+
+The setter functions are named: `setFieldname`, where fieldname are the resource records fields. For any RR, you can get the field names with `getFields()`:
+
+```js
+> validatedA.getFields()
+[ 'name', 'ttl', 'class', 'type', 'address' ]
+```
+
+## FUNCTIONS
+
 ### toBind
 
 Validate a record and export to BIND format.
@@ -119,6 +139,24 @@ console.log(new RR.CAA({
 }).toBind())
 ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
 ```
+
+### set
+
+Don't tell anyone but the DNS validation checks can be bypassed entirely by using 'set':
+
+```js
+> validatedA.set('address', 'oops')
+A(5) [Map] {
+  'name' => 'test.example.com',
+  'ttl' => 3600,
+  'class' => 'IN',
+  'type' => 'A',
+  'address' => 'oops'
+}
+```
+
+Consider this a "running with scissors" mode.
+
 
 ## Supported Records
 
