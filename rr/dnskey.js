@@ -57,7 +57,7 @@ class DS extends RR {
   }
 
   fromBind (str) {
-    // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
+    // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
     const [ fqdn, ttl, c, type, flags, protocol, algorithm ] = str.split(/\s+/)
     return new this.constructor({
       name     : fqdn,
