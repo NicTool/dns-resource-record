@@ -120,8 +120,8 @@ PRs are welcome, especially PRs with tests.
 | **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNSKEY** |                  |                  |                  |                  |                  |
-| **DS**     |                  |                  |                  |                  |                  |
+| **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |:white_check_mark:|
+| **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |:white_check_mark:|
 | **HINFO**  |:white_check_mark:|                  |                  |                  |:white_check_mark:|
 |**IPSECKEY**|                  |                  |                  |                  |                  |
 | **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
