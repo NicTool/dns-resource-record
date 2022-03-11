@@ -10,25 +10,50 @@ DNS resource record parser, validator, exporter, and importer.
 
 This module is used to:
 
-- validate formatting, values, and RFC compliance of each RR
+- validate well formedness and RFC compliance of resource records
 - import RRs from:
-    - [x] BIND zone file lines
-    - [x] tinydns entries
-- export RRs to:
-    - [x] [BIND](https://www.isc.org/bind/) [zone file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
+    - [x] [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
     - [x] tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
+- export RRs to:
+    - [x] BIND zone file format
+    - [x] tinydns data format
 
-This module intends to import and export wholly RFC compliant DNS resource records. If you discover a way to pass an invalid DNS record through this library, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
+This module intends to import and export RFC compliant DNS resource records. If you can pass invalid resource records through this library, or cannot pass valid records through, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
 
 
 ## USAGE
 
-### SOA
+Load the index for access to all RR types
 
 ```js
 const RR = require('dns-resource-record')
-try {
-    console.log(new RR.SOA({
+```
+
+Validate a record by passing a correctly formatted JS object to the base class. To validate an A record:
+
+```js
+const A = require('dns-resource-record').A
+const validatedRR = new RR.A(exampleRRs.A)
+```
+
+### EXAMPLES
+
+```js
+const RR = require('dns-resource-record')
+const exampleRRs = {
+    A: {
+        name   : 'test.example.com',
+        type   : 'A',
+        address: '192.0.2.127',
+        ttl    : 3600,
+    },
+    AAAA: {
+        name   : 'test.example.com',
+        type   : 'AAAA',
+        address: '2605:7900:20:a::4',
+        ttl    : 3600,
+    },
+    SOA: {
         name   : 'example.com',
         type   : 'SOA',
         mname  : 'matt.example.com.',
@@ -39,19 +64,22 @@ try {
         expire : 1209600,
         minimum: 3600,
         ttl    : 3600,
-    }))
-    SOA(12) [Map] {
-      'class' => 'IN',
-      'name' => 'example.com',
-      'ttl' => 3600,
-      'type' => 'SOA',
-      'minimum' => 3600,
-      'mname' => 'matt.example.com.',
-      'rname' => 'ns1.example.com.',
-      'serial' => 1,
-      'refresh' => 7200,
-      'retry' => 3600,
-      'expire' => 1209600
+    }
+}
+try {
+    console.log(new RR.SOA(exampleRRs.SOA))
+    SOA(11) [Map] {
+        'name' => 'example.com',
+        'ttl' => 3600,
+        'class' => 'IN',
+        'type' => 'SOA',
+        'mname' => 'matt.example.com.',
+        'rname' => 'ns1.example.com.',
+        'serial' => 1,
+        'refresh' => 7200,
+        'retry' => 3600,
+        'expire' => 1209600,
+        'minimum' => 3600
     }
 }
 catch (e) {
@@ -60,51 +88,36 @@ catch (e) {
 }
 ```
 
----
+### toBind
 
-### A
-
-Export to BIND format:
+Validate a record and export to BIND format.
 
 ```js
-const aAsJSON = {
-    name   : 'test.example.com',
-    type   : 'A',
-    address: '192.0.2.127',
-    ttl    : 3600,
-}
-console.log(new RR.A(aAsJSON).toBind())
+console.log(new RR.A(exampleRRs.A).toBind())
 test.example.com    3600    IN  A   192.0.2.127
-```
 
-Export to tinydns format:
-
-```js
-console.log(new RR.A(aAsJSON).toTinydns())
-+test.example.com:192.0.2.127:3600::
-```
-
-### AAAA
-
-```js
-console.log(new RR.AAAA({
-    name   : 'test.example.com',
-    type   : 'AAAA',
-    address: '2605:7900:20:a::4',
-    ttl    : 3600,
-}).toBind())
+console.log(new RR.AAAA(exampleRRs.AAAA).toBind())
 test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 ```
 
-### CAA
+### toTinydns
+
+Validate a record and export to tinydns format:
+
+```js
+console.log(new RR.A(exampleRRs.A).toTinydns())
++test.example.com:192.0.2.127:3600::
+```
+
+### fromTinydns toBind
 
 Convert a tinydns line to BIND:
 
 ```js
 console.log(new RR.CAA({
-    tinyline: ':ns1.example.com:257:\\000\\005issueletsencrypt.org:3600::'
+  tinyline: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n'
 }).toBind())
-ns1.example.com 3600    IN  CAA 0   issue   "letsencrypt.org"
+ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
 ```
 
 ## Supported Records
@@ -143,5 +156,5 @@ PRs are welcome, especially PRs with tests.
 - [x] change all domains to use reserved doc names
 - [ ] import tests from nictool/server/t/12_records.t
 - [x] add defaults for empty values like TTL?
-- [ ] DNSSEC RRs, probably not: RRSIG, NSEC, NSEC3, NSEC3PARAM
+- [x] DNSSEC RRs, probably not: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
