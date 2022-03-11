@@ -21,18 +21,15 @@ const validRecords = [
 ]
 
 const invalidRecords = [
-  // {
-  //   name     : 'test.example.com',
-  //   class    : 'IN',
-  //   type     : 'DNSKEY',
-  //   ttl      : 3600,
-  //   algorithm: 6,  // invalid
-  // },
+  {
+    name     : 'test.example.com',
+    algorithm: 6,  // invalid
+  },
 ]
 
 describe('DNSKEY record', function () {
   base.valid(DNSKEY, validRecords)
-  base.invalid(DNSKEY, invalidRecords)
+  base.invalid(DNSKEY, invalidRecords, { ttl: 3600 })
 
   base.getDescription(DNSKEY)
   base.getRFCs(DNSKEY, validRecords[0])

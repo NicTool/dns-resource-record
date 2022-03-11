@@ -1,6 +1,5 @@
 
 const RR = require('./index').RR
-// const TINYDNS = require('../lib/tinydns')
 
 class DS extends RR {
   constructor (opts) {
