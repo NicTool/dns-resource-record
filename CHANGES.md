@@ -2,6 +2,11 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.1 - 2022-03-14
+
+- TLSA, SMIMEA: add BIND support #13
+
+
 #### 0.9.0 - 2022-03-10
 
 - added null object instantiation
