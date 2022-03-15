@@ -181,7 +181,7 @@ PRs are welcome, especially PRs with tests.
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SMIMEA** |                  |                  |                  |                  |                  |
+| **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |                  |
 | **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
@@ -195,6 +195,6 @@ PRs are welcome, especially PRs with tests.
 - [x] Change all IPs to use [RFC example/doc](https://en.wikipedia.org/wiki/Reserved_IP_addresses) address space
 - [x] change all domains to use reserved doc names
 - [x] import tests from nictool/server/t/12_records.t
-- [x] add defaults for empty values like TTL?
+- [x] add defaults for empty values like TTL
 - [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
