@@ -8,6 +8,7 @@ exports.valid = (type, validRecords, defaults) => {
       it(`parses record: ${val.name}`, async function () {
         if (defaults) val.default = defaults
         const r = new type(val)
+        if (defaults) delete val.default
         if (process.env.DEBUG) console.dir(r)
 
         for (const k of Object.keys(val)) {

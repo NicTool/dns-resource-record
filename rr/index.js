@@ -22,9 +22,14 @@ class RR extends Map {
     this.setType (opts?.type)
 
     for (const f of this.getFields('rdata')) {
-      const fnName = `set${f.charAt(0).toUpperCase() + f.slice(1)}`
+      const fnName = `set${this.ucfirst(f)}`
+      if (this[fnName] === undefined) throw new Error(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
     }
+  }
+
+  ucfirst (str) {
+    return str.split(/\s/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
   }
 
   setClass (c) {

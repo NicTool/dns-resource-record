@@ -3,7 +3,7 @@
 
 # dns-resource-record
 
-DNS resource record parser, validator, exporter, and importer.
+DNS resource record parser, validator, importer, and exporter.
 
 
 ## SYNOPSIS
@@ -12,18 +12,19 @@ This module is used to:
 
 - validate well formedness and RFC compliance of DNS resource records
 - import RRs from:
+    - [x] JSON
     - [x] [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
     - [x] tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
 - export RRs to:
     - [x] BIND zone file format
     - [x] tinydns data format
 
-This module intends to import and export RFC compliant DNS resource records. If you can pass invalid resource records through this library, or cannot pass valid records through, please [raise an issue](https://github.com/msimerson/dns-resource-record/issues).
+This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/msimerson/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
 
 
 ## USAGE
 
-Load the index for access to all RR types
+Load the index for access to all RR types:
 
 ```js
 const RR = require('dns-resource-record')
@@ -88,7 +89,7 @@ const A = require('dns-resource-record').A
 const validatedA = new A(exampleRRs.A)
 ```
 
-We can also manipulate the validated record using specially named setter functions:
+Manipulate the validated record using pattern named setter functions:
 
 ```js
 console.log(validatedA.toBind())
@@ -99,7 +100,7 @@ console.log(validatedA.toBind())
 test.example.com    3600    IN  A   192.0.2.128
 ```
 
-The setter functions are named: `setFieldname`, where fieldname are the resource records fields. For any RR, you can get the field names with `getFields()`:
+The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`. You can get the field names with `getFields()`:
 
 ```js
 > validatedA.getFields()
@@ -142,7 +143,7 @@ ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
 
 ### set
 
-Don't tell anyone but the DNS validation checks can be bypassed entirely by using 'set':
+The DNS validation checks can be bypassed entirely by using 'set':
 
 ```js
 > validatedA.set('address', 'oops')
@@ -180,11 +181,12 @@ PRs are welcome, especially PRs with tests.
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SMIMEA** |                  |                  |                  |                  |                  |
+| **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |                  |
 | **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **TLSA**   |:white_check_mark:|                  |:white_check_mark:|                  |                  |
 | **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 
@@ -193,6 +195,6 @@ PRs are welcome, especially PRs with tests.
 - [x] Change all IPs to use [RFC example/doc](https://en.wikipedia.org/wiki/Reserved_IP_addresses) address space
 - [x] change all domains to use reserved doc names
 - [x] import tests from nictool/server/t/12_records.t
-- [x] add defaults for empty values like TTL?
+- [x] add defaults for empty values like TTL
 - [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
