@@ -9,10 +9,10 @@ class NS extends RR {
 
   /****** Resource record specific setters   *******/
   setDname (val) {
-    if (!val) throw new Error('NS: dname is required')
+    if (!val) throw new Error(`NS: dname is required: ${this.getRFCs()}`)
 
-    if (!this.fullyQualified('NS', 'dname', val)) return
-    if (!this.validHostname('NS', 'dname', val)) return
+    this.fullyQualified('NS', 'dname', val)
+    this.validHostname('NS', 'dname', val)
 
     this.set('dname', val)
   }

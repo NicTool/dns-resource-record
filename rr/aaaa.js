@@ -17,8 +17,8 @@ class AAAA extends RR {
     this.set('address', val.toLowerCase()) // IETFs suggest only lower case
   }
 
-  getCompressed (f) {
-    this.compress(this.get(f))
+  getCompressed (val) {
+    this.compress(val || this.get('address'))
   }
 
   getDescription () {
@@ -106,8 +106,7 @@ class AAAA extends RR {
   toTinydns () {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
     const rdata = TINYDNS.packHex(this.expand(this.get('address'), ''))
-
-    return `:${this.get('name')}:28:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

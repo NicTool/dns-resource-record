@@ -31,19 +31,18 @@ class NAPTR extends RR {
 
   /****** Resource record specific setters   *******/
   setOrder (val) {
-    if (!this.is16bitInt('NAPTR', 'order', val)) return
-
+    this.is16bitInt('NAPTR', 'order', val)
     this.set('order', val)
   }
 
   setPreference (val) {
-    if (!this.is16bitInt('NAPTR', 'preference', val)) return
+    this.is16bitInt('NAPTR', 'preference', val)
     this.set('preference', val)
   }
 
   setFlags (val) {
     if (![ '', 'S', 'A', 'U', 'P' ].includes(val))
-      throw new Error (`NAPTR flags are invalid: RFC 2915`)
+      throw new Error (`NAPTR flags are invalid: ${this.getRFCs()}`)
 
     this.set('flags', val)
   }
@@ -144,7 +143,7 @@ class NAPTR extends RR {
     }
     rdata += '``000'
 
-    return `:${this.get('name')}:35:${rdata}:${this.get('ttl')}::`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

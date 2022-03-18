@@ -9,19 +9,19 @@ class URI extends RR {
 
   /****** Resource record specific setters   *******/
   setPriority (val) {
-    if (!this.is16bitInt('URI', 'priority', val)) return
+    this.is16bitInt('URI', 'priority', val)
 
     this.set('priority', val)
   }
 
   setWeight (val) {
-    if (!this.is16bitInt('URI', 'weight', val)) return
+    this.is16bitInt('URI', 'weight', val)
 
     this.set('weight', val)
   }
 
   setTarget (val) {
-    if (!val) throw new Error('URI: target is required')
+    if (!val) throw new Error(`URI: target is required: ${this.getRFCs()}`)
 
     this.set('target', val)
   }
@@ -89,7 +89,7 @@ class URI extends RR {
     }
 
     rdata += TINYDNS.escapeOctal(dataRe, this.get('target'))
-    return `:${this.get('name')}:256:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

@@ -7,14 +7,24 @@ const MX = require('../rr/mx')
 
 const validRecords = [
   {
-    class   : 'IN',
-    name    : 'test.example.com',
-    type    : 'MX',
-    exchange: 'mail.example.com.',
-    weight  : 0,
-    ttl     : 3600,
-    testB   : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
-    testT   : '@test.example.com::mail.example.com.:0:3600::\n',
+    name      : 'test.example.com',
+    class     : 'IN',
+    type      : 'MX',
+    ttl       : 3600,
+    preference: 0,
+    exchange  : 'mail.example.com.',
+    testB     : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
+    testT     : '@test.example.com::mail.example.com.:0:3600::\n',
+  },
+  {
+    name      : 'www.example.com',
+    class     : 'IN',
+    type      : 'MX',
+    ttl       : 86400,
+    preference: 0,
+    exchange  : '.', // null MX, RFC 7505
+    testB     : 'www.example.com\t86400\tIN\tMX\t0\t.\n',
+    testT     : '@www.example.com::.:0:86400::\n',
   },
 ]
 
@@ -33,7 +43,7 @@ const invalidRecords = [
   },
 ]
 
-const defaults = { ttl: 3600, weight: 0 }
+const defaults = { ttl: 3600, preference: 0 }
 
 describe('MX record', function () {
   base.valid(MX, validRecords)
@@ -41,7 +51,7 @@ describe('MX record', function () {
 
   base.getDescription(MX)
   base.getRFCs(MX, validRecords[0])
-  base.getFields(MX, [ 'weight', 'exchange' ])
+  base.getFields(MX, [ 'preference', 'exchange' ])
   base.getTypeId(MX, 15)
 
   base.toBind(MX, validRecords)
@@ -54,7 +64,7 @@ describe('MX record', function () {
     it.skip(`imports tinydns MX (@) record (${val.name})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'exchange', 'weight', 'ttl' ]) {
+      for (const f of [ 'name', 'exchange', 'preference', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

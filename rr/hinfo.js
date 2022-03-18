@@ -46,8 +46,10 @@ class HINFO extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
-  }
+  // toTinydns () {
+  //   const rdata = '' // TODO
+  //   return this.getTinydnsGeneric(rdata)
+  // }
 }
 
 module.exports = HINFO

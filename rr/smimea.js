@@ -74,6 +74,8 @@ class SMIMEA extends RR {
 
   /******  EXPORTERS   *******/
   // toTinydns () {
+  //   const rdata = '' // TODO
+  //   return this.getTinydnsGeneric(rdata)
   // }
 }
 

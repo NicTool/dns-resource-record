@@ -7,12 +7,12 @@ class DS extends RR {
   }
 
   /****** Resource record specific setters   *******/
-  setKeytag (val) {
+  setKeyTag (val) {
     // a 2 octet Key Tag field...in network byte order
-    if (!val) throw new Error(`DS: keytagtag is required`)
-    if (val.length > 2) throw new Error(`DS: keytag is too long, see ${this.getRFCs()}`)
+    if (!val) throw new Error(`DS: key tag is required`)
+    if (val.length > 2) throw new Error(`DS: key tag is too long, see ${this.getRFCs()}`)
 
-    this.set('keytag', val)
+    this.set('key tag', val)
   }
 
   setAlgorithm (val) {
@@ -23,10 +23,10 @@ class DS extends RR {
     this.set('algorithm', val)
   }
 
-  setDigesttype (val) {
-    if (![ 1,2 ].includes(val)) throw new Error(`DS: digesttype invalid, see ${this.getRFCs()}`)
+  setDigestType (val) {
+    if (![ 1,2 ].includes(val)) throw new Error(`DS: digest type invalid, see ${this.getRFCs()}`)
 
-    this.set('digesttype', val)
+    this.set('digest type', val)
   }
 
   setDigest (val) {
@@ -40,7 +40,7 @@ class DS extends RR {
   }
 
   getRdataFields (arg) {
-    return [ 'keytag', 'algorithm', 'digesttype', 'digest' ]
+    return [ 'key tag', 'algorithm', 'digest type', 'digest' ]
   }
 
   getRFCs () {
@@ -59,20 +59,22 @@ class DS extends RR {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
     const [ fqdn, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
     return new this.constructor({
-      name      : fqdn,
-      ttl       : parseInt(ttl, 10),
-      class     : c,
-      type      : type,
-      keytag    : parseInt(keytag,     10),
-      algorithm : parseInt(algorithm,  10),
-      digesttype: parseInt(digesttype, 10),
-      digest    : str.split(/\s+/).slice(7).join(' ').trim(),
+      name         : fqdn,
+      ttl          : parseInt(ttl, 10),
+      class        : c,
+      type         : type,
+      'key tag'    : parseInt(keytag,     10),
+      algorithm    : parseInt(algorithm,  10),
+      'digest type': parseInt(digesttype, 10),
+      digest       : str.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
-  }
+  // toTinydns () {
+  //   const rdata = '' // TODO
+  //   return this.getTinydnsGeneric(rdata)
+  // }
 }
 
 module.exports = DS

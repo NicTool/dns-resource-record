@@ -10,14 +10,14 @@ class SSHFP extends RR {
   /****** Resource record specific setters   *******/
   setAlgorithm (val) {
     // 0: reserved; 1: RSA 2: DSA 3: ECDSA 4: Ed25519 6:Ed448
-    if (!this.is8bitInt('SSHFP', 'algorithm', val)) return
+    this.is8bitInt('SSHFP', 'algorithm', val)
 
     this.set('algorithm', val)
   }
 
   setFptype (val) {
     // 0: reserved, 1: SHA-1, 2: SHA-256
-    if (!this.is8bitInt('SSHFP', 'type', val)) return
+    this.is8bitInt('SSHFP', 'type', val)
 
     this.set('fptype', val)
   }
@@ -89,7 +89,7 @@ class SSHFP extends RR {
     }
 
     rdata += TINYDNS.packHex(this.get('fingerprint'))
-    return `:${this.get('name')}:44:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 
