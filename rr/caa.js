@@ -26,7 +26,7 @@ class CAA extends RR {
       throw new Error(`CAA tag must be a sequence of ASCII letters and numbers in lowercase: ${this.getRFCs()}`)
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
-      throw new Error(`CAA tag ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA tag ${val} not recognized: ${this.getRFCs()}`)
     }
     this.set('tag', val)
   }

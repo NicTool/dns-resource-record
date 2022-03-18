@@ -214,8 +214,9 @@ module.exports = {
   RR,
 }
 
-const files = fs.readdirSync('./rr')
+const files = fs.readdirSync(path.join(__dirname))
 for (let f of files) {
   f = path.basename(f, '.js')
+  if (f === 'index') continue
   module.exports[f.toUpperCase()] = require(`./${f}`)
 }
