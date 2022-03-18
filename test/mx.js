@@ -16,6 +16,16 @@ const validRecords = [
     testB     : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
     testT     : '@test.example.com::mail.example.com.:0:3600::\n',
   },
+  {
+    name      : 'www.example.com',
+    class     : 'IN',
+    type      : 'MX',
+    ttl       : 86400,
+    preference: 0,
+    exchange  : '.', // null MX, RFC 7505
+    testB     : 'www.example.com\t86400\tIN\tMX\t0\t.\n',
+    testT     : '@www.example.com::.:0:86400::\n',
+  },
 ]
 
 const invalidRecords = [
