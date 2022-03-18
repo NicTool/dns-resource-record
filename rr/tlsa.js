@@ -73,6 +73,8 @@ class TLSA extends RR {
 
   /******  EXPORTERS   *******/
   // toTinydns () {
+  //   const rdata = '' // TODO
+  //   return this.getTinydnsGeneric(rdata)
   // }
 }
 

@@ -211,7 +211,7 @@ class LOC extends RR {
     rdata += TINYDNS.UInt32toOctal(this.dmsToArcSec(loc.longitude))
     rdata += TINYDNS.UInt32toOctal(loc.altitude + REF.ALTITUDE)
 
-    return `:${this.get('name')}:29:${rdata}:${this.get('ttl')}::\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

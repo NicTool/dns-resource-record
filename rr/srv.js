@@ -11,31 +11,31 @@ class SRV extends RR {
 
   /****** Resource record specific setters   *******/
   setPriority (val) {
-    if (!this.is16bitInt('SRV', 'priority', val)) return
+    this.is16bitInt('SRV', 'priority', val)
 
     this.set('priority', val)
   }
 
   setPort (val) {
-    if (!this.is16bitInt('SRV', 'port', val)) return
+    this.is16bitInt('SRV', 'port', val)
 
     this.set('port', val)
   }
 
   setWeight (val) {
-    if (!this.is16bitInt('SRV', 'weight', val)) return
+    this.is16bitInt('SRV', 'weight', val)
 
     this.set('weight', val)
   }
 
   setTarget (val) {
-    if (!val) throw new Error('SRV: target is required')
+    if (!val) throw new Error(`SRV: target is required: ${this.getRFCs()}`)
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`SRV: target must be a FQDN: RFC 2782`)
+      throw new Error(`SRV: target must be a FQDN: ${this.getRFCs()}`)
 
-    if (!this.fullyQualified('SRV', 'target', val)) return
-    if (!this.validHostname('SRV', 'target', val)) return
+    this.fullyQualified('SRV', 'target', val)
+    this.validHostname('SRV', 'target', val)
 
     this.set('target', val)
   }
@@ -115,7 +115,7 @@ class SRV extends RR {
 
     rdata += TINYDNS.packDomainName(this.get('target'))
 
-    return `:${this.get('name')}:33:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

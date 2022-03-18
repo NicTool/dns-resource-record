@@ -11,28 +11,28 @@ class SOA extends RR {
     // minimum (used for negative caching, since RFC 2308)
     // RFC 1912 sugggests 1-5 days
     // RIPE recommends 3600 (1 hour)
-    if (!this.is32bitInt('SOA', 'minimum', val)) return
+    this.is32bitInt('SOA', 'minimum', val)
 
     this.set('minimum', val)
   }
 
   setMname (val) {
     // MNAME (primary NS)
-    if (!this.validHostname('SOA', 'MNAME', val)) return
-    if (!this.fullyQualified('SOA', 'MNAME', val)) return
+    this.validHostname('SOA', 'MNAME', val)
+    this.fullyQualified('SOA', 'MNAME', val)
     this.set('mname', val)
   }
 
   setRname (val) {
     // RNAME (email of admin)  (escape . with \)
-    if (!this.validHostname('SOA', 'RNAME', val)) return
-    if (!this.fullyQualified('SOA', 'RNAME', val)) return
-    if (/@/.test(val)) throw new Error('SOA rname replaces @ with a . (dot).')
+    this.validHostname('SOA', 'RNAME', val)
+    this.fullyQualified('SOA', 'RNAME', val)
+    if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.getRFCs()}`)
     this.set('rname', val)
   }
 
   setSerial (val) {
-    if (!this.is32bitInt('SOA', 'serial', val)) return
+    this.is32bitInt('SOA', 'serial', val)
 
     this.set('serial', val)
   }
@@ -41,7 +41,7 @@ class SOA extends RR {
     // refresh (seconds after which to check with master for update)
     // RFC 1912 suggests 20 min to 12 hours
     // RIPE recommends 86400 (24 hours)
-    if (!this.is32bitInt('SOA', 'refresh', val)) return
+    this.is32bitInt('SOA', 'refresh', val)
 
     this.set('refresh', val)
   }
@@ -50,7 +50,7 @@ class SOA extends RR {
     // seconds after which to retry serial # update
     // RIPE recommends 7200 seconds (2 hours)
 
-    if (!this.is32bitInt('SOA', 'retry', val)) return
+    this.is32bitInt('SOA', 'retry', val)
 
     this.set('retry', val)
   }
@@ -59,7 +59,7 @@ class SOA extends RR {
     // seconds after which secondary should drop zone if no master response
     // RFC 1912 suggests 2-4 weeks
     // RIPE suggests 3600000 (1,000 hours, 6 weeks)
-    if (!this.is32bitInt('SOA', 'expire', val)) return
+    this.is32bitInt('SOA', 'expire', val)
 
     this.set('expire', val)
   }

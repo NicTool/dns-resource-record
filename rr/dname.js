@@ -15,8 +15,9 @@ class DNAME extends RR {
     if (net.isIPv4(val) || net.isIPv6(val))
       throw new Error(`DNAME: target must be a domain name: RFC 6672`)
 
-    if (!this.fullyQualified('DNAME', 'target', val)) return
-    if (!this.validHostname('DNAME', 'target', val)) return
+    this.fullyQualified('DNAME', 'target', val)
+    this.validHostname('DNAME', 'target', val)
+
     this.set('target', val)
   }
 
@@ -67,7 +68,7 @@ class DNAME extends RR {
   /******  EXPORTERS   *******/
   toTinydns () {
     const rdata = TINYDNS.packDomainName(this.get('target'))
-    return `:${this.get('name')}:39:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

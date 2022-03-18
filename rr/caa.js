@@ -9,10 +9,10 @@ class CAA extends RR {
 
   /****** Resource record specific setters   *******/
   setFlags (val) {
-    if (!this.is8bitInt('CAA', 'flags', val)) return
+    this.is8bitInt('CAA', 'flags', val)
 
     if (![ 0, 128 ].includes(val)) {
-      throw new Error(`CAA flags ${val} not recognized: RFC 6844`)
+      throw new Error(`CAA flags ${val} not recognized: ${this.getRFCs()}`)
     }
 
     this.set('flags', val)
@@ -23,7 +23,7 @@ class CAA extends RR {
       || val.length < 1
       || /[A-Z]/.test(val)
       || /[^a-z0-9]/.test(val))
-      throw new Error('CAA tag must be a sequence of ASCII letters and numbers in lowercase: RFC 8659')
+      throw new Error(`CAA tag must be a sequence of ASCII letters and numbers in lowercase: ${this.getRFCs()}`)
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
       throw new Error(`CAA tag ${val} not recognized: RFC 6844`)
@@ -44,7 +44,7 @@ class CAA extends RR {
     // check if val starts with one of iodefSchemes
     const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
     if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
-      throw new Error(`CAA value must have valid iodefScheme prefix: RFC 6844`)
+      throw new Error(`CAA value must have valid iodefScheme prefix: ${this.getRFCs()}`)
     }
 
     this.set('value', val)
@@ -63,7 +63,7 @@ class CAA extends RR {
   }
 
   getRFCs () {
-    return [ 6844 ]
+    return [ 6844, 8659 ]
   }
 
   getTypeId () {
@@ -120,7 +120,7 @@ class CAA extends RR {
 
     rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value'))
 
-    return `:${this.get('name')}:257:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return this.getTinydnsGeneric(rdata)
   }
 }
 

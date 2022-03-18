@@ -11,7 +11,7 @@ class MX extends RR {
   /****** Resource record specific setters   *******/
   setPreference (val) {
     if (val === undefined) val = this?.default?.preference
-    if (!this.is16bitInt('MX', 'preference', val)) return
+    this.is16bitInt('MX', 'preference', val)
     this.set('preference', val)
   }
 
@@ -19,10 +19,10 @@ class MX extends RR {
     if (!val) throw new Error('MX: exchange is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`MX: exchange must be a FQDN: RFC 2181`)
+      throw new Error(`MX: exchange must be a FQDN: ${this.getRFCs()}`)
 
-    if (!this.fullyQualified('MX', 'exchange', val)) return
-    if (!this.validHostname('MX', 'exchange', val)) return
+    this.fullyQualified('MX', 'exchange', val)
+    this.validHostname('MX', 'exchange', val)
 
     this.set('exchange', val)
   }
@@ -36,7 +36,7 @@ class MX extends RR {
   }
 
   getRFCs () {
-    return [ 1035, 7505 ]
+    return [ 1035, 2181, 7505 ]
   }
 
   getTypeId () {

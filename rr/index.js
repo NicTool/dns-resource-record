@@ -34,13 +34,17 @@ class RR extends Map {
 
   setClass (c) {
     switch (c) {
-      case 'IN':
+      case 'IN':    // 1
       case undefined:
+      case null:
+      case '':
         this.set('class', 'IN')
         break
-      case 'CS':
-      case 'CH':
-      case 'HS':
+      case 'CS':    // 2
+      case 'CH':    // 3
+      case 'HS':    // 4
+      case 'NONE':  // 254
+      case 'ANY':   // 255
         this.set('class', c)
         break
       default:
@@ -74,6 +78,7 @@ class RR extends Map {
 
     this.hasValidLabels(n)
 
+    // wildcard records: RFC 1034, 4592
     if (/\*/.test(n)) {
       if (!/^\*\./.test(n) && !/\.\*\./.test(n)) throw new Error('only *.something or * (by itself) is a valid wildcard')
     }
@@ -92,13 +97,13 @@ class RR extends Map {
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
-    if (!this.is32bitInt(this.name, 'TTL', t)) return
+    this.is32bitInt(this.name, 'TTL', t)
 
     this.set('ttl', t)
   }
 
   setType (t) {
-    if (!module.exports[t || this.constructor.name])
+    if (!module.exports[ t || this.constructor.name ])
       throw new Error(`type ${t} not supported (yet)`)
 
     this.set('type', t || this.constructor.name)
@@ -143,10 +148,18 @@ class RR extends Map {
     }
   }
 
+  getTinydnsGeneric (rdata) {
+    return `:${this.get('name')}:${this.getTypeId()}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+  }
+
   hasValidLabels (hostname) {
+    // RFC  952 defined valid hostnames
+    // RFC 1035 limited domain label chars to letters, digits, and hyphen
+    // RFC 1123 allowed hostnames to start with a digit
+    // RFC 2181 'any binary string can be used as the label'
     for (const label of hostname.split('.')) {
       if (label.length < 1 || label.length > 63)
-        throw new Error('Labels must have 1-63 octets (characters)')
+        throw new Error('Labels must have 1-63 octets (characters), RFC 2181')
     }
   }
 
@@ -192,7 +205,7 @@ class RR extends Map {
   }
 
   validHostname (type, field, hostname) {
-    if (!/[^a-zA-Z0-9\-._]/.test(hostname)) return true
+    if (!/[^a-zA-Z0-9\-._/]/.test(hostname)) return true
     throw new Error(`${type}, ${field} has invalid hostname characters`)
   }
 }

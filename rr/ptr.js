@@ -8,8 +8,8 @@ class PTR extends RR {
 
   /****** Resource record specific setters   *******/
   setDname (val) {
-    if (!this.fullyQualified('PTR', 'dname', val)) return
-    if (!this.validHostname('PTR', 'dname', val)) return
+    this.fullyQualified('PTR', 'dname', val)
+    this.validHostname('PTR', 'dname', val)
 
     this.set('dname', val)
   }
