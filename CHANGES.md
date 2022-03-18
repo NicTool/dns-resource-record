@@ -1,6 +1,18 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+#### 0.9.2 - 2022-03-18
+
+- mx: weight -> preference
+- ds: keytag -> key tag (consistent naming)
+- mx: add null MX test
+- more use of this.getRFCs in error messages
+- added getTinydnsGeneric
+- on `index.is*` functions which throw, use declaratively
+- class: add NONE and ANY
+- validHostname: allow / char
+- use \__dirname to find RR mods
+
 
 #### 0.9.1 - 2022-03-14
 
