@@ -1,9 +1,9 @@
 
-const RR = require('./index').RR
+const TXT = require('./txt')
 
 const TINYDNS = require('../lib/tinydns')
 
-class SPF extends RR {
+class SPF extends TXT {
   constructor (opts) {
     super(opts)
   }
@@ -37,7 +37,7 @@ class SPF extends RR {
 
     return new this.constructor({
       type     : 'SPF',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       data     : TINYDNS.octalToChar(rdata),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -45,28 +45,7 @@ class SPF extends RR {
     })
   }
 
-  fromBind (str) {
-    // test.example.com  3600  IN  SPF  "rdata"
-    const [ fqdn, ttl, c, type ] = str.split(/\s+/)
-    return new this.constructor({
-      class: c,
-      type : type,
-      name : fqdn,
-      data : str.split(/\s+/).slice(4).map(s => s.replace(/^"|"$/g, '')).join(' ').trim(),
-      ttl  : parseInt(ttl, 10),
-    })
-  }
-
   /******  EXPORTERS   *******/
-  toBind () {
-    let data = this.get('data')
-    if (data.length > 255) {
-      // BIND croaks when any string in the SPF RR data is longer than 255
-      data = data.match(/(.{1,255})/g).join('" "')
-    }
-    return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
-  }
-
   toTinydns () {
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return this.getTinydnsGeneric(rdata)

@@ -190,6 +190,15 @@ PRs are welcome, especially PRs with tests.
 | **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 
+
+## TIPS
+
+- Domain names are stored fully qualified, absolute, with the trailing dot.
+    - Master Zone File expansions exist at another level
+- fromBIND is regex based and is naive. [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) has a much more robust parser.
+- 
+
+
 ## TODO
 
 - [x] Change all IPs to use [RFC example/doc](https://en.wikipedia.org/wiki/Reserved_IP_addresses) address space

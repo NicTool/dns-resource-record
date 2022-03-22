@@ -77,7 +77,7 @@ class SRV extends RR {
 
     return new this.constructor({
       type     : 'SRV',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       target   : `${addr}.`,
       port     : parseInt(port,   10),
       priority : parseInt(pri,    10),

@@ -45,7 +45,7 @@ class DNAME extends RR {
 
     return new this.constructor({
       type     : 'DNAME',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       target   : `${TINYDNS.unpackDomainName(rdata)}.`,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,

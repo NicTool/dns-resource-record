@@ -8,12 +8,12 @@ const NS = require('../rr/ns')
 const validRecords = [
   {
     class: 'IN',
-    name : 'example.com',
+    name : 'example.com.',
     type : 'NS',
     dname: 'ns1.example.com.',
     ttl  : 3600,
-    testB: 'example.com\t3600\tIN\tNS\tns1.example.com.\n',
-    testT: '&example.com::ns1.example.com.:3600::\n',
+    testB: 'example.com.\t3600\tIN\tNS\tns1.example.com.\n',
+    testT: '&example.com::ns1.example.com:3600::\n',
   },
 ]
 

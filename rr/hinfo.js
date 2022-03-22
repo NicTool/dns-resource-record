@@ -43,6 +43,7 @@ class HINFO extends RR {
   }
 
   fromBind () {
+    throw new Error('HINFO not yet supported')
   }
 
   /******  EXPORTERS   *******/

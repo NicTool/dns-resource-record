@@ -7,11 +7,11 @@ const AAAA = require('../rr/aaaa.js')
 const validRecords = [
   {
     class  : 'IN',
-    name   : 'test.example.com',
+    name   : 'test.example.com.',
     type   : 'AAAA',
     address: '2001:db8:20:a::4',
     ttl    : 3600,
-    testB  : 'test.example.com\t3600\tIN\tAAAA\t2001:db8:20:a::4\n',
+    testB  : 'test.example.com.\t3600\tIN\tAAAA\t2001:db8:20:a::4\n',
     testT  : ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:3600::\n',
   },
 ]

@@ -9,11 +9,11 @@ const validRecords = [
   {
     class: 'IN',
     type : 'HINFO',
-    name : 'server-under-my-desk.example.com',
+    name : 'server-under-my-desk.example.com.',
     cpu  : 'PDP-11/73',
     os   : 'UNIX',
     ttl  : 86400,
-    testB: 'server-under-my-desk.example.com\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
+    testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
     // testT : ':server-under-my-desk:13: :86400::\n',
   },
 ]

@@ -41,8 +41,8 @@ class NS extends RR {
 
     return new this.constructor({
       type     : 'NS',
-      name     : fqdn,
-      dname    : dname,
+      name     : this.fullyQualify(fqdn),
+      dname    : this.fullyQualify(dname),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
@@ -64,7 +64,7 @@ class NS extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `&${this.get('name')}::${this.get('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `&${this.getTinyFQDN('name')}::${this.getTinyFQDN('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

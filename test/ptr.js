@@ -8,12 +8,12 @@ const PTR = require('../rr/ptr')
 const validRecords = [
   {
     class: 'IN',
-    name : '2.2.0.192.in-addr.arpa',
+    name : '2.2.0.192.in-addr.arpa.',
     type : 'PTR',
     dname: 'dhcp.example.com.',
     ttl  : 86400,
-    testB: '2.2.0.192.in-addr.arpa\t86400\tIN\tPTR\tdhcp.example.com.\n',
-    testT: '^2.2.0.192.in-addr.arpa:dhcp.example.com.:86400::\n',
+    testB: '2.2.0.192.in-addr.arpa.\t86400\tIN\tPTR\tdhcp.example.com.\n',
+    testT: '^2.2.0.192.in-addr.arpa:dhcp.example.com:86400::\n',
   },
 ]
 

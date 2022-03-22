@@ -7,7 +7,7 @@ const DS = require('../rr/ds')
 
 const validRecords = [
   {
-    name         : 'dskey.example.com',
+    name         : 'dskey.example.com.',
     class        : 'IN',
     type         : 'DS',
     ttl          : 3600,
@@ -15,7 +15,7 @@ const validRecords = [
     algorithm    : 5,
     'digest type': 1,
     digest       : `( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )`,
-    testB        : 'dskey.example.com\t3600\tIN\tDS\t60485\t5\t1\t( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )\n',
+    testB        : 'dskey.example.com.\t3600\tIN\tDS\t60485\t5\t1\t( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )\n',
     testT        : ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n',
   },
 ]

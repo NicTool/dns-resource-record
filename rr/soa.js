@@ -87,9 +87,9 @@ class SOA extends RR {
 
     return new this.constructor({
       type     : 'SOA',
-      name     : fqdn,
-      mname    : mname,
-      rname    : rname,
+      name     : this.fullyQualify(fqdn),
+      mname    : this.fullyQualify(mname),
+      rname    : this.fullyQualify(rname),
       serial   : parseInt(ser, 10),
       refresh  : parseInt(ref, 10) || 16384,
       retry    : parseInt(ret, 10) || 2048,
@@ -112,7 +112,7 @@ class SOA extends RR {
     const bits = {
       class  : c,
       type   : type,
-      name   : fqdn.replace(/\.$/, ''),
+      name   : fqdn,
       mname  : mname,
       rname  : rname,
       serial : parseInt(serial, 10),
@@ -129,8 +129,8 @@ class SOA extends RR {
   /******  EXPORTERS   *******/
   toBind () {
     return `$TTL\t${this.get('ttl')}
-$ORIGIN\t${this.get('name')}.
-${this.get('name')}.\t${this.get('class')}\tSOA\t${this.get('mname')}\t${this.get('rname')} (
+$ORIGIN\t${this.getFQDN('name')}
+${this.getFQDN('name')}\t${this.get('class')}\tSOA\t${this.getFQDN('mname')}\t${this.getFQDN('rname')} (
           ${this.get('serial')}
           ${this.get('refresh')}
           ${this.get('retry')}
@@ -140,7 +140,7 @@ ${this.get('name')}.\t${this.get('class')}\tSOA\t${this.get('mname')}\t${this.ge
   }
 
   toTinydns () {
-    return `Z${this.get('name')}:${this.get('mname')}:${this.getEmpty('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `Z${this.getTinyFQDN('name')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

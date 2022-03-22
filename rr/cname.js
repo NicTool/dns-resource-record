@@ -46,7 +46,7 @@ class CNAME extends RR {
 
     return new this.constructor({
       type     : 'CNAME',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       cname    : p,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -69,7 +69,7 @@ class CNAME extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns () {
-    return `C${this.get('name')}:${this.get('cname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `C${this.getTinyFQDN('name')}:${this.get('cname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

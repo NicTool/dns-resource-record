@@ -37,8 +37,8 @@ class PTR extends RR {
 
     return new this.constructor({
       type     : 'PTR',
-      name     : fqdn,
-      dname    : p,
+      name     : this.fullyQualify(fqdn),
+      dname    : this.fullyQualify(p),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
@@ -59,7 +59,7 @@ class PTR extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `^${this.get('name')}:${this.get('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `^${this.getTinyFQDN('name')}:${this.getTinyFQDN('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

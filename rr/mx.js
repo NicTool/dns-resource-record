@@ -51,8 +51,8 @@ class MX extends RR {
 
     return new this.constructor({
       type      : 'MX',
-      name      : fqdn,
-      exchange  : x,
+      name      : this.fullyQualify(fqdn),
+      exchange  : this.fullyQualify(x),
       preference: parseInt(preference, 10) || 0,
       ttl       : parseInt(ttl, 10),
       timestamp : ts,
@@ -75,8 +75,12 @@ class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toBind () {
+    return `${this.getPrefix()}\t${this.get('preference')}\t${this.getFQDN('exchange')}\n`
+  }
+
   toTinydns () {
-    return `@${this.get('name')}::${this.get('exchange')}:${this.get('preference')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `@${this.getTinyFQDN('name')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

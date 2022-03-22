@@ -67,7 +67,7 @@ class NAPTR extends RR {
 
     const rec = {
       type      : 'NAPTR',
-      name      : fqdn,
+      name      : this.fullyQualify(fqdn),
       ttl       : parseInt(ttl, 10),
       timestamp : ts,
       location  : loc !== '' && loc !== '\n' ? loc : '',

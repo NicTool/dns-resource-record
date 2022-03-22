@@ -55,7 +55,7 @@ class SSHFP extends RR {
 
     return new this.constructor({
       type       : 'SSHFP',
-      name       : fqdn,
+      name       : this.fullyQualify(fqdn),
       algorithm  : algo,
       fptype     : fptype,
       fingerprint: fingerprint,

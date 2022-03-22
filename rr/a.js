@@ -37,7 +37,7 @@ class A extends RR {
     const [ fqdn, ip, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       type     : 'A',
       address  : ip,
       ttl      : parseInt(ttl, 10),
@@ -60,7 +60,7 @@ class A extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `+${this.get('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `+${this.getTinyFQDN('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }
 

@@ -60,7 +60,7 @@ class AAAA extends RR {
 
     return new this.constructor({
       type     : 'AAAA',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       address  : ip,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,

@@ -76,6 +76,7 @@ class RR extends Map {
     if (n.length < 1 || n.length > 255)
       throw new Error('Domain names must have 1-255 octets (characters): RFC 2181')
 
+    this.isFullyQualified('', 'name', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
@@ -109,7 +110,16 @@ class RR extends Map {
     this.set('type', t)
   }
 
-  getCommonFields () {
+  fullyQualify (str) {
+    if (str.endsWith('.')) return str
+    return `${str}.`
+  }
+
+  getPrefix () {
+    return `${this.getFQDN('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}`
+  }
+
+  getPrefixFields () {
     const commonFields = [ 'name', 'ttl', 'class', 'type' ]
     Object.freeze(commonFields)
     return commonFields
@@ -140,17 +150,28 @@ class RR extends Map {
   getFields (arg) {
     switch (arg) {
       case 'common':
-        return this.getCommonFields()
+        return this.getPrefixFields()
       case 'rdata':
         return this.getRdataFields()
       default:
-        return this.getCommonFields().concat(this.getRdataFields())
+        return this.getPrefixFields().concat(this.getRdataFields())
     }
   }
 
+  getFQDN (field) {
+    if (this.get(field).endsWith('.')) return this.get(field)
+    return `${this.get(field)}.`
+  }
+
   getTinyFQDN (field) {
-    if (this.get(field).endsWith('.')) return this.get(field).slice(0, -1)
-    return this.get(field)
+    const val = this.get(field)
+    if (val === '') return val   // empty
+    if (val === '.') return val  // null MX
+
+    // strip off trailing ., tinydns doesn't require it for FQDN
+    if (val.endsWith('.')) return val.slice(0, -1)
+
+    return val
   }
 
   getTinydnsGeneric (rdata) {
@@ -212,7 +233,7 @@ class RR extends Map {
   }
 
   toBind () {
-    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
+    return `${this.getPrefix()}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
 }
 
