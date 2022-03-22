@@ -1,6 +1,13 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+#### 0.9.3 - 2022-03-21
+
+- hasValidLabels: remove trailing dot, else split returns empty string
+- add config file:
+    - label.max\_len
+    - fqdn.max\_len
+
 #### 0.9.2 - 2022-03-18
 
 - mx: weight -> preference
@@ -11,7 +18,7 @@
 - on `index.is*` functions which throw, use declaratively
 - class: add NONE and ANY
 - validHostname: allow / char
-- use \__dirname to find RR mods
+- use \_\_dirname to find RR mods
 
 
 #### 0.9.1 - 2022-03-14

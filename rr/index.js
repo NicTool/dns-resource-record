@@ -103,10 +103,10 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (!module.exports[ t || this.constructor.name ])
+    if (module.exports[t] === undefined)
       throw new Error(`type ${t} not supported (yet)`)
 
-    this.set('type', t || this.constructor.name)
+    this.set('type', t)
   }
 
   getCommonFields () {
@@ -134,7 +134,7 @@ class RR extends Map {
   }
 
   getRdataFields () {
-    return [ ]
+    return []
   }
 
   getFields (arg) {
@@ -148,8 +148,13 @@ class RR extends Map {
     }
   }
 
+  getTinyFQDN (field) {
+    if (this.get(field).endsWith('.')) return this.get(field).slice(0, -1)
+    return this.get(field)
+  }
+
   getTinydnsGeneric (rdata) {
-    return `:${this.get('name')}:${this.getTypeId()}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `:${this.getTinyFQDN('name')}:${this.getTypeId()}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 
   hasValidLabels (hostname) {
@@ -157,7 +162,8 @@ class RR extends Map {
     // RFC 1035 limited domain label chars to letters, digits, and hyphen
     // RFC 1123 allowed hostnames to start with a digit
     // RFC 2181 'any binary string can be used as the label'
-    for (const label of hostname.split('.')) {
+    const fq = hostname.endsWith('.') ? hostname.slice(0, -1) : hostname
+    for (const label of fq.split('.')) {
       if (label.length < 1 || label.length > 63)
         throw new Error('Labels must have 1-63 octets (characters), RFC 2181')
     }
@@ -194,19 +200,19 @@ class RR extends Map {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  fullyQualified (type, blah, hostname) {
-    if (hostname.slice(-1) === '.') return true
+  isFullyQualified (type, blah, hostname) {
+    if (hostname.endsWith('.')) return true
 
     throw new Error(`${type}: ${blah} must be fully qualified`)
   }
 
-  toBind () {
-    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
-  }
-
-  validHostname (type, field, hostname) {
+  isValidHostname (type, field, hostname) {
     if (!/[^a-zA-Z0-9\-._/]/.test(hostname)) return true
     throw new Error(`${type}, ${field} has invalid hostname characters`)
+  }
+
+  toBind () {
+    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
 }
 
@@ -216,6 +222,7 @@ module.exports = {
 
 const files = fs.readdirSync(path.join(__dirname))
 for (let f of files) {
+  if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
   if (f === 'index') continue
   module.exports[f.toUpperCase()] = require(`./${f}`)

@@ -18,8 +18,8 @@ class CNAME extends RR {
     if (net.isIPv4(val) || net.isIPv6(val))
       throw new Error(`CNAME: cname must be a FQDN: RFC 2181`)
 
-    if (!this.fullyQualified('CNAME', 'cname', val)) return
-    if (!this.validHostname('CNAME', 'cname', val)) return
+    if (!this.isFullyQualified('CNAME', 'cname', val)) return
+    if (!this.isValidHostname('CNAME', 'cname', val)) return
     this.set('cname', val)
   }
 

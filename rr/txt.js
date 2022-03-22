@@ -84,15 +84,29 @@ class TXT extends RR {
   /******  EXPORTERS   *******/
   toBind () {
     let data = this.get('data')
-    if (data.length > 255) {
-      // BIND croaks when any string in the TXT RR data is longer than 255
-      data = data.match(/(.{1,255})/g).join('" "')
+
+    // BIND croaks when any string in the TXT RR data is longer than 255
+    if (Array.isArray(data)) {
+      let hasTooLong = false
+      for (const str of data) {
+        if (str.length > 255) hasTooLong = true
+      }
+      data = hasTooLong ? data.join('').match(/(.{1,255})/g).join('" "') : data.join('" "')
     }
+    else {
+      if (data.length > 255) {
+        // BIND croaks when any string in the TXT RR data is longer than 255
+        data = data.match(/(.{1,255})/g).join('" "')
+      }
+    }
+
     return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
   }
 
   toTinydns () {
-    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
+    let data = this.get('data')
+    if (Array.isArray(data)) data = data.join('')
+    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
     return `'${this.get('name')}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
   }
 }

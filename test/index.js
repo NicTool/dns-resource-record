@@ -31,12 +31,12 @@ describe('RR', function () {
     })
   })
 
-  describe('fullyQualified', function () {
+  describe('isFullyQualified', function () {
     it('should detect FQDNs', async function () {
-      assert.deepEqual(r.fullyQualified('$type', '$field', 'host.example.com.'), true)
+      assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com.'), true)
 
       try {
-        assert.deepEqual(r.fullyQualified('$type', '$field', 'host.example.com'), false)
+        assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com'), false)
       }
       catch (e) {
         assert.deepEqual(e.message, '$type: $field must be fully qualified')
@@ -120,10 +120,10 @@ describe('RR', function () {
     })
   })
 
-  describe('validHostname', function () {
+  describe('isValidHostname', function () {
     for (const n of [ 'x', '2x', '*', '*.something' ]) {
       it(`passes name: ${n}`, async function () {
-        assert.deepEqual(r.validHostname(n), true)
+        assert.deepEqual(r.isValidHostname(n), true)
       })
     }
   })

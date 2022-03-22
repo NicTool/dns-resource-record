@@ -11,8 +11,8 @@ class NS extends RR {
   setDname (val) {
     if (!val) throw new Error(`NS: dname is required: ${this.getRFCs()}`)
 
-    this.fullyQualified('NS', 'dname', val)
-    this.validHostname('NS', 'dname', val)
+    this.isFullyQualified('NS', 'dname', val)
+    this.isValidHostname('NS', 'dname', val)
 
     this.set('dname', val)
   }

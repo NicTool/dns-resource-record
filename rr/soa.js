@@ -18,15 +18,15 @@ class SOA extends RR {
 
   setMname (val) {
     // MNAME (primary NS)
-    this.validHostname('SOA', 'MNAME', val)
-    this.fullyQualified('SOA', 'MNAME', val)
+    this.isValidHostname('SOA', 'MNAME', val)
+    this.isFullyQualified('SOA', 'MNAME', val)
     this.set('mname', val)
   }
 
   setRname (val) {
     // RNAME (email of admin)  (escape . with \)
-    this.validHostname('SOA', 'RNAME', val)
-    this.fullyQualified('SOA', 'RNAME', val)
+    this.isValidHostname('SOA', 'RNAME', val)
+    this.isFullyQualified('SOA', 'RNAME', val)
     if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.getRFCs()}`)
     this.set('rname', val)
   }
