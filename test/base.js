@@ -81,33 +81,30 @@ exports.getRFCs = (type, valid) => {
   })
 }
 
+function checkFromNS (type, validRecords, nsName, nsLineName) {
+  for (const val of validRecords) {
+    it(`imports ${nsName} record: ${val.name}`, async function () {
+      const r = new type({ [nsLineName]: nsLineName === 'bindline' ? val.testB : val.testT })
+      if (process.env.DEBUG) console.dir(r)
+      for (const f of r.getFields()) {
+        if (f === 'class') continue
+        let expected = val[f]
+        if (f === 'data' && Array.isArray(expected)) expected = expected.join('') // TXT
+        assert.deepStrictEqual(r.get(f), expected, `${f}: ${r.get(f)} !== ${expected}`)
+      }
+    })
+  }
+}
+
 exports.fromTinydns = (type, validRecords) => {
   describe('fromTinydns', function () {
-    for (const val of validRecords) {
-      it(`imports tinydns record: ${val.name}`, async function () {
-        const r = new type({ tinyline: val.testT })
-        if (process.env.DEBUG) console.dir(r)
-        for (const f of r.getFields()) {
-          if (f === 'class') continue
-          assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-        }
-      })
-    }
+    checkFromNS(type, validRecords, 'tinydns', 'tinyline')
   })
 }
 
 exports.fromBind = (type, validRecords) => {
   describe('fromBind', function () {
-    for (const val of validRecords) {
-      it(`imports BIND record: ${val.name}`, async function () {
-        const r = new type({ bindline: val.testB })
-        if (process.env.DEBUG) console.dir(r)
-        for (const f of r.getFields()) {
-          if (f === 'class') continue
-          assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-        }
-      })
-    }
+    checkFromNS(type, validRecords, 'BIND', 'bindline')
   })
 }
 

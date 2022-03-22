@@ -51,4 +51,17 @@ describe('HINFO record', function () {
       }
     })
   }
+
+  for (const f of [ 'os', 'cpu' ]) {
+    it(`rejects ${f} value longer than 255 chars`, async () => {
+      const tooLong = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+      const r = new HINFO(null)
+      try {
+        assert.fail(r[`set${r.ucfirst(f)}`](tooLong))
+      }
+      catch (e) {
+        assert.equal(e.message, `HINFO ${f} cannot exceed 255 chars`)
+      }
+    })
+  }
 })

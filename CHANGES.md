@@ -1,12 +1,24 @@
 
 #### 1.N.N - YYYY-MM-DD
 
-#### 0.9.3 - 2022-03-21
+#### 0.9.3 - 2022-03-22
 
 - hasValidLabels: remove trailing dot, else split returns empty string
+- rename fullyQualified -> isFullyQualified
+- rename validHostname -> isValidHostname
+- set('type') no longer falls back on constructor.name (didn't reliably inherit)
+- new fns: getTinyFQDN, fullyQualify, getPrefix, getFQDN
+- when loading RR classes, ignore files that don't end with .js
+- rr/txt: support data as array (improves idempotency)
+- fromTinydns: fully qualify hostnames
+- toTinydns: strip trailing . upon export
+- rename getCommonFields -> getPrefixFields
+- TXT: import BIND format w/o mangling WS
+- SPF inherits from TXT
 - add config file:
     - label.max\_len
     - fqdn.max\_len
+
 
 #### 0.9.2 - 2022-03-18
 
