@@ -140,7 +140,7 @@ ${this.getFQDN('name')}\t${this.get('class')}\tSOA\t${this.getFQDN('mname')}\t${
   }
 
   toTinydns () {
-    return `Z${this.getTinyFQDN('name')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `Z${this.getTinyFQDN('name')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

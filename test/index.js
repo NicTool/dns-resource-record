@@ -7,7 +7,7 @@ describe('RR', function () {
   const r = new RR(null)
 
   describe('setTtl', function () {
-    const invalid = [ -1, -4, -299, 2147483648 ]
+    const invalid = [ -1, -4, -299, 2147483648, undefined ]
     for (const i of invalid) {
       it(`throws on invalid TTL: ${i}`, async function () {
         try {
@@ -16,6 +16,26 @@ describe('RR', function () {
         catch (e) {
           assert.ok(e.message)
           console.error(e.message)
+        }
+      })
+    }
+  })
+
+  describe('setClass', function () {
+    for (const i of [ 'IN', 'CH', 'ANY', 'NONE' ]) {
+      it(`accepts valid class: ${i}`, async function () {
+        r.setClass(i)
+        assert.deepEqual(r.get('class'), i)
+      })
+    }
+
+    for (const i of [ 'matt', 'in', 0 ]) {
+      it(`throws on invalid class: ${i}`, async function () {
+        try {
+          assert.strictEqual(r.setClass(i), false)
+        }
+        catch (e) {
+          assert.ok(e.message)
         }
       })
     }
@@ -108,6 +128,19 @@ describe('RR', function () {
         }
       })
     }
+  })
+
+  describe('getQuoted', function () {
+    it('returns a quoted string', async () => {
+      r.set('cpu', '"already quoted"')
+      assert.equal(r.get('cpu'), '"already quoted"')
+      assert.equal(r.getQuoted('cpu'), '"already quoted"') // doesn't double quote
+    })
+
+    it('doesn\'t double quote a quoted string', async () => {
+      r.set('cpu', '"already quoted"')
+      assert.equal(r.getQuoted('cpu'), '"already quoted"')
+    })
   })
 
   describe('isQuoted', function () {

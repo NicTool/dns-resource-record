@@ -175,7 +175,11 @@ class RR extends Map {
   }
 
   getTinydnsGeneric (rdata) {
-    return `:${this.getTinyFQDN('name')}:${this.getTypeId()}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `:${this.getTinyFQDN('name')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
+  }
+
+  getTinydnsPostamble () {
+    return [ 'ttl', 'timestamp', 'location' ].map(f => this.getEmpty(f)).join(':')
   }
 
   hasValidLabels (hostname) {

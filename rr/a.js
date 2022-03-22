@@ -60,7 +60,7 @@ class A extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `+${this.getTinyFQDN('name')}:${this.get('address')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `+${this.getTinyFQDN('name')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

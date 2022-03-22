@@ -59,7 +59,7 @@ class PTR extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `^${this.getTinyFQDN('name')}:${this.getTinyFQDN('dname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `^${this.getTinyFQDN('name')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

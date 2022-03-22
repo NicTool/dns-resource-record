@@ -69,7 +69,7 @@ class CNAME extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns () {
-    return `C${this.getTinyFQDN('name')}:${this.get('cname')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `C${this.getTinyFQDN('name')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

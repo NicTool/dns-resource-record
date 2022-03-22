@@ -107,7 +107,7 @@ class TXT extends RR {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
-    return `'${this.getTinyFQDN('name')}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `'${this.getTinyFQDN('name')}:${rdata}:${this.getTinydnsPostamble()}\n`
   }
 }
 

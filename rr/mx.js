@@ -80,7 +80,7 @@ class MX extends RR {
   }
 
   toTinydns () {
-    return `@${this.getTinyFQDN('name')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `@${this.getTinyFQDN('name')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`
   }
 }
 
