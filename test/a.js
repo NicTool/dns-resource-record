@@ -7,37 +7,37 @@ const base = require('./base')
 const validRecords = [
   {
     class  : 'IN',
-    name   : 'test.example.com',
+    name   : 'test.example.com.',
     type   : 'A',
     address: '192.0.2.127',
     ttl    : 3600,
-    testB  : 'test.example.com\t3600\tIN\tA\t192.0.2.127\n',
+    testB  : 'test.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:3600::\n',
   },
   {
     class  : 'IN',
-    name   : 'test.example.com',
+    name   : 'test.example.com.',
     type   : 'A',
     address: '192.0.2.127',
     ttl    : 2147483647,
-    testB  : 'test.example.com\t2147483647\tIN\tA\t192.0.2.127\n',
+    testB  : 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:2147483647::\n',
   },
   {
     class  : 'IN',
-    name   : 'a',
+    name   : 'a.',
     type   : 'A',
     address: '192.0.2.127',
     ttl    : 86400,
-    testB  : 'a\t86400\tIN\tA\t192.0.2.127\n',
+    testB  : 'a.\t86400\tIN\tA\t192.0.2.127\n',
     testT  : '+a:192.0.2.127:86400::\n',
   },
 ]
 
 const moreValid = [
   {
-    name : '*.example.com',
-    testB: '*.example.com\t3600\tIN\tA\t192.0.2.127\n',
+    name : '*.example.com.',
+    testB: '*.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT: '+*.example.com:192.0.2.127:3600::\n',
   },
 ]

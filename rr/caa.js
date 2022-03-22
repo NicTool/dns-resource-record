@@ -85,7 +85,7 @@ class CAA extends RR {
 
     return new this.constructor({
       type     : 'CAA',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       flags    : flags,
       tag      : tag,
       value    : fingerprint,

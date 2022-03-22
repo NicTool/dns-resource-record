@@ -15,8 +15,8 @@ class DNAME extends RR {
     if (net.isIPv4(val) || net.isIPv6(val))
       throw new Error(`DNAME: target must be a domain name: RFC 6672`)
 
-    this.fullyQualified('DNAME', 'target', val)
-    this.validHostname('DNAME', 'target', val)
+    this.isFullyQualified('DNAME', 'target', val)
+    this.isValidHostname('DNAME', 'target', val)
 
     this.set('target', val)
   }
@@ -45,7 +45,7 @@ class DNAME extends RR {
 
     return new this.constructor({
       type     : 'DNAME',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       target   : `${TINYDNS.unpackDomainName(rdata)}.`,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,

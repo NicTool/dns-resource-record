@@ -34,8 +34,8 @@ class SRV extends RR {
     if (net.isIPv4(val) || net.isIPv6(val))
       throw new Error(`SRV: target must be a FQDN: ${this.getRFCs()}`)
 
-    this.fullyQualified('SRV', 'target', val)
-    this.validHostname('SRV', 'target', val)
+    this.isFullyQualified('SRV', 'target', val)
+    this.isValidHostname('SRV', 'target', val)
 
     this.set('target', val)
   }
@@ -77,7 +77,7 @@ class SRV extends RR {
 
     return new this.constructor({
       type     : 'SRV',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       target   : `${addr}.`,
       port     : parseInt(port,   10),
       priority : parseInt(pri,    10),

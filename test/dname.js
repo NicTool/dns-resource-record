@@ -8,11 +8,11 @@ const DNAME = require('../rr/dname')
 const validRecords = [
   {
     class : 'IN',
-    name  : '_tcp.example.com',
+    name  : '_tcp.example.com.',
     type  : 'DNAME',
     target: '_tcp.example.net.',
     ttl   : 86400,
-    testB : '_tcp.example.com\t86400\tIN\tDNAME\t_tcp.example.net.\n',
+    testB : '_tcp.example.com.\t86400\tIN\tDNAME\t_tcp.example.net.\n',
     testT : ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
   },
 ]

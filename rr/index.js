@@ -76,6 +76,7 @@ class RR extends Map {
     if (n.length < 1 || n.length > 255)
       throw new Error('Domain names must have 1-255 octets (characters): RFC 2181')
 
+    this.isFullyQualified('', 'name', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
@@ -103,13 +104,22 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (!module.exports[ t || this.constructor.name ])
+    if (module.exports[t] === undefined)
       throw new Error(`type ${t} not supported (yet)`)
 
-    this.set('type', t || this.constructor.name)
+    this.set('type', t)
   }
 
-  getCommonFields () {
+  fullyQualify (str) {
+    if (str.endsWith('.')) return str
+    return `${str}.`
+  }
+
+  getPrefix () {
+    return `${this.getFQDN('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}`
+  }
+
+  getPrefixFields () {
     const commonFields = [ 'name', 'ttl', 'class', 'type' ]
     Object.freeze(commonFields)
     return commonFields
@@ -134,22 +144,42 @@ class RR extends Map {
   }
 
   getRdataFields () {
-    return [ ]
+    return []
   }
 
   getFields (arg) {
     switch (arg) {
       case 'common':
-        return this.getCommonFields()
+        return this.getPrefixFields()
       case 'rdata':
         return this.getRdataFields()
       default:
-        return this.getCommonFields().concat(this.getRdataFields())
+        return this.getPrefixFields().concat(this.getRdataFields())
     }
   }
 
+  getFQDN (field) {
+    if (this.get(field).endsWith('.')) return this.get(field)
+    return `${this.get(field)}.`
+  }
+
+  getTinyFQDN (field) {
+    const val = this.get(field)
+    if (val === '') return val   // empty
+    if (val === '.') return val  // null MX
+
+    // strip off trailing ., tinydns doesn't require it for FQDN
+    if (val.endsWith('.')) return val.slice(0, -1)
+
+    return val
+  }
+
   getTinydnsGeneric (rdata) {
-    return `:${this.get('name')}:${this.getTypeId()}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    return `:${this.getTinyFQDN('name')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
+  }
+
+  getTinydnsPostamble () {
+    return [ 'ttl', 'timestamp', 'location' ].map(f => this.getEmpty(f)).join(':')
   }
 
   hasValidLabels (hostname) {
@@ -157,7 +187,8 @@ class RR extends Map {
     // RFC 1035 limited domain label chars to letters, digits, and hyphen
     // RFC 1123 allowed hostnames to start with a digit
     // RFC 2181 'any binary string can be used as the label'
-    for (const label of hostname.split('.')) {
+    const fq = hostname.endsWith('.') ? hostname.slice(0, -1) : hostname
+    for (const label of fq.split('.')) {
       if (label.length < 1 || label.length > 63)
         throw new Error('Labels must have 1-63 octets (characters), RFC 2181')
     }
@@ -194,19 +225,19 @@ class RR extends Map {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  fullyQualified (type, blah, hostname) {
-    if (hostname.slice(-1) === '.') return true
+  isFullyQualified (type, blah, hostname) {
+    if (hostname.endsWith('.')) return true
 
     throw new Error(`${type}: ${blah} must be fully qualified`)
   }
 
-  toBind () {
-    return `${this.getFields().map(f => this.getQuoted(f)).join('\t')}\n`
-  }
-
-  validHostname (type, field, hostname) {
+  isValidHostname (type, field, hostname) {
     if (!/[^a-zA-Z0-9\-._/]/.test(hostname)) return true
     throw new Error(`${type}, ${field} has invalid hostname characters`)
+  }
+
+  toBind () {
+    return `${this.getPrefix()}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
 }
 
@@ -216,6 +247,7 @@ module.exports = {
 
 const files = fs.readdirSync(path.join(__dirname))
 for (let f of files) {
+  if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
   if (f === 'index') continue
   module.exports[f.toUpperCase()] = require(`./${f}`)

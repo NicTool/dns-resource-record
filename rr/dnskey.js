@@ -53,8 +53,8 @@ class DS extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
-  }
+  // fromTinydns (str) {
+  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey

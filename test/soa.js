@@ -8,7 +8,7 @@ const SOA = require('../rr/soa')
 const validRecords = [
   {
     class  : 'IN',
-    name   : 'example.com',
+    name   : 'example.com.',
     type   : 'SOA',
     mname  : 'ns1.example.com.',
     rname  : 'matt.example.com.',
@@ -27,7 +27,7 @@ example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
           1209600
           3600
           )\n\n`,
-    testT: 'Zexample.com:ns1.example.com.:matt.example.com.:1:7200:3600:1209600:3600:3600::\n',
+    testT: 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
 ]
 

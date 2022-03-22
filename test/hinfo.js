@@ -9,11 +9,11 @@ const validRecords = [
   {
     class: 'IN',
     type : 'HINFO',
-    name : 'server-under-my-desk.example.com',
+    name : 'server-under-my-desk.example.com.',
     cpu  : 'PDP-11/73',
     os   : 'UNIX',
     ttl  : 86400,
-    testB: 'server-under-my-desk.example.com\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
+    testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
     // testT : ':server-under-my-desk:13: :86400::\n',
   },
 ]
@@ -48,6 +48,19 @@ describe('HINFO record', function () {
       if (process.env.DEBUG) console.dir(r)
       for (const f of [ 'name', 'address', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      }
+    })
+  }
+
+  for (const f of [ 'os', 'cpu' ]) {
+    it(`rejects ${f} value longer than 255 chars`, async () => {
+      const tooLong = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+      const r = new HINFO(null)
+      try {
+        assert.fail(r[`set${r.ucfirst(f)}`](tooLong))
+      }
+      catch (e) {
+        assert.equal(e.message, `HINFO ${f} cannot exceed 255 chars`)
       }
     })
   }

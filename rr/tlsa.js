@@ -60,7 +60,7 @@ class TLSA extends RR {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
     const [ fqdn, ttl, c, type, usage, selector, match ] = str.split(/\s+/)
     return new this.constructor({
-      name                          : fqdn,
+      name                          : this.fullyQualify(fqdn),
       ttl                           : parseInt(ttl, 10),
       class                         : c,
       type                          : type,

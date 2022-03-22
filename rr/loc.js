@@ -106,7 +106,7 @@ class LOC extends RR {
 
     return new this.constructor({
       type     : 'LOC',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       address  : this.toHuman(l),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,

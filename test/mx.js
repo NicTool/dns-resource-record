@@ -7,23 +7,23 @@ const MX = require('../rr/mx')
 
 const validRecords = [
   {
-    name      : 'test.example.com',
+    name      : 'test.example.com.',
     class     : 'IN',
     type      : 'MX',
     ttl       : 3600,
     preference: 0,
     exchange  : 'mail.example.com.',
-    testB     : 'test.example.com\t3600\tIN\tMX\t0\tmail.example.com.\n',
-    testT     : '@test.example.com::mail.example.com.:0:3600::\n',
+    testB     : 'test.example.com.\t3600\tIN\tMX\t0\tmail.example.com.\n',
+    testT     : '@test.example.com::mail.example.com:0:3600::\n',
   },
   {
-    name      : 'www.example.com',
+    name      : 'www.example.com.',
     class     : 'IN',
     type      : 'MX',
     ttl       : 86400,
     preference: 0,
     exchange  : '.', // null MX, RFC 7505
-    testB     : 'www.example.com\t86400\tIN\tMX\t0\t.\n',
+    testB     : 'www.example.com.\t86400\tIN\tMX\t0\t.\n',
     testT     : '@www.example.com::.:0:86400::\n',
   },
 ]

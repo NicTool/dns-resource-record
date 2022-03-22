@@ -43,7 +43,7 @@ class TXT extends RR {
 
     return new this.constructor({
       type     : 'TXT',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       data     : rdata,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -70,30 +70,44 @@ class TXT extends RR {
   }
 
   fromBind (str) {
-    // test.example.com  3600  IN  TXT  "...""
+    // test.example.com  3600  IN  TXT  "..."
     const [ fqdn, ttl, c, type ] = str.split(/\s+/)
     return new this.constructor({
+      name : fqdn,
+      ttl  : parseInt(ttl, 10),
       class: c,
       type : type,
-      name : fqdn,
-      data : str.split(/\s+/).slice(4).map(s => s.replace(/^"|"$/g, '')).join(''),
-      ttl  : parseInt(ttl, 10),
+      data : str.match(/"([^"]+?)"/g).map(s => s.replace(/^"|"$/g, '')).join(''),
     })
   }
 
   /******  EXPORTERS   *******/
   toBind () {
     let data = this.get('data')
-    if (data.length > 255) {
-      // BIND croaks when any string in the TXT RR data is longer than 255
-      data = data.match(/(.{1,255})/g).join('" "')
+
+    // BIND croaks when any string in the TXT RR data is longer than 255
+    if (Array.isArray(data)) {
+      let hasTooLong = false
+      for (const str of data) {
+        if (str.length > 255) hasTooLong = true
+      }
+      data = hasTooLong ? data.join('').match(/(.{1,255})/g).join('" "') : data.join('" "')
     }
-    return `${this.getFields('common').map(f => this.get(f)).join('\t')}\t"${data}"\n`
+    else {
+      if (data.length > 255) {
+        // BIND croaks when any string in the TXT RR data is longer than 255
+        data = data.match(/(.{1,255})/g).join('" "')
+      }
+    }
+
+    return `${this.getPrefix()}\t"${data}"\n`
   }
 
   toTinydns () {
-    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
-    return `'${this.get('name')}:${rdata}:${this.getEmpty('ttl')}:${this.getEmpty('timestamp')}:${this.getEmpty('location')}\n`
+    let data = this.get('data')
+    if (Array.isArray(data)) data = data.join('')
+    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
+    return `'${this.getTinyFQDN('name')}:${rdata}:${this.getTinydnsPostamble()}\n`
   }
 }
 

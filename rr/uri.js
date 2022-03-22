@@ -34,7 +34,7 @@ class URI extends RR {
 
     return new this.constructor({
       type     : 'URI',
-      name     : fqdn,
+      name     : this.fullyQualify(fqdn),
       priority : TINYDNS.octalToUInt16(rdata.substring(0, 8)),
       weight   : TINYDNS.octalToUInt16(rdata.substring(8, 16)),
       target   : TINYDNS.octalToChar(rdata.substring(16)),
