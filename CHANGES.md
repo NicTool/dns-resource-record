@@ -1,6 +1,7 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+
 #### 0.9.3 - 2022-03-22
 
 - hasValidLabels: remove trailing dot, else split returns empty string
@@ -15,9 +16,6 @@
 - rename getCommonFields -> getPrefixFields
 - TXT: import BIND format w/o mangling WS
 - SPF inherits from TXT
-- add config file:
-    - label.max\_len
-    - fqdn.max\_len
 
 
 #### 0.9.2 - 2022-03-18
