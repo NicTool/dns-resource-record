@@ -26,6 +26,8 @@ class RR extends Map {
       if (this[fnName] === undefined) throw new Error(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
     }
+
+    if (opts.comment) this.set('comment', opts.comment)
   }
 
   ucfirst (str) {
@@ -84,7 +86,7 @@ class RR extends Map {
       if (!/^\*\./.test(n) && !/\.\*\./.test(n)) throw new Error('only *.something or * (by itself) is a valid wildcard')
     }
 
-    this.set('name', n)
+    this.set('name', n.toLowerCase())
   }
 
   setTtl (t) {
@@ -111,12 +113,18 @@ class RR extends Map {
   }
 
   fullyQualify (str) {
+    if (!str) return str
     if (str.endsWith('.')) return str
     return `${str}.`
   }
 
-  getPrefix () {
-    return `${this.getFQDN('name')}\t${this.get('ttl')}\t${this.get('class')}\t${this.get('type')}`
+  getPrefix (zone_opts = {}) {
+    const classVal = zone_opts.hide?.class ? '' : this.get('class')
+
+    let rrTTL = this.get('ttl')
+    if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = ''
+
+    return `${this.getFQDN('name', zone_opts)}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
   getPrefixFields () {
@@ -127,6 +135,12 @@ class RR extends Map {
 
   getEmpty (prop) {
     return this.get(prop) === undefined ? '' : this.get(prop)
+  }
+
+  getComment (prop) {
+    const c = this.get('comment')
+    if (!c || !c[prop]) return ''
+    return c[prop]
   }
 
   getQuoted (prop) {
@@ -158,9 +172,17 @@ class RR extends Map {
     }
   }
 
-  getFQDN (field) {
-    if (this.get(field).endsWith('.')) return this.get(field)
-    return `${this.get(field)}.`
+  getFQDN (field, zone_opts = {}) {
+    let fqdn = this.get(field)
+    if (!fqdn) throw new Error(`empty value for field ${field}`)
+    if (!fqdn.endsWith('.')) fqdn += '.'
+
+    if (zone_opts.hide?.origin && zone_opts.origin) {
+      if (fqdn === zone_opts.origin) return '@'
+      if (fqdn.endsWith(zone_opts.origin)) return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
+    }
+
+    return fqdn
   }
 
   getTinyFQDN (field) {
@@ -236,8 +258,8 @@ class RR extends Map {
     throw new Error(`${type}, ${field} has invalid hostname characters`)
   }
 
-  toBind () {
-    return `${this.getPrefix()}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
+  toBind (zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
 }
 

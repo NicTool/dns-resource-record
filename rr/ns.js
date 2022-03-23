@@ -14,7 +14,7 @@ class NS extends RR {
     this.isFullyQualified('NS', 'dname', val)
     this.isValidHostname('NS', 'dname', val)
 
-    this.set('dname', val)
+    this.set('dname', val.toLowerCase())
   }
 
   getDescription () {
@@ -63,6 +63,10 @@ class NS extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toBind (zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
+  }
+
   toTinydns () {
     return `&${this.getTinyFQDN('name')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }

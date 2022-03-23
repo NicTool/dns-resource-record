@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.4 - 2022-03-23
+
+- add: getComment
+- zone_opts, for influencing output of toBind
+- normalize hostnames to lower case
+- add tests: fullyQualify, getFQDN
+
+
 #### 0.9.3 - 2022-03-22
 
 - hasValidLabels: remove trailing dot, else split returns empty string

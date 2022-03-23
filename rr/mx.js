@@ -75,8 +75,8 @@ class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `${this.getPrefix()}\t${this.get('preference')}\t${this.getFQDN('exchange')}\n`
+  toBind (zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
   }
 
   toTinydns () {

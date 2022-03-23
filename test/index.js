@@ -41,6 +41,16 @@ describe('RR', function () {
     }
   })
 
+  describe('fullyQualify', function () {
+    it('does nothing to empty  hostname', async () => {
+      assert.equal(r.fullyQualify(''), '')
+    })
+
+    it('fully qualifies a valid hostname', async () => {
+      assert.equal(r.fullyQualify('example.com'), 'example.com.')
+    })
+  })
+
   describe('getFields', function () {
     it('gets common fields', async function () {
       assert.deepStrictEqual(r.getFields('common'), [ 'name', 'ttl', 'class', 'type' ])
@@ -48,6 +58,21 @@ describe('RR', function () {
 
     it('gets rdata fields', async function () {
       assert.deepStrictEqual(r.getFields('rdata'), [ ]) // none in the parent class
+    })
+  })
+
+  describe('getFQDN', function () {
+    it('adds a period to hostnames', async () => {
+      const rr = new RR(null)
+      rr.set('name', 'www.example.com') // bypass FQ check
+      assert.equal(rr.getFQDN('name'), 'www.example.com.')
+    })
+
+    it('reduces origin on request', async () => {
+      const rr = new RR(null)
+      const zone_opts = { origin: 'example.com.', hide: { origin: true } }
+      rr.setName('www.example.com.')
+      assert.equal(rr.getFQDN('name', zone_opts), 'www')
     })
   })
 
