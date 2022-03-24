@@ -114,6 +114,7 @@ class RR extends Map {
 
   fullyQualify (hostname, origin) {
     if (!hostname) return hostname
+    if (hostname === '@' && origin) hostname = origin
     if (hostname.endsWith('.')) return hostname.toLowerCase()
     if (origin) return `${hostname}.${origin}`.toLowerCase()
     return `${hostname}.`
