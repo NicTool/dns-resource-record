@@ -77,8 +77,7 @@ try {
     }
 }
 catch (e) {
-    // invalid RRs will throw
-    console.error(e)
+    console.error(e.message) // invalid RRs throw
 }
 ```
 
@@ -100,11 +99,18 @@ console.log(validatedA.toBind())
 test.example.com    3600    IN  A   192.0.2.128
 ```
 
-The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`. You can get the field names with `getFields()`:
+The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`. You can get the field names for each RR type with `getFields()`:
 
 ```js
-> validatedA.getFields()
+> const RR = require('dns-resource-record')
+> new RR.A(null).getFields()
 [ 'name', 'ttl', 'class', 'type', 'address' ]
+
+> new RR.PTR(null).getFields()
+[ 'name', 'ttl', 'class', 'type', 'dname' ]
+
+> new RR.SSHFP(null).getFields()
+[ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
 ```
 
 ## FUNCTIONS
@@ -193,10 +199,10 @@ PRs are welcome, especially PRs with tests.
 
 ## TIPS
 
-- Domain names are stored fully qualified, absolute, with the trailing dot.
+- Domain names are stored fully qualified, aka absolute.
     - Master Zone File expansions exist at another level
 - fromBIND is regex based and is naive. [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) has a much more robust parser.
-- 
+- toBind output (suppress TTL, class, relative domain names) can be influenced by passing in an options object. See it in `bin/import.js` in the [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) package.
 
 
 ## TODO
@@ -207,3 +213,4 @@ PRs are welcome, especially PRs with tests.
 - [x] add defaults for empty values like TTL
 - [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
+- [ ] add toWire, exports in wire/network format
