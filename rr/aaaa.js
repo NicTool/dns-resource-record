@@ -90,7 +90,7 @@ class AAAA extends RR {
     */
     let r = val
       .replace(/0000/g, '0')             // 4.1 0000 -> 0
-      .replace(/:0+([1-9a-f])/g, ':$1')  // 4.1 remove leading zeros
+      .replace(/:0+([1-9a-fA-F])/g, ':$1')  // 4.1 remove leading zeros
 
     const mostConsecutiveZeros = [
       new RegExp(/0?(?::0){6,}:0?/),
