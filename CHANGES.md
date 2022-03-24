@@ -8,10 +8,13 @@
 - zone_opts, for influencing output of toBind
 - normalize hostnames to lower case
 - add tests: fullyQualify, getFQDN
-- AAAA.compress: rewrote per RFC 5952, added tests
-- AAAA: internally store address in expanded notation
+- AAAA
+    - compress: rewrote per RFC 5952, added tests
+    - internally store address in expanded notation
 - fromTinydns: apply correct semantics for 'x' handling
-- fullyQualify: special handling for @
+- fullyQualify
+    - special handling for @
+    - consider $ORIGIN
 - add uc hex chars to ip6 compress
 
 

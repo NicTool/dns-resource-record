@@ -20,7 +20,8 @@ class SOA extends RR {
     // MNAME (primary NS)
     this.isValidHostname('SOA', 'MNAME', val)
     this.isFullyQualified('SOA', 'MNAME', val)
-    this.set('mname', val)
+
+    this.set('mname', val.toLowerCase())
   }
 
   setRname (val) {
@@ -28,7 +29,8 @@ class SOA extends RR {
     this.isValidHostname('SOA', 'RNAME', val)
     this.isFullyQualified('SOA', 'RNAME', val)
     if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.getRFCs()}`)
-    this.set('rname', val)
+
+    this.set('rname', val.toLowerCase())
   }
 
   setSerial (val) {
