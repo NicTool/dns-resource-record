@@ -11,6 +11,8 @@
 - AAAA.compress: rewrote per RFC 5952, added tests
 - AAAA: internally store address in expanded notation
 - fromTinydns: apply correct semantics for 'x' handling
+- fullyQualify: special handling for @
+- add uc hex chars to ip6 compress
 
 
 #### 0.9.3 - 2022-03-22
