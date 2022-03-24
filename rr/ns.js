@@ -42,7 +42,7 @@ class NS extends RR {
     return new this.constructor({
       type     : 'NS',
       name     : this.fullyQualify(fqdn),
-      dname    : this.fullyQualify(dname),
+      dname    : this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',

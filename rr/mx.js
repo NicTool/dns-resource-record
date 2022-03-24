@@ -52,7 +52,7 @@ class MX extends RR {
     return new this.constructor({
       type      : 'MX',
       name      : this.fullyQualify(fqdn),
-      exchange  : this.fullyQualify(x),
+      exchange  : this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${fqdn}`),
       preference: parseInt(preference, 10) || 0,
       ttl       : parseInt(ttl, 10),
       timestamp : ts,

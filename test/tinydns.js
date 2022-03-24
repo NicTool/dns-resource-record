@@ -27,6 +27,12 @@ describe('TINYDNS', function () {
     }
   })
 
+  describe('octalToHex', function () {
+    it('unescapes octal to hex digits', function () {
+      assert.strictEqual(TINYDNS.octalToHex('\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001'), '00000000000000000000000000000001')
+    })
+  })
+
   describe('UInt16toOctal', function () {
     it('converts a 16-bit number to escaped octal', function () {
       assert.strictEqual(TINYDNS.UInt16toOctal(65535), '\\377\\377')

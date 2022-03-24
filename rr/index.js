@@ -112,10 +112,11 @@ class RR extends Map {
     this.set('type', t)
   }
 
-  fullyQualify (str) {
-    if (!str) return str
-    if (str.endsWith('.')) return str
-    return `${str}.`
+  fullyQualify (hostname, origin) {
+    if (!hostname) return hostname
+    if (hostname.endsWith('.')) return hostname.toLowerCase()
+    if (origin) return `${hostname}.${origin}`.toLowerCase()
+    return `${hostname}.`
   }
 
   getPrefix (zone_opts = {}) {
@@ -265,6 +266,7 @@ class RR extends Map {
 
 module.exports = {
   RR,
+  TINYDNS: require('../lib/tinydns'),
 }
 
 const files = fs.readdirSync(path.join(__dirname))
