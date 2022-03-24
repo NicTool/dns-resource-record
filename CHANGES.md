@@ -2,6 +2,22 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.4 - 2022-03-24
+
+- add: getComment
+- zone_opts, for influencing output of toBind
+- normalize hostnames to lower case
+- add tests: fullyQualify, getFQDN
+- AAAA
+    - compress: rewrote per RFC 5952, added tests
+    - internally store address in expanded notation
+- fromTinydns: apply correct semantics for 'x' handling
+- fullyQualify
+    - special handling for @
+    - consider $ORIGIN
+- add uc hex chars to ip6 compress
+
+
 #### 0.9.3 - 2022-03-22
 
 - hasValidLabels: remove trailing dot, else split returns empty string

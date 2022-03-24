@@ -11,7 +11,7 @@ class PTR extends RR {
     this.isFullyQualified('PTR', 'dname', val)
     this.isValidHostname('PTR', 'dname', val)
 
-    this.set('dname', val)
+    this.set('dname', val.toLowerCase())
   }
 
   getDescription () {

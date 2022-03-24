@@ -20,7 +20,8 @@ class SOA extends RR {
     // MNAME (primary NS)
     this.isValidHostname('SOA', 'MNAME', val)
     this.isFullyQualified('SOA', 'MNAME', val)
-    this.set('mname', val)
+
+    this.set('mname', val.toLowerCase())
   }
 
   setRname (val) {
@@ -28,7 +29,8 @@ class SOA extends RR {
     this.isValidHostname('SOA', 'RNAME', val)
     this.isFullyQualified('SOA', 'RNAME', val)
     if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.getRFCs()}`)
-    this.set('rname', val)
+
+    this.set('rname', val.toLowerCase())
   }
 
   setSerial (val) {
@@ -115,28 +117,25 @@ class SOA extends RR {
       name   : fqdn,
       mname  : mname,
       rname  : rname,
-      serial : parseInt(serial, 10),
+      serial : parseInt(serial , 10),
       refresh: parseInt(refresh, 10),
-      retry  : parseInt(retry, 10),
-      expire : parseInt(expire, 10),
-      minimum: parseInt(minimum, 10 ),
-      ttl    : parseInt(ttl, 10),
+      retry  : parseInt(retry  , 10),
+      expire : parseInt(expire , 10),
+      minimum: parseInt(minimum, 10),
+      ttl    : parseInt(ttl    , 10),
     }
     // console.log(bits)
     return new this.constructor(bits)
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
-    return `$TTL\t${this.get('ttl')}
-$ORIGIN\t${this.getFQDN('name')}
-${this.getFQDN('name')}\t${this.get('class')}\tSOA\t${this.getFQDN('mname')}\t${this.getFQDN('rname')} (
-          ${this.get('serial')}
-          ${this.get('refresh')}
-          ${this.get('retry')}
-          ${this.get('expire')}
-          ${this.get('minimum')}
-          )\n\n`
+  toBind (zone_opts) {
+    const numFields = [ 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
+    return `$TTL\t${this.get('ttl')}${this.getComment('ttl')}
+$ORIGIN\t${this.getFQDN('name')}${this.getComment('origin')}
+${this.getFQDN('name', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)} (
+${numFields.map(f => '\t\t' + this.get(f) + this.getComment(f) + '\n').join('')}\t\t)
+\n`
   }
 
   toTinydns () {

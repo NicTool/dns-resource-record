@@ -21,12 +21,12 @@ const validRecords = [
     testB  : `$TTL\t3600
 $ORIGIN\texample.com.
 example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
-          1
-          7200
-          3600
-          1209600
-          3600
-          )\n\n`,
+\t\t1
+\t\t7200
+\t\t3600
+\t\t1209600
+\t\t3600
+\t\t)\n\n`,
     testT: 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
 ]

@@ -12,9 +12,9 @@ class AAAA extends RR {
   /****** Resource record specific setters   *******/
   setAddress (val) {
     if (!val) throw new Error('AAAA: address is required')
-    if (!net.isIPv6(val)) throw new Error('AAAA: address must be IPv6')
+    if (!net.isIPv6(val)) throw new Error(`AAAA: address must be IPv6 (${val})`)
 
-    this.set('address', val.toLowerCase()) // IETFs suggest only lower case
+    this.set('address', this.expand(val.toLowerCase())) // lower case: RFC 5952
   }
 
   getCompressed (val) {
@@ -45,14 +45,13 @@ class AAAA extends RR {
       case ':':
         // GENERIC  =>  :fqdn:28:rdata:ttl:timestamp:lo
         [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
-        if (n != 28) throw new Error('SRV fromTinydns, invalid n')
-        // compressed format is needed for test comparisons
-        ip = this.compress(TINYDNS.octalToHex(rdata).match(/([0-9a-fA-F]{4})/g).join(':'))
+        if (n != 28) throw new Error('AAAA fromTinydns, invalid n')
+        ip = TINYDNS.octalToHex(rdata).match(/([0-9a-fA-F]{4})/g).join(':')
         break
       case '3':
       case '6':
-        // AAAA     =>  3 fqdn:rdata:x:ttl:timestamp:lo
-        // AAAA,PTR =>  6 fqdn:rdata:x:ttl:timestamp:lo
+        // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
+        // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
         [ fqdn, rdata, ttl, ts, loc ] = str.substring(1).split(':')
         ip = rdata.match(/(.{4})/g).join(':')
         break
@@ -75,17 +74,40 @@ class AAAA extends RR {
       class  : c,
       type   : type,
       name   : fqdn,
-      address: ip,
+      address: this.expand(ip),
       ttl    : parseInt(ttl, 10),
     })
   }
 
   compress (val) {
-    return val
-      .replace(/\b(?:0+:){2,}/, ':')  // compress all zero
-      .split(':')
-      .map(o => o.replace(/\b0+/g, '')) // strip leading zero
-      .join(':')
+    /*
+     * RFC 5952
+     * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
+     * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
+     * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
+     * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
+     * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
+    */
+    let r = val
+      .replace(/0000/g, '0')             // 4.1 0000 -> 0
+      .replace(/:0+([1-9a-fA-F])/g, ':$1')  // 4.1 remove leading zeros
+
+    const mostConsecutiveZeros = [
+      new RegExp(/0?(?::0){6,}:0?/),
+      new RegExp(/0?(?::0){5,}:0?/),
+      new RegExp(/0?(?::0){4,}:0?/),
+      new RegExp(/0?(?::0){3,}:0?/),
+      new RegExp(/0?(?::0){2,}:0?/),
+    ]
+
+    for (const re of mostConsecutiveZeros) {
+      if (re.test(r)) {
+        r = r.replace(re, '::')
+        break
+      }
+    }
+
+    return r
   }
 
   expand (val, delimiter) {
@@ -102,6 +124,9 @@ class AAAA extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toBind (zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.compress(this.get('address'))}\n`
+  }
 
   toTinydns () {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
