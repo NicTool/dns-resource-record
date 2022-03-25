@@ -26,10 +26,9 @@ jobs:
           node-version: ${{ env.node_version }}
           registry-url: https://registry.npmjs.org/
 
-      - name: npm install
-        run: npm install
+      - run: npm install
 
-      - name: Run test suite
+      - name: Run tests
         run: npm run test
 
       - name: publish to NPM

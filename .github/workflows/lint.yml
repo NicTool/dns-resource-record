@@ -24,10 +24,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: npm install
-      run: npm install
+    - run: npm install
 
-    - name: Lint using eslint
+    - name: Lint
       run: npm run lint
 
       env:
