@@ -38,12 +38,23 @@ class HINFO extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
-    // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-  }
+  // fromTinydns (str) {
+  //   // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
+  // }
 
-  fromBind () {
-    throw new Error('HINFO not yet supported')
+  fromBind (str) {
+    // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
+    const [ fqdn, ttl, c, type, cpu, os ] = str.split(/\s+/)
+
+    const bits = {
+      name : fqdn,
+      ttl  : parseInt(ttl, 10),
+      class: c,
+      type,
+      cpu,
+      os,
+    }
+    return new this.constructor(bits)
   }
 
   /******  EXPORTERS   *******/
