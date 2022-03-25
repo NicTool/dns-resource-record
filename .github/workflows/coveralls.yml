@@ -29,7 +29,7 @@ jobs:
     - name: run
       run: npx nyc --reporter=lcovonly npm run test
       env:
-        NODE_ENV=cov
+        NODE_ENV: cov
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
