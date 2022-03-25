@@ -44,6 +44,8 @@ jobs:
         run: |
           npm install --no-save nyc codecov
           npm run cover
+        env:
+         NODE_ENV=cov
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
