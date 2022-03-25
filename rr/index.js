@@ -126,7 +126,15 @@ class RR extends Map {
     let rrTTL = this.get('ttl')
     if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = ''
 
-    return `${this.getFQDN('name', zone_opts)}\t${rrTTL}\t${classVal}\t${this.get('type')}`
+    let name = this.get('name')
+    if (zone_opts.previousName === name) {
+      name = ''
+    }
+    else {
+      name = this.getFQDN('name', zone_opts)
+    }
+
+    return `${name}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
   getPrefixFields () {
