@@ -21,11 +21,15 @@ jobs:
       with:
         node-version: 14
 
-    - name: install, run
+    - name: npm install
       run: |
         npm install
         npm install --no-save nyc codecov
-        npm run cover
+
+    - name: run
+      run: npx nyc --reporter=lcovonly npm run test
+      env:
+        NODE_ENV=cov
 
     - name: Coveralls
       uses: coverallsapp/github-action@master

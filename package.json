@@ -4,7 +4,6 @@
   "description": "DNS Resource Records",
   "main": "rr/index.js",
   "scripts": {
-    "cover": "NODE_ENV=cov npx nyc --reporter=lcovonly npm run test",
     "lint": "npx eslint lib/*.js rr/*.js test/*.js",
     "lintfix": "npx eslint --fix lib/*.js rr/*.js test/*.js",
     "test": "npx mocha",
