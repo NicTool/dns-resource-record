@@ -127,7 +127,7 @@ class RR extends Map {
     if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = ''
 
     let name = this.get('name')
-    if (zone_opts.previousName === name) {
+    if (zone_opts.hide?.sameName && zone_opts.previousName === name) {
       name = ''
     }
     else {
