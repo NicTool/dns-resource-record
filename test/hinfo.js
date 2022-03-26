@@ -16,6 +16,16 @@ const validRecords = [
     testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
     // testT : ':server-under-my-desk:13: :86400::\n',
   },
+  {
+    class: 'IN',
+    type : 'HINFO',
+    name : 'sri-nic.arpa.',
+    cpu  : 'DEC-2060',
+    os   : 'TOPS20',
+    ttl  : 86400,
+    testB: 'sri-nic.arpa.\t86400\tIN\tHINFO\t"DEC-2060"\t"TOPS20"\n',
+    // testT : ':server-under-my-desk:13: :86400::\n',
+  },
 ]
 
 const invalidRecords = [

@@ -21,7 +21,6 @@ class CAA extends RR {
   setTag (val) {
     if (typeof val !== 'string'
       || val.length < 1
-      || /[A-Z]/.test(val)
       || /[^a-z0-9]/.test(val))
       throw new Error(`CAA tag must be a sequence of ASCII letters and numbers in lowercase: ${this.getRFCs()}`)
 

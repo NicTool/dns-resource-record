@@ -1,0 +1,108 @@
+
+const RR = require('./index').RR
+
+class RRSIG extends RR {
+  constructor (opts) {
+    super(opts)
+  }
+
+  /****** Resource record specific setters   *******/
+  setTypeCovered (val) {
+    // a 2 octet Type Covered field
+    if (!val) throw new Error(`RRSIG: 'type covered' is required`)
+    if (val.length > 2) throw new Error(`RRSIG: 'type covered' is too long, see ${this.getRFCs()}`)
+
+    this.set('type covered', val)
+  }
+
+  setAlgorithm (val) {
+    // a 1 octet Algorithm field
+    // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
+    if (![ 1,2,3,4,5,253,254 ].includes(val))
+      throw new Error(`RRSIG: algorithm invalid, see ${this.getRFCs()}`)
+
+    this.set('algorithm', val)
+  }
+
+  setLabels (val) {
+    // a 1 octet Labels field
+    this.is8bitInt('RRSIG', 'labels', val)
+
+    this.set('labels', val)
+  }
+
+  setOriginalTtl (val) {
+    // a 4 octet Original TTL field
+    this.is32bitInt('RRSIG', 'original ttl', val)
+
+    this.set('original ttl', val)
+  }
+
+  setSignatureExpiration (val) {
+    // a 4 octet Signature Expiration field
+    this.set('signature expiration', val)
+  }
+
+  setSignatureInception (val) {
+    // a 4 octet Signature Inception field
+    this.set('signature inception', val)
+  }
+
+  setKeyTag (val) {
+    // a 2 octet Key tag
+    this.set('key tag', val)
+  }
+
+  setSignersName (val) {
+    // the Signer's Name field
+    this.set('signers name', val)
+  }
+
+  setSignature (val) {
+    // the Signature field.
+
+    this.set('signature', val)
+  }
+
+  getDescription () {
+    return 'Resource Record Signature'
+  }
+
+  getRdataFields (arg) {
+    return [
+      'type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration',
+      'signature inception', 'key tag', 'signers name', 'signature',
+    ]
+  }
+
+  getRFCs () {
+    return [ 4034 ]
+  }
+
+  getTypeId () {
+    return 46
+  }
+
+  /******  IMPORTERS   *******/
+  // fromTinydns (str) {
+  // }
+
+  // fromBind (str) {
+  //   // test.example.com  3600  IN  RRSIG ...
+  //   const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+  //   return new this.constructor({
+  //     name         : fqdn,
+  //     ttl          : parseInt(ttl, 10),
+  //     class        : c,
+  //     type         : type,
+  //   })
+  // }
+
+  /******  EXPORTERS   *******/
+  // toTinydns () {
+  //   const rdata = '' // TODO
+  //   return this.getTinydnsGeneric(rdata)
+  // }
+}
+
+module.exports = RRSIG

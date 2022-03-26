@@ -12,12 +12,12 @@ This module is used to:
 
 - validate well formedness and RFC compliance of DNS resource records
 - import RRs from:
-    - [x] JSON
-    - [x] [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
-    - [x] tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
+    - JSON
+    - [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
+    - tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
 - export RRs to:
-    - [x] BIND zone file format
-    - [x] tinydns data format
+    - BIND zone file format
+    - tinydns data format
 
 This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/msimerson/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
 
@@ -99,7 +99,11 @@ console.log(validatedA.toBind())
 test.example.com    3600    IN  A   192.0.2.128
 ```
 
-The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`. You can get the field names for each RR type with `getFields()`:
+The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`.
+
+## FUNCTIONS
+
+Get the field names for each RR type with `getFields()`:
 
 ```js
 > const RR = require('dns-resource-record')
@@ -113,7 +117,18 @@ The setter functions are named: `set` + `Field`, where field is the resource rec
 [ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
 ```
 
-## FUNCTIONS
+Get a list of RFCs for further learning about a RR type:
+
+```js
+> new RR.A(null).getRFCs()
+[ 1035 ]
+
+> new RR.SRV(null).getRFCs()
+[ 2782 ]
+
+> new RR.MX(null).getRFCs()
+[ 1035, 2181, 7505 ]
+```
 
 ### toBind
 
@@ -171,36 +186,43 @@ This module intends to include support for all current (ie, not officially depre
 
 PRs are welcome, especially PRs with tests.
 
-| **RR**     | **toBind**       | **toTinydns**    | **fromBind**     |  **fromTinydns** |     getRFCs      |
-|:---------: |:----------------:|:----------------:|:----------------:|:----------------:|:----------------:|
-| **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |:white_check_mark:|
-| **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |:white_check_mark:|
-| **HINFO**  |:white_check_mark:|                  |                  |                  |:white_check_mark:|
-|**IPSECKEY**|                  |                  |                  |                  |                  |
-| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |:white_check_mark:|
-| **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |                  |
-| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **TLSA**   |:white_check_mark:|                  |:white_check_mark:|                  |                  |
-| **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **RR**     | **toBind**       | **toTinydns**    | **fromBind**     |  **fromTinydns** |
+|:---------: |:----------------:|:----------------:|:----------------:|:----------------:|
+| **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |
+| **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |
+| **HINFO**  |:white_check_mark:|                  |:white_check_mark:|                  |
+|**IPSECKEY**|                  |                  |                  |                  |
+| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
+| **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |
+| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **TLSA**   |:white_check_mark:|                  |:white_check_mark:|                  |
+| **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 
 
 ## TIPS
 
-- Domain names are stored fully qualified, aka absolute.
+- Domain names are:
+    - stored fully qualified, aka absolute.
+    - normalized to lower case
+        - DNS is case insensitive (see RFCs 4343, 1035, 1034)
+        - this library enforces duplicate suppression
+        - DNSSEC canonicalization (see RFC 4034)
+        - wire format for most RRs require it
     - Master Zone File expansions exist at another level
+    - domain 
 - fromBIND is regex based and is naive. [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) has a much more robust parser.
 - toBind output (suppress TTL, class, relative domain names) can be influenced by passing in an options object. See it in `bin/import.js` in the [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) package.
 
@@ -214,3 +236,8 @@ PRs are welcome, especially PRs with tests.
 - [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
 - [ ] add toWire, exports in wire/network format
+- [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
+      MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
+      NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
+      letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
+- [ ] LOC record ingest/out isn't consistent with API
