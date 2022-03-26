@@ -82,7 +82,7 @@ class TXT extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind () {
+  toBind (zone_opts) {
     let data = this.get('data')
 
     // BIND croaks when any string in the TXT RR data is longer than 255
@@ -100,7 +100,7 @@ class TXT extends RR {
       }
     }
 
-    return `${this.getPrefix()}\t"${data}"\n`
+    return `${this.getPrefix(zone_opts)}\t"${data}"\n`
   }
 
   toTinydns () {
