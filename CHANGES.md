@@ -2,6 +2,16 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.5 - 2022-03-26
+
+- README: add docs for getRFCs()
+- dnskey: fix copy/paste errors
+- HINFO: add fromBind
+- RR.name: if name is same as previous, suppress (when sameName option is set)
+- master: NODE_ENV=cov when running coverage
+- TXT: pass along zone_opts
+
+
 #### 0.9.4 - 2022-03-24
 
 - add: getComment
