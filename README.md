@@ -202,6 +202,7 @@ PRs are welcome, especially PRs with tests.
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **RRSIG**  |                  |                  |                  |                  |
 | **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |
 | **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
@@ -233,7 +234,7 @@ PRs are welcome, especially PRs with tests.
 - [x] change all domains to use reserved doc names
 - [x] import tests from nictool/server/t/12_records.t
 - [x] add defaults for empty values like TTL
-- [x] DNSSEC RRs, except: RRSIG, NSEC, NSEC3, NSEC3PARAM
+- [x] DNSSEC RRs, except: NSEC, NSEC3, NSEC3PARAM
 - [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
 - [ ] add toWire, exports in wire/network format
 - [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
@@ -241,3 +242,4 @@ PRs are welcome, especially PRs with tests.
       NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
 - [ ] LOC record ingest/out isn't consistent with API
+- [ ] handling unknown RR types: RFC 3597
