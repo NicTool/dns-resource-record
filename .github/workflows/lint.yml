@@ -3,6 +3,9 @@ name: Lint
 
 on: [ push ]
 
+env:
+  CI: true
+
 jobs:
 
   lint:
@@ -28,6 +31,3 @@ jobs:
 
     - name: Lint
       run: npm run lint
-
-      env:
-        CI: true
