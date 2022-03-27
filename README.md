@@ -246,7 +246,7 @@ PRs are welcome, especially PRs with tests.
 - [x] add defaults for empty values like TTL
 - [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
 - [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
-- [ ] KX, DHCID, HIP, RP
+- [ ] APL, KX, DHCID, HIP, RP, SVCB/HTTPS
 - [ ] add toWire, exports in wire/network format
 - [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
