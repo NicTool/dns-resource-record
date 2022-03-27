@@ -1,3 +1,4 @@
+// obsoleted by RFC 7208
 
 const TXT = require('./txt')
 

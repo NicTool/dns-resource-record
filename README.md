@@ -12,12 +12,15 @@ This module is used to:
 
 - validate well formedness and RFC compliance of DNS resource records
 - import RRs from:
+    - JS object
     - JSON
     - [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
     - tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
 - export RRs to:
     - BIND zone file format
     - tinydns data format
+    - JS object
+    - JSON
 
 This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/msimerson/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
 
@@ -191,18 +194,25 @@ PRs are welcome, especially PRs with tests.
 | **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **CERT**   |                  |                  |                  |                  |
 | **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |
 | **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |
 | **HINFO**  |:white_check_mark:|                  |:white_check_mark:|                  |
 |**IPSECKEY**|                  |                  |                  |                  |
+| **KEY**    |                  |                  |                  |                  |
 | **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+| **NSEC**   |                  |                  |                  |                  |
+| **NSEC3**  |                  |                  |                  |                  |
+| **NSEC3PARAM**|               |                  |                  |                  |
+| **OPENPGPKEY**|               |                  |                  |                  |
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **RRSIG**  |                  |                  |                  |                  |
+| **SIG**    |                  |                  |                  |                  |
 | **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |
 | **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
@@ -234,8 +244,9 @@ PRs are welcome, especially PRs with tests.
 - [x] change all domains to use reserved doc names
 - [x] import tests from nictool/server/t/12_records.t
 - [x] add defaults for empty values like TTL
-- [x] DNSSEC RRs, except: NSEC, NSEC3, NSEC3PARAM
-- [ ] Additional RRs?: KX, CERT, DHCID, TLSA, ...
+- [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
+- [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
+- [ ] KX, DHCID, HIP, RP
 - [ ] add toWire, exports in wire/network format
 - [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
@@ -243,3 +254,11 @@ PRs are welcome, especially PRs with tests.
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
 - [ ] LOC record ingest/out isn't consistent with API
 - [ ] handling unknown RR types: RFC 3597
+- [ ] export a web page for each RR type
+
+## DEVELOP
+
+- this package has no dependencies. That's no accident.
+- eventually this will be used a node.js app & a browser based app
+    - so, ESM, eventually
+- CI tests are on linux & windows
