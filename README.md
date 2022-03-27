@@ -1,5 +1,5 @@
-[![Module Tests](https://github.com/msimerson/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/msimerson/dns-resource-record/actions/workflows/ci-test.yml)
-[![Coverage Status](https://coveralls.io/repos/github/msimerson/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/msimerson/dns-resource-record?branch=master)
+[![Module Tests](https://github.com/nictool/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/nictool/dns-resource-record/actions/workflows/ci-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/nictool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/nictool/dns-resource-record?branch=master)
 
 # dns-resource-record
 
@@ -22,7 +22,7 @@ This module is used to:
     - JS object
     - JSON
 
-This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/msimerson/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
+This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/nictool/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
 
 
 ## USAGE
@@ -234,8 +234,8 @@ PRs are welcome, especially PRs with tests.
         - wire format for most RRs require it
     - Master Zone File expansions exist at another level
     - domain 
-- fromBIND is regex based and is naive. [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) has a much more robust parser.
-- toBind output (suppress TTL, class, relative domain names) can be influenced by passing in an options object. See it in `bin/import.js` in the [dns-zone-validator](https://github.com/msimerson/dns-zone-validator) package.
+- fromBIND is regex based and is naive. [dns-zone](https://github.com/nictool/dns-zone) has a much more robust parser.
+- toBind output (suppress TTL, class, relative domain names) can be influenced with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/nictool/dns-zone) package.
 
 
 ## TODO
@@ -247,7 +247,7 @@ PRs are welcome, especially PRs with tests.
 - [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
 - [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
 - [ ] APL, KX, DHCID, HIP, RP, SVCB/HTTPS
-- [ ] add toWire, exports in wire/network format
+- [ ] add toWire, exports in wire/network format (see also: node-dns)
 - [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
       NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
