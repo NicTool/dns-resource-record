@@ -127,7 +127,7 @@ class RR extends Map {
     if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = ''
 
     let owner = this.get('owner')
-    if (zone_opts.hide?.sameName && zone_opts.previousName === owner) {
+    if (zone_opts.hide?.sameOwner && zone_opts.previousName === owner) {
       owner = ''
     }
     else {

@@ -2,12 +2,22 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.6 - 2022-03-27
+
+- rr*: rename name -> owner (not overloaded)
+- RFC 4034: letters in DNS names are lower cased
+- README: added definitions
+- repo: move from msimerson -> nictool org
+- add macos testing
+- add CERT, KEY, NSEC, NSEC3, NSEC3PARAM, OPENPGPKEY, SIG
+
+
 #### 0.9.5 - 2022-03-26
 
 - README: add docs for getRFCs()
 - dnskey: fix copy/paste errors
 - HINFO: add fromBind
-- RR.name: if name is same as previous, suppress (when sameName option is set)
+- RR.owner: if owner is same as previous, suppress (when sameOwner option is set)
 - master: NODE_ENV=cov when running coverage
 - TXT: pass along zone_opts
 
