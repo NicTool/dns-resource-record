@@ -37,7 +37,8 @@ class SRV extends RR {
     this.isFullyQualified('SRV', 'target', val)
     this.isValidHostname('SRV', 'target', val)
 
-    this.set('target', val)
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('target', val.toLowerCase())
   }
 
   getDescription () {
@@ -76,13 +77,13 @@ class SRV extends RR {
     }
 
     return new this.constructor({
+      owner    : this.fullyQualify(fqdn),
+      ttl      : parseInt(ttl,    10),
       type     : 'SRV',
-      name     : this.fullyQualify(fqdn),
-      target   : `${addr}.`,
-      port     : parseInt(port,   10),
       priority : parseInt(pri,    10),
       weight   : parseInt(weight, 10),
-      ttl      : parseInt(ttl,    10),
+      port     : parseInt(port,   10),
+      target   : `${addr}.`,
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -90,16 +91,16 @@ class SRV extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [ fqdn, ttl, c, type, pri, weight, port, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, pri, weight, port, target ] = str.split(/\s+/)
     return new this.constructor({
+      owner   : owner,
+      ttl     : parseInt(ttl,    10),
       class   : c,
       type    : type,
-      name    : fqdn,
-      target  : target,
-      port    : parseInt(port,   10),
       priority: parseInt(pri,    10),
       weight  : parseInt(weight, 10),
-      ttl     : parseInt(ttl,    10),
+      port    : parseInt(port,   10),
+      target  : target,
     })
   }
 

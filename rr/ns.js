@@ -14,6 +14,7 @@ class NS extends RR {
     this.isFullyQualified('NS', 'dname', val)
     this.isValidHostname('NS', 'dname', val)
 
+    // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', val.toLowerCase())
   }
 
@@ -41,7 +42,7 @@ class NS extends RR {
 
     return new this.constructor({
       type     : 'NS',
-      name     : this.fullyQualify(fqdn),
+      owner    : this.fullyQualify(fqdn),
       dname    : this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -51,14 +52,14 @@ class NS extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  NS dname
-    const [ fqdn, ttl, c, type, dname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, dname ] = str.split(/\s+/)
 
     return new this.constructor({
+      owner,
+      ttl  : parseInt(ttl, 10),
       class: c,
       type : type,
-      name : fqdn,
       dname: dname,
-      ttl  : parseInt(ttl, 10),
     })
   }
 
@@ -68,7 +69,7 @@ class NS extends RR {
   }
 
   toTinydns () {
-    return `&${this.getTinyFQDN('name')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
+    return `&${this.getTinyFQDN('owner')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

@@ -8,7 +8,7 @@ const TLSA = require('../rr/tlsa')
 const validRecords = [
   {
     class                         : 'IN',
-    name                          : '_443._tcp.www.example.com.',
+    owner                         : '_443._tcp.www.example.com.',
     type                          : 'TLSA',
     ttl                           : 3600,
     'certificate usage'           : 0,
@@ -20,7 +20,7 @@ const validRecords = [
   },
   {
     class                         : 'IN',
-    name                          : '_443._tcp.www.example.com.',
+    owner                         : '_443._tcp.www.example.com.',
     type                          : 'TLSA',
     ttl                           : 3600,
     'certificate usage'           : 1,
@@ -34,7 +34,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    // name     : 'test.example.com',
+    // owner    : 'test.example.com',
     selector: 6,  // invalid
   },
 ]

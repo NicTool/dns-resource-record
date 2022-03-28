@@ -34,7 +34,7 @@ class URI extends RR {
 
     return new this.constructor({
       type     : 'URI',
-      name     : this.fullyQualify(fqdn),
+      owner    : this.fullyQualify(fqdn),
       priority : TINYDNS.octalToUInt16(rdata.substring(0, 8)),
       weight   : TINYDNS.octalToUInt16(rdata.substring(8, 16)),
       target   : TINYDNS.octalToChar(rdata.substring(16)),
@@ -46,11 +46,11 @@ class URI extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  URI  priority, weight, target
-    const [ fqdn, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
     return new this.constructor({
       class   : c,
       type    : type,
-      name    : fqdn,
+      owner,
       priority: parseInt(priority, 10),
       weight  : parseInt(weight, 10),
       target  : target.replace(/^"|"$/g, ''),

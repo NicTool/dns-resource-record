@@ -24,7 +24,8 @@ class MX extends RR {
     this.isFullyQualified('MX', 'exchange', val)
     this.isValidHostname('MX', 'exchange', val)
 
-    this.set('exchange', val)
+    // RFC 4034: letters in the DNS names ... are lower cased
+    this.set('exchange', val.toLowerCase())
   }
 
   getDescription () {
@@ -47,12 +48,12 @@ class MX extends RR {
   fromTinydns (str) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [ fqdn, ip, x, preference, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ owner, ip, x, preference, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
       type      : 'MX',
-      name      : this.fullyQualify(fqdn),
-      exchange  : this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${fqdn}`),
+      owner     : this.fullyQualify(owner),
+      exchange  : this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
       preference: parseInt(preference, 10) || 0,
       ttl       : parseInt(ttl, 10),
       timestamp : ts,
@@ -62,15 +63,15 @@ class MX extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  MX  preference exchange
-    const [ fqdn, ttl, c, type, preference, exchange ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, preference, exchange ] = str.split(/\s+/)
 
     return new this.constructor({
-      class     : c,
-      type      : type,
-      name      : fqdn,
-      preference: parseInt(preference),
-      exchange  : exchange,
+      owner,
       ttl       : parseInt(ttl, 10),
+      class     : c,
+      type,
+      preference: parseInt(preference),
+      exchange,
     })
   }
 
@@ -80,7 +81,7 @@ class MX extends RR {
   }
 
   toTinydns () {
-    return `@${this.getTinyFQDN('name')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`
+    return `@${this.getTinyFQDN('owner')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

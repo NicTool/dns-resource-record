@@ -1,7 +1,7 @@
 
 const RR = require('./index').RR
 
-class RRSIG extends RR {
+class SIG extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -9,31 +9,29 @@ class RRSIG extends RR {
   /****** Resource record specific setters   *******/
   setTypeCovered (val) {
     // a 2 octet Type Covered field
-    if (!val) throw new Error(`RRSIG: 'type covered' is required`)
-    if (val.length > 2) throw new Error(`RRSIG: 'type covered' is too long, see ${this.getRFCs()}`)
+    if (!val) throw new Error(`SIG: 'type covered' is required`)
 
     this.set('type covered', val)
   }
 
   setAlgorithm (val) {
     // a 1 octet Algorithm field
-    // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`RRSIG: algorithm invalid, see ${this.getRFCs()}`)
+
+    this.is8bitInt('SIG', 'labels', val)
 
     this.set('algorithm', val)
   }
 
   setLabels (val) {
     // a 1 octet Labels field
-    this.is8bitInt('RRSIG', 'labels', val)
+    this.is8bitInt('SIG', 'labels', val)
 
     this.set('labels', val)
   }
 
   setOriginalTtl (val) {
     // a 4 octet Original TTL field
-    this.is32bitInt('RRSIG', 'original ttl', val)
+    this.is32bitInt('SIG', 'original ttl', val)
 
     this.set('original ttl', val)
   }
@@ -54,8 +52,10 @@ class RRSIG extends RR {
   }
 
   setSignersName (val) {
-    // the Signer's Name field
-    this.set('signers name', val)
+    // the domain name of the signer generating the SIG RR
+
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('signers name', val.toLowerCase())
   }
 
   setSignature (val) {
@@ -65,7 +65,7 @@ class RRSIG extends RR {
   }
 
   getDescription () {
-    return 'Resource Record Signature'
+    return 'Signature'
   }
 
   getRdataFields (arg) {
@@ -76,17 +76,16 @@ class RRSIG extends RR {
   }
 
   getRFCs () {
-    return [ 4034 ]
+    return [ 2535 ]
   }
 
   getTypeId () {
-    return 46
+    return 24
   }
 
   /******  IMPORTERS   *******/
-
   // fromBind (str) {
-  //   // test.example.com  3600  IN  RRSIG ...
+  //   // test.example.com  3600  IN  SIG ...
   //   const [ owner, ttl, c, type ] = str.split(/\s+/)
   //   return new this.constructor({
   //     owner,
@@ -100,4 +99,4 @@ class RRSIG extends RR {
 
 }
 
-module.exports = RRSIG
+module.exports = SIG

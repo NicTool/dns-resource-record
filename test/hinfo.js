@@ -9,7 +9,7 @@ const validRecords = [
   {
     class: 'IN',
     type : 'HINFO',
-    name : 'server-under-my-desk.example.com.',
+    owner: 'server-under-my-desk.example.com.',
     cpu  : 'PDP-11/73',
     os   : 'UNIX',
     ttl  : 86400,
@@ -19,7 +19,7 @@ const validRecords = [
   {
     class: 'IN',
     type : 'HINFO',
-    name : 'sri-nic.arpa.',
+    owner: 'sri-nic.arpa.',
     cpu  : 'DEC-2060',
     os   : 'TOPS20',
     ttl  : 86400,
@@ -30,7 +30,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name   : 'www.example.com',
+    owner  : 'www.example.com',
     type   : 'HINFO',
     address: '',
     // ttl    : 3600,
@@ -53,10 +53,10 @@ describe('HINFO record', function () {
   // base.fromTinydns(HINFO, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns HINFO (generic) record (${val.name})`, async function () {
+    it.skip(`imports tinydns HINFO (generic) record (${val.owner})`, async function () {
       const r = new HINFO({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'address', 'ttl' ]) {
+      for (const f of [ 'owner', 'address', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

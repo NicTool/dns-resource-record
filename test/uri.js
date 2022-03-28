@@ -8,7 +8,7 @@ const URI = require('../rr/uri')
 const validRecords = [
   {
     class   : 'IN',
-    name    : 'www.example.com.',
+    owner   : 'www.example.com.',
     type    : 'URI',
     target  : 'www2.example.com.',
     priority: 1,
@@ -19,7 +19,7 @@ const validRecords = [
   },
   {
     class   : 'IN',
-    name    : '_http.github.dog.',
+    owner   : '_http.github.dog.',
     type    : 'URI',
     target  : 'http://github.com/dog',
     priority: 2,
@@ -53,7 +53,7 @@ describe('URI record', function () {
     it.skip(`imports tinydns (generic) record`, async function () {
       const r = new URI({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'priority', 'weight', 'target', 'ttl' ]) {
+      for (const f of [ 'owner', 'priority', 'weight', 'target', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

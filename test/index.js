@@ -53,7 +53,7 @@ describe('RR', function () {
 
   describe('getFields', function () {
     it('gets common fields', async function () {
-      assert.deepStrictEqual(r.getFields('common'), [ 'name', 'ttl', 'class', 'type' ])
+      assert.deepStrictEqual(r.getFields('common'), [ 'owner', 'ttl', 'class', 'type' ])
     })
 
     it('gets rdata fields', async function () {
@@ -64,15 +64,15 @@ describe('RR', function () {
   describe('getFQDN', function () {
     it('adds a period to hostnames', async () => {
       const rr = new RR(null)
-      rr.set('name', 'www.example.com') // bypass FQ check
-      assert.equal(rr.getFQDN('name'), 'www.example.com.')
+      rr.set('owner', 'www.example.com') // bypass FQ check
+      assert.equal(rr.getFQDN('owner'), 'www.example.com.')
     })
 
     it('reduces origin on request', async () => {
       const rr = new RR(null)
       const zone_opts = { origin: 'example.com.', hide: { origin: true } }
-      rr.setName('www.example.com.')
-      assert.equal(rr.getFQDN('name', zone_opts), 'www')
+      rr.setOwner('www.example.com.')
+      assert.equal(rr.getFQDN('owner', zone_opts), 'www')
     })
   })
 

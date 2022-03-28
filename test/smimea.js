@@ -8,7 +8,7 @@ const SMIMEA = require('../rr/tlsa')
 const validRecords = [
   {
     class                         : 'IN',
-    name                          : '_443._tcp.www.example.com.',
+    owner                         : '_443._tcp.www.example.com.',
     type                          : 'SMIMEA',
     ttl                           : 3600,
     'certificate usage'           : 0,
@@ -22,7 +22,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    // name     : 'test.example.com',
+    // owner    : 'test.example.com',
     selector: 6,  // invalid
   },
 ]

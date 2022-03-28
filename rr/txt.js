@@ -42,10 +42,10 @@ class TXT extends RR {
     }
 
     return new this.constructor({
-      type     : 'TXT',
-      name     : this.fullyQualify(fqdn),
-      data     : rdata,
+      owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
+      type     : 'TXT',
+      data     : rdata,
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -71,12 +71,12 @@ class TXT extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  TXT  "..."
-    const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+    const [ owner, ttl, c, type ] = str.split(/\s+/)
     return new this.constructor({
-      name : fqdn,
+      owner,
       ttl  : parseInt(ttl, 10),
       class: c,
-      type : type,
+      type,
       data : str.match(/"([^"]+?)"/g).map(s => s.replace(/^"|"$/g, '')).join(''),
     })
   }
@@ -107,7 +107,7 @@ class TXT extends RR {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
-    return `'${this.getTinyFQDN('name')}:${rdata}:${this.getTinydnsPostamble()}\n`
+    return `'${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
   }
 }
 

@@ -7,7 +7,7 @@ const DS = require('../rr/ds')
 
 const validRecords = [
   {
-    name         : 'dskey.example.com.',
+    owner        : 'dskey.example.com.',
     class        : 'IN',
     type         : 'DS',
     ttl          : 3600,
@@ -22,7 +22,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name     : 'test.example.com',
+    owner    : 'test.example.com',
     algorithm: 6,  // invalid
   },
 ]

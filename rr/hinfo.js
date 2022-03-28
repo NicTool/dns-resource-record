@@ -44,10 +44,10 @@ class HINFO extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const [ fqdn, ttl, c, type, cpu, os ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, cpu, os ] = str.split(/\s+/)
 
     const bits = {
-      name : fqdn,
+      owner,
       ttl  : parseInt(ttl, 10),
       class: c,
       type,

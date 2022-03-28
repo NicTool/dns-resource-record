@@ -58,10 +58,10 @@ class AAAA extends RR {
     }
 
     return new this.constructor({
-      type     : 'AAAA',
-      name     : this.fullyQualify(fqdn),
-      address  : ip,
+      owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
+      type     : 'AAAA',
+      address  : ip,
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -69,13 +69,13 @@ class AAAA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  AAAA  ...
-    const [ fqdn, ttl, c, type, ip ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, ip ] = str.split(/\s+/)
     return new this.constructor({
-      class  : c,
-      type   : type,
-      name   : fqdn,
-      address: this.expand(ip),
+      owner,
       ttl    : parseInt(ttl, 10),
+      class  : c,
+      type,
+      address: this.expand(ip),
     })
   }
 

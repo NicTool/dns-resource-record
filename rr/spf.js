@@ -1,3 +1,4 @@
+// obsoleted by RFC 7208
 
 const TXT = require('./txt')
 
@@ -37,7 +38,7 @@ class SPF extends TXT {
 
     return new this.constructor({
       type     : 'SPF',
-      name     : this.fullyQualify(fqdn),
+      owner    : this.fullyQualify(fqdn),
       data     : TINYDNS.octalToChar(rdata),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,

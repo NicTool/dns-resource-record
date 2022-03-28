@@ -18,7 +18,8 @@ class DNAME extends RR {
     this.isFullyQualified('DNAME', 'target', val)
     this.isValidHostname('DNAME', 'target', val)
 
-    this.set('target', val)
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('target', val.toLowerCase())
   }
 
   getDescription () {
@@ -45,7 +46,7 @@ class DNAME extends RR {
 
     return new this.constructor({
       type     : 'DNAME',
-      name     : this.fullyQualify(fqdn),
+      owner    : this.fullyQualify(fqdn),
       target   : `${TINYDNS.unpackDomainName(rdata)}.`,
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -55,13 +56,13 @@ class DNAME extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  DNAME  ...
-    const [ fqdn, ttl, c, type, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, target ] = str.split(/\s+/)
     return new this.constructor({
-      class : c,
-      type  : type,
-      name  : fqdn,
-      target: target,
-      ttl   : parseInt(ttl, 10),
+      owner,
+      ttl  : parseInt(ttl, 10),
+      class: c,
+      type,
+      target,
     })
   }
 

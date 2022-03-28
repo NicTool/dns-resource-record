@@ -8,7 +8,7 @@ const SOA = require('../rr/soa')
 const validRecords = [
   {
     class  : 'IN',
-    name   : 'example.com.',
+    owner  : 'example.com.',
     type   : 'SOA',
     mname  : 'ns1.example.com.',
     rname  : 'matt.example.com.',
@@ -33,8 +33,9 @@ example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
 
 const invalidRecords = [
   {
+    owner  : 'example.com',
+    ttl    : 3600,
     class  : 'IN',
-    name   : 'example.com',
     type   : 'SOA',
     mname  : 'ns1.example.com.',
     rname  : 'matt.example.com.',
@@ -42,7 +43,6 @@ const invalidRecords = [
     refresh: 7200,
     retry  : 3600,
     expire : 1209600,
-    ttl    : 3600,
   },
 ]
 
@@ -62,10 +62,10 @@ describe('SOA record', function () {
   base.fromTinydns(SOA, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns SOA (Z) record (${val.name})`, async function () {
+    it.skip(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
       const r = new SOA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl' ]) {
+      for (const f of [ 'owner', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

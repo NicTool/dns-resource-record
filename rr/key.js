@@ -1,7 +1,7 @@
 
 const RR = require('./index').RR
 
-class DNSKEY extends RR {
+class KEY extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -9,16 +9,14 @@ class DNSKEY extends RR {
   /****** Resource record specific setters   *******/
   setFlags (val) {
     // a 2 octet Flags Field
-    // the possible values are: 0, 256, and 257 RFC 4034
-    if (![ 0, 256, 257 ].includes(val)) throw new Error(`DNSKEY: flags invalid, see ${this.getRFCs()}`)
+    this.is16bitInt(val)
 
     this.set('flags', val)
   }
 
   setProtocol (val) {
     // 1 octet
-    // The Protocol Field MUST be represented as an unsigned decimal integer with a value of 3.
-    if (![ 3 ].includes(val)) throw new Error(`DNSKEY: protocol invalid, see ${this.getRFCs()}`)
+    this.is8bitInt(val)
 
     this.set('protocol', val)
   }
@@ -27,13 +25,13 @@ class DNSKEY extends RR {
     // 1 octet
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`DNSKEY: algorithm invalid, see ${this.getRFCs()}`)
+      throw new Error(`KEY: algorithm invalid, see ${this.getRFCs()}`)
 
     this.set('algorithm', val)
   }
 
   setPublickey (val) {
-    if (!val) throw new Error(`DNSKEY: publickey is required, see ${this.getRFCs()}`)
+    if (!val) throw new Error(`KEY: publickey is required, see ${this.getRFCs()}`)
 
     this.set('publickey', val)
   }
@@ -47,11 +45,11 @@ class DNSKEY extends RR {
   }
 
   getRFCs () {
-    return [ 4034 ]
+    return [ 2535 ]
   }
 
   getTypeId () {
-    return 48
+    return 25
   }
 
   /******  IMPORTERS   *******/
@@ -59,7 +57,7 @@ class DNSKEY extends RR {
   // }
 
   fromBind (str) {
-    // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
+    // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
     const [ owner, ttl, c, type, flags, protocol, algorithm ] = str.split(/\s+/)
     return new this.constructor({
       owner,
@@ -80,4 +78,4 @@ class DNSKEY extends RR {
   // }
 }
 
-module.exports = DNSKEY
+module.exports = KEY

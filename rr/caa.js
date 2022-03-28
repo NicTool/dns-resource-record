@@ -83,12 +83,12 @@ class CAA extends RR {
     const fingerprint = unescaped.substring(taglen)
 
     return new this.constructor({
-      type     : 'CAA',
-      name     : this.fullyQualify(fqdn),
-      flags    : flags,
-      tag      : tag,
-      value    : fingerprint,
+      owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
+      type     : 'CAA',
+      flags,
+      tag,
+      value    : fingerprint,
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -96,15 +96,15 @@ class CAA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const [ fqdn, ttl, c, type, flags, tag ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, flags, tag ] = str.split(/\s+/)
     return new this.constructor({
+      owner,
+      ttl  : parseInt(ttl, 10),
       class: c,
-      type : type,
-      name : fqdn,
+      type,
       flags: parseInt(flags, 10),
-      tag  : tag,
+      tag,
       value: str.split(/\s+/).slice(6).join(' ').trim(),
-      ttl  : parseInt(ttl,    10),
     })
   }
 

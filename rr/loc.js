@@ -106,7 +106,7 @@ class LOC extends RR {
 
     return new this.constructor({
       type     : 'LOC',
-      name     : this.fullyQualify(fqdn),
+      owner    : this.fullyQualify(fqdn),
       address  : this.toHuman(l),
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
@@ -115,14 +115,14 @@ class LOC extends RR {
   }
 
   fromBind (str) {
-    const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+    const [ owner, ttl, c, type ] = str.split(/\s+/)
 
     return new this.constructor({
+      owner,
+      ttl    : parseInt(ttl, 10),
       class  : c,
       type   : type,
-      name   : fqdn,
       address: str.split(/\s+/).slice(4).join(' ').trim(),
-      ttl    : parseInt(ttl, 10),
     })
   }
 

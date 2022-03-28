@@ -53,14 +53,12 @@ class TLSA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const [ fqdn, ttl, c, type, usage, selector, match ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, usage, selector, match ] = str.split(/\s+/)
     return new this.constructor({
-      name                          : this.fullyQualify(fqdn),
+      owner                         : this.fullyQualify(owner),
       ttl                           : parseInt(ttl, 10),
       class                         : c,
       type                          : type,
@@ -70,12 +68,6 @@ class TLSA extends RR {
       'certificate association data': str.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
-
-  /******  EXPORTERS   *******/
-  // toTinydns () {
-  //   const rdata = '' // TODO
-  //   return this.getTinydnsGeneric(rdata)
-  // }
 }
 
 module.exports = TLSA
