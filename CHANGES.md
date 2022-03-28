@@ -2,6 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.7 - 2022-03-NN
+
+- index: previousName -> previousOwner
+-
+
+
 #### 0.9.6 - 2022-03-27
 
 - rr*: rename name -> owner (not overloaded)
