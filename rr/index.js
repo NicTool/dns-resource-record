@@ -264,7 +264,7 @@ class RR extends Map {
   }
 
   isValidHostname (type, field, hostname) {
-    if (!/[^a-zA-Z0-9\-._/]/.test(hostname)) return true
+    if (!/[^a-zA-Z0-9\-._/\\]/.test(hostname)) return true
     throw new Error(`${type}, ${field} has invalid hostname characters`)
   }
 

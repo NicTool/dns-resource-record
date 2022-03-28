@@ -2,15 +2,16 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.9.7 - 2022-03-NN
+#### 0.9.7 - 2022-03-27
 
 - index: previousName -> previousOwner
--
+- isValidHostname: allow \ char
+
 
 
 #### 0.9.6 - 2022-03-27
 
-- rr*: rename name -> owner (not overloaded)
+- rr\*: rename name -> owner (not overloaded)
 - RFC 4034: letters in DNS names are lower cased
 - README: added definitions
 - repo: move from msimerson -> nictool org
