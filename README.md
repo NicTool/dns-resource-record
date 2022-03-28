@@ -91,7 +91,7 @@ const A = require('dns-resource-record').A
 const validatedA = new A(exampleRRs.A)
 ```
 
-Manipulate the validated record using pattern named setter functions:
+Manipulate the validated record using pattern named setters:
 
 ```js
 console.log(validatedA.toBind())
@@ -102,7 +102,7 @@ console.log(validatedA.toBind())
 test.example.com    3600    IN  A   192.0.2.128
 ```
 
-The setter functions are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`.
+The setters are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`.
 
 ## FUNCTIONS
 
@@ -233,9 +233,30 @@ PRs are welcome, especially PRs with tests.
         - DNSSEC canonicalization (see RFC 4034)
         - wire format for most RRs require it
     - Master Zone File expansions exist at another level
-    - domain 
 - fromBIND is regex based and is naive. [dns-zone](https://github.com/nictool/dns-zone) has a much more robust parser.
-- toBind output (suppress TTL, class, relative domain names) can be influenced with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/nictool/dns-zone) package.
+- toBind output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/nictool/dns-zone) package.
+
+
+## DEFINITIONS
+
+- Resource Record: structured data associated with names / nodes
+    - format: owner ttl class type rdata
+    - example: www.example.com 3600 IN A 192.0.2.127
+- owner [name]:
+    - a node in the domain name tree
+    - consists of a sequence of labels
+    - format: node.zone.tld.
+        - the right most label is null, aka the root
+        - the 2nd from right is the top level domain
+        - the 3rd from right is the [organizational] domain name
+- label: character strings between the dots in a domain name
+- ttl: time to live
+    - how long to cache this DNS resource record
+- class: IN, internet.
+- type: the type of rdata the follows
+    - examples: A, MX, SOA, PTR
+- rdata: resource data. The contents vary widely by type
+    - examples: A records have an address, CNAME records bear a cname target, NS records point to nameservers (nsdname).
 
 
 ## TODO
@@ -247,8 +268,8 @@ PRs are welcome, especially PRs with tests.
 - [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
 - [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
 - [ ] APL, KX, DHCID, HIP, RP, SVCB/HTTPS
-- [ ] add toWire, exports in wire/network format (see also: node-dns)
-- [ ] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
+- [ ] add toWire, exports in wire/network format
+- [x] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
       NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
@@ -256,9 +277,10 @@ PRs are welcome, especially PRs with tests.
 - [ ] handling unknown RR types: RFC 3597
 - [ ] export a web page for each RR type
 
+
 ## DEVELOP
 
 - this package has no dependencies. That's no accident.
 - eventually this will be used a node.js app & a browser based app
     - so, ESM, eventually
-- CI tests are on linux & windows
+- CI tests are on linux, windows, and macos
