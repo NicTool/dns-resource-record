@@ -7,7 +7,7 @@ const SPF = require('../rr/spf')
 
 const validRecords = [
   {
-    name : 'example.com.',
+    owner: 'example.com.',
     ttl  : 86400,
     type : 'SPF',
     data : 'v=spf1 mx a include:mx.example.com -all',
@@ -39,7 +39,7 @@ describe('SPF record', function () {
     it.skip(`imports tinydns SPF (generic) record`, async function () {
       const r = new SPF({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'data', 'ttl' ]) {
+      for (const f of [ 'owner', 'data', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

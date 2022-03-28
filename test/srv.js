@@ -7,14 +7,14 @@ const SRV = require('../rr/srv')
 
 const validRecords = [
   {
+    owner   : '_imaps._tcp.example.com.',
+    ttl     : 3600,
     class   : 'IN',
-    name    : '_imaps._tcp.example.com.',
     type    : 'SRV',
-    target  : 'mail.example.com.',
     priority: 1,
     weight  : 0,
     port    : 993,
-    ttl     : 3600,
+    target  : 'mail.example.com.',
     testB   : '_imaps._tcp.example.com.\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
     testT   : ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n',
   },
@@ -22,11 +22,11 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name  : 'test.example.com',
+    owner : 'test.example.com',
     target: 'not-full-qualified.example.com',
   },
   {
-    name  : 'test.example.com',
+    owner : 'test.example.com',
     target: '192.168.0.1',
   },
 ]
@@ -47,10 +47,10 @@ describe('SRV record', function () {
   base.fromTinydns(SRV, validRecords)
 
   for (const val of validRecords) {
-    it(`imports tinydns SRV (generic) record (${val.name})`, async function () {
+    it(`imports tinydns SRV (generic) record (${val.owner})`, async function () {
       const r = new SRV({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
+      for (const f of [ 'owner', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
@@ -60,7 +60,7 @@ describe('SRV record', function () {
     const val = validRecords[0]
     const r = new SRV({ tinyline: 'S_imaps._tcp.example.com:mail.example.com:993:1:0:3600::' })
     if (process.env.DEBUG) console.dir(r)
-    for (const f of [ 'name', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
+    for (const f of [ 'owner', 'target', 'priority', 'weight', 'port', 'ttl' ]) {
       assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
     }
   })

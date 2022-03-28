@@ -7,7 +7,7 @@ const NSEC = require('../rr/nsec')
 
 const validRecords = [
   {
-    name           : 'alfa.example.com.',
+    owner          : 'alfa.example.com.',
     ttl            : 86400,
     class          : 'IN',
     type           : 'NSEC',

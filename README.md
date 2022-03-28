@@ -39,19 +39,19 @@ const RR = require('dns-resource-record')
 const RR = require('dns-resource-record')
 const exampleRRs = {
     A: {
-        name   : 'test.example.com',
+        owner  : 'test.example.com',
         type   : 'A',
         address: '192.0.2.127',
         ttl    : 3600,
     },
     AAAA: {
-        name   : 'test.example.com',
+        owner  : 'test.example.com',
         type   : 'AAAA',
         address: '2605:7900:20:a::4',
         ttl    : 3600,
     },
     SOA: {
-        name   : 'example.com',
+        owner  : 'example.com',
         type   : 'SOA',
         mname  : 'matt.example.com.',
         rname  : 'ns1.example.com.',
@@ -66,7 +66,7 @@ const exampleRRs = {
 try {
     console.log(new RR.SOA(exampleRRs.SOA))
     SOA(11) [Map] {
-        'name' => 'example.com',
+        'owner' => 'example.com',
         'ttl' => 3600,
         'class' => 'IN',
         'type' => 'SOA',
@@ -111,13 +111,13 @@ Get the field names for each RR type with `getFields()`:
 ```js
 > const RR = require('dns-resource-record')
 > new RR.A(null).getFields()
-[ 'name', 'ttl', 'class', 'type', 'address' ]
+[ 'owner', 'ttl', 'class', 'type', 'address' ]
 
 > new RR.PTR(null).getFields()
-[ 'name', 'ttl', 'class', 'type', 'dname' ]
+[ 'owner', 'ttl', 'class', 'type', 'dname' ]
 
 > new RR.SSHFP(null).getFields()
-[ 'name', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
+[ 'owner', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
 ```
 
 Get a list of RFCs for further learning about a RR type:
@@ -172,7 +172,7 @@ The DNS validation checks can be bypassed entirely by using 'set':
 ```js
 > validatedA.set('address', 'oops')
 A(5) [Map] {
-  'name' => 'test.example.com',
+  'owner' => 'test.example.com',
   'ttl' => 3600,
   'class' => 'IN',
   'type' => 'A',
@@ -225,7 +225,7 @@ PRs are welcome, especially PRs with tests.
 
 ## TIPS
 
-- Domain names are:
+- Domain owner names are:
     - stored fully qualified, aka absolute.
     - normalized to lower case
         - DNS is case insensitive (see RFCs 4343, 1035, 1034)

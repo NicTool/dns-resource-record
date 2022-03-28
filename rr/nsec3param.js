@@ -61,17 +61,15 @@ class NSEC3PARAM extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  NSEC3PARAM
-    const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+    const [ owner, ttl, c, type ] = str.split(/\s+/)
     return new this.constructor({
+      owner,
+      ttl                     : parseInt(ttl, 10),
       class                   : c,
       type                    : type,
-      name                    : fqdn,
-      ttl                     : parseInt(ttl, 10),
       'hash algorithm'        : '',
       'flags'                 : '',
       'iterations'            : '',
@@ -82,12 +80,7 @@ class NSEC3PARAM extends RR {
   }
 
   /******  EXPORTERS   *******/
-  // toBind (zone_opts) {
-  //   return `${this.getPrefix(zone_opts)}\t${this.getFQDN('next domain', zone_opts)}\n`
-  // }
 
-  // toTinydns () {
-  // }
 }
 
 // const removeParens = a => ![ '(',')' ].includes(a)

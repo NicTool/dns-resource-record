@@ -7,9 +7,9 @@ const KEY = require('../rr/key')
 
 const validRecords = [
   // {
-  //   name     : 'example.com.',
-  //   class    : 'IN',
+  //   owner    : 'example.com.',
   //   ttl      : 3600,
+  //   class    : 'IN',
   //   type     : 'KEY',
   //   flags    : 256,
   //   protocol : 3,

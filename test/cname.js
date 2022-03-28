@@ -8,7 +8,7 @@ const CNAME = require('../rr/cname')
 const validRecords = [
   {
     class: 'IN',
-    name : 'ns1.example.com.',
+    owner: 'ns1.example.com.',
     type : 'CNAME',
     cname: 'ns2.example.com.',
     ttl  : 3600,
@@ -20,7 +20,7 @@ const validRecords = [
 const invalidRecords = [
   {
     class: 'IN',
-    name : 'example.com',
+    owner: 'example.com',
     type : 'CNAME',
     cname: '192.0.2.4',  // FQDN required
     ttl  : 3600,

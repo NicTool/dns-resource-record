@@ -16,7 +16,7 @@ class RR extends Map {
     this.setLocation(opts?.location)
     this.setTimestamp(opts?.timestamp)
 
-    this.setName (opts?.name)
+    this.setOwner(opts?.owner)
     this.setTtl  (opts?.ttl)
     this.setClass(opts?.class)
     this.setType (opts?.type)
@@ -72,13 +72,13 @@ class RR extends Map {
     }
   }
 
-  setName (n) {
-    if (n === undefined) throw new Error(`name is required`)
+  setOwner (n) {
+    if (n === undefined) throw new Error(`owner is required`)
 
     if (n.length < 1 || n.length > 255)
       throw new Error('Domain names must have 1-255 octets (characters): RFC 2181')
 
-    this.isFullyQualified('', 'name', n)
+    this.isFullyQualified('', 'owner', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
@@ -86,7 +86,7 @@ class RR extends Map {
       if (!/^\*\./.test(n) && !/\.\*\./.test(n)) throw new Error('only *.something or * (by itself) is a valid wildcard')
     }
 
-    this.set('name', n.toLowerCase())
+    this.set('owner', n.toLowerCase())
   }
 
   setTtl (t) {
@@ -100,7 +100,7 @@ class RR extends Map {
     if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
-    this.is32bitInt(this.name, 'TTL', t)
+    this.is32bitInt(this.owner, 'TTL', t)
 
     this.set('ttl', t)
   }
@@ -126,19 +126,19 @@ class RR extends Map {
     let rrTTL = this.get('ttl')
     if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = ''
 
-    let name = this.get('name')
-    if (zone_opts.hide?.sameName && zone_opts.previousName === name) {
-      name = ''
+    let owner = this.get('owner')
+    if (zone_opts.hide?.sameName && zone_opts.previousName === owner) {
+      owner = ''
     }
     else {
-      name = this.getFQDN('name', zone_opts)
+      owner = this.getFQDN('owner', zone_opts)
     }
 
-    return `${name}\t${rrTTL}\t${classVal}\t${this.get('type')}`
+    return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
   getPrefixFields () {
-    const commonFields = [ 'name', 'ttl', 'class', 'type' ]
+    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
     Object.freeze(commonFields)
     return commonFields
   }
@@ -207,7 +207,7 @@ class RR extends Map {
   }
 
   getTinydnsGeneric (rdata) {
-    return `:${this.getTinyFQDN('name')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
+    return `:${this.getTinyFQDN('owner')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
   }
 
   getTinydnsPostamble () {

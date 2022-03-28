@@ -37,10 +37,10 @@ class PTR extends RR {
     const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
-      type     : 'PTR',
-      name     : this.fullyQualify(fqdn),
-      dname    : this.fullyQualify(p),
+      owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
+      type     : 'PTR',
+      dname    : this.fullyQualify(p),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -48,19 +48,19 @@ class PTR extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  PTR  dname
-    const [ fqdn, ttl, c, type, dname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, dname ] = str.split(/\s+/)
     return new this.constructor({
+      owner,
+      ttl  : parseInt(ttl, 10),
       class: c,
       type : type,
-      name : fqdn,
       dname: dname,
-      ttl  : parseInt(ttl, 10),
     })
   }
 
   /******  EXPORTERS   *******/
   toTinydns () {
-    return `^${this.getTinyFQDN('name')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
+    return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

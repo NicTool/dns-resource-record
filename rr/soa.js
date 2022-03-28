@@ -90,8 +90,9 @@ class SOA extends RR {
     const [ fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
+      owner    : this.fullyQualify(fqdn),
+      ttl      : parseInt(ttl, 10),
       type     : 'SOA',
-      name     : this.fullyQualify(fqdn),
       mname    : this.fullyQualify(mname),
       rname    : this.fullyQualify(rname),
       serial   : parseInt(ser, 10),
@@ -99,7 +100,6 @@ class SOA extends RR {
       retry    : parseInt(ret, 10) || 2048,
       expire   : parseInt(exp, 10) || 1048576,
       minimum  : parseInt(min, 10) || 2560,
-      ttl      : parseInt(ttl, 10),
       timestamp: parseInt(ts) || '',
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -111,20 +111,20 @@ class SOA extends RR {
        $ORIGIN example.com
        example.com  IN  SOA mname rname ( serial refresh retry expire minimum )
     */
-    const [ , ttl, , fqdn, , c, type, mname, rname, , serial, refresh, retry, expire, minimum ] = str.split(/\s+/)
+    const [ , ttl, , owner, , c, type, mname, rname, , serial, refresh, retry, expire, minimum ] = str.split(/\s+/)
 
     const bits = {
+      owner,
+      ttl    : parseInt(ttl    , 10),
       class  : c,
-      type   : type,
-      name   : fqdn,
-      mname  : mname,
-      rname  : rname,
+      type,
+      mname,
+      rname,
       serial : parseInt(serial , 10),
       refresh: parseInt(refresh, 10),
       retry  : parseInt(retry  , 10),
       expire : parseInt(expire , 10),
       minimum: parseInt(minimum, 10),
-      ttl    : parseInt(ttl    , 10),
     }
     // console.log(bits)
     return new this.constructor(bits)
@@ -134,14 +134,14 @@ class SOA extends RR {
   toBind (zone_opts) {
     const numFields = [ 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
     return `$TTL\t${this.get('ttl')}${this.getComment('ttl')}
-$ORIGIN\t${this.getFQDN('name')}${this.getComment('origin')}
-${this.getFQDN('name', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)} (
+$ORIGIN\t${this.getFQDN('owner')}${this.getComment('origin')}
+${this.getFQDN('owner', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)} (
 ${numFields.map(f => '\t\t' + this.get(f) + this.getComment(f) + '\n').join('')}\t\t)
 \n`
   }
 
   toTinydns () {
-    return `Z${this.getTinyFQDN('name')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
+    return `Z${this.getTinyFQDN('owner')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

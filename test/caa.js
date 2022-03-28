@@ -7,31 +7,31 @@ const CAA = require('../rr/caa')
 
 const validRecords = [
   {
+    owner: 'ns1.example.com.',
+    ttl  : 3600,
     class: 'IN',
-    name : 'ns1.example.com.',
     type : 'CAA',
     flags: 0,
     tag  : 'issue',
     value: 'http://letsencrypt.org',
-    ttl  : 3600,
     testB: `ns1.example.com.\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n`,
     testT: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
   },
   {
+    owner: 'ns2.example.com.',
+    ttl  : 3600,
     class: 'IN',
-    name : 'ns2.example.com.',
     type : 'CAA',
     flags: 0,
     tag  : 'issue',
     value: 'mailto:lets-crypt.org',
-    ttl  : 3600,
     testB: `ns2.example.com.\t3600\tIN\tCAA\t0\tissue\t"mailto:lets-crypt.org"\n`,
     testT: ':ns2.example.com:257:\\000\\005issue"mailto\\072lets-crypt.org":3600::\n',
   },
   {
-    name : 'example.net.',
-    type : 'CAA',
+    owner: 'example.net.',
     ttl  : 86400,
+    type : 'CAA',
     flags: 0,
     tag  : 'issuewild',
     value: 'https://letsencrypt.org',
@@ -42,19 +42,19 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name : 'example.com',
+    owner: 'example.com',
     flags: 128,
     tag  : 'issue',
     value: 'letsencrypt.org', // missing iodef prefix
   },
   {
-    name : 'example.com',
+    owner: 'example.com',
     flags: 128,
     tag  : 'invalid', // invalid
     value: 'http://letsencrypt.org',
   },
   {
-    name : 'example.com',
+    owner: 'example.com',
     flags: 15,  // invalid
     tag  : 'issue',
     value: 'http://letsencrypt.org',
@@ -80,7 +80,7 @@ describe('CAA record', function () {
     it(`imports tinydns CAA (generic) record`, async function () {
       const r = new CAA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'flags', 'tag', 'value', 'ttl' ]) {
+      for (const f of [ 'owner', 'flags', 'tag', 'value', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

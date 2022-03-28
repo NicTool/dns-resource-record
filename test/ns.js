@@ -7,7 +7,7 @@ const NS = require('../rr/ns')
 
 const validRecords = [
   {
-    name : 'example.com.',
+    owner: 'example.com.',
     ttl  : 3600,
     class: 'IN',
     type : 'NS',
@@ -19,7 +19,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name : 'example.com',
+    owner: 'example.com',
     dname: '1.2.3.4',  // FQDN required
   },
 ]
@@ -40,10 +40,10 @@ describe('NS record', function () {
   base.fromTinydns(NS, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns NS (&) record (${val.name})`, async function () {
+    it.skip(`imports tinydns NS (&) record (${val.owner})`, async function () {
       const r = new NS({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'dname', 'ttl' ]) {
+      for (const f of [ 'owner', 'dname', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

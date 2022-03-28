@@ -84,14 +84,11 @@ class SIG extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
-
   // fromBind (str) {
   //   // test.example.com  3600  IN  SIG ...
-  //   const [ fqdn, ttl, c, type ] = str.split(/\s+/)
+  //   const [ owner, ttl, c, type ] = str.split(/\s+/)
   //   return new this.constructor({
-  //     name         : fqdn,
+  //     owner,
   //     ttl          : parseInt(ttl, 10),
   //     class        : c,
   //     type         : type,
@@ -99,10 +96,7 @@ class SIG extends RR {
   // }
 
   /******  EXPORTERS   *******/
-  // toTinydns () {
-  //   const rdata = '' // TODO
-  //   return this.getTinydnsGeneric(rdata)
-  // }
+
 }
 
 module.exports = SIG

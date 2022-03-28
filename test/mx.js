@@ -7,7 +7,7 @@ const MX = require('../rr/mx')
 
 const validRecords = [
   {
-    name      : 'test.example.com.',
+    owner     : 'test.example.com.',
     class     : 'IN',
     type      : 'MX',
     ttl       : 3600,
@@ -17,7 +17,7 @@ const validRecords = [
     testT     : '@test.example.com::mail.example.com:0:3600::\n',
   },
   {
-    name      : 'www.example.com.',
+    owner     : 'www.example.com.',
     class     : 'IN',
     type      : 'MX',
     ttl       : 86400,
@@ -30,15 +30,15 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name    : 'test.example.com',
+    owner   : 'test.example.com',
     exchange: 'not-full-qualified.example.com',
   },
   {
-    name    : 'test.example.com',
+    owner   : 'test.example.com',
     exchange: '192.0.2.1',
   },
   {
-    name    : 'test.example.com',
+    owner   : 'test.example.com',
     exchange: '-blah',
   },
 ]
@@ -61,10 +61,10 @@ describe('MX record', function () {
   base.fromTinydns(MX, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns MX (@) record (${val.name})`, async function () {
+    it.skip(`imports tinydns MX (@) record (${val.owner})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'exchange', 'preference', 'ttl' ]) {
+      for (const f of [ 'owner', 'exchange', 'preference', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

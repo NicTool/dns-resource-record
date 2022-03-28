@@ -6,29 +6,29 @@ const base = require('./base')
 
 const validRecords = [
   {
+    owner  : 'test.example.com.',
+    ttl    : 3600,
     class  : 'IN',
-    name   : 'test.example.com.',
     type   : 'A',
     address: '192.0.2.127',
-    ttl    : 3600,
     testB  : 'test.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:3600::\n',
   },
   {
+    owner  : 'test.example.com.',
+    ttl    : 2147483647,
     class  : 'IN',
-    name   : 'test.example.com.',
     type   : 'A',
     address: '192.0.2.127',
-    ttl    : 2147483647,
     testB  : 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:2147483647::\n',
   },
   {
+    owner  : 'a.',
+    ttl    : 86400,
     class  : 'IN',
-    name   : 'a.',
     type   : 'A',
     address: '192.0.2.127',
-    ttl    : 86400,
     testB  : 'a.\t86400\tIN\tA\t192.0.2.127\n',
     testT  : '+a:192.0.2.127:86400::\n',
   },
@@ -36,7 +36,7 @@ const validRecords = [
 
 const moreValid = [
   {
-    name : '*.example.com.',
+    owner: '*.example.com.',
     testB: '*.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT: '+*.example.com:192.0.2.127:3600::\n',
   },
@@ -49,13 +49,13 @@ for (let i = 0; i < moreValid.length; i++) {
 }
 
 const invalidRecords = [
-  { name: '' },
-  { name: 'something*' },
-  { name: 'some*thing' },
-  { name: '*something' },
-  { name: 'something.*' },
-  { name: 'a.m.' },
-  { name: 'something.test.' },
+  { owner: '' },
+  { owner: 'something*' },
+  { owner: 'some*thing' },
+  { owner: '*something' },
+  { owner: 'something.*' },
+  { owner: 'a.m.' },
+  { owner: 'something.test.' },
   { address: 'hosts.not.valid.here' },
   { address: '' },
   { address: undefined },

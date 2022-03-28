@@ -57,12 +57,12 @@ class DS extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [ fqdn, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
     return new this.constructor({
-      name         : fqdn,
+      owner,
       ttl          : parseInt(ttl, 10),
       class        : c,
-      type         : type,
+      type,
       'key tag'    : parseInt(keytag,     10),
       algorithm    : parseInt(algorithm,  10),
       'digest type': parseInt(digesttype, 10),

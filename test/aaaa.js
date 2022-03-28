@@ -7,7 +7,7 @@ const AAAA = require('../rr/aaaa.js')
 const validRecords = [
   {
     class  : 'IN',
-    name   : 'test.example.com.',
+    owner  : 'test.example.com.',
     type   : 'AAAA',
     address: '2001:0db8:0020:000a:0000:0000:0000:0004',
     ttl    : 3600,
@@ -19,7 +19,7 @@ const validRecords = [
 const invalidRecords = [
   {
     class  : 'IN',
-    name   : 'test.example.com',
+    owner  : 'test.example.com',
     type   : 'AAAA',
     address: '192.0.2.204',
     ttl    : 3600,
@@ -42,10 +42,10 @@ describe('AAAA record', function () {
   base.fromTinydns(AAAA, validRecords)
 
   for (const val of validRecords) {
-    it(`imports tinydns AAAA (generic) record (${val.name})`, async function () {
+    it(`imports tinydns AAAA (generic) record (${val.owner})`, async function () {
       const r = new AAAA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'address', 'ttl' ]) {
+      for (const f of [ 'owner', 'address', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

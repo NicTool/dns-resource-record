@@ -30,9 +30,9 @@ class OPENPGPKEY extends RR {
   /******  IMPORTERS   *******/
   fromBind (str) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
-    const [ fqdn, ttl, c, type, privatekey ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, privatekey ] = str.split(/\s+/)
     return new this.constructor({
-      name         : fqdn,
+      owner,
       ttl          : parseInt(ttl, 10),
       class        : c,
       type         : type,

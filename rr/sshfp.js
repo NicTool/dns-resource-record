@@ -54,12 +54,12 @@ class SSHFP extends RR {
     const fingerprint = TINYDNS.octalToHex(rdata.substring(16))
 
     return new this.constructor({
+      owner      : this.fullyQualify(fqdn),
+      ttl        : parseInt(ttl, 10),
       type       : 'SSHFP',
-      name       : this.fullyQualify(fqdn),
       algorithm  : algo,
       fptype     : fptype,
       fingerprint: fingerprint,
-      ttl        : parseInt(ttl, 10),
       timestamp  : ts,
       location   : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -67,15 +67,15 @@ class SSHFP extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  SSHFP  algo fptype fp
-    const [ fqdn, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
     return new this.constructor({
+      owner,
+      ttl        : parseInt(ttl, 10),
       class      : c,
       type       : type,
-      name       : fqdn,
       algorithm  : parseInt(algo, 10),
       fptype     : parseInt(fptype, 10),
       fingerprint: fp,
-      ttl        : parseInt(ttl, 10),
     })
   }
 

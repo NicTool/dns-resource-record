@@ -7,7 +7,7 @@ const NAPTR = require('../rr/naptr')
 
 const validRecords = [
   {
-    name       : 'cid.urn.arpa.',
+    owner      : 'cid.urn.arpa.',
     ttl        : 86400,
     class      : 'IN',
     type       : 'NAPTR',

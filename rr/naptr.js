@@ -67,7 +67,7 @@ class NAPTR extends RR {
 
     const rec = {
       type      : 'NAPTR',
-      name      : this.fullyQualify(fqdn),
+      owner     : this.fullyQualify(fqdn),
       ttl       : parseInt(ttl, 10),
       timestamp : ts,
       location  : loc !== '' && loc !== '\n' ? loc : '',
@@ -102,21 +102,21 @@ class NAPTR extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  NAPTR order, preference, "flags", "service", "regexp", replacement
-    const [ fqdn, ttl, c, type, order, preference ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, order, preference ] = str.split(/\s+/)
     const [ flags, service, regexp ] = str.match(/(?:").*?(?:"\s)/g)
     const replacement = str.trim().split(/\s+/).pop()
 
     const bits = {
+      owner      : owner,
+      ttl        : parseInt(ttl, 10),
       class      : c,
       type       : type,
-      name       : fqdn,
       order      : parseInt(order, 10),
       preference : parseInt(preference, 10),
       flags      : flags.trim().replace(/^"|"$/g, ''),
       service    : service.trim().replace(/^"|"$/g, ''),
       regexp     : regexp.trim().replace(/^"|"$/g, ''),
       replacement: replacement,
-      ttl        : parseInt(ttl, 10),
     }
     return new this.constructor(bits)
   }

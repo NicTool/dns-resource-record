@@ -7,7 +7,7 @@ const DNSKEY = require('../rr/dnskey')
 
 const validRecords = [
   {
-    name     : 'example.com.',
+    owner    : 'example.com.',
     class    : 'IN',
     ttl      : 3600,
     type     : 'DNSKEY',
@@ -22,7 +22,7 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    name     : 'test.example.com',
+    owner    : 'test.example.com',
     algorithm: 6,  // invalid
   },
 ]

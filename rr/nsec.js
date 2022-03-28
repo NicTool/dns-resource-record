@@ -46,12 +46,12 @@ class NSEC extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [ fqdn, ttl, c, type, next ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, next ] = str.split(/\s+/)
     return new this.constructor({
+      owner,
+      ttl            : parseInt(ttl, 10),
       class          : c,
       type           : type,
-      name           : fqdn,
-      ttl            : parseInt(ttl, 10),
       'next domain'  : next,
       'type bit maps': str.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
     })

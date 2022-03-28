@@ -8,7 +8,7 @@ const PTR = require('../rr/ptr')
 const validRecords = [
   {
     class: 'IN',
-    name : '2.2.0.192.in-addr.arpa.',
+    owner: '2.2.0.192.in-addr.arpa.',
     type : 'PTR',
     dname: 'dhcp.example.com.',
     ttl  : 86400,
@@ -20,7 +20,7 @@ const validRecords = [
 const invalidRecords = [
   {
     class: 'IN',
-    name : 'example.com',
+    owner: 'example.com',
     type : 'PTR',
     dname: '192.0.2.4',  // FQDN required
     ttl  : 3600,
@@ -44,10 +44,10 @@ describe('PTR record', function () {
 
   for (const val of validRecords) {
 
-    it.skip(`imports tinydns PTR (^) record (${val.name})`, async function () {
+    it.skip(`imports tinydns PTR (^) record (${val.owner})`, async function () {
       const r = new PTR({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'name', 'dname', 'ttl' ]) {
+      for (const f of [ 'owner', 'dname', 'ttl' ]) {
         assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

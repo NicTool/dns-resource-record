@@ -5,7 +5,7 @@ exports.valid = (type, validRecords, defaults) => {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
-      it(`parses record: ${val.name}`, async function () {
+      it(`parses record: ${val.owner}`, async function () {
         if (defaults) val.default = defaults
         const r = new type(val)
         if (defaults) delete val.default
@@ -24,7 +24,7 @@ exports.invalid = (type, invalidRecords, defaults) => {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
       if (defaults) inv.default = defaults
-      it(`throws on record (${inv.name})`, async function () {
+      it(`throws on record (${inv.owner})`, async function () {
         try {
           assert.deepEqual(new type(inv), null)
         }
@@ -42,7 +42,7 @@ exports.invalid = (type, invalidRecords, defaults) => {
 exports.toBind = (type, validRecords) => {
   describe('toBind', function () {
     for (const val of validRecords) {
-      it(`exports to BIND: ${val.name}`, async function () {
+      it(`exports to BIND: ${val.owner}`, async function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testB)
@@ -54,7 +54,7 @@ exports.toBind = (type, validRecords) => {
 exports.toTinydns = (type, validRecords) => {
   describe('toTinydns', function () {
     for (const val of validRecords) {
-      it(`exports to tinydns: ${val.name}`, async function () {
+      it(`exports to tinydns: ${val.owner}`, async function () {
         const r = new type(val).toTinydns()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testT)
@@ -83,7 +83,7 @@ exports.getRFCs = (type, valid) => {
 
 function checkFromNS (type, validRecords, nsName, nsLineName) {
   for (const val of validRecords) {
-    it(`imports ${nsName} record: ${val.name}`, async function () {
+    it(`imports ${nsName} record: ${val.owner}`, async function () {
       const r = new type({ [nsLineName]: nsLineName === 'bindline' ? val.testB : val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {

@@ -47,10 +47,10 @@ class CNAME extends RR {
     const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
 
     return new this.constructor({
-      type     : 'CNAME',
-      name     : this.fullyQualify(fqdn),
-      cname    : p,
+      owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
+      type     : 'CNAME',
+      cname    : p,
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -58,20 +58,20 @@ class CNAME extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CNAME  ...
-    const [ fqdn, ttl, c, type, cname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, cname ] = str.split(/\s+/)
     return new this.constructor({
-      class: c,
-      type : type,
-      name : fqdn,
-      cname: cname,
+      owner,
       ttl  : parseInt(ttl, 10),
+      class: c,
+      type,
+      cname,
     })
   }
 
   /******  EXPORTERS   *******/
 
   toTinydns () {
-    return `C${this.getTinyFQDN('name')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
+    return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
   }
 }
 

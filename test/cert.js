@@ -7,7 +7,7 @@ const CERT = require('../rr/cert')
 
 const validRecords = [
   // {
-  //   name       : 'mail.example.com.',
+  //   owner      : 'mail.example.com.',
   //   ttl        : 86400,
   //   class      : 'IN',
   //   type       : 'CERT',
