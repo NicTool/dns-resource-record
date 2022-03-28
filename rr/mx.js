@@ -24,7 +24,8 @@ class MX extends RR {
     this.isFullyQualified('MX', 'exchange', val)
     this.isValidHostname('MX', 'exchange', val)
 
-    this.set('exchange', val)
+    // RFC 4034: letters in the DNS names ... are lower cased
+    this.set('exchange', val.toLowerCase())
   }
 
   getDescription () {

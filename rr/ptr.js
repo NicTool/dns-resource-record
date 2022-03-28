@@ -11,6 +11,7 @@ class PTR extends RR {
     this.isFullyQualified('PTR', 'dname', val)
     this.isValidHostname('PTR', 'dname', val)
 
+    // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', val.toLowerCase())
   }
 

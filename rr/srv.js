@@ -37,7 +37,8 @@ class SRV extends RR {
     this.isFullyQualified('SRV', 'target', val)
     this.isValidHostname('SRV', 'target', val)
 
-    this.set('target', val)
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('target', val.toLowerCase())
   }
 
   getDescription () {

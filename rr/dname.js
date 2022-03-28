@@ -18,7 +18,8 @@ class DNAME extends RR {
     this.isFullyQualified('DNAME', 'target', val)
     this.isValidHostname('DNAME', 'target', val)
 
-    this.set('target', val)
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('target', val.toLowerCase())
   }
 
   getDescription () {

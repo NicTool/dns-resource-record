@@ -93,7 +93,7 @@ class RR extends Map {
 
     if (t === undefined) t = this?.default?.ttl
     if (t === undefined) {
-      if ('SSHPF' === this.get('type')) return
+      if ([ 'SOA', 'SSHPF' ].includes(this.get('type'))) return
       throw new Error('TTL is required, no default available')
     }
 

@@ -14,6 +14,7 @@ class NSEC extends RR {
     this.isFullyQualified('NSEC', 'next domain', val)
     this.isValidHostname('NSEC', 'next domain', val)
 
+    // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', val.toLowerCase())
   }
 

@@ -20,7 +20,9 @@ class CNAME extends RR {
 
     if (!this.isFullyQualified('CNAME', 'cname', val)) return
     if (!this.isValidHostname('CNAME', 'cname', val)) return
-    this.set('cname', val)
+
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('cname', val.toLowerCase())
   }
 
   getDescription () {

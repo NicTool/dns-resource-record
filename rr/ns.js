@@ -14,6 +14,7 @@ class NS extends RR {
     this.isFullyQualified('NS', 'dname', val)
     this.isValidHostname('NS', 'dname', val)
 
+    // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', val.toLowerCase())
   }
 

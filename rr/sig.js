@@ -52,8 +52,10 @@ class SIG extends RR {
   }
 
   setSignersName (val) {
-    // the Signer's Name field
-    this.set('signers name', val)
+    // the domain name of the signer generating the SIG RR
+
+    // RFC 4034: letters in the DNS names are lower cased
+    this.set('signers name', val.toLowerCase())
   }
 
   setSignature (val) {
