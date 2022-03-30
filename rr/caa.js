@@ -12,7 +12,7 @@ class CAA extends RR {
     this.is8bitInt('CAA', 'flags', val)
 
     if (![ 0, 128 ].includes(val)) {
-      throw new Error(`CAA flags ${val} not recognized, RFC ${this.getRFCs()}`)
+      throw new Error(`CAA flags ${val} not recognized, ${this.citeRFC()}`)
     }
 
     this.set('flags', val)
@@ -22,10 +22,10 @@ class CAA extends RR {
     if (typeof val !== 'string'
       || val.length < 1
       || /[^a-z0-9]/.test(val))
-      throw new Error(`CAA tag must be a sequence of ASCII letters and numbers in lowercase, RFC ${this.getRFCs()}`)
+      throw new Error(`CAA tag must be a sequence of ASCII letters and numbers in lowercase, ${this.citeRFC()}`)
 
     if (![ 'issue', 'issuewild', 'iodef' ].includes(val)) {
-      throw new Error(`CAA tag ${val} not recognized: ${this.getRFCs()}`)
+      throw new Error(`CAA tag ${val} not recognized: ${this.citeRFC()}`)
     }
     this.set('tag', val)
   }
@@ -43,7 +43,7 @@ class CAA extends RR {
     // check if val starts with one of iodefSchemes
     const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
     if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
-      throw new Error(`CAA value must have valid iodefScheme prefix, RFC ${this.getRFCs()}`)
+      throw new Error(`CAA value must have valid iodefScheme prefix, ${this.citeRFC()}`)
     }
 
     this.set('value', val)

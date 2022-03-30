@@ -25,13 +25,13 @@ class KEY extends RR {
     // 1 octet
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`KEY: algorithm invalid, see RFC ${this.getRFCs()}`)
+      throw new Error(`KEY: algorithm invalid, ${this.citeRFC()}`)
 
     this.set('algorithm', val)
   }
 
   setPublickey (val) {
-    if (!val) throw new Error(`KEY: publickey is required, see RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`KEY: publickey is required, ${this.citeRFC()}`)
 
     this.set('publickey', val)
   }

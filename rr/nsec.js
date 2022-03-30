@@ -9,7 +9,7 @@ class NSEC extends RR {
 
   /****** Resource record specific setters   *******/
   setNextDomain (val) {
-    if (!val) throw new Error(`NSEC: 'next domain' is required:, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC: 'next domain' is required:, ${this.citeRFC()}`)
 
     this.isFullyQualified('NSEC', 'next domain', val)
     this.isValidHostname('NSEC', 'next domain', val)
@@ -19,7 +19,7 @@ class NSEC extends RR {
   }
 
   setTypeBitMaps (val) {
-    if (!val) throw new Error(`NSEC: 'type bit maps' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC: 'type bit maps' is required, ${this.citeRFC()}`)
 
     this.set('type bit maps', val)
   }

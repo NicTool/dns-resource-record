@@ -9,21 +9,21 @@ class TLSA extends RR {
   /****** Resource record specific setters   *******/
   setCertificateUsage (val) {
     if (![ 0,1,2,3 ].includes(val))
-      throw new Error(`TLSA: certificate usage invalid, see RFC ${this.getRFCs()}`)
+      throw new Error(`TLSA: certificate usage invalid, ${this.citeRFC()}`)
 
     this.set('certificate usage', val)
   }
 
   setSelector (val) {
     if (![ 0,1 ].includes(val))
-      throw new Error(`TLSA: selector invalid, see RFC ${this.getRFCs()}`)
+      throw new Error(`TLSA: selector invalid, ${this.citeRFC()}`)
 
     this.set('selector', val)
   }
 
   setMatchingType (val) {
     if (![ 0,1,2 ].includes(val))
-      throw new Error(`TLSA: matching type, see RFC ${this.getRFCs()}`)
+      throw new Error(`TLSA: matching type, ${this.citeRFC()}`)
 
     this.set('matching type', val)
   }

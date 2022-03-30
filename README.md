@@ -17,8 +17,9 @@ This module is used to:
     - [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
     - tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
 - export RRs to:
-    - BIND zone file format
-    - tinydns data format
+    - BIND zone files
+    - tinydns data
+    - maradns
     - JS object
     - JSON
 

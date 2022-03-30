@@ -19,7 +19,7 @@ class MX extends RR {
     if (!val) throw new Error('MX: exchange is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`MX: exchange must be a FQDN, RFC ${this.getRFCs()}`)
+      throw new Error(`MX: exchange must be a FQDN, ${this.citeRFC()}`)
 
     this.isFullyQualified('MX', 'exchange', val)
     this.isValidHostname('MX', 'exchange', val)

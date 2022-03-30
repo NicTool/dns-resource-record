@@ -42,7 +42,7 @@ class NAPTR extends RR {
 
   setFlags (val) {
     if (![ '', 'S', 'A', 'U', 'P' ].includes(val))
-      throw new Error (`NAPTR flags are invalid, RFC: ${this.getRFCs()}`)
+      throw new Error (`NAPTR flags are invalid, ${this.citeRFC()}`)
 
     this.set('flags', val)
   }

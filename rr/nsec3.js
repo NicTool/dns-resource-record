@@ -11,7 +11,7 @@ class NSEC3 extends RR {
   setHashAlgoritm (val) {
     // Hash Algorithm is a single octet.
     // The Hash Algorithm field is represented as an unsigned decimal integer.
-    if (!val) throw new Error(`NSEC3: 'hash algorithm' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3: 'hash algorithm' is required, ${this.citeRFC()}`)
 
     this.is8bitInt(val)
 
@@ -20,7 +20,7 @@ class NSEC3 extends RR {
 
   setFlags (val) {
     // The Flags field is represented as an unsigned decimal integer.
-    if (!val) throw new Error(`NSEC3: 'flags' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3: 'flags' is required, ${this.citeRFC()}`)
 
     this.is8bitInt(val)
 
@@ -29,7 +29,7 @@ class NSEC3 extends RR {
 
   setIterations (val) {
     // The Iterations field is represented as an unsigned decimal integer. 0-65535
-    if (!val) throw new Error(`NSEC3: 'iterations' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3: 'iterations' is required, ${this.citeRFC()}`)
 
     this.is16bitInt(val)
 
@@ -47,14 +47,14 @@ class NSEC3 extends RR {
   setNextHashedOwnerName (val) {
     // The Next Hashed Owner Name field is represented as an unpadded
     // sequence of case-insensitive base32 digits, without whitespace
-    if (!val) throw new Error(`NSEC3: 'next hashed owner name' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3: 'next hashed owner name' is required, ${this.citeRFC()}`)
 
     this.set('next hashed owner name', val)
   }
 
   setTypeBitMaps (val) {
     // The Type Bit Maps field is represented as a sequence of RR type mnemonics.
-    if (!val) throw new Error(`NSEC3: 'type bit maps' is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3: 'type bit maps' is required, ${this.citeRFC()}`)
 
     this.set('type bit maps', val)
   }

@@ -29,10 +29,10 @@ class SRV extends RR {
   }
 
   setTarget (val) {
-    if (!val) throw new Error(`SRV: target is required, RFC ${this.getRFCs()}`)
+    if (!val) throw new Error(`SRV: target is required, ${this.citeRFC()}`)
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`SRV: target must be a FQDN, RFC ${this.getRFCs()}`)
+      throw new Error(`SRV: target must be a FQDN, ${this.citeRFC()}`)
 
     this.isFullyQualified('SRV', 'target', val)
     this.isValidHostname('SRV', 'target', val)

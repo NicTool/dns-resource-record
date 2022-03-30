@@ -112,6 +112,10 @@ class RR extends Map {
     this.set('type', t)
   }
 
+  citeRFC () {
+    return `see RFC ${this.getRFCs()}`
+  }
+
   fullyQualify (hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin
@@ -301,7 +305,8 @@ for (let f of files) {
   f = path.basename(f, '.js')
   if (f === 'index') continue
   const rrTypeName = f.toUpperCase()
-  module.exports[rrTypeName] = require(`./${f}`)
-  const inst = new module.exports[rrTypeName](null)
-  module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
+  const rrmod = require(`./${f}`)
+  module.exports[rrTypeName] = rrmod
+  // const inst = new rrmod(null)
+  // module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
 }

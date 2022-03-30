@@ -29,7 +29,7 @@ class SOA extends RR {
     // RNAME (email of admin)  (escape . with \)
     this.isValidHostname('SOA', 'RNAME', val)
     this.isFullyQualified('SOA', 'RNAME', val)
-    if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.getRFCs()}`)
+    if (/@/.test(val)) throw new Error(`SOA rname replaces @ with a . (dot), ${this.citeRFC()}`)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('rname', val.toLowerCase())

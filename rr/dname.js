@@ -13,7 +13,7 @@ class DNAME extends RR {
     if (!val) throw new Error('DNAME: target is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`DNAME: target must be a domain name, RFC ${this.getRFCs()}`)
+      throw new Error(`DNAME: target must be a domain name, ${this.citeRFC()}`)
 
     this.isFullyQualified('DNAME', 'target', val)
     this.isValidHostname('DNAME', 'target', val)
