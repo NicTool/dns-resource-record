@@ -83,8 +83,7 @@ class TXT extends RR {
 
   /******  EXPORTERS   *******/
   toBind (zone_opts) {
-    const data = asQuotedStrings(this.get('data'))
-    return `${this.getPrefix(zone_opts)}\t"${data}"\n`
+    return `${this.getPrefix(zone_opts)}\t"${asQuotedStrings(this.get('data'))}"\n`
   }
 
   toMaraDNS () {
@@ -114,6 +113,8 @@ function asQuotedStrings (data) {
   if (data.length > 255) {
     return data.match(/(.{1,255})/g).join('" "')
   }
+
+  return data
 }
 
 module.exports = TXT
