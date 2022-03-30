@@ -1,6 +1,6 @@
 {
   "name": "dns-resource-record",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "DNS Resource Records",
   "main": "rr/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/nictool/dns-resource-record.git"
+    "url": "git+ssh://git@github.com/NicTool/dns-resource-record.git"
   },
   "keywords": [
     "DNS",
@@ -28,9 +28,9 @@
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/nictool/dns-resource-record/issues"
+    "url": "https://github.com/NicTool/dns-resource-record/issues"
   },
-  "homepage": "https://github.com/nictool/dns-resource-record#readme",
+  "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "devDependencies": {
     "eslint": "^8.11.0",
     "mocha": "^9.2.2"
