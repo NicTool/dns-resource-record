@@ -264,18 +264,35 @@ class RR extends Map {
   }
 
   isValidHostname (type, field, hostname) {
-    if (!/[^a-zA-Z0-9\-._/\\]/.test(hostname)) return true
-    throw new Error(`${type}, ${field} has invalid hostname characters`)
+    const allowed = new RegExp(/[^a-zA-Z0-9\-._/\\]/)
+    if (!allowed.test(hostname)) return true
+
+    const matches = allowed.exec(hostname)
+    throw new Error(`${type}, ${field} has invalid hostname character (${matches[0]})`)
   }
 
   toBind (zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
   }
+
+  toMaraDNS () {
+    const type = this.get('type')
+    const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(/\s+/g)
+    if (!supportedTypes.includes(type)) return this.toMaraGeneric()
+    // console.log(supportedTypes)
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')} ~\n`
+  }
+
+  toMaraGeneric () {
+    // throw new Error(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields().map(f => this.getQuoted(f)).join(' ')}' ~\n`
+  }
 }
 
 module.exports = {
   RR,
-  TINYDNS: require('../lib/tinydns'),
+  TINYDNS  : require('../lib/tinydns'),
+  TYPE_MAP: {},
 }
 
 const files = fs.readdirSync(path.join(__dirname))
@@ -283,5 +300,8 @@ for (let f of files) {
   if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
   if (f === 'index') continue
-  module.exports[f.toUpperCase()] = require(`./${f}`)
+  const rrTypeName = f.toUpperCase()
+  module.exports[rrTypeName] = require(`./${f}`)
+  const inst = new module.exports[rrTypeName](null)
+  module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
 }

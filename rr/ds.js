@@ -10,7 +10,7 @@ class DS extends RR {
   setKeyTag (val) {
     // a 2 octet Key Tag field...in network byte order
     if (!val) throw new Error(`DS: key tag is required`)
-    if (val.length > 2) throw new Error(`DS: key tag is too long, see ${this.getRFCs()}`)
+    if (val.length > 2) throw new Error(`DS: key tag is too long, see RFC ${this.getRFCs()}`)
 
     this.set('key tag', val)
   }
@@ -18,19 +18,19 @@ class DS extends RR {
   setAlgorithm (val) {
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`DS: algorithm invalid, see ${this.getRFCs()}`)
+      throw new Error(`DS: algorithm invalid, see RFC ${this.getRFCs()}`)
 
     this.set('algorithm', val)
   }
 
   setDigestType (val) {
-    if (![ 1,2 ].includes(val)) throw new Error(`DS: digest type invalid, see ${this.getRFCs()}`)
+    if (![ 1,2 ].includes(val)) throw new Error(`DS: digest type invalid, see RFC ${this.getRFCs()}`)
 
     this.set('digest type', val)
   }
 
   setDigest (val) {
-    if (!val) throw new Error(`DS: digest is required, see ${this.getRFCs()}`)
+    if (!val) throw new Error(`DS: digest is required, see RFC ${this.getRFCs()}`)
 
     this.set('digest', val)
   }

@@ -10,7 +10,7 @@ class RRSIG extends RR {
   setTypeCovered (val) {
     // a 2 octet Type Covered field
     if (!val) throw new Error(`RRSIG: 'type covered' is required`)
-    if (val.length > 2) throw new Error(`RRSIG: 'type covered' is too long, see ${this.getRFCs()}`)
+    if (val.length > 2) throw new Error(`RRSIG: 'type covered' is too long, see RFC ${this.getRFCs()}`)
 
     this.set('type covered', val)
   }
@@ -19,7 +19,7 @@ class RRSIG extends RR {
     // a 1 octet Algorithm field
     // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`RRSIG: algorithm invalid, see ${this.getRFCs()}`)
+      throw new Error(`RRSIG: algorithm invalid, see RFC ${this.getRFCs()}`)
 
     this.set('algorithm', val)
   }

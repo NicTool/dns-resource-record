@@ -42,7 +42,7 @@ class NAPTR extends RR {
 
   setFlags (val) {
     if (![ '', 'S', 'A', 'U', 'P' ].includes(val))
-      throw new Error (`NAPTR flags are invalid: ${this.getRFCs()}`)
+      throw new Error (`NAPTR flags are invalid, RFC: ${this.getRFCs()}`)
 
     this.set('flags', val)
   }
@@ -75,11 +75,11 @@ class NAPTR extends RR {
       preference: TINYDNS.octalToUInt16(rdata.substr(8, 8)),
     }
     /*
-  TODO: incomplete, need to remove octal escapes from regexp
-'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
-':cid.urn.arpa:35:
-\000\144\000\012\000\000\040!^urn\072cid\072.+@([^\134.]+\134.)(.*)$!\x02!i\001.``000:86400::'
-*/
+    TODO: incomplete, need to remove octal escapes from regexp
+    'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
+    ':cid.urn.arpa:35:
+    \000\144\000\012\000\000\040!^urn\072cid\072.+@([^\134.]+\134.)(.*)$!\x02!i\001.``000:86400::'
+    */
 
     let idx = 16
     const flagsLength = TINYDNS.octalToUInt8(rdata.substr(idx, 4))

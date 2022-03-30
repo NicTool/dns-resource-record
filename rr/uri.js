@@ -21,7 +21,7 @@ class URI extends RR {
   }
 
   setTarget (val) {
-    if (!val) throw new Error(`URI: target is required: ${this.getRFCs()}`)
+    if (!val) throw new Error(`URI: target is required, RFC ${this.getRFCs()}`)
 
     this.set('target', val)
   }

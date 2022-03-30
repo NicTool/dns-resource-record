@@ -140,6 +140,10 @@ ${numFields.map(f => '\t\t' + this.get(f) + this.getComment(f) + '\n').join('')}
 \n`
   }
 
+  toMaraDNS () {
+    return `${this.get('owner')}\t SOA\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')} ~\n`
+  }
+
   toTinydns () {
     return `Z${this.getTinyFQDN('owner')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
   }

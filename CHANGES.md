@@ -2,11 +2,15 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.9.7 - 2022-03-27
+#### 0.9.7 - 2022-03-29
 
-- index: previousName -> previousOwner
+- index
+    - previousName -> previousOwner
+    - export a TYPE_MAP (id => name)
 - isValidHostname: allow \ char
-
+- add the word 'RFC' in error messages citing RFCs
+- when rejecting hostname, show the rejected character
+- maradns: add export support
 
 
 #### 0.9.6 - 2022-03-27

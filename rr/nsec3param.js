@@ -11,7 +11,7 @@ class NSEC3PARAM extends RR {
   setHashAlgoritm (val) {
     // Hash Algorithm is a single octet.
     // The Hash Algorithm field is represented as an unsigned decimal integer.
-    if (!val) throw new Error(`NSEC3PARAM: 'hash algorithm' is required: ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3PARAM: 'hash algorithm' is required, RFC ${this.getRFCs()}`)
 
     this.is8bitInt(val)
 
@@ -20,7 +20,7 @@ class NSEC3PARAM extends RR {
 
   setFlags (val) {
     // The Flags field is represented as an unsigned decimal integer.
-    if (!val) throw new Error(`NSEC3PARAM: 'flags' is required: ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3PARAM: 'flags' is required, RFC ${this.getRFCs()}`)
 
     this.is8bitInt(val)
 
@@ -29,7 +29,7 @@ class NSEC3PARAM extends RR {
 
   setIterations (val) {
     // The Iterations field is represented as an unsigned decimal integer. 0-65535
-    if (!val) throw new Error(`NSEC3PARAM: 'iterations' is required: ${this.getRFCs()}`)
+    if (!val) throw new Error(`NSEC3PARAM: 'iterations' is required, RFC ${this.getRFCs()}`)
 
     this.is16bitInt(val)
 

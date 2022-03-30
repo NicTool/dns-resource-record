@@ -83,24 +83,13 @@ class TXT extends RR {
 
   /******  EXPORTERS   *******/
   toBind (zone_opts) {
-    let data = this.get('data')
-
-    // BIND croaks when any string in the TXT RR data is longer than 255
-    if (Array.isArray(data)) {
-      let hasTooLong = false
-      for (const str of data) {
-        if (str.length > 255) hasTooLong = true
-      }
-      data = hasTooLong ? data.join('').match(/(.{1,255})/g).join('" "') : data.join('" "')
-    }
-    else {
-      if (data.length > 255) {
-        // BIND croaks when any string in the TXT RR data is longer than 255
-        data = data.match(/(.{1,255})/g).join('" "')
-      }
-    }
-
+    const data = asQuotedStrings(this.get('data'))
     return `${this.getPrefix(zone_opts)}\t"${data}"\n`
+  }
+
+  toMaraDNS () {
+    const data = asQuotedStrings(this.get('data')).replace(/"/g, "'")
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
   toTinydns () {
@@ -108,6 +97,22 @@ class TXT extends RR {
     if (Array.isArray(data)) data = data.join('')
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
     return `'${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
+  }
+}
+
+function asQuotedStrings (data) {
+
+  // BIND croaks when any string in the TXT RR data is longer than 255
+  if (Array.isArray(data)) {
+    let hasTooLong = false
+    for (const str of data) {
+      if (str.length > 255) hasTooLong = true
+    }
+    return hasTooLong ? data.join('').match(/(.{1,255})/g).join('" "') : data.join('" "')
+  }
+
+  if (data.length > 255) {
+    return data.match(/(.{1,255})/g).join('" "')
   }
 }
 
