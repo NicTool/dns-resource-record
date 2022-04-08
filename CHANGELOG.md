@@ -2,10 +2,12 @@
 #### 1.N.N - YYYY-MM-DD
 
 
-#### 0.9.8 - 2022-03-NN
+#### 0.9.8 - 2022-04-07
 
--
--
+- url updates
+- fix: txt records
+- feat: add index.citeRFC
+- docs: updates
 
 
 #### 0.9.7 - 2022-03-29
