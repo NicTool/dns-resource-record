@@ -36,13 +36,13 @@ update_changes() {
 -
 EO_CHANGE
 
-    sed -i '' -e "/#### 1.N.N.*$/r .release/new.txt" CHANGES.md
+    sed -i '' -e "/#### 1.N.N.*$/r .release/new.txt" CHANGELOG.md
     rm .release/new.txt
 }
 
 update_changes
 
-if command -v open; then open CHANGES.md; fi
+if command -v open; then open CHANGELOG.md; fi
 
 echo
 echo "AFTER editing changes, run: .release/push.sh"

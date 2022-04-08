@@ -1,5 +1,5 @@
-[![Module Tests](https://github.com/nictool/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/nictool/dns-resource-record/actions/workflows/ci-test.yml)
-[![Coverage Status](https://coveralls.io/repos/github/nictool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/nictool/dns-resource-record?branch=master)
+[![Module Tests](https://github.com/NicTool/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/NicTool/dns-resource-record/actions/workflows/ci-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-resource-record?branch=master)
 
 # dns-resource-record
 
@@ -23,7 +23,9 @@ This module is used to:
     - JS object
     - JSON
 
-This module intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/nictool/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
+This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
+
+This package is for working with _individual_ Resource Records. If you're working with batches of RRs, have a look at [dns-zone](https://github.com/NicTool/dns-zone).
 
 
 ## USAGE
@@ -228,14 +230,14 @@ PRs are welcome, especially PRs with tests.
 
 - Domain owner names are:
     - stored fully qualified, aka absolute.
-    - normalized to lower case
+    - normalized to lower case, because:
         - DNS is case insensitive (see RFCs 4343, 1035, 1034)
         - this library enforces duplicate suppression
         - DNSSEC canonicalization (see RFC 4034)
         - wire format for most RRs require it
     - Master Zone File expansions exist at another level
-- fromBIND is regex based and is naive. [dns-zone](https://github.com/nictool/dns-zone) has a much more robust parser.
-- toBind output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/nictool/dns-zone) package.
+- fromBIND is regex based and is naive. [dns-zone](https://github.com/NicTool/dns-zone) has a much more robust parser.
+- to{Bind|MaraDNS} output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/NicTool/dns-zone) package.
 
 
 ## DEFINITIONS
@@ -258,6 +260,11 @@ PRs are welcome, especially PRs with tests.
     - examples: A, MX, SOA, PTR
 - rdata: resource data. The contents vary widely by type
     - examples: A records have an address, CNAME records bear a cname target, NS records point to nameservers (nsdname).
+
+
+## SEE ALSO
+
+- [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
 
 
 ## TODO

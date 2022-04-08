@@ -2,6 +2,14 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.8 - 2022-04-07
+
+- url updates
+- fix: txt records
+- feat: add index.citeRFC
+- docs: updates
+
+
 #### 0.9.7 - 2022-03-29
 
 - index
@@ -11,6 +19,7 @@
 - add the word 'RFC' in error messages citing RFCs
 - when rejecting hostname, show the rejected character
 - maradns: add export support
+- add index.citeRFC
 
 
 #### 0.9.6 - 2022-03-27
@@ -18,7 +27,7 @@
 - rr\*: rename name -> owner (not overloaded)
 - RFC 4034: letters in DNS names are lower cased
 - README: added definitions
-- repo: move from msimerson -> nictool org
+- repo: move from msimerson -> NicTool org
 - add macos testing
 - add CERT, KEY, NSEC, NSEC3, NSEC3PARAM, OPENPGPKEY, SIG
 

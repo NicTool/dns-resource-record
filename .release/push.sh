@@ -7,7 +7,7 @@ if branch_is_master; then exit; fi
 VERSION=$(node -e 'console.log(require("./package.json").version)')
 
 git add package.json
-git add CHANGES.md
+git add CHANGELOG.md
 
 git commit -m "Release v$VERSION"
 
