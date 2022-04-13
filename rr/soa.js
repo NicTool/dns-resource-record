@@ -106,16 +106,12 @@ class SOA extends RR {
   }
 
   fromBind (str) {
-    /*
-       $TTL 3600
-       $ORIGIN example.com
-       example.com  IN  SOA mname rname ( serial refresh retry expire minimum )
-    */
-    const [ , ttl, , owner, , c, type, mname, rname, , serial, refresh, retry, expire, minimum ] = str.split(/\s+/)
+    // example.com  IN  SOA mname rname serial refresh retry expire minimum
+    const [ owner, c, type, mname, rname, serial, refresh, retry, expire, minimum ] = str.split(/[\s+]/)
 
     const bits = {
       owner,
-      ttl    : parseInt(ttl    , 10),
+      ttl    : parseInt(minimum, 10),
       class  : c,
       type,
       mname,
@@ -133,11 +129,7 @@ class SOA extends RR {
   /******  EXPORTERS   *******/
   toBind (zone_opts) {
     const numFields = [ 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
-    return `$TTL\t${this.get('ttl')}${this.getComment('ttl')}
-$ORIGIN\t${this.getFQDN('owner')}${this.getComment('origin')}
-${this.getFQDN('owner', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)} (
-${numFields.map(f => '\t\t' + this.get(f) + this.getComment(f) + '\n').join('')}\t\t)
-\n`
+    return `${this.getFQDN('owner', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)}${numFields.map(f => '\t' + this.get(f) ).join('')}\n`
   }
 
   toMaraDNS () {

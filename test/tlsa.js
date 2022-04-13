@@ -5,12 +5,12 @@ const base = require('./base')
 
 const TLSA = require('../rr/tlsa')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'TLSA' }
+
 const validRecords = [
   {
-    class                         : 'IN',
+    ...defaults,
     owner                         : '_443._tcp.www.example.com.',
-    type                          : 'TLSA',
-    ttl                           : 3600,
     'certificate usage'           : 0,
     selector                      : 0,
     'matching type'               : 1,
@@ -19,10 +19,8 @@ const validRecords = [
     // testT              : '',
   },
   {
-    class                         : 'IN',
+    ...defaults,
     owner                         : '_443._tcp.www.example.com.',
-    type                          : 'TLSA',
-    ttl                           : 3600,
     'certificate usage'           : 1,
     selector                      : 1,
     'matching type'               : 2,
@@ -34,14 +32,16 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    // owner    : 'test.example.com',
+    ...defaults,
+    owner   : 'test.example.com.',
     selector: 6,  // invalid
+    msg     : /RFC/,
   },
 ]
 
 describe('TLSA record', function () {
   base.valid(TLSA, validRecords)
-  base.invalid(TLSA, invalidRecords, { ttl: 3600 })
+  base.invalid(TLSA, invalidRecords)
 
   base.getDescription(TLSA)
   base.getRFCs(TLSA, validRecords[0])

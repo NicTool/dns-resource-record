@@ -17,9 +17,9 @@ class RR extends Map {
     this.setTimestamp(opts?.timestamp)
 
     this.setOwner(opts?.owner)
+    this.setType (opts?.type)
     this.setTtl  (opts?.ttl)
     this.setClass(opts?.class)
-    this.setType (opts?.type)
 
     for (const f of this.getFields('rdata')) {
       const fnName = `set${this.ucfirst(f)}`

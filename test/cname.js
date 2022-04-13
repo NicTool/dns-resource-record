@@ -5,13 +5,13 @@ const base = require('./base')
 
 const CNAME = require('../rr/cname')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'CNAME' }
+
 const validRecords = [
   {
-    class: 'IN',
+    ...defaults,
     owner: 'ns1.example.com.',
-    type : 'CNAME',
     cname: 'ns2.example.com.',
-    ttl  : 3600,
     testB: 'ns1.example.com.\t3600\tIN\tCNAME\tns2.example.com.\n',
     testT: 'Cns1.example.com:ns2.example.com.:3600::\n',
   },
@@ -19,11 +19,10 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class: 'IN',
-    owner: 'example.com',
-    type : 'CNAME',
+    ...defaults,
+    owner: 'example.com.',
     cname: '192.0.2.4',  // FQDN required
-    ttl  : 3600,
+    msg  : /cname must be a FQDN/,
   },
 ]
 

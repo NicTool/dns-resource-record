@@ -4,30 +4,28 @@
 const A    = require('../rr/a.js')
 const base = require('./base')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'A' }
+
 const validRecords = [
   {
+    ...defaults,
     owner  : 'test.example.com.',
-    ttl    : 3600,
-    class  : 'IN',
-    type   : 'A',
     address: '192.0.2.127',
     testB  : 'test.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:3600::\n',
   },
   {
+    ...defaults,
     owner  : 'test.example.com.',
     ttl    : 2147483647,
-    class  : 'IN',
-    type   : 'A',
     address: '192.0.2.127',
     testB  : 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
     testT  : '+test.example.com:192.0.2.127:2147483647::\n',
   },
   {
+    ...defaults,
     owner  : 'a.',
     ttl    : 86400,
-    class  : 'IN',
-    type   : 'A',
     address: '192.0.2.127',
     testB  : 'a.\t86400\tIN\tA\t192.0.2.127\n',
     testT  : '+a:192.0.2.127:86400::\n',
@@ -36,6 +34,7 @@ const validRecords = [
 
 const moreValid = [
   {
+    ...defaults,
     owner: '*.example.com.',
     testB: '*.example.com.\t3600\tIN\tA\t192.0.2.127\n',
     testT: '+*.example.com:192.0.2.127:3600::\n',
@@ -49,24 +48,21 @@ for (let i = 0; i < moreValid.length; i++) {
 }
 
 const invalidRecords = [
-  { owner: '' },
-  { owner: 'something*' },
-  { owner: 'some*thing' },
-  { owner: '*something' },
-  { owner: 'something.*' },
-  { owner: 'a.m.' },
-  { owner: 'something.test.' },
-  { address: 'hosts.not.valid.here' },
-  { address: '' },
-  { address: undefined },
-  { address: '1.x.2.3' },
-  { address: '.1.2.3' },
-  { address: '0.0.0.0' },
-  { type: '' },
-  { type: undefined },
-  { ttl: ''   },
-  { ttl: -299 },
-  { ttl: 2147483648 },
+  { ...defaults, owner: '', msg: /RFC/ },
+  { ...defaults, owner: 'something*', msg: /fully/ },
+  { ...defaults, owner: 'some*thing', msg: /fully/ },
+  { ...defaults, owner: '*something', msg: /fully/ },
+  { ...defaults, owner: 'something.*', msg: /fully/ },
+  { ...defaults, address: 'hosts.not.valid.here', msg: /address must be IPv4/ },
+  { ...defaults, address: '', msg: /address is required/ },
+  { ...defaults, address: undefined, msg: /address is required/ },
+  { ...defaults, address: '1.x.2.3', msg: /address must be IPv4/ },
+  { ...defaults, address: '.1.2.3', msg: /address must be IPv4/ },
+  { ...defaults, type: '', msg: /not supported/ },
+  { ...defaults, type: undefined, msg: /type undefined not supported/ },
+  { ...defaults, ttl: '', msg: /TTL must be numeric/ },
+  { ...defaults, ttl: -299, msg: /TTL must be a 32-bit integer/ },
+  { ...defaults, ttl: 2147483648, msg: /TTL must be a 32-bit integer/ },
 ]
 
 // copy invalid properties to a valid object

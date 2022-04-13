@@ -4,13 +4,13 @@ const assert = require('assert')
 const base = require('./base')
 const AAAA = require('../rr/aaaa.js')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'AAAA' }
+
 const validRecords = [
   {
-    class  : 'IN',
+    ...defaults,
     owner  : 'test.example.com.',
-    type   : 'AAAA',
     address: '2001:0db8:0020:000a:0000:0000:0000:0004',
-    ttl    : 3600,
     testB  : 'test.example.com.\t3600\tIN\tAAAA\t2001:db8:20:a::4\n',
     testT  : ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:3600::\n',
   },
@@ -18,11 +18,10 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class  : 'IN',
-    owner  : 'test.example.com',
-    type   : 'AAAA',
+    ...defaults,
+    owner  : 'test.example.com.',
     address: '192.0.2.204',
-    ttl    : 3600,
+    msg    : /address must be IPv6/,
   },
 ]
 

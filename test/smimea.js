@@ -5,11 +5,12 @@ const base = require('./base')
 
 const SMIMEA = require('../rr/tlsa')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'SMIMEA' }
+
 const validRecords = [
   {
-    class                         : 'IN',
+    ...defaults,
     owner                         : '_443._tcp.www.example.com.',
-    type                          : 'SMIMEA',
     ttl                           : 3600,
     'certificate usage'           : 0,
     selector                      : 0,
@@ -22,14 +23,16 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    // owner    : 'test.example.com',
+    ...defaults,
+    owner   : 'test.example.com.',
     selector: 6,  // invalid
+    msg     : /certificate usage invalid/,
   },
 ]
 
 describe('SMIMEA record', function () {
-  base.valid(SMIMEA, validRecords, { ttl: 3600 })
-  base.invalid(SMIMEA, invalidRecords, { ttl: 3600 })
+  base.valid(SMIMEA, validRecords)
+  base.invalid(SMIMEA, invalidRecords)
 
   base.getDescription(SMIMEA)
   base.getRFCs(SMIMEA, validRecords[0])

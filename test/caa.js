@@ -38,26 +38,42 @@ const validRecords = [
     testB: 'example.net.\t86400\tIN\tCAA\t0\tissuewild\t"https://letsencrypt.org"\n',
     testT: ':example.net:257:\\000\\011issuewild"https\\072\\057\\057letsencrypt.org":86400::\n',
   },
+  {
+    owner: 'certs.example.com.',
+    ttl  : 86400,
+    type : 'CAA',
+    flags: 0,
+    tag  : 'issue',
+    value: 'ca1.example.net',
+    testB: 'certs.example.com.\t86400\tIN\tCAA\t0\tissue\t"ca1.example.net"\n',
+    testT: ':certs.example.com:257:\\000\\005issue"ca1.example.net":86400::\n',
+  },
 ]
 
 const invalidRecords = [
   {
-    owner: 'example.com',
+    owner: 'example.com.',
+    type : 'CAA',
     flags: 128,
-    tag  : 'issue',
+    tag  : 'iodef',
     value: 'letsencrypt.org', // missing iodef prefix
+    msg  : /RFC/,
   },
   {
-    owner: 'example.com',
+    owner: 'example.com.',
+    type : 'CAA',
     flags: 128,
     tag  : 'invalid', // invalid
     value: 'http://letsencrypt.org',
+    msg  : /RFC/,
   },
   {
-    owner: 'example.com',
+    owner: 'example.com.',
+    type : 'CAA',
     flags: 15,  // invalid
     tag  : 'issue',
     value: 'http://letsencrypt.org',
+    msg  : /RFC/,
   },
 ]
 
