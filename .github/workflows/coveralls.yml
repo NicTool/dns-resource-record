@@ -5,6 +5,7 @@ name: Coverage
 
 env:
   CI: true
+  node_version: 14
 
 jobs:
 
@@ -19,18 +20,18 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Use Node.js 14
+    - name: Use Node.js ${{ env.node_version }}
       uses: actions/setup-node@master
       with:
-        node-version: 14
+        node-version: ${{ env.node_version }}
 
     - name: npm install
       run: |
         npm install
-        npm install --no-save nyc codecov
+        npm install --no-save c8 codecov
 
     - name: run coverage
-      run: npx nyc --reporter=lcovonly npm run test
+      run: npx c8 --reporter=lcovonly npm run test
       env:
         NODE_ENV: cov
 

@@ -7,8 +7,8 @@ on:
       - master
 
 env:
-  node_version: 14
   CI: true
+  node_version: 14
 
 jobs:
 
@@ -22,18 +22,16 @@ jobs:
           fetch-depth: 0
 
       - name: Setup node.js ${{ env.node_version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.node_version }}
           registry-url: https://registry.npmjs.org/
 
       - run: npm install
 
-      - name: Run tests
-        run: npm run test
+      - run: npm run test
 
-      - name: publish to NPM
-        run: npm publish --access public
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
@@ -43,8 +41,8 @@ jobs:
 
       - name: run coverage
         run: |
-          npm install --no-save nyc codecov
-          npx nyc --reporter=lcovonly npm run test
+          npm install --no-save c8 codecov
+          npx c8 --reporter=lcovonly npm run test
         env:
          NODE_ENV: cov
 
