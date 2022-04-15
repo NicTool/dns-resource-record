@@ -41,9 +41,11 @@ class CAA extends RR {
     }
 
     // check if val starts with one of iodefSchemes
-    const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
-    if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
-      throw new Error(`CAA value must have valid iodefScheme prefix, ${this.citeRFC()}`)
+    if (this.get('tag') === 'iodef') {
+      const iodefSchemes = [ 'mailto:', 'http:', 'https:' ]
+      if (!iodefSchemes.filter(s => val.startsWith(s)).length) {
+        throw new Error(`CAA value must have valid iodefScheme prefix, ${this.citeRFC()}`)
+      }
     }
 
     this.set('value', val)
@@ -96,7 +98,10 @@ class CAA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const [ owner, ttl, c, type, flags, tag ] = str.split(/\s+/)
+    const fields = str.match(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[^\s]+?)\s*$/i)
+    if (!fields) throw new Error(`unable to parse: ${str}`)
+
+    const [ owner, ttl, c, type, flags, tag, value ] = fields.slice(1)
     return new this.constructor({
       owner,
       ttl  : parseInt(ttl, 10),
@@ -104,7 +109,7 @@ class CAA extends RR {
       type,
       flags: parseInt(flags, 10),
       tag,
-      value: str.split(/\s+/).slice(6).join(' ').trim(),
+      value,
     })
   }
 

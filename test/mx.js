@@ -5,21 +5,20 @@ const base = require('./base')
 
 const MX = require('../rr/mx')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'MX', preference: 0 }
+
 const validRecords = [
   {
+    ...defaults,
     owner     : 'test.example.com.',
-    class     : 'IN',
-    type      : 'MX',
-    ttl       : 3600,
     preference: 0,
     exchange  : 'mail.example.com.',
     testB     : 'test.example.com.\t3600\tIN\tMX\t0\tmail.example.com.\n',
     testT     : '@test.example.com::mail.example.com:0:3600::\n',
   },
   {
+    ...defaults,
     owner     : 'www.example.com.',
-    class     : 'IN',
-    type      : 'MX',
     ttl       : 86400,
     preference: 0,
     exchange  : '.', // null MX, RFC 7505
@@ -30,24 +29,28 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner   : 'test.example.com',
+    ...defaults,
+    owner   : 'test.example.com.',
     exchange: 'not-full-qualified.example.com',
+    msg     : /exchange must be fully qualified/,
   },
   {
-    owner   : 'test.example.com',
+    ...defaults,
+    owner   : 'test.example.com.',
     exchange: '192.0.2.1',
+    msg     : /exchange must be a FQDN/,
   },
   {
-    owner   : 'test.example.com',
+    ...defaults,
+    owner   : 'test.example.com.',
     exchange: '-blah',
+    msg     : /exchange must be fully qualified/,
   },
 ]
 
-const defaults = { ttl: 3600, preference: 0 }
-
 describe('MX record', function () {
   base.valid(MX, validRecords)
-  base.invalid(MX, invalidRecords, defaults)
+  base.invalid(MX, invalidRecords)
 
   base.getDescription(MX)
   base.getRFCs(MX, validRecords[0])

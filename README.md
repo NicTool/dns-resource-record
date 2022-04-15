@@ -235,35 +235,13 @@ PRs are welcome, especially PRs with tests.
         - this library enforces duplicate suppression
         - DNSSEC canonicalization (see RFC 4034)
         - wire format for most RRs require it
-    - Master Zone File expansions exist at another level
-- fromBIND is regex based and is naive. [dns-zone](https://github.com/NicTool/dns-zone) has a much more robust parser.
+    - Master Zone File expansions exist in [dns-zone](https://github.com/NicTool/dns-zone)
 - to{Bind|MaraDNS} output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/NicTool/dns-zone) package.
-
-
-## DEFINITIONS
-
-- Resource Record: structured data associated with names / nodes
-    - format: owner ttl class type rdata
-    - example: www.example.com 3600 IN A 192.0.2.127
-- owner [name]:
-    - a node in the domain name tree
-    - consists of a sequence of labels
-    - format: node.zone.tld.
-        - the right most label is null, aka the root
-        - the 2nd from right is the top level domain
-        - the 3rd from right is the [organizational] domain name
-- label: character strings between the dots in a domain name
-- ttl: time to live
-    - how long to cache this DNS resource record
-- class: IN, internet.
-- type: the type of rdata the follows
-    - examples: A, MX, SOA, PTR
-- rdata: resource data. The contents vary widely by type
-    - examples: A records have an address, CNAME records bear a cname target, NS records point to nameservers (nsdname).
 
 
 ## SEE ALSO
 
+- [Dictionary of DNS terms](https://nictool.github.io/web/Dictionary)
 - [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
 
 
@@ -275,20 +253,17 @@ PRs are welcome, especially PRs with tests.
 - [x] add defaults for empty values like TTL
 - [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
 - [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
-- [ ] APL, KX, DHCID, HIP, RP, SVCB/HTTPS
-- [ ] add toWire, exports in wire/network format
 - [x] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
       NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
-- [ ] LOC record ingest/out isn't consistent with API
-- [ ] handling unknown RR types: RFC 3597
+- [x] LOC record ingest/out isn't consistent with API
 - [ ] export a web page for each RR type
 
 
 ## DEVELOP
 
 - this package has no dependencies. That's no accident.
-- eventually this will be used a node.js app & a browser based app
-    - so, ESM, eventually
-- CI tests are on linux, windows, and macos
+- this will be used by a node.js app & a browser based app
+    - [x] ES6 modules, eventually
+- [x] CI tests are on linux, windows, and macos

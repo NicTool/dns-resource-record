@@ -2,6 +2,16 @@
 #### 1.N.N - YYYY-MM-DD
 
 
+#### 0.9.9 - 2022-04-14
+
+- feat: parser improvements (DNSKEY, HINFO, NAPTR, SOA, TLSA, TXT)
+- CAA: more robust fromBind parser
+- SOA: leave $TTL and $ORIGIN to dns-zone
+- test/base: improve invalid tests, check error message against expected
+- test/rr: update tests with expected error messages
+- README: move some content to web links
+
+
 #### 0.9.8 - 2022-04-07
 
 - url updates

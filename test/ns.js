@@ -5,12 +5,12 @@ const base = require('./base')
 
 const NS = require('../rr/ns')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'NS' }
+
 const validRecords = [
   {
+    ...defaults,
     owner: 'example.com.',
-    ttl  : 3600,
-    class: 'IN',
-    type : 'NS',
     dname: 'ns1.example.com.',
     testB: 'example.com.\t3600\tIN\tNS\tns1.example.com.\n',
     testT: '&example.com::ns1.example.com:3600::\n',
@@ -19,14 +19,16 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner: 'example.com',
+    ...defaults,
+    owner: 'example.com.',
     dname: '1.2.3.4',  // FQDN required
+    msg  : /dname must be fully qualified/,
   },
 ]
 
 describe('NS record', function () {
   base.valid(NS, validRecords)
-  base.invalid(NS, invalidRecords, { ttl: 3600 })
+  base.invalid(NS, invalidRecords)
 
   base.getDescription(NS)
   base.getRFCs(NS, validRecords[0])

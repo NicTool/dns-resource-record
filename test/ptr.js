@@ -5,13 +5,13 @@ const base = require('./base')
 
 const PTR = require('../rr/ptr')
 
+const defaults = { class: 'IN', ttl: 86400, type: 'PTR' }
+
 const validRecords = [
   {
-    class: 'IN',
+    ...defaults,
     owner: '2.2.0.192.in-addr.arpa.',
-    type : 'PTR',
     dname: 'dhcp.example.com.',
-    ttl  : 86400,
     testB: '2.2.0.192.in-addr.arpa.\t86400\tIN\tPTR\tdhcp.example.com.\n',
     testT: '^2.2.0.192.in-addr.arpa:dhcp.example.com:86400::\n',
   },
@@ -19,11 +19,10 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    class: 'IN',
-    owner: 'example.com',
-    type : 'PTR',
+    ...defaults,
+    owner: 'example.com.',
     dname: '192.0.2.4',  // FQDN required
-    ttl  : 3600,
+    msg  : /dname must be fully qualified/,
   },
 ]
 

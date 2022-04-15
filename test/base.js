@@ -25,15 +25,12 @@ exports.invalid = (type, invalidRecords, defaults) => {
     for (const inv of invalidRecords) {
       if (defaults) inv.default = defaults
       it(`throws on record (${inv.owner})`, async function () {
-        try {
-          assert.deepEqual(new type(inv), null)
-        }
-        catch (e) {
-          if (process.env.DEBUG) console.error(e.message)
-          assert.ok(e)
-          return
-        }
-        throw new Error(`failed to throw`)
+        assert.throws(() => {
+          new type(inv)
+        },
+        {
+          message: inv.msg,
+        })
       })
     }
   })

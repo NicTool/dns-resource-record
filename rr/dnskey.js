@@ -60,7 +60,10 @@ class DNSKEY extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const [ owner, ttl, c, type, flags, protocol, algorithm ] = str.split(/\s+/)
+    const match = str.match(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+\s*(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse DNSKEY: ${str}`)
+    const [ owner, ttl, c, type, flags, protocol, algorithm, publickey ] = match.slice(1)
+
     return new this.constructor({
       owner,
       ttl      : parseInt(ttl, 10),
@@ -69,7 +72,7 @@ class DNSKEY extends RR {
       flags    : parseInt(flags,     10),
       protocol : parseInt(protocol, 10),
       algorithm: parseInt(algorithm,  10),
-      publickey: str.split(/\s+/).slice(7).join(' ').trim(),
+      publickey: publickey,
     })
   }
 

@@ -5,24 +5,22 @@ const base = require('./base')
 
 const HINFO = require('../rr/hinfo')
 
+const defaults = { class: 'IN', ttl: 86400, type: 'HINFO' }
+
 const validRecords = [
   {
-    class: 'IN',
-    type : 'HINFO',
+    ...defaults,
     owner: 'server-under-my-desk.example.com.',
     cpu  : 'PDP-11/73',
     os   : 'UNIX',
-    ttl  : 86400,
     testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
     // testT : ':server-under-my-desk:13: :86400::\n',
   },
   {
-    class: 'IN',
-    type : 'HINFO',
+    ...defaults,
     owner: 'sri-nic.arpa.',
     cpu  : 'DEC-2060',
     os   : 'TOPS20',
-    ttl  : 86400,
     testB: 'sri-nic.arpa.\t86400\tIN\tHINFO\t"DEC-2060"\t"TOPS20"\n',
     // testT : ':server-under-my-desk:13: :86400::\n',
   },
@@ -30,10 +28,10 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner  : 'www.example.com',
-    type   : 'HINFO',
+    ...defaults,
+    owner  : 'www.example.com.',
     address: '',
-    // ttl    : 3600,
+    msg    : /Cannot read proper/,
   },
 ]
 

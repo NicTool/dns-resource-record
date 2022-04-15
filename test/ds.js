@@ -5,12 +5,12 @@ const base = require('./base')
 
 const DS = require('../rr/ds')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'DS' }
+
 const validRecords = [
   {
+    ...defaults,
     owner        : 'dskey.example.com.',
-    class        : 'IN',
-    type         : 'DS',
-    ttl          : 3600,
     'key tag'    : 60485,
     algorithm    : 5,
     'digest type': 1,
@@ -22,14 +22,16 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner    : 'test.example.com',
+    ...defaults,
+    owner    : 'test.example.com.',
     algorithm: 6,  // invalid
+    msg      : /key tag is required/,
   },
 ]
 
 describe('DS record', function () {
   base.valid(DS, validRecords)
-  base.invalid(DS, invalidRecords, { ttl: 3600 })
+  base.invalid(DS, invalidRecords)
 
   base.getDescription(DS)
   base.getRFCs(DS, validRecords[0])

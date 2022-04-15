@@ -5,12 +5,12 @@ const base = require('./base')
 
 const DNSKEY = require('../rr/dnskey')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'DNSKEY' }
+
 const validRecords = [
   {
+    ...defaults,
     owner    : 'example.com.',
-    class    : 'IN',
-    ttl      : 3600,
-    type     : 'DNSKEY',
     flags    : 256,
     protocol : 3,
     algorithm: 5,
@@ -22,14 +22,16 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner    : 'test.example.com',
+    ...defaults,
+    owner    : 'test.example.com.',
     algorithm: 6,  // invalid
+    msg      : /flags invalid/,
   },
 ]
 
 describe('DNSKEY record', function () {
   base.valid(DNSKEY, validRecords)
-  base.invalid(DNSKEY, invalidRecords, { ttl: 3600 })
+  base.invalid(DNSKEY, invalidRecords)
 
   base.getDescription(DNSKEY)
   base.getRFCs(DNSKEY, validRecords[0])

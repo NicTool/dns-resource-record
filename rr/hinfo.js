@@ -9,12 +9,12 @@ class HINFO extends RR {
   /****** Resource record specific setters   *******/
   setCpu (val) {
     if (val.length > 255) throw new Error('HINFO cpu cannot exceed 255 chars')
-    this.set('cpu', val)
+    this.set('cpu', val.replace(/^["']|["']$/g, ''))
   }
 
   setOs (val) {
     if (val.length > 255) throw new Error('HINFO os cannot exceed 255 chars')
-    this.set('os', val)
+    this.set('os', val.replace(/^["']|["']$/g, ''))
   }
 
   getDescription () {
@@ -38,13 +38,11 @@ class HINFO extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  //   // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-  // }
-
   fromBind (str) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const [ owner, ttl, c, type, cpu, os ] = str.split(/\s+/)
+    const match = str.match(/([^\s]+)\s+([0-9]+)\s+(IN)\s+(HINFO)\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)/i)
+    if (!match) throw new Error(`unable to parse HINFO: ${str}`)
+    const [ owner, ttl, c, type, cpu, os ] = match.slice(1)
 
     const bits = {
       owner,
@@ -56,6 +54,10 @@ class HINFO extends RR {
     }
     return new this.constructor(bits)
   }
+
+  // fromTinydns (str) {
+  //   // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
+  // }
 
   /******  EXPORTERS   *******/
   // toTinydns () {

@@ -5,12 +5,12 @@ const base = require('./base')
 
 const SRV = require('../rr/srv')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'SRV' }
+
 const validRecords = [
   {
     owner   : '_imaps._tcp.example.com.',
-    ttl     : 3600,
-    class   : 'IN',
-    type    : 'SRV',
+    ...defaults,
     priority: 1,
     weight  : 0,
     port    : 993,
@@ -22,18 +22,22 @@ const validRecords = [
 
 const invalidRecords = [
   {
-    owner : 'test.example.com',
+    ...defaults,
+    owner : 'test.example.com.',
     target: 'not-full-qualified.example.com',
+    msg   : /must be a 16-bit integer/,
   },
   {
-    owner : 'test.example.com',
+    ...defaults,
+    owner : 'test.example.com.',
     target: '192.168.0.1',
+    msg   : /must be a 16-bit integer/,
   },
 ]
 
 describe('SRV record', function () {
   base.valid(SRV, validRecords)
-  base.invalid(SRV, invalidRecords, { ttl: 3600 })
+  base.invalid(SRV, invalidRecords)
 
   base.getDescription(SRV)
   base.getRFCs(SRV, validRecords[0])

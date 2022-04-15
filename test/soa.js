@@ -5,11 +5,12 @@ const base = require('./base')
 
 const SOA = require('../rr/soa')
 
+const defaults = { class: 'IN', ttl: 3600, type: 'SOA' }
+
 const validRecords = [
   {
-    class  : 'IN',
+    ...defaults,
     owner  : 'example.com.',
-    type   : 'SOA',
     mname  : 'ns1.example.com.',
     rname  : 'matt.example.com.',
     serial : 1,
@@ -17,32 +18,35 @@ const validRecords = [
     retry  : 3600,
     expire : 1209600,
     minimum: 3600,
-    ttl    : 3600,
-    testB  : `$TTL\t3600
-$ORIGIN\texample.com.
-example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com. (
-\t\t1
-\t\t7200
-\t\t3600
-\t\t1209600
-\t\t3600
-\t\t)\n\n`,
-    testT: 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+    testB  : `example.com.\t3600\tIN\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
+    testT  : 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+  },
+  {
+    ...defaults,
+    owner  : '2.example.com.',
+    mname  : 'ns2.example.com.',
+    rname  : 'matt.example.com.',
+    serial : 1,
+    refresh: 7200,
+    retry  : 3600,
+    expire : 1209600,
+    minimum: 3600,
+    testB  : `2.example.com.\t3600\tIN\tSOA\tns2.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
+    testT  : 'Z2.example.com:ns2.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
 ]
 
 const invalidRecords = [
   {
-    owner  : 'example.com',
-    ttl    : 3600,
-    class  : 'IN',
-    type   : 'SOA',
+    ...defaults,
+    owner  : 'example.com.',
     mname  : 'ns1.example.com.',
     rname  : 'matt.example.com.',
     serial : 4294967296,
     refresh: 7200,
     retry  : 3600,
     expire : 1209600,
+    msg    : /serial must be a 32-bit integer/,
   },
 ]
 
