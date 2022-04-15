@@ -9,8 +9,8 @@ class RR extends Map {
 
     if (opts.default) this.default = opts.default
 
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
     if (opts.bindline) return this.fromBind(opts.bindline)
+    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
 
     // tinydns specific
     this.setLocation(opts?.location)
@@ -283,7 +283,6 @@ class RR extends Map {
     const type = this.get('type')
     const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(/\s+/g)
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    // console.log(supportedTypes)
     return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')} ~\n`
   }
 

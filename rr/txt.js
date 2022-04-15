@@ -71,13 +71,16 @@ class TXT extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  TXT  "..."
-    const [ owner, ttl, c, type ] = str.split(/\s+/)
+    const match = str.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse TXT: ${str}`)
+    const [ owner, ttl, c, type, rdata ] = match.slice(1)
+
     return new this.constructor({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,
       type,
-      data : str.match(/"([^"]+?)"/g).map(s => s.replace(/^"|"$/g, '')).join(''),
+      data : rdata.match(/"([^"]+?)"/g).map(s => s.replace(/^"|"$/g, '')).join(''),
     })
   }
 

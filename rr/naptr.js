@@ -41,10 +41,10 @@ class NAPTR extends RR {
   }
 
   setFlags (val) {
-    if (![ '', 'S', 'A', 'U', 'P' ].includes(val))
+    if (![ '', 'S', 'A', 'U', 'P' ].includes(val.toUpperCase()))
       throw new Error (`NAPTR flags are invalid, ${this.citeRFC()}`)
 
-    this.set('flags', val)
+    this.set('flags', val.toUpperCase())
   }
 
   setService (val) {
@@ -113,9 +113,9 @@ class NAPTR extends RR {
       type       : type,
       order      : parseInt(order, 10),
       preference : parseInt(preference, 10),
-      flags      : flags.trim().replace(/^"|"$/g, ''),
-      service    : service.trim().replace(/^"|"$/g, ''),
-      regexp     : regexp.trim().replace(/^"|"$/g, ''),
+      flags      : flags.trim().replace(/^['"]|['"]$/g, ''),
+      service    : service.trim().replace(/^['"]|['"]$/g, ''),
+      regexp     : regexp.trim().replace(/^['"]|['"]/g, ''),
       replacement: replacement,
     }
     return new this.constructor(bits)

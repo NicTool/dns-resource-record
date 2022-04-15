@@ -85,6 +85,27 @@ class SOA extends RR {
   }
 
   /******  IMPORTERS   *******/
+  fromBind (str) {
+    // example.com TTL IN  SOA mname rname serial refresh retry expire minimum
+    const [ owner, ttl, c, type, mname, rname, serial, refresh, retry, expire, minimum ] = str.split(/[\s+]/)
+
+    const bits = {
+      owner,
+      ttl    : parseInt(ttl) || parseInt(minimum),
+      class  : c,
+      type,
+      mname,
+      rname,
+      serial : parseInt(serial , 10),
+      refresh: parseInt(refresh, 10),
+      retry  : parseInt(retry  , 10),
+      expire : parseInt(expire , 10),
+      minimum: parseInt(minimum, 10),
+    }
+    // console.log(bits)
+    return new this.constructor(bits)
+  }
+
   fromTinydns (str) {
     // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
     const [ fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc ] = str.substring(1).split(':')
@@ -105,31 +126,10 @@ class SOA extends RR {
     })
   }
 
-  fromBind (str) {
-    // example.com  IN  SOA mname rname serial refresh retry expire minimum
-    const [ owner, c, type, mname, rname, serial, refresh, retry, expire, minimum ] = str.split(/[\s+]/)
-
-    const bits = {
-      owner,
-      ttl    : parseInt(minimum, 10),
-      class  : c,
-      type,
-      mname,
-      rname,
-      serial : parseInt(serial , 10),
-      refresh: parseInt(refresh, 10),
-      retry  : parseInt(retry  , 10),
-      expire : parseInt(expire , 10),
-      minimum: parseInt(minimum, 10),
-    }
-    // console.log(bits)
-    return new this.constructor(bits)
-  }
-
   /******  EXPORTERS   *******/
   toBind (zone_opts) {
     const numFields = [ 'serial', 'refresh', 'retry', 'expire', 'minimum' ]
-    return `${this.getFQDN('owner', zone_opts)}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)}${numFields.map(f => '\t' + this.get(f) ).join('')}\n`
+    return `${this.getFQDN('owner', zone_opts)}\t${this.get('ttl')}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)}${numFields.map(f => '\t' + this.get(f) ).join('')}\n`
   }
 
   toMaraDNS () {

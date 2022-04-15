@@ -18,7 +18,7 @@ const validRecords = [
     retry  : 3600,
     expire : 1209600,
     minimum: 3600,
-    testB  : `example.com.\tIN\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
+    testB  : `example.com.\t3600\tIN\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
     testT  : 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
   {
@@ -31,7 +31,7 @@ const validRecords = [
     retry  : 3600,
     expire : 1209600,
     minimum: 3600,
-    testB  : `2.example.com.\tIN\tSOA\tns2.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
+    testB  : `2.example.com.\t3600\tIN\tSOA\tns2.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
     testT  : 'Z2.example.com:ns2.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
 ]

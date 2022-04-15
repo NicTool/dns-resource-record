@@ -235,8 +235,7 @@ PRs are welcome, especially PRs with tests.
         - this library enforces duplicate suppression
         - DNSSEC canonicalization (see RFC 4034)
         - wire format for most RRs require it
-    - Master Zone File expansions exist at another level
-- fromBIND is naive. [dns-zone](https://github.com/NicTool/dns-zone) has robust parsers.
+    - Master Zone File expansions exist in [dns-zone](https://github.com/NicTool/dns-zone)
 - to{Bind|MaraDNS} output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/NicTool/dns-zone) package.
 
 
@@ -258,7 +257,7 @@ PRs are welcome, especially PRs with tests.
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
       NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
-- [ ] LOC record ingest/out isn't consistent with API
+- [x] LOC record ingest/out isn't consistent with API
 - [ ] export a web page for each RR type
 
 
@@ -266,5 +265,5 @@ PRs are welcome, especially PRs with tests.
 
 - this package has no dependencies. That's no accident.
 - this will be used by a node.js app & a browser based app
-    - so, ESM, eventually
-- CI tests are on linux, windows, and macos
+    - [x] ES6 modules, eventually
+- [x] CI tests are on linux, windows, and macos

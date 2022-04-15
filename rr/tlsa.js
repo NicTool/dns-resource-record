@@ -56,16 +56,18 @@ class TLSA extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const [ owner, ttl, c, type, usage, selector, match ] = str.split(/\s+/)
+    const match = str.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse TLSA: ${str}`)
+    const [ owner, ttl, c, type, usage, selector, matchtype, cad ] = match.slice(1)
     return new this.constructor({
       owner                         : this.fullyQualify(owner),
       ttl                           : parseInt(ttl, 10),
       class                         : c,
-      type                          : type,
-      'certificate usage'           : parseInt(usage,    10),
-      selector                      : parseInt(selector, 10),
-      'matching type'               : parseInt(match   , 10),
-      'certificate association data': str.split(/\s+/).slice(7).join(' ').trim(),
+      type,
+      'certificate usage'           : parseInt(usage,     10),
+      selector                      : parseInt(selector,  10),
+      'matching type'               : parseInt(matchtype, 10),
+      'certificate association data': cad,
     })
   }
 }
