@@ -31,7 +31,7 @@ const invalidRecords = [
     ...defaults,
     owner  : 'www.example.com.',
     address: '',
-    msg    : /Cannot read properties/,
+    msg    : /Cannot read proper/,
   },
 ]
 
