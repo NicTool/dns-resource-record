@@ -1,7 +1,7 @@
 
 const assert = require('assert')
 
-const RR = require('../rr/index').RR
+const RR = require('../index.js').RR
 
 describe('RR', function () {
   const r = new RR(null)

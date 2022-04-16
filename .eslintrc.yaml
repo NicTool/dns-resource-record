@@ -2,11 +2,11 @@ env:
   es6: true
   node: true
   mocha: true
+  es2020: true
 
 root: true
 
-parserOptions:
-  ecmaVersion: 2020
+#parserOptions:
 
 extends:
   - eslint:recommended

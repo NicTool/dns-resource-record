@@ -2,10 +2,10 @@
   "name": "dns-resource-record",
   "version": "0.9.9",
   "description": "DNS Resource Records",
-  "main": "rr/index.js",
+  "main": "index.js",
   "scripts": {
-    "lint": "npx eslint lib/*.js rr/*.js test/*.js",
-    "lintfix": "npx eslint --fix lib/*.js rr/*.js test/*.js",
+    "lint": "npx eslint *.js lib/*.js rr/*.js test/*.js",
+    "lintfix": "npx eslint --fix *.js lib/*.js rr/*.js test/*.js",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },

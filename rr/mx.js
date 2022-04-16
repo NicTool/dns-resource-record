@@ -1,7 +1,7 @@
 
 const net = require('net')
 
-const RR = require('./index').RR
+const RR = require('../index.js').RR
 
 class MX extends RR {
   constructor (opts) {

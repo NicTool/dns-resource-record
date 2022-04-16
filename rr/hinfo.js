@@ -1,5 +1,5 @@
 
-const RR = require('./index').RR
+const RR = require('../index.js').RR
 
 class HINFO extends RR {
   constructor (opts) {

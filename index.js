@@ -1,3 +1,4 @@
+
 const fs = require('fs')
 const path = require('path')
 
@@ -294,18 +295,16 @@ class RR extends Map {
 
 module.exports = {
   RR,
-  TINYDNS  : require('../lib/tinydns'),
+  TINYDNS : require('./lib/tinydns'),
   TYPE_MAP: {},
 }
 
-const files = fs.readdirSync(path.join(__dirname))
+const files = fs.readdirSync(path.join('rr'))
 for (let f of files) {
   if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
   if (f === 'index') continue
   const rrTypeName = f.toUpperCase()
-  const rrmod = require(`./${f}`)
-  module.exports[rrTypeName] = rrmod
-  // const inst = new rrmod(null)
+  module.exports[rrTypeName] = require(`./rr/${f}`)
   // module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
 }

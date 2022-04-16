@@ -1,6 +1,5 @@
 
-const RR      = require('./index').RR
-// const TINYDNS = require('../lib/tinydns')
+const RR = require('../index.js').RR
 
 class CERT extends RR {
   constructor (opts) {

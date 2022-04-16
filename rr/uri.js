@@ -1,5 +1,5 @@
 
-const RR      = require('./index').RR
+const RR = require('../index.js').RR
 const TINYDNS = require('../lib/tinydns')
 
 class URI extends RR {
