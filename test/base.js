@@ -105,11 +105,19 @@ exports.fromBind = (type, validRecords) => {
   })
 }
 
+exports.getRdataFields = (type, rdataFields) => {
+  describe('getRdataFields', function () {
+    it(`can retrieve record fields`, async function () {
+      const r = new type(null)
+      assert.deepEqual(r.getRdataFields('rdata'), rdataFields)
+    })
+  })
+}
+
 exports.getFields = (type, rdataFields) => {
   describe('getFields', function () {
     it(`can retrieve record fields`, async function () {
       const r = new type(null)
-      // console.log(new type(null).getFields('rdata'))
       assert.deepEqual(r.getFields('rdata'), rdataFields)
       assert.deepEqual(r.getFields(), r.getFields('common').concat(rdataFields))
     })

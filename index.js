@@ -303,7 +303,6 @@ const files = fs.readdirSync(path.join('rr'))
 for (let f of files) {
   if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
-  if (f === 'index') continue
   const rrTypeName = f.toUpperCase()
   module.exports[rrTypeName] = require(`./rr/${f}`)
   // module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName

@@ -78,6 +78,7 @@ describe('A record', function () {
 
   base.getDescription(A)
   base.getRFCs(A, validRecords[0])
+  base.getRdataFields(A, [ 'address' ])
   base.getFields(A, [ 'address' ])
   base.getTypeId(A, 1)
 

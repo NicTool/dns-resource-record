@@ -25,7 +25,7 @@ This module is used to:
 
 This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
 
-This package is for working with _individual_ Resource Records. If you're working with batches of RRs, have a look at [dns-zone](https://github.com/NicTool/dns-zone).
+This package is for working with _individual_ Resource Records. For working with zones of RRs, have a look at [dns-zone](https://github.com/NicTool/dns-zone).
 
 
 ## USAGE
@@ -105,7 +105,7 @@ console.log(validatedA.toBind())
 test.example.com    3600    IN  A   192.0.2.128
 ```
 
-The setters are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` would have a setter named `setCertificateUsage`.
+The setters are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` has a setter named `setCertificateUsage`.
 
 ## FUNCTIONS
 
@@ -123,7 +123,7 @@ Get the field names for each RR type with `getFields()`:
 [ 'owner', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
 ```
 
-Get a list of RFCs for further learning about a RR type:
+Get a list of RFCs for references about each RR type:
 
 ```js
 > new RR.A(null).getRFCs()
@@ -265,5 +265,5 @@ PRs are welcome, especially PRs with tests.
 
 - this package has no dependencies. That's no accident.
 - this will be used by a node.js app & a browser based app
-    - [x] ES6 modules, eventually
+    - [ ] ES6 modules, eventually
 - [x] CI tests are on linux, windows, and macos
