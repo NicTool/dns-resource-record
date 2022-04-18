@@ -3,9 +3,9 @@ const fs = require('fs')
 const path = require('path')
 
 class RR extends Map {
-
   constructor (opts) {
     super()
+
     if (opts === null) return
 
     if (opts.default) this.default = opts.default
@@ -142,12 +142,6 @@ class RR extends Map {
     return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
-  getPrefixFields () {
-    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
-    Object.freeze(commonFields)
-    return commonFields
-  }
-
   getEmpty (prop) {
     return this.get(prop) === undefined ? '' : this.get(prop)
   }
@@ -177,13 +171,16 @@ class RR extends Map {
   }
 
   getFields (arg) {
+    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
+    Object.freeze(commonFields)
+
     switch (arg) {
       case 'common':
-        return this.getPrefixFields()
+        return commonFields
       case 'rdata':
         return this.getRdataFields()
       default:
-        return this.getPrefixFields().concat(this.getRdataFields())
+        return commonFields.concat(this.getRdataFields())
     }
   }
 
@@ -293,17 +290,12 @@ class RR extends Map {
   }
 }
 
-module.exports = {
-  RR,
-  TINYDNS : require('./lib/tinydns'),
-  TYPE_MAP: {},
-}
+module.exports = { RR }
 
-const files = fs.readdirSync(path.join('rr'))
+const files = fs.readdirSync(path.resolve(__dirname, 'rr'))
 for (let f of files) {
   if (!f.endsWith('.js')) continue
   f = path.basename(f, '.js')
   const rrTypeName = f.toUpperCase()
   module.exports[rrTypeName] = require(`./rr/${f}`)
-  // module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
 }

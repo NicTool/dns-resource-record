@@ -36,7 +36,7 @@ class A extends RR {
     // +fqdn:ip:ttl:timestamp:lo
     const [ owner, ip, ttl, ts, loc ] = str.substring(1).split(':')
 
-    return new this.constructor({
+    return new A({
       owner    : this.fullyQualify(owner),
       type     : 'A',
       address  : ip,
@@ -49,7 +49,7 @@ class A extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  A  192.0.2.127
     const [ owner, ttl, c, type, address ] = str.split(/\s+/)
-    return new this.constructor({
+    return new A({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

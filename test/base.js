@@ -13,7 +13,7 @@ exports.valid = (type, validRecords, defaults) => {
 
         for (const k of Object.keys(val)) {
           if (/^test/.test(k)) continue
-          assert.strictEqual(r.get(k), val[k], `${k} ${r.get(k)} !== ${val[k]}`)
+          assert.strictEqual(r.get(k), val[k], `${type.name} ${k} ${r.get(k)} !== ${val[k]}`)
         }
       })
     }

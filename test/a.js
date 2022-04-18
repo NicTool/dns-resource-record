@@ -4,35 +4,29 @@
 const A    = require('../rr/a.js')
 const base = require('./base')
 
-const defaults = { class: 'IN', ttl: 3600, type: 'A' }
+const defaults = { class: 'IN', ttl: 3600, type: 'A', address: '192.0.2.127' }
 
 const validRecords = [
   {
     ...defaults,
-    owner  : 'test.example.com.',
-    address: '192.0.2.127',
-    testB  : 'test.example.com.\t3600\tIN\tA\t192.0.2.127\n',
-    testT  : '+test.example.com:192.0.2.127:3600::\n',
+    owner: 'test.example.com.',
+    testB: 'test.example.com.\t3600\tIN\tA\t192.0.2.127\n',
+    testT: '+test.example.com:192.0.2.127:3600::\n',
   },
   {
     ...defaults,
-    owner  : 'test.example.com.',
-    ttl    : 2147483647,
-    address: '192.0.2.127',
-    testB  : 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
-    testT  : '+test.example.com:192.0.2.127:2147483647::\n',
+    owner: 'test.example.com.',
+    ttl  : 2147483647,
+    testB: 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
+    testT: '+test.example.com:192.0.2.127:2147483647::\n',
   },
   {
     ...defaults,
-    owner  : 'a.',
-    ttl    : 86400,
-    address: '192.0.2.127',
-    testB  : 'a.\t86400\tIN\tA\t192.0.2.127\n',
-    testT  : '+a:192.0.2.127:86400::\n',
+    owner: 'a.',
+    ttl  : 86400,
+    testB: 'a.\t86400\tIN\tA\t192.0.2.127\n',
+    testT: '+a:192.0.2.127:86400::\n',
   },
-]
-
-const moreValid = [
   {
     ...defaults,
     owner: '*.example.com.',
@@ -40,12 +34,6 @@ const moreValid = [
     testT: '+*.example.com:192.0.2.127:3600::\n',
   },
 ]
-
-for (let i = 0; i < moreValid.length; i++) {
-  const temp = JSON.parse(JSON.stringify(validRecords[0]))
-  Object.assign(temp, moreValid[i])
-  validRecords.push(temp)
-}
 
 const invalidRecords = [
   { ...defaults, owner: '', msg: /RFC/ },

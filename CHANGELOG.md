@@ -4,6 +4,7 @@
 #### 0.9.10 - 2022-04-
 
 - style: mv rr/index to ./index
+- test: add base.getRdataFields
 - 
 
 
