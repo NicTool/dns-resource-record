@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const SOA = require('../rr/soa')
+import SOA from '../rr/soa.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'SOA' }
 

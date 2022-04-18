@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class RRSIG extends RR {
+export default class RRSIG extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -99,5 +99,3 @@ class RRSIG extends RR {
   /******  EXPORTERS   *******/
 
 }
-
-module.exports = RRSIG

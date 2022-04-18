@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class DS extends RR {
+export default class DS extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -52,8 +52,6 @@ class DS extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
@@ -71,10 +69,4 @@ class DS extends RR {
   }
 
   /******  EXPORTERS   *******/
-  // toTinydns () {
-  //   const rdata = '' // TODO
-  //   return this.getTinydnsGeneric(rdata)
-  // }
 }
-
-module.exports = DS

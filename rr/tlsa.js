@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class TLSA extends RR {
+export default class TLSA extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -71,5 +71,3 @@ class TLSA extends RR {
     })
   }
 }
-
-module.exports = TLSA

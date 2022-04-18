@@ -1,8 +1,6 @@
 
-// const assert = require('assert')
-
-const A    = require('../rr/a.js')
-const base = require('./base')
+import A    from '../rr/a.js'
+import * as base from './base.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'A', address: '192.0.2.127' }
 

@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class OPENPGPKEY extends RR {
+export default class OPENPGPKEY extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -42,5 +42,3 @@ class OPENPGPKEY extends RR {
 
   /******  EXPORTERS   *******/
 }
-
-module.exports = OPENPGPKEY

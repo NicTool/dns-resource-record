@@ -1,9 +1,7 @@
 
-// const assert = require('assert')
+import * as base from './base.js'
 
-const base = require('./base')
-
-const CNAME = require('../rr/cname')
+import CNAME from '../rr/cname.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'CNAME' }
 

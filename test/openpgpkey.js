@@ -1,7 +1,7 @@
 
-const base = require('./base')
+import * as base from './base.js'
 
-const OPENPGPKEY = require('../rr/openpgpkey.js')
+import OPENPGPKEY from '../rr/openpgpkey.js'
 
 const validRecords = [
   // {

@@ -1,10 +1,10 @@
 // obsoleted by RFC 7208
 
-const TXT = require('./txt')
+import TXT from './txt.js'
 
-const TINYDNS = require('../lib/tinydns')
+import * as TINYDNS from '../lib/tinydns.js'
 
-class SPF extends TXT {
+export default class SPF extends TXT {
   constructor (opts) {
     super(opts)
   }
@@ -52,5 +52,3 @@ class SPF extends TXT {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = SPF

@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const HINFO = require('../rr/hinfo')
+import HINFO from '../rr/hinfo.js'
 
 const defaults = { class: 'IN', ttl: 86400, type: 'HINFO' }
 

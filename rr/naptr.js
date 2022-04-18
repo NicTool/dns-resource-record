@@ -1,10 +1,10 @@
 
-const RR = require('../index.js').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../index.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
 const rdataRe = /[\r\n\t:\\/]/
 
-class NAPTR extends RR {
+export default class NAPTR extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -146,5 +146,3 @@ class NAPTR extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = NAPTR

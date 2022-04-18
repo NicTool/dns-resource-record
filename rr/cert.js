@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class CERT extends RR {
+export default class CERT extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -55,8 +55,6 @@ class CERT extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
@@ -70,9 +68,4 @@ class CERT extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  // toTinydns () {
-  // }
 }
-
-module.exports = CERT

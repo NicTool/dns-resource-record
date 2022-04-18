@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const MX = require('../rr/mx')
+import MX from '../rr/mx.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'MX', preference: 0 }
 

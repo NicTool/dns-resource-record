@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const DNAME = require('../rr/dname')
+import DNAME from '../rr/dname.js'
 
 const defaults = { class: 'IN', ttl: 86400, type: 'DNAME' }
 

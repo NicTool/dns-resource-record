@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class HINFO extends RR {
+export default class HINFO extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -60,10 +60,4 @@ class HINFO extends RR {
   // }
 
   /******  EXPORTERS   *******/
-  // toTinydns () {
-  //   const rdata = '' // TODO
-  //   return this.getTinydnsGeneric(rdata)
-  // }
 }
-
-module.exports = HINFO

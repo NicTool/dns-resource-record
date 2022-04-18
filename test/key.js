@@ -1,9 +1,7 @@
 
-// const assert = require('assert')
+import * as base from './base.js'
 
-const base = require('./base')
-
-const KEY = require('../rr/key')
+import KEY from '../rr/key.js'
 
 const validRecords = [
   // {

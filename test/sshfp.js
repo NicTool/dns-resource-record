@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const SSHFP = require('../rr/sshfp')
+import SSHFP from '../rr/sshfp.js'
 
 const validRecords = [
   {

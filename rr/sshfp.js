@@ -1,8 +1,8 @@
 
-const RR = require('../index.js').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../index.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
-class SSHFP extends RR {
+export default class SSHFP extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -92,5 +92,3 @@ class SSHFP extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = SSHFP

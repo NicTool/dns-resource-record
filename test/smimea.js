@@ -1,9 +1,7 @@
 
-// const assert = require('assert')
+import * as base from './base.js'
 
-const base = require('./base')
-
-const SMIMEA = require('../rr/tlsa')
+import SMIMEA from '../rr/tlsa.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'SMIMEA' }
 

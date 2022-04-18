@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class NS extends RR {
+export default class NS extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
@@ -72,5 +72,3 @@ class NS extends RR {
     return `&${this.getTinyFQDN('owner')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }
-
-module.exports = NS

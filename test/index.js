@@ -1,8 +1,8 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const RR = require('../index.js').RR
-const A  = require('../rr/a.js')
+import RR from '../index.js'
+import A  from '../rr/a.js'
 
 const cases = [
   // { name: 'RR class'   , obj: RR          , expect: [ 'owner', 'ttl', 'class', 'type' ] },

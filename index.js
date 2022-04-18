@@ -1,8 +1,5 @@
 
-const fs = require('fs')
-const path = require('path')
-
-class RR extends Map {
+export default class RR extends Map {
   constructor (opts) {
     super()
 
@@ -107,7 +104,7 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (module.exports[t] === undefined)
+    if ([ undefined, '' ].includes(t))
       throw new Error(`type ${t} not supported (yet)`)
 
     this.set('type', t)
@@ -288,14 +285,4 @@ class RR extends Map {
     // throw new Error(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
     return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields().map(f => this.getQuoted(f)).join(' ')}' ~\n`
   }
-}
-
-module.exports = { RR }
-
-const files = fs.readdirSync(path.resolve(__dirname, 'rr'))
-for (let f of files) {
-  if (!f.endsWith('.js')) continue
-  f = path.basename(f, '.js')
-  const rrTypeName = f.toUpperCase()
-  module.exports[rrTypeName] = require(`./rr/${f}`)
 }

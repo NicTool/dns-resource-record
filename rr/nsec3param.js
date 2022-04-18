@@ -1,7 +1,7 @@
 
-const RR = require('../index.js').RR
+import RR from '../index.js'
 
-class NSEC3PARAM extends RR {
+export default class NSEC3PARAM extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
@@ -82,7 +82,3 @@ class NSEC3PARAM extends RR {
   /******  EXPORTERS   *******/
 
 }
-
-// const removeParens = a => ![ '(',')' ].includes(a)
-
-module.exports = NSEC3PARAM

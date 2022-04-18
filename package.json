@@ -3,6 +3,7 @@
   "version": "0.9.10",
   "description": "DNS Resource Records",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "lint": "npx eslint *.js lib/*.js rr/*.js test/*.js",
     "lintfix": "npx eslint --fix *.js lib/*.js rr/*.js test/*.js",

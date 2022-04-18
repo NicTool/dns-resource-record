@@ -6,7 +6,8 @@ env:
 
 root: true
 
-#parserOptions:
+parserOptions:
+  sourceType: module
 
 extends:
   - eslint:recommended

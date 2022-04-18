@@ -1,10 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const LOC = require('../rr/loc')
-// const TINYDNS = require('../lib/tinydns')
+import LOC from '../rr/loc.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'LOC' }
 

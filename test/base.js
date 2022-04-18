@@ -1,7 +1,7 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-exports.valid = (type, validRecords, defaults) => {
+export function valid (type, validRecords, defaults) {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
@@ -20,7 +20,7 @@ exports.valid = (type, validRecords, defaults) => {
   })
 }
 
-exports.invalid = (type, invalidRecords, defaults) => {
+export function invalid (type, invalidRecords, defaults) {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
       if (defaults) inv.default = defaults
@@ -36,7 +36,7 @@ exports.invalid = (type, invalidRecords, defaults) => {
   })
 }
 
-exports.toBind = (type, validRecords) => {
+export function toBind (type, validRecords) {
   describe('toBind', function () {
     for (const val of validRecords) {
       it(`exports to BIND: ${val.owner}`, async function () {
@@ -48,7 +48,7 @@ exports.toBind = (type, validRecords) => {
   })
 }
 
-exports.toTinydns = (type, validRecords) => {
+export function toTinydns (type, validRecords) {
   describe('toTinydns', function () {
     for (const val of validRecords) {
       it(`exports to tinydns: ${val.owner}`, async function () {
@@ -60,7 +60,7 @@ exports.toTinydns = (type, validRecords) => {
   })
 }
 
-exports.getDescription = type => {
+export function getDescription (type) {
   describe('getDescription', function () {
     const desc = new type(null).getDescription()
     it(`gets description: ${desc}`, async function () {
@@ -69,7 +69,7 @@ exports.getDescription = type => {
   })
 }
 
-exports.getRFCs = (type, valid) => {
+export function getRFCs (type, valid) {
   describe('getRFCs', function () {
     it(`can retrieve RFCs`, async function () {
       const r = new type(null)
@@ -93,19 +93,19 @@ function checkFromNS (type, validRecords, nsName, nsLineName) {
   }
 }
 
-exports.fromTinydns = (type, validRecords) => {
+export function fromTinydns (type, validRecords) {
   describe('fromTinydns', function () {
     checkFromNS(type, validRecords, 'tinydns', 'tinyline')
   })
 }
 
-exports.fromBind = (type, validRecords) => {
+export function fromBind (type, validRecords) {
   describe('fromBind', function () {
     checkFromNS(type, validRecords, 'BIND', 'bindline')
   })
 }
 
-exports.getRdataFields = (type, rdataFields) => {
+export function getRdataFields (type, rdataFields) {
   describe('getRdataFields', function () {
     it(`can retrieve record fields`, async function () {
       const r = new type(null)
@@ -114,7 +114,7 @@ exports.getRdataFields = (type, rdataFields) => {
   })
 }
 
-exports.getFields = (type, rdataFields) => {
+export function getFields (type, rdataFields) {
   describe('getFields', function () {
     it(`can retrieve record fields`, async function () {
       const r = new type(null)
@@ -124,7 +124,7 @@ exports.getFields = (type, rdataFields) => {
   })
 }
 
-exports.getTypeId = (type, val) => {
+export function getTypeId (type, val) {
   describe('getTypeId', function () {
     it(`can retrieve record type ID`, async function () {
       const r = new type(null)
