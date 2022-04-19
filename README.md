@@ -265,5 +265,5 @@ PRs are welcome, especially PRs with tests.
 
 - this package has no dependencies. That's no accident.
 - this will be used by a node.js app & a browser based app
-    - [ ] ES6 modules, eventually
+    - [x] ES6 modules
 - [x] CI tests are on linux, windows, and macos

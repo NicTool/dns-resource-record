@@ -1,6 +1,6 @@
 {
   "name": "dns-resource-record",
-  "version": "0.9.10",
+  "version": "1.0.0",
   "description": "DNS Resource Records",
   "main": "index.js",
   "type": "module",
