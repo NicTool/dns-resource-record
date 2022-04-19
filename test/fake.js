@@ -3,8 +3,6 @@ import assert from 'assert'
 
 import * as RR from '../index.js'
 
-// import * as base from './base.js'
-
 const defaults = { owner: 'fake.com.', class: 'IN', ttl: 3600, address: '192.0.2.127' }
 
 describe('fake', function () {
