@@ -107,7 +107,10 @@ export default class RR extends Map {
     if ([ undefined, '' ].includes(t))
       throw new Error(`type ${t} not supported (yet)`)
 
-    this.set('type', t)
+    if (t.toUpperCase() !== this.constructor.name)
+      throw new Error(`type ${t} doesn't match ${this.constructor.name}`)
+
+    this.set('type', t.toUpperCase())
   }
 
   citeRFC () {
