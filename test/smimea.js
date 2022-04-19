@@ -1,7 +1,7 @@
 
 import * as base from './base.js'
 
-import SMIMEA from '../rr/tlsa.js'
+import SMIMEA from '../rr/smimea.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'SMIMEA' }
 
@@ -35,7 +35,7 @@ describe('SMIMEA record', function () {
   base.getDescription(SMIMEA)
   base.getRFCs(SMIMEA, validRecords[0])
   base.getFields(SMIMEA, [ 'certificate usage', 'selector', 'matching type', 'certificate association data' ])
-  base.getTypeId(SMIMEA, 52)
+  base.getTypeId(SMIMEA, 53)
 
   base.toBind(SMIMEA, validRecords)
   // base.toTinydns(SMIMEA, validRecords)
