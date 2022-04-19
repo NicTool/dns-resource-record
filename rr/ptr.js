@@ -1,5 +1,5 @@
 
-import RR from '../index.js'
+import RR from '../rr.js'
 
 export default class PTR extends RR {
   constructor (opts) {

@@ -1,5 +1,5 @@
 
-import RR from '../index.js'
+import RR from '../rr.js'
 
 export default class SIG extends RR {
   constructor (opts) {

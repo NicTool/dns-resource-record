@@ -1,7 +1,7 @@
 
 import net from 'net'
 
-import RR from '../index.js'
+import RR from '../rr.js'
 
 export default class MX extends RR {
   constructor (opts) {

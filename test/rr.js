@@ -1,7 +1,7 @@
 
 import assert from 'assert'
 
-import RR from '../index.js'
+import RR from '../rr.js'
 import A  from '../rr/a.js'
 
 const cases = [

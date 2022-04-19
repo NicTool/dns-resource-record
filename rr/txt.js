@@ -1,5 +1,5 @@
 
-import RR from '../index.js'
+import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 
