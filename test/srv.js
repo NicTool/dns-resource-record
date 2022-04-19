@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const SRV = require('../rr/srv')
+import SRV from '../rr/srv.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'SRV' }
 

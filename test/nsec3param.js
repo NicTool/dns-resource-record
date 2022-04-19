@@ -1,9 +1,7 @@
 
-// const assert = require('assert')
+import * as base from './base.js'
 
-const base = require('./base')
-
-const NSEC3PARAM = require('../rr/nsec3param')
+import NSEC3PARAM from '../rr/nsec3param.js'
 
 const validRecords = [
 ]

@@ -1,9 +1,9 @@
 
-const net = require('net')
+import net from 'net'
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class MX extends RR {
+export default class MX extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -84,5 +84,3 @@ class MX extends RR {
     return `@${this.getTinyFQDN('owner')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`
   }
 }
-
-module.exports = MX

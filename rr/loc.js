@@ -1,6 +1,6 @@
 
-const RR      = require('./index').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
 const REF = {  // RFC 1876
   LATLON  : 2**31,  // LAT equator, LON prime meridian
@@ -13,7 +13,7 @@ const CONV = {
   deg: 60 * 60 * 1000,
 }
 
-class LOC extends RR {
+export default class LOC extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -214,5 +214,3 @@ class LOC extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = LOC

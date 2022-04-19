@@ -1,9 +1,7 @@
 
-// const assert = require('assert')
+import * as base from './base.js'
 
-const base = require('./base')
-
-const NAPTR = require('../rr/naptr')
+import NAPTR from '../rr/naptr.js'
 
 const validRecords = [
   {
@@ -15,7 +13,7 @@ const validRecords = [
     preference : 10,
     flags      : '',
     service    : '',
-    regexp     : '!^urn:cid:.+@([^\\.]+\\.)(.*)$!\2!i',
+    regexp     : '!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i',
     replacement: '.',
     testB      : 'cid.urn.arpa.\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
     testT      : ':cid.urn.arpa:35:\\000\\144\\000\\012\\000\\000\\040!^urn\\072cid\\072.+@([^\\134.]+\\134.)(.*)$!\x02!i\\001.``000:86400::\n',

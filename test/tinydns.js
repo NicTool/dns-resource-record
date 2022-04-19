@@ -1,7 +1,7 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const TINYDNS = require('../lib/tinydns')
+import * as TINYDNS from '../lib/tinydns.js'
 
 describe('TINYDNS', function () {
 

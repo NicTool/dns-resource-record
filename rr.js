@@ -1,10 +1,8 @@
-const fs = require('fs')
-const path = require('path')
 
-class RR extends Map {
-
+export default class RR extends Map {
   constructor (opts) {
     super()
+
     if (opts === null) return
 
     if (opts.default) this.default = opts.default
@@ -106,10 +104,13 @@ class RR extends Map {
   }
 
   setType (t) {
-    if (module.exports[t] === undefined)
+    if ([ undefined, '' ].includes(t))
       throw new Error(`type ${t} not supported (yet)`)
 
-    this.set('type', t)
+    if (t.toUpperCase() !== this.constructor.name)
+      throw new Error(`type ${t} doesn't match ${this.constructor.name}`)
+
+    this.set('type', t.toUpperCase())
   }
 
   citeRFC () {
@@ -141,12 +142,6 @@ class RR extends Map {
     return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
-  getPrefixFields () {
-    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
-    Object.freeze(commonFields)
-    return commonFields
-  }
-
   getEmpty (prop) {
     return this.get(prop) === undefined ? '' : this.get(prop)
   }
@@ -176,13 +171,16 @@ class RR extends Map {
   }
 
   getFields (arg) {
+    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
+    Object.freeze(commonFields)
+
     switch (arg) {
       case 'common':
-        return this.getPrefixFields()
+        return commonFields
       case 'rdata':
         return this.getRdataFields()
       default:
-        return this.getPrefixFields().concat(this.getRdataFields())
+        return commonFields.concat(this.getRdataFields())
     }
   }
 
@@ -290,22 +288,4 @@ class RR extends Map {
     // throw new Error(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
     return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields().map(f => this.getQuoted(f)).join(' ')}' ~\n`
   }
-}
-
-module.exports = {
-  RR,
-  TINYDNS  : require('../lib/tinydns'),
-  TYPE_MAP: {},
-}
-
-const files = fs.readdirSync(path.join(__dirname))
-for (let f of files) {
-  if (!f.endsWith('.js')) continue
-  f = path.basename(f, '.js')
-  if (f === 'index') continue
-  const rrTypeName = f.toUpperCase()
-  const rrmod = require(`./${f}`)
-  module.exports[rrTypeName] = rrmod
-  // const inst = new rrmod(null)
-  // module.exports.TYPE_MAP[inst.getTypeId()] = rrTypeName
 }

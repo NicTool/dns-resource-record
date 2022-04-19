@@ -1,8 +1,8 @@
 
-const RR = require('./index').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
-class CAA extends RR {
+export default class CAA extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -127,5 +127,3 @@ class CAA extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = CAA

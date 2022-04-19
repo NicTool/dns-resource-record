@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const CAA = require('../rr/caa')
+import CAA from '../rr/caa.js'
 
 const validRecords = [
   {

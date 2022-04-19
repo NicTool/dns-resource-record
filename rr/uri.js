@@ -1,8 +1,8 @@
 
-const RR      = require('./index').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
-class URI extends RR {
+export default class URI extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -92,5 +92,3 @@ class URI extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = URI

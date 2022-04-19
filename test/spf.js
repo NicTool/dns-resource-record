@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const SPF = require('../rr/spf')
+import SPF from '../rr/spf.js'
 
 const defaults = { class: 'IN', ttl: 86400, type: 'SPF' }
 

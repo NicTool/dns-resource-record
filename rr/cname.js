@@ -1,9 +1,9 @@
 
-const net = require('net')
+import net from 'net'
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class CNAME extends RR {
+export default class CNAME extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -74,5 +74,3 @@ class CNAME extends RR {
     return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
   }
 }
-
-module.exports = CNAME

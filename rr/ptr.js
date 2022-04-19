@@ -1,7 +1,7 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class PTR extends RR {
+export default class PTR extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -63,5 +63,3 @@ class PTR extends RR {
     return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }
-
-module.exports = PTR

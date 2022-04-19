@@ -1,7 +1,7 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class SMIMEA extends RR {
+export default class SMIMEA extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -71,5 +71,3 @@ class SMIMEA extends RR {
   }
 
 }
-
-module.exports = SMIMEA

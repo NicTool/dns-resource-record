@@ -1,9 +1,9 @@
-const net = require('net')
+import net from 'net'
 
-const RR = require('./index').RR
-const TINYDNS = require('../lib/tinydns')
+import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
-class DNAME extends RR {
+export default class DNAME extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -72,5 +72,3 @@ class DNAME extends RR {
     return this.getTinydnsGeneric(rdata)
   }
 }
-
-module.exports = DNAME

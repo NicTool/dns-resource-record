@@ -1,7 +1,7 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class NSEC extends RR {
+export default class NSEC extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
@@ -67,5 +67,3 @@ class NSEC extends RR {
 }
 
 const removeParens = a => ![ '(',')' ].includes(a)
-
-module.exports = NSEC

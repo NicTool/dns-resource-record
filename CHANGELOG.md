@@ -1,6 +1,13 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+#### 1.0.0 - 2022-04-18
+
+- style: move rr/index to ./rr
+- test: add base.getRdataFields
+- style(esm): convert from CJS to ESM (ES6 module)
+- test: add base.getRdataFields
+
 
 #### 0.9.9 - 2022-04-14
 

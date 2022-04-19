@@ -1,11 +1,12 @@
 {
   "name": "dns-resource-record",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "description": "DNS Resource Records",
-  "main": "rr/index.js",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "lint": "npx eslint lib/*.js rr/*.js test/*.js",
-    "lintfix": "npx eslint --fix lib/*.js rr/*.js test/*.js",
+    "lint": "npx eslint *.js lib/*.js rr/*.js test/*.js",
+    "lintfix": "npx eslint --fix *.js lib/*.js rr/*.js test/*.js",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check"
   },
@@ -23,7 +24,8 @@
     "export",
     "BIND",
     "djbdns",
-    "tinydns"
+    "tinydns",
+    "nictool"
   ],
   "author": "Matt Simerson <matt@tnpi.net>",
   "license": "BSD-3-Clause",
@@ -34,6 +36,5 @@
   "devDependencies": {
     "eslint": "^8.11.0",
     "mocha": "^9.2.2"
-  },
-  "dependencies": {}
+  }
 }

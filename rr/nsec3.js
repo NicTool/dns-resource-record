@@ -1,7 +1,7 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class NSEC3 extends RR {
+export default class NSEC3 extends RR {
   constructor (opts) {
     super(opts)
     if (opts === null) return
@@ -76,8 +76,6 @@ class NSEC3 extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  NSEC3
@@ -97,14 +95,5 @@ class NSEC3 extends RR {
   }
 
   /******  EXPORTERS   *******/
-  // toBind (zone_opts) {
-  //   return `${this.getPrefix(zone_opts)}\t${this.getFQDN('next domain', zone_opts)}\n`
-  // }
 
-  // toTinydns () {
-  // }
 }
-
-// const removeParens = a => ![ '(',')' ].includes(a)
-
-module.exports = NSEC3

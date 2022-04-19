@@ -1,8 +1,8 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
-const AAAA = require('../rr/aaaa.js')
+import * as base from './base.js'
+import AAAA from '../rr/aaaa.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'AAAA' }
 

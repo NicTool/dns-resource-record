@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const NS = require('../rr/ns')
+import NS from '../rr/ns.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'NS' }
 

@@ -1,9 +1,9 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-const TINYDNS = require('../lib/tinydns')
+import * as TINYDNS from '../lib/tinydns.js'
 
-class TXT extends RR {
+export default class TXT extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -119,5 +119,3 @@ function asQuotedStrings (data) {
 
   return data
 }
-
-module.exports = TXT

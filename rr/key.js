@@ -1,7 +1,7 @@
 
-const RR = require('./index').RR
+import RR from '../rr.js'
 
-class KEY extends RR {
+export default class KEY extends RR {
   constructor (opts) {
     super(opts)
   }
@@ -53,8 +53,6 @@ class KEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
   fromBind (str) {
     // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
@@ -72,10 +70,4 @@ class KEY extends RR {
   }
 
   /******  EXPORTERS   *******/
-  // toTinydns () {
-  //   const rdata = '' // TODO
-  //   return this.getTinydnsGeneric(rdata)
-  // }
 }
-
-module.exports = KEY

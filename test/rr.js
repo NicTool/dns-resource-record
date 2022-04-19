@@ -1,7 +1,25 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const RR = require('../rr/index').RR
+import RR from '../rr.js'
+import A  from '../rr/a.js'
+
+const cases = [
+  // { name: 'RR class'   , obj: RR          , expect: [ 'owner', 'ttl', 'class', 'type' ] },
+  { name: 'RR instance', obj: new RR(null), expect: [ 'owner', 'ttl', 'class', 'type' ] },
+  // { name: 'A class'    , obj: A           , expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
+  { name: 'A instance' , obj: new A(null) , expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
+]
+
+for (const c of cases) {
+  describe(`${c.name}`, function () {
+    describe('getFields', function () {
+      it('gets expected fields', async function () {
+        assert.deepStrictEqual(c.obj.getFields(), c.expect)
+      })
+    })
+  })
+}
 
 describe('RR', function () {
   const r = new RR(null)
@@ -48,16 +66,6 @@ describe('RR', function () {
 
     it('fully qualifies a valid hostname', async () => {
       assert.equal(r.fullyQualify('example.com'), 'example.com.')
-    })
-  })
-
-  describe('getFields', function () {
-    it('gets common fields', async function () {
-      assert.deepStrictEqual(r.getFields('common'), [ 'owner', 'ttl', 'class', 'type' ])
-    })
-
-    it('gets rdata fields', async function () {
-      assert.deepStrictEqual(r.getFields('rdata'), [ ]) // none in the parent class
     })
   })
 

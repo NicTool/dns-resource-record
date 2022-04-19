@@ -1,9 +1,9 @@
 
-const assert = require('assert')
+import assert from 'assert'
 
-const base = require('./base')
+import * as base from './base.js'
 
-const URI = require('../rr/uri')
+import URI from '../rr/uri.js'
 
 const validRecords = [
   {
