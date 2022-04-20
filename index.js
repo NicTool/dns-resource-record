@@ -9,6 +9,7 @@ import DNAME   from './rr/dname.js'
 import DNSKEY  from './rr/dnskey.js'
 import DS      from './rr/ds.js'
 import HINFO   from './rr/hinfo.js'
+import IPSECKEY from './rr/ipseckey.js'
 import KEY     from './rr/key.js'
 import LOC     from './rr/loc.js'
 import MX      from './rr/mx.js'
@@ -42,6 +43,7 @@ export {
   DNSKEY,
   DS,
   HINFO,
+  IPSECKEY,
   KEY,
   LOC,
   MX,
