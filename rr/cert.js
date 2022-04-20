@@ -47,7 +47,7 @@ export default class CERT extends RR {
   }
 
   getRFCs () {
-    return [ 4398 ]
+    return [ 2538, 4398 ]
   }
 
   getTypeId () {
@@ -58,12 +58,16 @@ export default class CERT extends RR {
 
   fromBind (str) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
-    const [ owner, ttl, c, type  ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, certtype, keytag, algo, certificate  ] = str.split(/\s+/)
     return new CERT({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,
       type,
+      'cert type': /^[0-9]+$/.test(certtype) ? parseInt(certtype, 10) : certtype,
+      'key tag'  : parseInt(keytag,   10),
+      algorithm  : parseInt(algo, 10),
+      certificate,
     })
   }
 
