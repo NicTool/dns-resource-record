@@ -89,7 +89,7 @@ export default class SOA extends RR {
     // example.com TTL IN  SOA mname rname serial refresh retry expire minimum
     const [ owner, ttl, c, type, mname, rname, serial, refresh, retry, expire, minimum ] = str.split(/[\s+]/)
 
-    const bits = {
+    return new SOA({
       owner,
       ttl    : parseInt(ttl) || parseInt(minimum),
       class  : c,
@@ -101,16 +101,14 @@ export default class SOA extends RR {
       retry  : parseInt(retry  , 10),
       expire : parseInt(expire , 10),
       minimum: parseInt(minimum, 10),
-    }
-    // console.log(bits)
-    return new this.constructor(bits)
+    })
   }
 
   fromTinydns (str) {
     // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
     const [ fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc ] = str.substring(1).split(':')
 
-    return new this.constructor({
+    return new SOA({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'SOA',

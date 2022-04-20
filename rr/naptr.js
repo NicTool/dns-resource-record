@@ -97,7 +97,7 @@ export default class NAPTR extends RR {
     const replaceLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
     rec.replacement = TINYDNS.octalToChar(rdata.substr(idx+4, replaceLen))
 
-    return new this.constructor(rec)
+    return new NAPTR(rec)
   }
 
   fromBind (str) {
@@ -118,7 +118,7 @@ export default class NAPTR extends RR {
       regexp     : regexp.trim().replace(/^['"]|['"]/g, ''),
       replacement: replacement,
     }
-    return new this.constructor(bits)
+    return new NAPTR(bits)
   }
 
   /******  EXPORTERS   *******/

@@ -53,7 +53,7 @@ export default class SSHFP extends RR {
 
     const fingerprint = TINYDNS.octalToHex(rdata.substring(16))
 
-    return new this.constructor({
+    return new SSHFP({
       owner      : this.fullyQualify(fqdn),
       ttl        : parseInt(ttl, 10),
       type       : 'SSHFP',
@@ -68,7 +68,7 @@ export default class SSHFP extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  SSHFP  algo fptype fp
     const [ owner, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
-    return new this.constructor({
+    return new SSHFP({
       owner,
       ttl        : parseInt(ttl, 10),
       class      : c,

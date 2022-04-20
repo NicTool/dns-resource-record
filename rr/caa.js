@@ -84,7 +84,7 @@ export default class CAA extends RR {
     const tag         = unescaped.substring(0, taglen)
     const fingerprint = unescaped.substring(taglen)
 
-    return new this.constructor({
+    return new CAA({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'CAA',
@@ -102,7 +102,7 @@ export default class CAA extends RR {
     if (!fields) throw new Error(`unable to parse: ${str}`)
 
     const [ owner, ttl, c, type, flags, tag, value ] = fields.slice(1)
-    return new this.constructor({
+    return new CAA({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

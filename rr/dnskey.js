@@ -62,7 +62,7 @@ export default class DNSKEY extends RR {
     if (!match) throw new Error(`unable to parse DNSKEY: ${str}`)
     const [ owner, ttl, c, type, flags, protocol, algorithm, publickey ] = match.slice(1)
 
-    return new this.constructor({
+    return new DNSKEY({
       owner,
       ttl      : parseInt(ttl, 10),
       class    : c,

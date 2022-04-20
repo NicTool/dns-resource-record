@@ -44,15 +44,14 @@ export default class HINFO extends RR {
     if (!match) throw new Error(`unable to parse HINFO: ${str}`)
     const [ owner, ttl, c, type, cpu, os ] = match.slice(1)
 
-    const bits = {
+    return new HINFO({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,
       type,
       cpu,
       os,
-    }
-    return new this.constructor(bits)
+    })
   }
 
   // fromTinydns (str) {

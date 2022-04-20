@@ -13,7 +13,7 @@ export default class NSEC3 extends RR {
     // The Hash Algorithm field is represented as an unsigned decimal integer.
     if (!val) throw new Error(`NSEC3: 'hash algorithm' is required, ${this.citeRFC()}`)
 
-    this.is8bitInt(val)
+    this.is8bitInt('NSEC3', 'hash algorithm', val)
 
     this.set('hash algorithm', val)
   }
@@ -22,7 +22,7 @@ export default class NSEC3 extends RR {
     // The Flags field is represented as an unsigned decimal integer.
     if (!val) throw new Error(`NSEC3: 'flags' is required, ${this.citeRFC()}`)
 
-    this.is8bitInt(val)
+    this.is8bitInt('NSEC3', 'flags', val)
 
     this.set('flags', val)
   }
@@ -31,7 +31,7 @@ export default class NSEC3 extends RR {
     // The Iterations field is represented as an unsigned decimal integer. 0-65535
     if (!val) throw new Error(`NSEC3: 'iterations' is required, ${this.citeRFC()}`)
 
-    this.is16bitInt(val)
+    this.is16bitInt('NSEC3', 'flags', val)
 
     this.set('iterations', val)
   }
@@ -80,7 +80,7 @@ export default class NSEC3 extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  NSEC3
     const [ owner, ttl, c, type ] = str.split(/\s+/)
-    return new this.constructor({
+    return new NSEC3({
       owner,
       ttl                     : parseInt(ttl, 10),
       class                   : c,

@@ -56,7 +56,7 @@ export default class DS extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
     const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
-    return new this.constructor({
+    return new DS({
       owner,
       ttl          : parseInt(ttl, 10),
       class        : c,

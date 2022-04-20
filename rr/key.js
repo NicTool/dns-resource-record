@@ -9,14 +9,14 @@ export default class KEY extends RR {
   /****** Resource record specific setters   *******/
   setFlags (val) {
     // a 2 octet Flags Field
-    this.is16bitInt(val)
+    this.is16bitInt('KEY', 'flags', val)
 
     this.set('flags', val)
   }
 
   setProtocol (val) {
     // 1 octet
-    this.is8bitInt(val)
+    this.is8bitInt('KEY', 'protocol', val)
 
     this.set('protocol', val)
   }
@@ -45,7 +45,7 @@ export default class KEY extends RR {
   }
 
   getRFCs () {
-    return [ 2535 ]
+    return [ 2535, 3445 ]
   }
 
   getTypeId () {
@@ -57,7 +57,7 @@ export default class KEY extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
     const [ owner, ttl, c, type, flags, protocol, algorithm ] = str.split(/\s+/)
-    return new this.constructor({
+    return new KEY({
       owner,
       ttl      : parseInt(ttl, 10),
       class    : c,

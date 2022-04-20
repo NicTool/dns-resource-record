@@ -33,28 +33,27 @@ This package is for working with _individual_ Resource Records. For working with
 Load the index for access to all RR types:
 
 ```js
-const RR = require('dns-resource-record')
+import * as RR from 'dns-resource-record'
 ```
 
 ### EXAMPLES
 
 ```js
-const RR = require('dns-resource-record')
 const exampleRRs = {
     A: {
-        owner  : 'test.example.com',
+        owner  : 'test.example.com.',
         type   : 'A',
         address: '192.0.2.127',
         ttl    : 3600,
     },
     AAAA: {
-        owner  : 'test.example.com',
+        owner  : 'test.example.com.',
         type   : 'AAAA',
         address: '2605:7900:20:a::4',
         ttl    : 3600,
     },
     SOA: {
-        owner  : 'example.com',
+        owner  : 'example.com.',
         type   : 'SOA',
         mname  : 'matt.example.com.',
         rname  : 'ns1.example.com.',
@@ -69,7 +68,7 @@ const exampleRRs = {
 try {
     console.log(new RR.SOA(exampleRRs.SOA))
     SOA(11) [Map] {
-        'owner' => 'example.com',
+        'owner' => 'example.com.',
         'ttl' => 3600,
         'class' => 'IN',
         'type' => 'SOA',
@@ -90,19 +89,18 @@ catch (e) {
 Validate records by passing a properly formatted JS object to the record-specific class. To validate an A record:
 
 ```js
-const A = require('dns-resource-record').A
-const validatedA = new A(exampleRRs.A)
+const validatedA = new RR.A(exampleRRs.A)
 ```
 
 Manipulate the validated record using pattern named setters:
 
 ```js
 console.log(validatedA.toBind())
-test.example.com    3600    IN  A   192.0.2.127
+test.example.com.    3600    IN  A   192.0.2.127
 
 validatedA.setAddress('192.0.2.128')
 console.log(validatedA.toBind())
-test.example.com    3600    IN  A   192.0.2.128
+test.example.com.    3600    IN  A   192.0.2.128
 ```
 
 The setters are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` has a setter named `setCertificateUsage`. The RFCs aren't always consistent regarding RR field names so aliases are permissible for interoperability.
@@ -112,7 +110,7 @@ The setters are named: `set` + `Field`, where field is the resource record field
 Get the field names for each RR type with `getFields()`:
 
 ```js
-> const RR = require('dns-resource-record')
+> import * as RR from 'dns-resource-record'
 > new RR.A(null).getFields()
 [ 'owner', 'ttl', 'class', 'type', 'address' ]
 
@@ -203,7 +201,7 @@ PRs are welcome, especially PRs with tests.
 | **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |
 | **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |
 | **HINFO**  |:white_check_mark:|                  |:white_check_mark:|                  |
-|**IPSECKEY**|                  |                  |                  |                  |
+|**IPSECKEY**|:white_check_mark:|                  |:white_check_mark:|                  |
 | **KEY**    |                  |                  |                  |                  |
 | **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|

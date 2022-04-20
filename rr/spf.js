@@ -36,7 +36,7 @@ export default class SPF extends TXT {
     const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
     if (n != 99) throw new Error('SPF fromTinydns, invalid n')
 
-    return new this.constructor({
+    return new SPF({
       type     : 'SPF',
       owner    : this.fullyQualify(fqdn),
       data     : TINYDNS.octalToChar(rdata),

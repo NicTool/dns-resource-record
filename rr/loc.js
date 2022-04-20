@@ -104,7 +104,7 @@ export default class LOC extends RR {
       altitude : TINYDNS.octalToUInt32(rdata.substring(48, 64)) - REF.ALTITUDE,
     }
 
-    return new this.constructor({
+    return new LOC({
       type     : 'LOC',
       owner    : this.fullyQualify(fqdn),
       address  : this.toHuman(l),
@@ -117,7 +117,7 @@ export default class LOC extends RR {
   fromBind (str) {
     const [ owner, ttl, c, type ] = str.split(/\s+/)
 
-    return new this.constructor({
+    return new LOC({
       owner,
       ttl    : parseInt(ttl, 10),
       class  : c,

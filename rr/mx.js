@@ -50,7 +50,7 @@ export default class MX extends RR {
     // eslint-disable-next-line no-unused-vars
     const [ owner, ip, x, preference, ttl, ts, loc ] = str.substring(1).split(':')
 
-    return new this.constructor({
+    return new MX({
       type      : 'MX',
       owner     : this.fullyQualify(owner),
       exchange  : this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
@@ -65,7 +65,7 @@ export default class MX extends RR {
     // test.example.com  3600  IN  MX  preference exchange
     const [ owner, ttl, c, type, preference, exchange ] = str.split(/\s+/)
 
-    return new this.constructor({
+    return new MX({
       owner,
       ttl       : parseInt(ttl, 10),
       class     : c,
