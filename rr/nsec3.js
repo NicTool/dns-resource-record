@@ -80,7 +80,7 @@ export default class NSEC3 extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  NSEC3
     const [ owner, ttl, c, type ] = str.split(/\s+/)
-    return new this.constructor({
+    return new NSEC3({
       owner,
       ttl                     : parseInt(ttl, 10),
       class                   : c,

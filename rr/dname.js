@@ -44,7 +44,7 @@ export default class DNAME extends RR {
     const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
     if (n != 39) throw new Error('DNAME fromTinydns, invalid n')
 
-    return new this.constructor({
+    return new DNAME({
       type     : 'DNAME',
       owner    : this.fullyQualify(fqdn),
       target   : `${TINYDNS.unpackDomainName(rdata)}.`,
@@ -57,7 +57,7 @@ export default class DNAME extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  DNAME  ...
     const [ owner, ttl, c, type, target ] = str.split(/\s+/)
-    return new this.constructor({
+    return new DNAME({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

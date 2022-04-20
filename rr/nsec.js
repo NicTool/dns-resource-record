@@ -47,7 +47,7 @@ export default class NSEC extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
     const [ owner, ttl, c, type, next ] = str.split(/\s+/)
-    return new this.constructor({
+    return new NSEC({
       owner,
       ttl            : parseInt(ttl, 10),
       class          : c,

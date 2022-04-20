@@ -40,7 +40,7 @@ export default class NS extends RR {
     // eslint-disable-next-line no-unused-vars
     const [ fqdn, ip, dname, ttl, ts, loc ] = str.substring(1).split(':')
 
-    return new this.constructor({
+    return new NS({
       type     : 'NS',
       owner    : this.fullyQualify(fqdn),
       dname    : this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
@@ -54,7 +54,7 @@ export default class NS extends RR {
     // test.example.com  3600  IN  NS dname
     const [ owner, ttl, c, type, dname ] = str.split(/\s+/)
 
-    return new this.constructor({
+    return new NS({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

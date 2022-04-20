@@ -46,7 +46,7 @@ export default class CNAME extends RR {
     // Cfqdn:p:ttl:timestamp:lo
     const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
 
-    return new this.constructor({
+    return new CNAME({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'CNAME',
@@ -59,7 +59,7 @@ export default class CNAME extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  CNAME  ...
     const [ owner, ttl, c, type, cname ] = str.split(/\s+/)
-    return new this.constructor({
+    return new CNAME({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

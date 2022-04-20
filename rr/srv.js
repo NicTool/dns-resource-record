@@ -76,7 +76,7 @@ export default class SRV extends RR {
       addr   = TINYDNS.unpackDomainName(rdata.substring(24))
     }
 
-    return new this.constructor({
+    return new SRV({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl,    10),
       type     : 'SRV',
@@ -92,7 +92,7 @@ export default class SRV extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  SRV Priority Weight Port Target
     const [ owner, ttl, c, type, pri, weight, port, target ] = str.split(/\s+/)
-    return new this.constructor({
+    return new SRV({
       owner   : owner,
       ttl     : parseInt(ttl,    10),
       class   : c,

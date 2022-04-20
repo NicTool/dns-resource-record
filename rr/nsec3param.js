@@ -65,7 +65,7 @@ export default class NSEC3PARAM extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  NSEC3PARAM
     const [ owner, ttl, c, type ] = str.split(/\s+/)
-    return new this.constructor({
+    return new NSEC3PARAM({
       owner,
       ttl                     : parseInt(ttl, 10),
       class                   : c,

@@ -88,7 +88,7 @@ export default class RRSIG extends RR {
   // fromBind (str) {
   //   // test.example.com  3600  IN  RRSIG ...
   //   const [ owner, ttl, c, type ] = str.split(/\s+/)
-  //   return new this.constructor({
+  //   return new RRSIG({
   //     owner,
   //     ttl          : parseInt(ttl, 10),
   //     class        : c,

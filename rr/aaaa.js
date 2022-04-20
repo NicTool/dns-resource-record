@@ -57,7 +57,7 @@ export default class AAAA extends RR {
         break
     }
 
-    return new this.constructor({
+    return new AAAA({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'AAAA',
@@ -70,7 +70,7 @@ export default class AAAA extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  AAAA  ...
     const [ owner, ttl, c, type, ip ] = str.split(/\s+/)
-    return new this.constructor({
+    return new AAAA({
       owner,
       ttl    : parseInt(ttl, 10),
       class  : c,

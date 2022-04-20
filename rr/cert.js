@@ -59,7 +59,7 @@ export default class CERT extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
     const [ owner, ttl, c, type  ] = str.split(/\s+/)
-    return new this.constructor({
+    return new CERT({
       owner,
       ttl  : parseInt(ttl, 10),
       class: c,

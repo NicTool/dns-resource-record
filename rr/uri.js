@@ -32,7 +32,7 @@ export default class URI extends RR {
     const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
     if (n != 256) throw new Error('URI fromTinydns, invalid n')
 
-    return new this.constructor({
+    return new URI({
       type     : 'URI',
       owner    : this.fullyQualify(fqdn),
       priority : TINYDNS.octalToUInt16(rdata.substring(0, 8)),
@@ -47,7 +47,7 @@ export default class URI extends RR {
   fromBind (str) {
     // test.example.com  3600  IN  URI  priority, weight, target
     const [ owner, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
-    return new this.constructor({
+    return new URI({
       class   : c,
       type    : type,
       owner,
