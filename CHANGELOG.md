@@ -1,6 +1,17 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+#### 1.0.1 - 2022-04-19
+
+- feat(IPSECKEY): added basic support
+- doc(README): update for ES module usage
+- fix: call is[8|16]BitInt() correctly
+- style: replace this.constructor with class name
+- test: show more results in test output
+- test(CERT): added two test cases
+- test(KEY): added valid test
+
+
 #### 1.0.0 - 2022-04-18
 
 - style: move rr/index to ./rr
