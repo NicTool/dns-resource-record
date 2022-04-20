@@ -71,9 +71,10 @@ export function getDescription (type) {
 
 export function getRFCs (type, valid) {
   describe('getRFCs', function () {
-    it(`can retrieve RFCs`, async function () {
-      const r = new type(null)
-      assert.ok(r.getRFCs().length)
+    const r = new type(null)
+    const rfcs = r.getRFCs()
+    it(`can retrieve RFCs: ${rfcs.join(',')}`, async function () {
+      assert.ok(rfcs.length)
     })
   })
 }
@@ -107,8 +108,8 @@ export function fromBind (type, validRecords) {
 
 export function getRdataFields (type, rdataFields) {
   describe('getRdataFields', function () {
-    it(`can retrieve record fields`, async function () {
-      const r = new type(null)
+    const r = new type(null)
+    it(`can retrieve rdata fields: (${r.getRdataFields('rdata')})`, async function () {
       assert.deepEqual(r.getRdataFields('rdata'), rdataFields)
     })
   })
@@ -116,8 +117,8 @@ export function getRdataFields (type, rdataFields) {
 
 export function getFields (type, rdataFields) {
   describe('getFields', function () {
+    const r = new type(null)
     it(`can retrieve record fields`, async function () {
-      const r = new type(null)
       assert.deepEqual(r.getFields('rdata'), rdataFields)
       assert.deepEqual(r.getFields(), r.getFields('common').concat(rdataFields))
     })
@@ -126,8 +127,8 @@ export function getFields (type, rdataFields) {
 
 export function getTypeId (type, val) {
   describe('getTypeId', function () {
-    it(`can retrieve record type ID`, async function () {
-      const r = new type(null)
+    const r = new type(null)
+    it(`can retrieve record type ID (${r.getTypeId()})`, async function () {
       assert.deepEqual(r.getTypeId(), val)
     })
   })
