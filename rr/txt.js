@@ -41,7 +41,7 @@ export default class TXT extends RR {
       [ fqdn, rdata, ttl, ts, loc ] = this.fromTinydnsGeneric(str)
     }
 
-    return new TXT({
+    return new this.constructor({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'TXT',
