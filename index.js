@@ -29,6 +29,7 @@ import SOA from './rr/soa.js'
 import SPF from './rr/spf.js'
 import SRV from './rr/srv.js'
 import SSHFP from './rr/sshfp.js'
+import SVCB from './rr/svcb.js'
 import TLSA from './rr/tlsa.js'
 import TSIG from './rr/tsig.js'
 import TXT from './rr/txt.js'
@@ -66,6 +67,7 @@ export {
   SOA,
   SPF,
   SRV,
+  SVCB,
   TLSA,
   TSIG,
   TXT,
@@ -103,6 +105,7 @@ for (const c of [
   SOA,
   SPF,
   SRV,
+  SVCB,
   TLSA,
   TSIG,
   TXT,
