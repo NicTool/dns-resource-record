@@ -7,8 +7,8 @@ export default class RR extends Map {
 
     if (opts.default) this.default = opts.default
 
-    if (opts.bindline) return this.fromBind(opts.bindline)
-    if (opts.tinyline) return this.fromTinydns(opts.tinyline)
+    if (opts.bindline) return this.fromBind(opts)
+    if (opts.tinyline) return this.fromTinydns(opts)
 
     // tinydns specific
     this.setLocation(opts?.location)

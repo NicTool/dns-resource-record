@@ -30,7 +30,8 @@ export default class TXT extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
+    const str = opts.tinyline
     let fqdn, rdata, s, ttl, ts, loc
     // 'fqdn:s:ttl:timestamp:lo
     if (str[0] === "'") {
@@ -69,10 +70,10 @@ export default class TXT extends RR {
     return [ fqdn, s, ttl, ts, loc ]
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  TXT  "..."
-    const match = str.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/)
-    if (!match) throw new Error(`unable to parse TXT: ${str}`)
+    const match = opts.bindline.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse TXT: ${opts.bindline}`)
     const [ owner, ttl, c, type, rdata ] = match.slice(1)
 
     return new this.constructor({

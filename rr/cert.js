@@ -56,9 +56,9 @@ export default class CERT extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
-    const [ owner, ttl, c, type, certtype, keytag, algo, certificate  ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, certtype, keytag, algo, certificate  ] = opts.bindline.split(/\s+/)
     return new CERT({
       owner,
       ttl        : parseInt(ttl, 10),

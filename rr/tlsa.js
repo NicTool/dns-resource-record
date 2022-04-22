@@ -54,10 +54,10 @@ export default class TLSA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const match = str.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/)
-    if (!match) throw new Error(`unable to parse TLSA: ${str}`)
+    const match = opts.bindline.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse TLSA: ${opts.bindline}`)
     const [ owner, ttl, c, type, usage, selector, matchtype, cad ] = match.slice(1)
     return new TLSA({
       owner                         : this.fullyQualify(owner),

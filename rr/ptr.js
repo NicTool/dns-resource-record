@@ -32,9 +32,9 @@ export default class PTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // ^fqdn:p:ttl:timestamp:lo
-    const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, p, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
 
     return new PTR({
       owner    : this.fullyQualify(fqdn),
@@ -46,9 +46,9 @@ export default class PTR extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  PTR  dname
-    const [ owner, ttl, c, type, dname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, dname ] = opts.bindline.split(/\s+/)
     return new PTR({
       owner,
       ttl  : parseInt(ttl, 10),

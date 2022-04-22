@@ -53,9 +53,9 @@ export default class DS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = opts.bindline.split(/\s+/)
     return new DS({
       owner,
       ttl          : parseInt(ttl, 10),
@@ -64,7 +64,7 @@ export default class DS extends RR {
       'key tag'    : parseInt(keytag,     10),
       algorithm    : parseInt(algorithm,  10),
       'digest type': parseInt(digesttype, 10),
-      digest       : str.split(/\s+/).slice(7).join(' ').trim(),
+      digest       : opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 

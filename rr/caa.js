@@ -72,9 +72,9 @@ export default class CAA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 257) throw new Error('CAA fromTinydns, invalid n')
 
     const flags  = TINYDNS.octalToUInt8(rdata.substring(0, 4))
@@ -96,10 +96,10 @@ export default class CAA extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const fields = str.match(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[^\s]+?)\s*$/i)
-    if (!fields) throw new Error(`unable to parse: ${str}`)
+    const fields = opts.bindline.match(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[^\s]+?)\s*$/i)
+    if (!fields) throw new Error(`unable to parse: ${opts.bindline}`)
 
     const [ owner, ttl, c, type, flags, tag, value ] = fields.slice(1)
     return new CAA({

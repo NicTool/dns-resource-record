@@ -60,9 +60,9 @@ export default class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 35) throw new Error('NAPTR fromTinydns, invalid n')
 
     const rec = {
@@ -75,7 +75,7 @@ export default class NAPTR extends RR {
       preference: TINYDNS.octalToUInt16(rdata.substr(8, 8)),
     }
     /*
-    TODO: incomplete, need to remove octal escapes from regexp
+    TODO: incomplete, need to replace octal escapes in regexp with hex escapes
     'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
     ':cid.urn.arpa:35:
     \000\144\000\012\000\000\040!^urn\072cid\072.+@([^\134.]+\134.)(.*)$!\x02!i\001.``000:86400::'
@@ -100,7 +100,8 @@ export default class NAPTR extends RR {
     return new NAPTR(rec)
   }
 
-  fromBind (str) {
+  fromBind (opts) {
+    const str = opts.bindline
     // test.example.com  3600  IN  NAPTR order, preference, "flags", "service", "regexp", replacement
     const [ owner, ttl, c, type, order, preference ] = str.split(/\s+/)
     const [ flags, service, regexp ] = str.match(/(?:").*?(?:"\s)/g)

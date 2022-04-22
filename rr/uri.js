@@ -27,9 +27,9 @@ export default class URI extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // URI via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 256) throw new Error('URI fromTinydns, invalid n')
 
     return new URI({
@@ -44,9 +44,9 @@ export default class URI extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  URI  priority, weight, target
-    const [ owner, ttl, c, type, priority, weight, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, priority, weight, target ] = opts.bindline.split(/\s+/)
     return new URI({
       class   : c,
       type    : type,

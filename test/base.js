@@ -51,6 +51,7 @@ export function toBind (type, validRecords) {
 export function toTinydns (type, validRecords) {
   describe('toTinydns', function () {
     for (const val of validRecords) {
+      if (val.testT === undefined) continue
       it(`exports to tinydns: ${val.owner}`, async function () {
         const r = new type(val).toTinydns()
         if (process.env.DEBUG) console.dir(r)
@@ -81,8 +82,10 @@ export function getRFCs (type, valid) {
 
 function checkFromNS (type, validRecords, nsName, nsLineName) {
   for (const val of validRecords) {
+    const testLine = nsLineName === 'bindline' ? val.testB : val.testT
+    if (testLine == undefined) continue
     it(`imports ${nsName} record: ${val.owner}`, async function () {
-      const r = new type({ [nsLineName]: nsLineName === 'bindline' ? val.testB : val.testT })
+      const r = new type({ [nsLineName]: testLine })
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
         if (f === 'class') continue

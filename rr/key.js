@@ -54,9 +54,9 @@ export default class KEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
-    const [ owner, ttl, c, type, flags, protocol, algorithm ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, flags, protocol, algorithm ] = opts.bindline.split(/\s+/)
     return new KEY({
       owner,
       ttl      : parseInt(ttl, 10),
@@ -65,7 +65,7 @@ export default class KEY extends RR {
       flags    : parseInt(flags,     10),
       protocol : parseInt(protocol, 10),
       algorithm: parseInt(algorithm,  10),
-      publickey: str.split(/\s+/).slice(7).join(' ').trim(),
+      publickey: opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 

@@ -39,9 +39,9 @@ export default class DNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // DNAME via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 39) throw new Error('DNAME fromTinydns, invalid n')
 
     return new DNAME({
@@ -54,9 +54,9 @@ export default class DNAME extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  DNAME  ...
-    const [ owner, ttl, c, type, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, target ] = opts.bindline.split(/\s+/)
     return new DNAME({
       owner,
       ttl  : parseInt(ttl, 10),

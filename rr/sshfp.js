@@ -43,9 +43,9 @@ export default class SSHFP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 44) throw new Error('SSHFP fromTinydns, invalid n')
 
     const algo   = TINYDNS.octalToUInt16(rdata.substring(0, 8))
@@ -65,9 +65,9 @@ export default class SSHFP extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  SSHFP  algo fptype fp
-    const [ owner, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, algo, fptype, fp ] = opts.bindline.split(/\s+/)
     return new SSHFP({
       owner,
       ttl        : parseInt(ttl, 10),
