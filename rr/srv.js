@@ -74,7 +74,7 @@ export default class SRV extends RR {
       pri    = TINYDNS.octalToUInt16(rdata.substring(0, 8))
       weight = TINYDNS.octalToUInt16(rdata.substring(8, 16))
       port   = TINYDNS.octalToUInt16(rdata.substring(16, 24))
-      addr   = TINYDNS.unpackDomainName(rdata.substring(24))
+      addr   = (TINYDNS.unpackDomainName(rdata.substring(24)))[0]
     }
 
     return new SRV({
@@ -84,7 +84,7 @@ export default class SRV extends RR {
       priority : parseInt(pri,    10),
       weight   : parseInt(weight, 10),
       port     : parseInt(port,   10),
-      target   : `${addr}.`,
+      target   : this.fullyQualify(addr),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })

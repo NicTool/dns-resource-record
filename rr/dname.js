@@ -47,7 +47,7 @@ export default class DNAME extends RR {
     return new DNAME({
       type     : 'DNAME',
       owner    : this.fullyQualify(fqdn),
-      target   : `${TINYDNS.unpackDomainName(rdata)}.`,
+      target   : (TINYDNS.unpackDomainName(rdata))[0],
       ttl      : parseInt(ttl, 10),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',

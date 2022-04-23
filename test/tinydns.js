@@ -99,7 +99,9 @@ describe('TINYDNS', function () {
 
   describe('unpackDomainName', function () {
     it(`extracts domain name from wire format`, async () => {
-      assert.strictEqual(TINYDNS.unpackDomainName('\\006sipdir\\006online\\004lync\\003com\\000'), 'sipdir.online.lync.com')
+      const r = TINYDNS.unpackDomainName('\\006sipdir\\006online\\004lync\\003com\\000')
+      assert.strictEqual(r[0], 'sipdir.online.lync.com.')
+      assert.strictEqual(r[1], 40)
     })
   })
 
