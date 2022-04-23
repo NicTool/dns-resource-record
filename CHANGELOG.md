@@ -1,6 +1,21 @@
 
 #### 1.N.N - YYYY-MM-DD
 
+
+#### 1.1.0 - 2022-04-22
+
+- feat(tinydns): add ipv4toOctal, octalToIPv4, base64toOctal, octalToBase64
+- feat(DNSKEY,DS,IPSECKEY,TLSA): added to/fromTinydns support
+- feat(NAPTR): finished fromTinydns
+- feat(bindline & tinyline): pass in opts (was only line), so defaults (serial, ttl, etc) can be passed in.
+- fix(SSHFP): algo & fptype are 1 byte, not 2
+- fix:(cname): fully qualify the target
+- test: add tinydns.unpackDomainName, ipv4toOctal, octalToIPv4
+- test(SRV): add another test case (found a bug in NicTool 2)
+- test(IPSECKEY): expand test coverage
+- tinydns.unpackdomain: return fqdn + length, for RRs where the FQDN is part of the byte stream
+
+
 #### 1.0.1 - 2022-04-19
 
 - feat(IPSECKEY): added basic support

@@ -43,31 +43,26 @@ export default class SSHFP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 44) throw new Error('SSHFP fromTinydns, invalid n')
-
-    const algo   = TINYDNS.octalToUInt16(rdata.substring(0, 8))
-    const fptype = TINYDNS.octalToUInt16(rdata.substring(8, 16))
-
-    const fingerprint = TINYDNS.octalToHex(rdata.substring(16))
 
     return new SSHFP({
       owner      : this.fullyQualify(fqdn),
       ttl        : parseInt(ttl, 10),
       type       : 'SSHFP',
-      algorithm  : algo,
-      fptype     : fptype,
-      fingerprint: fingerprint,
+      algorithm  : TINYDNS.octalToUInt8(rdata.substring(0, 4)),
+      fptype     : TINYDNS.octalToUInt8(rdata.substring(4, 8)),
+      fingerprint: TINYDNS.octalToHex(rdata.substring(8)),
       timestamp  : ts,
       location   : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  SSHFP  algo fptype fp
-    const [ owner, ttl, c, type, algo, fptype, fp ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, algo, fptype, fp ] = opts.bindline.split(/\s+/)
     return new SSHFP({
       owner,
       ttl        : parseInt(ttl, 10),
@@ -82,13 +77,10 @@ export default class SSHFP extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns () {
-    let rdata = ''
-
-    for (const e of [ 'algorithm', 'fptype' ]) {
-      rdata += TINYDNS.UInt16toOctal(this.get(e))
-    }
-
-    rdata += TINYDNS.packHex(this.get('fingerprint'))
-    return this.getTinydnsGeneric(rdata)
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('algorithm')) +
+      TINYDNS.UInt8toOctal(this.get('fptype')) +
+      TINYDNS.packHex(this.get('fingerprint'))
+    )
   }
 }

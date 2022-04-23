@@ -1,6 +1,8 @@
 
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class TLSA extends RR {
   constructor (opts) {
     super(opts)
@@ -54,10 +56,10 @@ export default class TLSA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const match = str.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/)
-    if (!match) throw new Error(`unable to parse TLSA: ${str}`)
+    const match = opts.bindline.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/)
+    if (!match) throw new Error(`unable to parse TLSA: ${opts.bindline}`)
     const [ owner, ttl, c, type, usage, selector, matchtype, cad ] = match.slice(1)
     return new TLSA({
       owner                         : this.fullyQualify(owner),
@@ -69,5 +71,36 @@ export default class TLSA extends RR {
       'matching type'               : parseInt(matchtype, 10),
       'certificate association data': cad,
     })
+  }
+
+  fromTinydns (opts) {
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    if (n != 52) throw new Error('TLSA fromTinydns, invalid n')
+
+    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+
+    return new TLSA({
+      owner                         : this.fullyQualify(fqdn),
+      ttl                           : parseInt(ttl, 10),
+      type                          : 'TLSA',
+      'certificate usage'           : bytes.readUInt8(0),
+      selector                      : bytes.readUInt8(1),
+      'matching type'               : bytes.readUInt8(2),
+      'certificate association data': bytes.slice(3).toString(),
+      timestamp                     : ts,
+      location                      : loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
+  /******  EXPORTERS   *******/
+  toTinydns () {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('certificate usage')) +
+      TINYDNS.UInt8toOctal(this.get('selector')) +
+      TINYDNS.UInt8toOctal(this.get('matching type')) +
+      TINYDNS.escapeOctal(dataRe, this.get('certificate association data'))
+    )
   }
 }

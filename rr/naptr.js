@@ -60,10 +60,12 @@ export default class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 35) throw new Error('NAPTR fromTinydns, invalid n')
+
+    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
     const rec = {
       type      : 'NAPTR',
@@ -71,36 +73,31 @@ export default class NAPTR extends RR {
       ttl       : parseInt(ttl, 10),
       timestamp : ts,
       location  : loc !== '' && loc !== '\n' ? loc : '',
-      order     : TINYDNS.octalToUInt16(rdata.substr(0, 8)),
-      preference: TINYDNS.octalToUInt16(rdata.substr(8, 8)),
+      order     : binRdata.readUInt16BE(0,2),
+      preference: binRdata.readUInt16BE(2,4),
     }
-    /*
-    TODO: incomplete, need to remove octal escapes from regexp
-    'cid.urn.arpa\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
-    ':cid.urn.arpa:35:
-    \000\144\000\012\000\000\040!^urn\072cid\072.+@([^\134.]+\134.)(.*)$!\x02!i\001.``000:86400::'
-    */
 
-    let idx = 16
-    const flagsLength = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
-    rec.flags = rdata.substr(idx+4, flagsLength)
-    idx += 4 + flagsLength
+    let idx = 4
+    const flagsLength = binRdata.readUInt8(idx); idx++
+    rec.flags         = binRdata.slice(idx, flagsLength).toString()
+    idx += flagsLength
 
-    const serviceLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
-    rec.service = TINYDNS.octalToChar(rdata.substr(idx+4, serviceLen))
-    idx += 4 + serviceLen
+    const serviceLen  = binRdata.readUInt8(idx); idx++
+    rec.service       = binRdata.slice(idx, idx+serviceLen).toString()
+    idx += serviceLen
 
-    const regexpLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
-    rec.regexp = TINYDNS.octalToChar(rdata.substr(idx+4, regexpLen))
-    idx += 4 + regexpLen
+    const regexpLen   = binRdata.readUInt8(idx); idx++
+    rec.regexp        = binRdata.slice(idx, idx+regexpLen).toString()
+    idx += regexpLen
 
-    const replaceLen = TINYDNS.octalToUInt8(rdata.substr(idx, 4))
-    rec.replacement = TINYDNS.octalToChar(rdata.substr(idx+4, replaceLen))
+    const replaceLen  = binRdata.readUInt8(idx); idx++
+    rec.replacement   = binRdata.slice(idx, idx+replaceLen).toString()
 
     return new NAPTR(rec)
   }
 
-  fromBind (str) {
+  fromBind (opts) {
+    const str = opts.bindline
     // test.example.com  3600  IN  NAPTR order, preference, "flags", "service", "regexp", replacement
     const [ owner, ttl, c, type, order, preference ] = str.split(/\s+/)
     const [ flags, service, regexp ] = str.match(/(?:").*?(?:"\s)/g)
@@ -124,24 +121,25 @@ export default class NAPTR extends RR {
   /******  EXPORTERS   *******/
   toTinydns () {
 
-    let rdata = ''
-    rdata += TINYDNS.UInt16toOctal(this.get('order'))
-    rdata += TINYDNS.UInt16toOctal(this.get('preference'))
+    let rdata =
+      TINYDNS.UInt16toOctal(this.get('order')) +
+      TINYDNS.UInt16toOctal(this.get('preference')) +
 
-    rdata += TINYDNS.UInt8toOctal(this.get('flags').length)
-    rdata += this.get('flags')
+      TINYDNS.UInt8toOctal(this.get('flags').length) +
+      this.get('flags') +
 
-    rdata += TINYDNS.UInt8toOctal(this.get('service').length)
-    rdata += TINYDNS.escapeOctal(rdataRe, this.get('service'))
+      TINYDNS.UInt8toOctal(this.get('service').length) +
+      TINYDNS.escapeOctal(rdataRe, this.get('service')) +
 
-    rdata += TINYDNS.UInt8toOctal(this.get('regexp').length)
-    rdata += TINYDNS.escapeOctal(rdataRe, this.get('regexp'))
+      TINYDNS.UInt8toOctal(this.get('regexp').length) +
+      TINYDNS.escapeOctal(rdataRe, this.get('regexp'))
 
-    if (this.set('replacement' !== '')) {
-      rdata += TINYDNS.UInt8toOctal(this.get('replacement').length)
-      rdata += TINYDNS.escapeOctal(rdataRe, this.get('replacement'))
+    const replacement = this.get('replacement')
+    if (replacement !== '') {
+      rdata += TINYDNS.UInt8toOctal(replacement.length)
+      rdata += TINYDNS.escapeOctal(rdataRe, replacement)
     }
-    rdata += '``000'
+    rdata += '\\000'
 
     return this.getTinydnsGeneric(rdata)
   }

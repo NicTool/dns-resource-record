@@ -9,14 +9,24 @@ const defaults = { class: 'IN', ttl: 3600, type: 'SRV' }
 
 const validRecords = [
   {
-    owner   : '_imaps._tcp.example.com.',
     ...defaults,
+    owner   : '_imaps._tcp.example.com.',
     priority: 1,
     weight  : 0,
     port    : 993,
     target  : 'mail.example.com.',
     testB   : '_imaps._tcp.example.com.\t3600\tIN\tSRV\t1\t0\t993\tmail.example.com.\n',
     testT   : ':_imaps._tcp.example.com:33:\\000\\001\\000\\000\\003\\341\\004mail\\007example\\003com\\000:3600::\n',
+  },
+  {
+    ...defaults,
+    owner   : '_sip._tls.example.com.',
+    priority: 100,
+    weight  : 1,
+    port    : 443,
+    target  : 'sipdir.online.lync.com.',
+    testB   : '_sip._tls.example.com.\t3600\tIN\tSRV\t100\t1\t443\tsipdir.online.lync.com.\n',
+    testT   : ':_sip._tls.example.com:33:\\000\\144\\000\\001\\001\\273\\006sipdir\\006online\\004lync\\003com\\000:3600::\n',
   },
 ]
 

@@ -41,29 +41,21 @@ export default class NSEC extends RR {
   }
 
   /******  IMPORTERS   *******/
-  // fromTinydns (str) {
-  // }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [ owner, ttl, c, type, next ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, next ] = opts.bindline.split(/\s+/)
     return new NSEC({
       owner,
       ttl            : parseInt(ttl, 10),
       class          : c,
       type           : type,
       'next domain'  : next,
-      'type bit maps': str.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
+      'type bit maps': opts.bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
     })
   }
 
   /******  EXPORTERS   *******/
-  // toBind (zone_opts) {
-  //   return `${this.getPrefix(zone_opts)}\t${this.getFQDN('next domain', zone_opts)}\n`
-  // }
-
-  // toTinydns () {
-  // }
 }
 
 const removeParens = a => ![ '(',')' ].includes(a)

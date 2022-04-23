@@ -31,9 +31,9 @@ export default class SPF extends TXT {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // SPF via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 99) throw new Error('SPF fromTinydns, invalid n')
 
     return new SPF({

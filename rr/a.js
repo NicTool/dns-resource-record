@@ -32,9 +32,9 @@ export default class A extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // +fqdn:ip:ttl:timestamp:lo
-    const [ owner, ip, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ owner, ip, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
 
     return new A({
       owner    : this.fullyQualify(owner),
@@ -46,9 +46,9 @@ export default class A extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  A  192.0.2.127
-    const [ owner, ttl, c, type, address ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, address ] = opts.bindline.split(/\s+/)
     return new A({
       owner,
       ttl  : parseInt(ttl, 10),

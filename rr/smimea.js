@@ -55,9 +55,9 @@ export default class SMIMEA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  SMIMEA, usage, selector, match, data
-    const [ owner, ttl, c, type, usage, selector, match ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, usage, selector, match ] = opts.bindline.split(/\s+/)
     return new SMIMEA({
       owner,
       ttl                           : parseInt(ttl, 10),
@@ -66,7 +66,7 @@ export default class SMIMEA extends RR {
       'certificate usage'           : parseInt(usage,    10),
       selector                      : parseInt(selector, 10),
       'matching type'               : parseInt(match   , 10),
-      'certificate association data': str.split(/\s+/).slice(7).join(' ').trim(),
+      'certificate association data': opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 

@@ -35,10 +35,10 @@ export default class NS extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // &fqdn:ip:x:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [ fqdn, ip, dname, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, ip, dname, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
 
     return new NS({
       type     : 'NS',
@@ -50,9 +50,9 @@ export default class NS extends RR {
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  NS dname
-    const [ owner, ttl, c, type, dname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, dname ] = opts.bindline.split(/\s+/)
 
     return new NS({
       owner,

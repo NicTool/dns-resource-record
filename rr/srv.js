@@ -58,7 +58,8 @@ export default class SRV extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
+    const str = opts.tinyline
     let fqdn, addr, port, pri, weight, ttl, ts, loc, n, rdata
 
     if (str[0] === 'S') {
@@ -73,7 +74,7 @@ export default class SRV extends RR {
       pri    = TINYDNS.octalToUInt16(rdata.substring(0, 8))
       weight = TINYDNS.octalToUInt16(rdata.substring(8, 16))
       port   = TINYDNS.octalToUInt16(rdata.substring(16, 24))
-      addr   = TINYDNS.unpackDomainName(rdata.substring(24))
+      addr   = (TINYDNS.unpackDomainName(rdata.substring(24)))[0]
     }
 
     return new SRV({
@@ -83,15 +84,15 @@ export default class SRV extends RR {
       priority : parseInt(pri,    10),
       weight   : parseInt(weight, 10),
       port     : parseInt(port,   10),
-      target   : `${addr}.`,
+      target   : this.fullyQualify(addr),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [ owner, ttl, c, type, pri, weight, port, target ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, pri, weight, port, target ] = opts.bindline.split(/\s+/)
     return new SRV({
       owner   : owner,
       ttl     : parseInt(ttl,    10),

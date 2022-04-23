@@ -42,23 +42,23 @@ export default class CNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (str) {
+  fromTinydns (opts) {
     // Cfqdn:p:ttl:timestamp:lo
-    const [ fqdn, p, ttl, ts, loc ] = str.substring(1).split(':')
+    const [ fqdn, p, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
 
     return new CNAME({
       owner    : this.fullyQualify(fqdn),
       ttl      : parseInt(ttl, 10),
       type     : 'CNAME',
-      cname    : p,
+      cname    : this.fullyQualify(p),
       timestamp: ts,
       location : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  CNAME  ...
-    const [ owner, ttl, c, type, cname ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, cname ] = opts.bindline.split(/\s+/)
     return new CNAME({
       owner,
       ttl  : parseInt(ttl, 10),

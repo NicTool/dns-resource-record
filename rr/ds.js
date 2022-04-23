@@ -1,6 +1,8 @@
 
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class DS extends RR {
   constructor (opts) {
     super(opts)
@@ -53,9 +55,9 @@ export default class DS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind (str) {
+  fromBind (opts) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = str.split(/\s+/)
+    const [ owner, ttl, c, type, keytag, algorithm, digesttype ] = opts.bindline.split(/\s+/)
     return new DS({
       owner,
       ttl          : parseInt(ttl, 10),
@@ -64,9 +66,39 @@ export default class DS extends RR {
       'key tag'    : parseInt(keytag,     10),
       algorithm    : parseInt(algorithm,  10),
       'digest type': parseInt(digesttype, 10),
-      digest       : str.split(/\s+/).slice(7).join(' ').trim(),
+      digest       : opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
+    })
+  }
+
+  fromTinydns (opts) {
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    if (n != 43) throw new Error('DS fromTinydns, invalid n')
+
+    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+
+    return new DS({
+      owner        : this.fullyQualify(fqdn),
+      ttl          : parseInt(ttl, 10),
+      type         : 'DS',
+      'key tag'    : binRdata.readUInt16BE(0),
+      algorithm    : binRdata.readUInt8(2),
+      'digest type': binRdata.readUInt8(3),
+      digest       : binRdata.slice(4).toString(),
+      timestamp    : ts,
+      location     : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns () {
+    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.get('key tag')) +
+      TINYDNS.UInt8toOctal(this.get('algorithm')) +
+      TINYDNS.UInt8toOctal(this.get('digest type')) +
+      TINYDNS.escapeOctal(rdataRe, this.get('digest'))
+    )
+  }
 }
