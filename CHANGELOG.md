@@ -5,7 +5,7 @@
 #### 1.1.0 - 2022-04-22
 
 - feat(tinydns): add ipv4toOctal, octalToIPv4, base64toOctal, octalToBase64
-- feat(DS,IPSECKEY,TLSA): added to/fromTinydns support
+- feat(DNSKEY,DS,IPSECKEY,TLSA): added to/fromTinydns support
 - feat(NAPTR): finished fromTinydns
 - feat(bindline & tinyline): pass in opts (was only line), so defaults (serial, ttl, etc) can be passed in.
 - fix(SSHFP): algo & fptype are 1 byte, not 2
