@@ -48,18 +48,13 @@ export default class SSHFP extends RR {
     const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
     if (n != 44) throw new Error('SSHFP fromTinydns, invalid n')
 
-    const algo   = TINYDNS.octalToUInt16(rdata.substring(0, 8))
-    const fptype = TINYDNS.octalToUInt16(rdata.substring(8, 16))
-
-    const fingerprint = TINYDNS.octalToHex(rdata.substring(16))
-
     return new SSHFP({
       owner      : this.fullyQualify(fqdn),
       ttl        : parseInt(ttl, 10),
       type       : 'SSHFP',
-      algorithm  : algo,
-      fptype     : fptype,
-      fingerprint: fingerprint,
+      algorithm  : TINYDNS.octalToUInt8(rdata.substring(0, 4)),
+      fptype     : TINYDNS.octalToUInt8(rdata.substring(4, 8)),
+      fingerprint: TINYDNS.octalToHex(rdata.substring(8)),
       timestamp  : ts,
       location   : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -82,13 +77,10 @@ export default class SSHFP extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns () {
-    let rdata = ''
-
-    for (const e of [ 'algorithm', 'fptype' ]) {
-      rdata += TINYDNS.UInt16toOctal(this.get(e))
-    }
-
-    rdata += TINYDNS.packHex(this.get('fingerprint'))
-    return this.getTinydnsGeneric(rdata)
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('algorithm')) +
+      TINYDNS.UInt8toOctal(this.get('fptype')) +
+      TINYDNS.packHex(this.get('fingerprint'))
+    )
   }
 }
