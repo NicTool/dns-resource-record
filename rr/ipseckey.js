@@ -35,17 +35,11 @@ export default class IPSECKEY extends RR {
   }
 
   setGateway (val) {
-    const gwErr = new Error(`IPSECKEY: gateway invalid, ${this.citeRFC()}`)
+    const gwErr = new Error(`IPSECKEY: gateway invalid (${val}), ${this.citeRFC()}`)
     switch (this.get('gateway type')) {
-      case 0:
-        if (val !== '.') throw gwErr
-        break
-      case 1:
-        if (!net.isIPv4(val)) throw gwErr
-        break
-      case 2:
-        if (!net.isIPv6(val)) throw gwErr
-        break
+      case 0: if (val !== '.') throw gwErr; break
+      case 1: if (!net.isIPv4(val)) throw gwErr; break
+      case 2: if (!net.isIPv6(val)) throw gwErr; break
     }
 
     this.set('gateway', val)
@@ -98,27 +92,24 @@ export default class IPSECKEY extends RR {
     const gwType     = TINYDNS.octalToUInt8(rdata.substring(4, 8))
     const algorithm  = TINYDNS.octalToUInt8(rdata.substring(8, 12))
 
-    const pos = 12
-    let len, gateway, octalPK
+    let len, gateway, octalKey
 
     switch (gwType) {
       case 0:     // no gateway
-        len = 0
-        octalPK = rdata.substring(pos)
+        gateway  = rdata.substring(12, 13) // should always be: '.'
+        octalKey = rdata.substring(13)
         break
       case 1:     // 4-byte IPv4 address
-        len = 16
-        gateway = TINYDNS.octalToIPv4(rdata.substring(pos, len))
-        octalPK = rdata.substring(pos + len)
+        gateway  = TINYDNS.octalToIPv4(rdata.substring(12, 28))
+        octalKey = rdata.substring(28)
         break
       case 2:     // 16-byte IPv6
-        len = 64
-        gateway = TINYDNS.octalToHex(rdata.substring(pos, len))
-        octalPK = rdata.substring(pos + len)
+        gateway  = TINYDNS.octalToHex(rdata.substring(12, 76))
+        octalKey = rdata.substring(76)
         break
       case 3:     // wire encoded domain name
-        [ gateway, len ] = TINYDNS.unpackDomainName(rdata.substring(pos))
-        octalPK = rdata.substring(pos + len)
+        [ gateway, len ] = TINYDNS.unpackDomainName(rdata.substring(12))
+        octalKey = rdata.substring(12 + len)
         break
     }
 
@@ -130,7 +121,7 @@ export default class IPSECKEY extends RR {
       'gateway type': gwType,
       algorithm,
       gateway,
-      publickey     : TINYDNS.octalToBase64(octalPK),
+      publickey     : TINYDNS.octalToBase64(octalKey),
       timestamp     : ts,
       location      : loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -151,10 +142,10 @@ export default class IPSECKEY extends RR {
         rdata += TINYDNS.escapeOctal(rdataRe, '.')
         break
       case 1:
-        rdata += TINYDNS.ipv4asOctal(this.get('gateway'))
+        rdata += TINYDNS.ipv4toOctal(this.get('gateway'))
         break
       case 2:
-        rdata += TINYDNS.ipv4asOctal(this.get('gateway'))
+        rdata += TINYDNS.ipv6toOctal(this.get('gateway'))
         break
       case 3:
         rdata += TINYDNS.packDomainName(this.get('gateway'))

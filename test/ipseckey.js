@@ -15,6 +15,7 @@ const validRecords = [
     gateway       : '192.0.2.38',
     publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
     testB         : '38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10\t1\t2\t192.0.2.38\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT         : ':38.2.0.192.in-addr.arpa:45:\\012\\001\\002\\300\\000\\002\\046\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:7200::\n',
   },
   {
     ...common,
@@ -25,6 +26,7 @@ const validRecords = [
     gateway       : '.',
     publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
     testB         : '38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10\t0\t2\t.\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT         : ':38.2.0.192.in-addr.arpa:45:\\012\\000\\002.\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:7200::\n',
   },
   {
     ...common,
@@ -32,9 +34,10 @@ const validRecords = [
     precedence    : 10,
     'gateway type': 1,
     algorithm     : 2,
-    gateway       : '192.0.2.3',
+    gateway       : '192.0.2.38',
     publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
-    testB         : '38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10\t1\t2\t192.0.2.3\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testB         : '38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10\t1\t2\t192.0.2.38\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT         : ':38.2.0.192.in-addr.arpa:45:\\012\\001\\002\\300\\000\\002\\046\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:7200::\n',
   },
   {
     ...common,
@@ -45,6 +48,7 @@ const validRecords = [
     gateway       : 'mygateway.example.com.',
     publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
     testB         : '38.1.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10\t3\t2\tmygateway.example.com.\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT         : ':38.1.0.192.in-addr.arpa:45:\\012\\003\\002\\011mygateway\\007example\\003com\\000\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:7200::\n',
   },
   {
     ...common,
@@ -71,11 +75,31 @@ const validRecords = [
 ]
 
 const invalidRecords = [
+  {
+    ...common,
+    owner         : '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
+    precedence    : 10,
+    'gateway type': 4,
+    algorithm     : 2,
+    gateway       : '2001:0db8:0:8002::2000:1',
+    publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
+    msg           : /Gateway Type is invalid/,
+  },
+  {
+    ...common,
+    owner         : '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
+    precedence    : 10,
+    'gateway type': 3,
+    algorithm     : 3,
+    gateway       : '2001:0db8:0:8002::2000:1',
+    publickey     : 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
+    msg           : /Algorithm invalid/,
+  },
 ]
 
 describe('IPSECKEY record', function () {
   base.valid(IPSECKEY, validRecords)
-  base.invalid(IPSECKEY, invalidRecords, { ttl: 3600 })
+  base.invalid(IPSECKEY, invalidRecords)
 
   base.getDescription(IPSECKEY)
   base.getRFCs(IPSECKEY, validRecords[0])
