@@ -1,6 +1,8 @@
 
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class DS extends RR {
   constructor (opts) {
     super(opts)
@@ -68,5 +70,35 @@ export default class DS extends RR {
     })
   }
 
+  fromTinydns (opts) {
+    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    if (n != 43) throw new Error('DS fromTinydns, invalid n')
+
+    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+
+    return new DS({
+      owner        : this.fullyQualify(fqdn),
+      ttl          : parseInt(ttl, 10),
+      type         : 'DS',
+      'key tag'    : binRdata.readUInt16BE(0),
+      algorithm    : binRdata.readUInt8(2),
+      'digest type': binRdata.readUInt8(3),
+      digest       : binRdata.slice(4).toString(),
+      timestamp    : ts,
+      location     : loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
   /******  EXPORTERS   *******/
+
+  toTinydns () {
+    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.get('key tag')) +
+      TINYDNS.UInt8toOctal(this.get('algorithm')) +
+      TINYDNS.UInt8toOctal(this.get('digest type')) +
+      TINYDNS.escapeOctal(rdataRe, this.get('digest'))
+    )
+  }
 }

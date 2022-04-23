@@ -199,7 +199,7 @@ PRs are welcome, especially PRs with tests.
 | **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNSKEY** |:white_check_mark:|                  |:white_check_mark:|                  |
-| **DS**     |:white_check_mark:|                  |:white_check_mark:|                  |
+| **DS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **HINFO**  |:white_check_mark:|                  |:white_check_mark:|                  |
 |**IPSECKEY**|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **KEY**    |                  |                  |                  |                  |
