@@ -205,7 +205,7 @@ PRs are welcome, especially PRs with tests.
 | **KEY**    |                  |                  |                  |                  |
 | **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
+| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NSEC**   |                  |                  |                  |                  |
 | **NSEC3**  |                  |                  |                  |                  |
