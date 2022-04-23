@@ -80,15 +80,15 @@ export default class TLSA extends RR {
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
     return new TLSA({
-      owner        : this.fullyQualify(fqdn),
-      ttl          : parseInt(ttl, 10),
-      type         : 'TLSA',
-      'certificate usage': bytes.readUInt8(0),
-      selector           : bytes.readUInt8(1),
-      'matching type'    : bytes.readUInt8(2),
+      owner                         : this.fullyQualify(fqdn),
+      ttl                           : parseInt(ttl, 10),
+      type                          : 'TLSA',
+      'certificate usage'           : bytes.readUInt8(0),
+      selector                      : bytes.readUInt8(1),
+      'matching type'               : bytes.readUInt8(2),
       'certificate association data': bytes.slice(3).toString(),
-      timestamp    : ts,
-      location     : loc !== '' && loc !== '\n' ? loc : '',
+      timestamp                     : ts,
+      location                      : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
