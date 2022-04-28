@@ -262,7 +262,6 @@ PRs are welcome, especially PRs with tests.
 ## DEVELOP
 
 - this package has no dependencies. That's no accident.
-- this will be used by a node.js app & a browser based app
-    - [x] ES6 modules
+- this will be used by a node.js app & a browser based app, so ES modules
 - platform independence is a goal
     - [x] CI tests are on linux, windows, and macos
