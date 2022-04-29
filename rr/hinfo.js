@@ -1,6 +1,8 @@
 
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class HINFO extends RR {
   constructor (opts) {
     super(opts)
@@ -26,7 +28,7 @@ export default class HINFO extends RR {
   }
 
   getRFCs () {
-    return [ 8482 ]
+    return [ 1034, 1035, 8482 ]
   }
 
   getTypeId () {
@@ -54,9 +56,29 @@ export default class HINFO extends RR {
     })
   }
 
-  // fromTinydns (opts) {
-  //   // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-  // }
+  fromTinydns (opts) {
+    // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
+    const [ fqdn, , rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [ cpu, os ] = [ ...TINYDNS.unpackString(rdata) ]
+
+    return new this.constructor({
+      owner    : this.fullyQualify(fqdn),
+      ttl      : parseInt(ttl, 10),
+      type     : 'HINFO',
+      cpu,
+      os,
+      timestamp: ts,
+      location : loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
 
   /******  EXPORTERS   *******/
+  toTinydns () {
+    return this.getTinydnsGeneric(
+      [
+        TINYDNS.packString(this.get('cpu')),
+        TINYDNS.packString(this.get('os')),
+      ].join('')
+    )
+  }
 }
