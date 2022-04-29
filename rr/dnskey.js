@@ -11,7 +11,9 @@ export default class DNSKEY extends RR {
   /****** Resource record specific setters   *******/
   setFlags (val) {
     // a 2 octet Flags Field
-    // the possible values are: 0, 256, and 257 RFC 4034
+    this.is16bitInt('DNSKEY', 'flags', val)
+
+    // the possible values are: 0, 256, and 257; RFC 4034
     if (![ 0, 256, 257 ].includes(val)) throw new Error(`DNSKEY: flags invalid, ${this.citeRFC()}`)
 
     this.set('flags', val)
@@ -19,6 +21,8 @@ export default class DNSKEY extends RR {
 
   setProtocol (val) {
     // 1 octet
+    this.is8bitInt('DNSKEY', 'protocol', val)
+
     // The Protocol Field MUST be represented as an unsigned decimal integer with a value of 3.
     if (![ 3 ].includes(val)) throw new Error(`DNSKEY: protocol invalid, ${this.citeRFC()}`)
 
@@ -27,9 +31,12 @@ export default class DNSKEY extends RR {
 
   setAlgorithm (val) {
     // 1 octet
+    this.is8bitInt('DNSKEY', 'algorithm', val)
+
+    // https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![ 1,2,3,4,5,253,254 ].includes(val))
-      throw new Error(`DNSKEY: algorithm invalid, ${this.citeRFC()}`)
+    if (![ ...Array(16).keys(),253,254 ].includes(val))
+      console.error(`DNSKEY: algorithm (${val}) not recognized, ${this.citeRFC()}`)
 
     this.set('algorithm', val)
   }
@@ -49,7 +56,7 @@ export default class DNSKEY extends RR {
   }
 
   getRFCs () {
-    return [ 4034 ]
+    return [ 4034, 6014, 8624 ]
   }
 
   getTypeId () {

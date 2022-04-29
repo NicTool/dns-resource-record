@@ -22,8 +22,8 @@ const invalidRecords = [
   {
     ...defaults,
     owner    : 'test.example.com.',
-    algorithm: 6,  // invalid
-    msg      : /flags invalid/,
+    algorithm: 257,  // invalid
+    msg      : /flags must be a 16-bit integer/,
   },
 ]
 

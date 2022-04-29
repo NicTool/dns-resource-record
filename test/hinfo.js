@@ -14,7 +14,7 @@ const validRecords = [
     cpu  : 'PDP-11/73',
     os   : 'UNIX',
     testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
-    // testT : ':server-under-my-desk:13: :86400::\n',
+    testT: ':server-under-my-desk.example.com:13:\\011PDP-11/73\\004UNIX:86400::\n',
   },
   {
     ...defaults,
@@ -22,7 +22,7 @@ const validRecords = [
     cpu  : 'DEC-2060',
     os   : 'TOPS20',
     testB: 'sri-nic.arpa.\t86400\tIN\tHINFO\t"DEC-2060"\t"TOPS20"\n',
-    // testT : ':server-under-my-desk:13: :86400::\n',
+    testT: ':sri-nic.arpa:13:\\010DEC-2060\\006TOPS20:86400::\n',
   },
 ]
 
@@ -45,10 +45,10 @@ describe('HINFO record', function () {
   base.getTypeId(HINFO, 13)
 
   base.toBind(HINFO, validRecords)
-  // base.toTinydns(HINFO, validRecords)
+  base.toTinydns(HINFO, validRecords)
 
-  // base.fromBind(HINFO, validRecords)
-  // base.fromTinydns(HINFO, validRecords)
+  base.fromBind(HINFO, validRecords)
+  base.fromTinydns(HINFO, validRecords)
 
   for (const val of validRecords) {
     it.skip(`imports tinydns HINFO (generic) record (${val.owner})`, async function () {

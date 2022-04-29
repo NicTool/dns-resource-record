@@ -1,13 +1,12 @@
 
-
 # Release process
 
-in your feature branch:
+in your feature branch: (git checkout -b release-N.N.N)
 
 - make your changes
 - git add .
 - .release/do.sh {major|minor|patch}
-- fill in the blanks in CHANGES.md
+- fill in the blanks in CHANGELOG.md
 - .release/push.sh
 
 Upon merge to `master`:
