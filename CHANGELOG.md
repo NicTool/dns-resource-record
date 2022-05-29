@@ -1,19 +1,23 @@
+# Changelog
 
-#### N.N.N - YYYY-MM-DD
+Notable changes to this project are documented in this file.
 
 
-#### 1.1.3 - 2022-05-29
+#### [Unreleased]
+
+
+#### [1.1.3] - 2022-05-29
 
 - chore: publish npm package in @nictool namespace
 
 
-#### 1.1.2 - 2022-05-28
+#### [1.1.2] - 2022-05-28
 
 - chore(ci): replace .release with submodule
 - chore(ci): use GHA with shared workflows
 
 
-#### 1.1.1 - 2022-04-28
+#### [1.1.1] - 2022-04-28
 
 - feat(DNSKEY): expanded algo from 1-5 to 1-16 (RFC 8624)
     - warn if outside that range, not error
@@ -21,7 +25,7 @@
 - test(dnskey): update fail test
 
 
-#### 1.1.0 - 2022-04-22
+#### [1.1.0] - 2022-04-22
 
 - feat(tinydns): add ipv4toOctal, octalToIPv4, base64toOctal, octalToBase64
 - feat(DNSKEY,DS,IPSECKEY,TLSA): added to/fromTinydns support
@@ -35,7 +39,7 @@
 - tinydns.unpackdomain: return fqdn + length, for RRs where the FQDN is part of the byte stream
 
 
-#### 1.0.1 - 2022-04-19
+#### [1.0.1] - 2022-04-19
 
 - feat(IPSECKEY): added basic support
 - doc(README): update for ES module usage
@@ -46,7 +50,7 @@
 - test(KEY): added valid test
 
 
-#### 1.0.0 - 2022-04-18
+#### [1.0.0] - 2022-04-18
 
 - style: move rr/index to ./rr
 - test: add base.getRdataFields
@@ -54,7 +58,7 @@
 - test: add base.getRdataFields
 
 
-#### 0.9.9 - 2022-04-14
+#### [0.9.9] - 2022-04-14
 
 - feat: parser improvements (DNSKEY, HINFO, NAPTR, SOA, TLSA, TXT)
 - CAA: more robust fromBind parser
@@ -64,7 +68,7 @@
 - README: move some content to web links
 
 
-#### 0.9.8 - 2022-04-07
+#### [0.9.8] - 2022-04-07
 
 - url updates
 - fix: txt records
@@ -72,7 +76,7 @@
 - docs: updates
 
 
-#### 0.9.7 - 2022-03-29
+#### [0.9.7] - 2022-03-29
 
 - index
     - previousName -> previousOwner
@@ -84,7 +88,7 @@
 - add index.citeRFC
 
 
-#### 0.9.6 - 2022-03-27
+#### [0.9.6] - 2022-03-27
 
 - rr\*: rename name -> owner (not overloaded)
 - RFC 4034: letters in DNS names are lower cased
@@ -94,7 +98,7 @@
 - add CERT, KEY, NSEC, NSEC3, NSEC3PARAM, OPENPGPKEY, SIG
 
 
-#### 0.9.5 - 2022-03-26
+#### [0.9.5] - 2022-03-26
 
 - README: add docs for getRFCs()
 - dnskey: fix copy/paste errors
@@ -104,7 +108,7 @@
 - TXT: pass along zone_opts
 
 
-#### 0.9.4 - 2022-03-24
+#### [0.9.4] - 2022-03-24
 
 - add: getComment
 - zone_opts, for influencing output of toBind
@@ -120,7 +124,7 @@
 - add uc hex chars to ip6 compress
 
 
-#### 0.9.3 - 2022-03-22
+#### [0.9.3] - 2022-03-22
 
 - hasValidLabels: remove trailing dot, else split returns empty string
 - rename fullyQualified -> isFullyQualified
@@ -136,7 +140,7 @@
 - SPF inherits from TXT
 
 
-#### 0.9.2 - 2022-03-18
+#### [0.9.2] - 2022-03-18
 
 - mx: weight -> preference
 - ds: keytag -> key tag (consistent naming)
@@ -149,12 +153,12 @@
 - use \_\_dirname to find RR mods
 
 
-#### 0.9.1 - 2022-03-14
+#### [0.9.1] - 2022-03-14
 
 - TLSA, SMIMEA: add BIND support #13
 
 
-#### 0.9.0 - 2022-03-10
+#### [0.9.0] - 2022-03-10
 
 - added null object instantiation
 - added `getTypeId`, `getDescription`, `getRdataFields`, `getQuotedFields`
@@ -168,19 +172,19 @@
 - tests: import tests from nictool 2
 
 
-#### 0.8.1 - 2022-03-08
+#### [0.8.1] - 2022-03-08
 
 - use RFC example IPs and zone names
 
 
-#### 0.8.0 - 2022-02-01
+#### [0.8.0] - 2022-02-01
 
 - fromBind for: A, AAAA, CNAME, TXT, CNAME, TXT, LOC, MX, NS, SOA, PTR, SPF, SSHFP, URI, CAA, DNAME, NAPTR
 - add fromTinydns: LOC
 - rr/\*: add getFields
 
 
-#### 0.7.0 - 2021-10-26
+#### [0.7.0] - 2021-10-26
 
 - tinydns: added octalToHex, octalToUInt16, unpackDomainName, octalToInt8
 - AAAA: added fromTinydns, compress, expand
@@ -188,38 +192,38 @@
 - add tests for getRFCs
 
 
-#### 0.6.0 - 2021-10-25
+#### [0.6.0] - 2021-10-25
 
 - tinydns: added octalToChar
 - A, MX, NS, PTR, SOA, TXT: added fromTinydns
 
 
-#### 0.5.1 - 2021-10-25
+#### [0.5.1] - 2021-10-25
 
 - LOC: added toTinydns
 - tinydns: add UInt32toOctal
 - SRV: added support
 
 
-#### 0.5.0 - 2021-10-24
+#### [0.5.0] - 2021-10-24
 
 - NAPTR: add toTinydns
 - tinydns: remove sprintf-js dependency
 
 
-#### 0.4.0 - 2021-10-22
+#### [0.4.0] - 2021-10-22
 
 - CAA, DNAME, SSHFP, URI: add toTinydns
 - lib/tinydns: added packHex and UInt16AsOctal
 
 
-#### 0.3.1 - 2021-10-21
+#### [0.3.1] - 2021-10-21
 
 - update index.js to also export RR sub classes
 - update README examples
 
 
-#### 0.3.0 - 2021-10-21
+#### [0.3.0] - 2021-10-21
 
 - add getRFCs to all RR types
 - populate this.id with IANA type ID
@@ -227,7 +231,7 @@
 - CAA, DNAME, NAPTR, SSHFP, URI: add toBind, tests
 
 
-#### 0.2.3 - 2021-10-21
+#### [0.2.3] - 2021-10-21
 
 - refactored classes into separate files
 - TXT, SOA, MX, CNAME, PTR, SRV: add toBind and toTinydns
@@ -236,18 +240,25 @@
 - PTR, SRV: added tests
 
 
-#### 0.2.2 - 2021-10-20
+#### [0.2.2] - 2021-10-20
 
 - add tests/*
 - A, AAAA, add toBind and toTinydns()
 - add .release
 
 
-#### 0.2.1 - 2021-10-16
+#### [0.2.1] - 2021-10-16
 
 - additional RR formats started, weakly validated
 
 
-#### 0.2.0 - 2021-10-16
+#### [0.2.0] - 2021-10-16
 
 - initial release & name grab
+
+
+# References
+
+- [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+  + fix, feature, BREAKING CHANGE, build, chore, ci, docs, style, test
