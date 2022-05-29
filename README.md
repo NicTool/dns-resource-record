@@ -1,4 +1,4 @@
-[![Module Tests](https://github.com/NicTool/dns-resource-record/actions/workflows/ci-test.yml/badge.svg)](https://github.com/NicTool/dns-resource-record/actions/workflows/ci-test.yml)
+[![Module Tests](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg)](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-resource-record?branch=master)
 
 # dns-resource-record
