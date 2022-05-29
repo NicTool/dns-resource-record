@@ -2,6 +2,11 @@
 #### N.N.N - YYYY-MM-DD
 
 
+#### 1.1.3 - 2022-05-29
+
+- chore: publish npm package in @nictool namespace
+
+
 #### 1.1.2 - 2022-05-28
 
 - chore(ci): replace .release with submodule
