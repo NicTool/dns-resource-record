@@ -1,11 +1,19 @@
 
-#### 1.N.N - YYYY-MM-DD
+#### N.N.N - YYYY-MM-DD
+
+
+#### 1.1.2 - 2022-05-28
+
+- chore(ci): replace .release with submodule
+- chore(ci): use GHA with shared workflows
 
 
 #### 1.1.1 - 2022-04-28
 
 - feat(DNSKEY): expanded algo from 1-5 to 1-16 (RFC 8624)
     - warn if outside that range, not error
+- feat(HINFO): added to/from tinydns
+- test(dnskey): update fail test
 
 
 #### 1.1.0 - 2022-04-22
