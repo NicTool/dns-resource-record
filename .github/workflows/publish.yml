@@ -3,7 +3,7 @@ name: publish
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - package.json
 
@@ -12,5 +12,5 @@ env:
 
 jobs:
   publish:
-    uses: NicTool/.github/.github/workflows/publish.yml@master
+    uses: NicTool/.github/.github/workflows/publish.yml@main
     secrets: inherit
