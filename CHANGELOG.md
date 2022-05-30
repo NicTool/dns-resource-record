@@ -3,7 +3,7 @@
 Notable changes to this project are documented in this file.
 
 
-#### [Unreleased]
+#### Unreleased
 
 ### [1.1.4] - 2022-05-29
 
@@ -271,8 +271,6 @@ Notable changes to this project are documented in this file.
   + fix, feature, BREAKING CHANGE, build, chore, ci, docs, style, test
 
 
-[Unreleased]: https://github.com/NicTool/dns-resource-record/compare/1.1.4...HEAD
-[1.1.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.4
 [1.1.3]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.3
 [1.1.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.2
 [1.1.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.1
@@ -302,3 +300,5 @@ Notable changes to this project are documented in this file.
 [0.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.2
 [0.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.1
 [0.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.0
+[1.1.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.4
+
