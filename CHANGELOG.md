@@ -269,3 +269,35 @@ Notable changes to this project are documented in this file.
 - [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
   + fix, feature, BREAKING CHANGE, build, chore, ci, docs, style, test
+
+
+[Unreleased]: https://github.com/NicTool/dns-resource-record/compare/1.1.3...HEAD
+[1.1.3]: https://github.com/NicTool/dns-resource-record/compare/1.1.2...1.1.3
+[1.1.2]: https://github.com/NicTool/dns-resource-record/compare/1.1.1...1.1.2
+[1.1.1]: https://github.com/NicTool/dns-resource-record/compare/1.1.0...1.1.1
+[1.1.0]: https://github.com/NicTool/dns-resource-record/compare/1.0.1...1.1.0
+[1.0.1]: https://github.com/NicTool/dns-resource-record/compare/1.0.0...1.0.1
+[1.0.0]: https://github.com/NicTool/dns-resource-record/compare/0.9.9...1.0.0
+[0.9.9]: https://github.com/NicTool/dns-resource-record/compare/0.9.8...0.9.9
+[0.9.8]: https://github.com/NicTool/dns-resource-record/compare/0.9.7...0.9.8
+[0.9.7]: https://github.com/NicTool/dns-resource-record/compare/0.9.6...0.9.7
+[0.9.6]: https://github.com/NicTool/dns-resource-record/compare/0.9.5...0.9.6
+[0.9.5]: https://github.com/NicTool/dns-resource-record/compare/0.9.4...0.9.5
+[0.9.4]: https://github.com/NicTool/dns-resource-record/compare/0.9.3...0.9.4
+[0.9.3]: https://github.com/NicTool/dns-resource-record/compare/0.9.2...0.9.3
+[0.9.2]: https://github.com/NicTool/dns-resource-record/compare/0.9.1...0.9.2
+[0.9.1]: https://github.com/NicTool/dns-resource-record/compare/0.9.0...0.9.1
+[0.9.0]: https://github.com/NicTool/dns-resource-record/compare/0.8.1...0.9.0
+[0.8.1]: https://github.com/NicTool/dns-resource-record/compare/0.8.0...0.8.1
+[0.8.0]: https://github.com/NicTool/dns-resource-record/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/NicTool/dns-resource-record/compare/0.6.0...0.7.0
+[0.6.0]: https://github.com/NicTool/dns-resource-record/compare/0.5.1...0.6.0
+[0.5.1]: https://github.com/NicTool/dns-resource-record/compare/0.5.0...0.5.1
+[0.5.0]: https://github.com/NicTool/dns-resource-record/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/NicTool/dns-resource-record/compare/0.3.1...0.4.0
+[0.3.1]: https://github.com/NicTool/dns-resource-record/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/NicTool/dns-resource-record/compare/0.2.3...0.3.0
+[0.2.3]: https://github.com/NicTool/dns-resource-record/compare/0.2.2...0.2.3
+[0.2.2]: https://github.com/NicTool/dns-resource-record/compare/0.2.1...0.2.2
+[0.2.1]: https://github.com/NicTool/dns-resource-record/compare/0.2.0...0.2.0
+[0.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.1
