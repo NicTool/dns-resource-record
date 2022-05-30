@@ -8,10 +8,10 @@ env:
 
 jobs:
   lint:
-    uses: NicTool/.github/.github/workflows/lint.yml@master
+    uses: NicTool/.github/.github/workflows/lint.yml@main
 
   coverage:
-    uses: NicTool/.github/.github/workflows/coverage.yml@master
+    uses: NicTool/.github/.github/workflows/coverage.yml@main
     secrets: inherit
 
   test:
