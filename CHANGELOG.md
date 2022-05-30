@@ -5,37 +5,10 @@ Notable changes to this project are documented in this file.
 
 #### [Unreleased]
 
-
-### [1.1.5] - 2022-05-29
-
-#### Added
-
-- 
-
-#### Fixed
-
-- 
-
-#### Changed
-
-- 
-- doc(README): improved develop notes
-- doc(CHANGELOG): make version numbers links
-
-
 ### [1.1.4] - 2022-05-29
 
-#### Added
-
-- 
-
-#### Fixed
-
-- 
-
 #### Changed
 
-- 
 - doc(README): improved develop notes
 - doc(CHANGELOG): make version numbers links
 
