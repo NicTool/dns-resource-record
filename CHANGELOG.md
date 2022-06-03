@@ -5,9 +5,13 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-### [1.1.4] - 2022-05-29
 
-#### Changed
+### [1.1.5] - 2022-06-03
+
+- ci: auto-populate node LTS versions to run CI tests with
+
+
+### [1.1.4] - 2022-05-29
 
 - doc(README): improved develop notes
 - doc(CHANGELOG): make version numbers links
@@ -302,3 +306,4 @@ Notable changes to this project are documented in this file.
 [0.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.0
 [1.1.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.4
 
+[1.1.5]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.5
