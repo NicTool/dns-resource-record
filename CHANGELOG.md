@@ -6,6 +6,11 @@ Notable changes to this project are documented in this file.
 #### Unreleased
 
 
+### [1.1.6] - 2022-06-21
+
+- doc(sshfp): added RFC 7479, 8709
+
+
 ### [1.1.5] - 2022-06-03
 
 - ci: auto-populate node LTS versions to run CI tests with
@@ -305,5 +310,5 @@ Notable changes to this project are documented in this file.
 [0.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.1
 [0.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/0.2.0
 [1.1.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.4
-
 [1.1.5]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.5
+[1.1.6]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.6

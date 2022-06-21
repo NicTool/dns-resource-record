@@ -9,7 +9,7 @@ export default class SSHFP extends RR {
 
   /****** Resource record specific setters   *******/
   setAlgorithm (val) {
-    // 0: reserved; 1: RSA 2: DSA 3: ECDSA 4: Ed25519 6:Ed448
+    // 0: reserved  1: RSA  2: DSA  3: ECDSA  4: Ed25519  6: Ed448
     this.is8bitInt('SSHFP', 'algorithm', val)
 
     this.set('algorithm', val)
@@ -35,7 +35,7 @@ export default class SSHFP extends RR {
   }
 
   getRFCs () {
-    return [ 4255 ]
+    return [ 4255, 7479, 8709 ]
   }
 
   getTypeId () {
