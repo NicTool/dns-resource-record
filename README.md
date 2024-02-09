@@ -191,7 +191,7 @@ PRs are welcome, especially PRs with tests.
 | **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CERT**   |                  |                  |                  |                  |
+| **CERT**   |:white_check_mark:|                  |:white_check_mark:|                  |
 | **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **DNSKEY** |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
@@ -203,8 +203,8 @@ PRs are welcome, especially PRs with tests.
 | **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
 | **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NSEC**   |                  |                  |                  |                  |
-| **NSEC3**  |                  |                  |                  |                  |
+| **NSEC**   |:white_check_mark:|                  |:white_check_mark:|                  |
+| **NSEC3**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
 | **NSEC3PARAM**|               |                  |                  |                  |
 | **OPENPGPKEY**|               |                  |                  |                  |
 | **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
