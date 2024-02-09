@@ -105,17 +105,17 @@ export default class NSEC3 extends RR {
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
     return new NSEC3({
-      owner      : this.fullyQualify(fqdn),
-      ttl        : parseInt(ttl, 10),
-      type       : 'NSEC3',
-      'hash algorithm'        : bytes.readUInt8(0),
+      owner                   : this.fullyQualify(fqdn),
+      ttl                     : parseInt(ttl, 10),
+      type                    : 'NSEC3',
+      'hash algorithm': bytes.readUInt8(0),
       flags                   : bytes.readUInt8(1),
       iterations              : bytes.readUInt16BE(2),
       // salt                    : ,
       // 'next hashed owner name': ,
       // 'type bit maps'         : ,
-      timestamp  : ts,
-      location   : loc !== '' && loc !== '\n' ? loc : '',
+      timestamp               : ts,
+      location                : loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 

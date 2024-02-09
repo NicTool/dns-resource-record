@@ -8,7 +8,7 @@
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint --fix",
     "lint": "npx eslint **/*.js",
-    "lint:fix": "npm run lint --fix",
+    "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --ignore-path .gitignore --check .",
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
     "test": "npx mocha",
