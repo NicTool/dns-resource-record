@@ -104,8 +104,11 @@ export default class RR extends Map {
   }
 
   setType (t) {
-    if ([ undefined, '' ].includes(t))
-      throw new Error(`type ${t} not supported (yet)`)
+    switch (t) {
+      case '':
+      case undefined:
+        throw new Error(`type is required`)
+    }
 
     if (t.toUpperCase() !== this.constructor.name)
       throw new Error(`type ${t} doesn't match ${this.constructor.name}`)

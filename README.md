@@ -5,28 +5,24 @@
 
 DNS resource record parser, validator, importer, and exporter.
 
-
 ## SYNOPSIS
 
 This module is used to:
 
 - validate well formedness and RFC compliance of DNS resource records
-- import RRs from:
-    - JS object
-    - JSON
-    - [BIND](https://www.isc.org/bind/) zone [file format](https://bind9.readthedocs.io/en/latest/reference.html#zone-file)
-    - tinydns [data format](https://cr.yp.to/djbdns/tinydns-data.html)
-- export RRs to:
-    - BIND zone files
-    - tinydns data
-    - maradns
-    - JS object
-    - JSON
+- import RRs from and from the following formats:
 
-This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if you cannot pass a valid resource record or you can pass an invalid resource record.
+|                      **RR format**                       |     **import**     |     **export**     |
+| :------------------------------------------------------: | :----------------: | :----------------: |
+|                         **JSON**                         | :white_check_mark: | :white_check_mark: |
+|          **[BIND](https://www.isc.org/bind/)**           | :white_check_mark: | :white_check_mark: |
+| **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)** | :white_check_mark: | :white_check_mark: |
+|                       **MaraDNS**                        |                    | :white_check_mark: |
+|                          **JS**                          | :white_check_mark: | :white_check_mark: |
+
+This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if you a valid resource record fails to pass or an invalid resource record passes.
 
 This package is for working with _individual_ Resource Records. For working with zones of RRs, use [dns-zone](https://github.com/NicTool/dns-zone).
-
 
 ## USAGE
 
