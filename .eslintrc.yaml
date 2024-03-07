@@ -25,3 +25,4 @@ rules:
       functions: only-multiline
   dot-notation: error
   prefer-const: warn
+  no-extra-semi: off
