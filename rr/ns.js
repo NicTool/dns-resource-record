@@ -1,14 +1,13 @@
-
 import RR from '../rr.js'
 
 export default class NS extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
     if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
-  setDname (val) {
+  setDname(val) {
     if (!val) throw new Error(`NS: dname is required, ${this.citeRFC()}`)
 
     this.isFullyQualified('NS', 'dname', val)
@@ -18,57 +17,61 @@ export default class NS extends RR {
     this.set('dname', val.toLowerCase())
   }
 
-  getDescription () {
+  getDescription() {
     return 'Name Server'
   }
 
-  getRdataFields (arg) {
-    return [ 'dname' ]
+  getRdataFields(arg) {
+    return ['dname']
   }
 
-  getRFCs () {
-    return [ 1035 ]
+  getRFCs() {
+    return [1035]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 2
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // &fqdn:ip:x:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [ fqdn, ip, dname, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [fqdn, ip, dname, ttl, ts, loc] = opts.tinyline
+      .substring(1)
+      .split(':')
 
     return new NS({
-      type     : 'NS',
-      owner    : this.fullyQualify(fqdn),
-      dname    : this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
-      ttl      : parseInt(ttl, 10),
+      type: 'NS',
+      owner: this.fullyQualify(fqdn),
+      dname: this.fullyQualify(
+        /\./.test(dname) ? dname : `${dname}.ns.${fqdn}`,
+      ),
+      ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  NS dname
-    const [ owner, ttl, c, type, dname ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, dname] = opts.bindline.split(/\s+/)
 
     return new NS({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
-      type : type,
+      type: type,
       dname: dname,
     })
   }
 
   /******  EXPORTERS   *******/
-  toBind (zone_opts) {
+  toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
   }
 
-  toTinydns () {
+  toTinydns() {
     return `&${this.getTinyFQDN('owner')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }

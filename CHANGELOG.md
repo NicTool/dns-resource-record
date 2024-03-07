@@ -2,44 +2,41 @@
 
 Notable changes to this project are documented in this file.
 
-
 #### Unreleased
 
+### [1.1.8] - 2024-03-06
+
+- doc(README): move synopsis section into table (#38)
+- chore(style): set up prettier
 
 ### [1.1.6] - 2022-06-21
 
 - doc(sshfp): added RFC 7479, 8709
 
-
 ### [1.1.5] - 2022-06-03
 
 - ci: auto-populate node LTS versions to run CI tests with
-
 
 ### [1.1.4] - 2022-05-29
 
 - doc(README): improved develop notes
 - doc(CHANGELOG): make version numbers links
 
-
 ### [1.1.3] - 2022-05-29
 
 - chore: publish npm package in @nictool namespace
-
 
 ### [1.1.2] - 2022-05-28
 
 - chore(ci): replace .release with submodule
 - chore(ci): use GHA with shared workflows
 
-
 ### [1.1.1] - 2022-04-28
 
 - feat(DNSKEY): expanded algo from 1-5 to 1-16 (RFC 8624)
-    - warn if outside that range, not error
+  - warn if outside that range, not error
 - feat(HINFO): added to/from tinydns
 - test(dnskey): update fail test
-
 
 ### [1.1.0] - 2022-04-22
 
@@ -54,7 +51,6 @@ Notable changes to this project are documented in this file.
 - test(IPSECKEY): expand test coverage
 - tinydns.unpackdomain: return fqdn + length, for RRs where the FQDN is part of the byte stream
 
-
 ### [1.0.1] - 2022-04-19
 
 - feat(IPSECKEY): added basic support
@@ -65,14 +61,12 @@ Notable changes to this project are documented in this file.
 - test(CERT): added two test cases
 - test(KEY): added valid test
 
-
 ### [1.0.0] - 2022-04-18
 
 - style: move rr/index to ./rr
 - test: add base.getRdataFields
 - style(esm): convert from CJS to ESM (ES6 module)
 - test: add base.getRdataFields
-
 
 ### [0.9.9] - 2022-04-14
 
@@ -83,7 +77,6 @@ Notable changes to this project are documented in this file.
 - test/rr: update tests with expected error messages
 - README: move some content to web links
 
-
 ### [0.9.8] - 2022-04-07
 
 - url updates
@@ -91,18 +84,16 @@ Notable changes to this project are documented in this file.
 - feat: add index.citeRFC
 - docs: updates
 
-
 ### [0.9.7] - 2022-03-29
 
 - index
-    - previousName -> previousOwner
-    - export a TYPE_MAP (id => name)
+  - previousName -> previousOwner
+  - export a TYPE_MAP (id => name)
 - isValidHostname: allow \ char
 - add the word 'RFC' in error messages citing RFCs
 - when rejecting hostname, show the rejected character
 - maradns: add export support
 - add index.citeRFC
-
 
 ### [0.9.6] - 2022-03-27
 
@@ -113,7 +104,6 @@ Notable changes to this project are documented in this file.
 - add macos testing
 - add CERT, KEY, NSEC, NSEC3, NSEC3PARAM, OPENPGPKEY, SIG
 
-
 ### [0.9.5] - 2022-03-26
 
 - README: add docs for getRFCs()
@@ -123,7 +113,6 @@ Notable changes to this project are documented in this file.
 - master: NODE_ENV=cov when running coverage
 - TXT: pass along zone_opts
 
-
 ### [0.9.4] - 2022-03-24
 
 - add: getComment
@@ -131,14 +120,13 @@ Notable changes to this project are documented in this file.
 - normalize hostnames to lower case
 - add tests: fullyQualify, getFQDN
 - AAAA
-    - compress: rewrote per RFC 5952, added tests
-    - internally store address in expanded notation
+  - compress: rewrote per RFC 5952, added tests
+  - internally store address in expanded notation
 - fromTinydns: apply correct semantics for 'x' handling
 - fullyQualify
-    - special handling for @
-    - consider $ORIGIN
+  - special handling for @
+  - consider $ORIGIN
 - add uc hex chars to ip6 compress
-
 
 ### [0.9.3] - 2022-03-22
 
@@ -155,7 +143,6 @@ Notable changes to this project are documented in this file.
 - TXT: import BIND format w/o mangling WS
 - SPF inherits from TXT
 
-
 ### [0.9.2] - 2022-03-18
 
 - mx: weight -> preference
@@ -168,11 +155,9 @@ Notable changes to this project are documented in this file.
 - validHostname: allow / char
 - use \_\_dirname to find RR mods
 
-
 ### [0.9.1] - 2022-03-14
 
 - TLSA, SMIMEA: add BIND support #13
-
 
 ### [0.9.0] - 2022-03-10
 
@@ -187,18 +172,15 @@ Notable changes to this project are documented in this file.
 - tests: more signal, less noise
 - tests: import tests from nictool 2
 
-
 ### [0.8.1] - 2022-03-08
 
 - use RFC example IPs and zone names
-
 
 ### [0.8.0] - 2022-02-01
 
 - fromBind for: A, AAAA, CNAME, TXT, CNAME, TXT, LOC, MX, NS, SOA, PTR, SPF, SSHFP, URI, CAA, DNAME, NAPTR
 - add fromTinydns: LOC
 - rr/\*: add getFields
-
 
 ### [0.7.0] - 2021-10-26
 
@@ -207,12 +189,10 @@ Notable changes to this project are documented in this file.
 - CAA, CNAME, DNAME, SPF, SSHFP, SRV, URI: added fromTinydns
 - add tests for getRFCs
 
-
 ### [0.6.0] - 2021-10-25
 
 - tinydns: added octalToChar
 - A, MX, NS, PTR, SOA, TXT: added fromTinydns
-
 
 ### [0.5.1] - 2021-10-25
 
@@ -220,24 +200,20 @@ Notable changes to this project are documented in this file.
 - tinydns: add UInt32toOctal
 - SRV: added support
 
-
 ### [0.5.0] - 2021-10-24
 
 - NAPTR: add toTinydns
 - tinydns: remove sprintf-js dependency
-
 
 ### [0.4.0] - 2021-10-22
 
 - CAA, DNAME, SSHFP, URI: add toTinydns
 - lib/tinydns: added packHex and UInt16AsOctal
 
-
 ### [0.3.1] - 2021-10-21
 
 - update index.js to also export RR sub classes
 - update README examples
-
 
 ### [0.3.0] - 2021-10-21
 
@@ -245,7 +221,6 @@ Notable changes to this project are documented in this file.
 - populate this.id with IANA type ID
 - toBind: use tabs for exported WS
 - CAA, DNAME, NAPTR, SSHFP, URI: add toBind, tests
-
 
 ### [0.2.3] - 2021-10-21
 
@@ -255,30 +230,25 @@ Notable changes to this project are documented in this file.
 - lib/tinydns: added escapeOct & packDomainName
 - PTR, SRV: added tests
 
-
 ### [0.2.2] - 2021-10-20
 
-- add tests/*
+- add tests/\*
 - A, AAAA, add toBind and toTinydns()
 - add .release
-
 
 ### [0.2.1] - 2021-10-16
 
 - additional RR formats started, weakly validated
 
-
 ### [0.2.0] - 2021-10-16
 
 - initial release & name grab
-
 
 # References
 
 - [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
-  + fix, feature, BREAKING CHANGE, build, chore, ci, docs, style, test
-
+  - fix, feature, BREAKING CHANGE, build, chore, ci, docs, style, test
 
 [1.1.3]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.3
 [1.1.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.2
@@ -312,3 +282,4 @@ Notable changes to this project are documented in this file.
 [1.1.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.4
 [1.1.5]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.5
 [1.1.6]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.6
+[1.1.8]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.8

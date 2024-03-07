@@ -1,15 +1,15 @@
-
 import RR from '../rr.js'
 
 export default class NSEC extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
     if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
-  setNextDomain (val) {
-    if (!val) throw new Error(`NSEC: 'next domain' is required:, ${this.citeRFC()}`)
+  setNextDomain(val) {
+    if (!val)
+      throw new Error(`NSEC: 'next domain' is required:, ${this.citeRFC()}`)
 
     this.isFullyQualified('NSEC', 'next domain', val)
     this.isValidHostname('NSEC', 'next domain', val)
@@ -18,44 +18,50 @@ export default class NSEC extends RR {
     this.set('next domain', val.toLowerCase())
   }
 
-  setTypeBitMaps (val) {
-    if (!val) throw new Error(`NSEC: 'type bit maps' is required, ${this.citeRFC()}`)
+  setTypeBitMaps(val) {
+    if (!val)
+      throw new Error(`NSEC: 'type bit maps' is required, ${this.citeRFC()}`)
 
     this.set('type bit maps', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'Next Secure'
   }
 
-  getRdataFields (arg) {
-    return [ 'next domain', 'type bit maps' ]
+  getRdataFields(arg) {
+    return ['next domain', 'type bit maps']
   }
 
-  getRFCs () {
-    return [ 4034 ]
+  getRFCs() {
+    return [4034]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 47
   }
 
   /******  IMPORTERS   *******/
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [ owner, ttl, c, type, next ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, next] = opts.bindline.split(/\s+/)
     return new NSEC({
       owner,
-      ttl            : parseInt(ttl, 10),
-      class          : c,
-      type           : type,
-      'next domain'  : next,
-      'type bit maps': opts.bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
+      ttl: parseInt(ttl, 10),
+      class: c,
+      type: type,
+      'next domain': next,
+      'type bit maps': opts.bindline
+        .split(/\s+/)
+        .slice(5)
+        .filter(removeParens)
+        .join(' ')
+        .trim(),
     })
   }
 
   /******  EXPORTERS   *******/
 }
 
-const removeParens = a => ![ '(',')' ].includes(a)
+const removeParens = (a) => !['(', ')'].includes(a)

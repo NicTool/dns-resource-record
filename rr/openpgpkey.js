@@ -1,41 +1,40 @@
-
 import RR from '../rr.js'
 
 export default class OPENPGPKEY extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setPublicKey (val) {
+  setPublicKey(val) {
     this.set('public key', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'OpenPGP Public Key'
   }
 
-  getRdataFields () {
-    return [ 'public key' ]
+  getRdataFields() {
+    return ['public key']
   }
 
-  getRFCs () {
-    return [ 4880, 7929 ]
+  getRFCs() {
+    return [4880, 7929]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 61
   }
 
   /******  IMPORTERS   *******/
-  fromBind (str) {
+  fromBind(str) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
-    const [ owner, ttl, c, type, privatekey ] = str.split(/\s+/)
+    const [owner, ttl, c, type, privatekey] = str.split(/\s+/)
     return new OPENPGPKEY({
       owner,
-      ttl          : parseInt(ttl, 10),
-      class        : c,
-      type         : type,
+      ttl: parseInt(ttl, 10),
+      class: c,
+      type: type,
       'private key': privatekey,
     })
   }

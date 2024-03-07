@@ -1,14 +1,21 @@
-
 import assert from 'assert'
 
 import RR from '../rr.js'
-import A  from '../rr/a.js'
+import A from '../rr/a.js'
 
 const cases = [
   // { name: 'RR class'   , obj: RR          , expect: [ 'owner', 'ttl', 'class', 'type' ] },
-  { name: 'RR instance', obj: new RR(null), expect: [ 'owner', 'ttl', 'class', 'type' ] },
+  {
+    name: 'RR instance',
+    obj: new RR(null),
+    expect: ['owner', 'ttl', 'class', 'type'],
+  },
   // { name: 'A class'    , obj: A           , expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
-  { name: 'A instance' , obj: new A(null) , expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
+  {
+    name: 'A instance',
+    obj: new A(null),
+    expect: ['owner', 'ttl', 'class', 'type', 'address'],
+  },
 ]
 
 for (const c of cases) {
@@ -25,13 +32,12 @@ describe('RR', function () {
   const r = new RR(null)
 
   describe('setTtl', function () {
-    const invalid = [ -1, -4, -299, 2147483648, undefined ]
+    const invalid = [-1, -4, -299, 2147483648, undefined]
     for (const i of invalid) {
       it(`throws on invalid TTL: ${i}`, async function () {
         try {
           assert.deepStrictEqual(r.setTtl(i), false)
-        }
-        catch (e) {
+        } catch (e) {
           assert.ok(e.message)
           console.error(e.message)
         }
@@ -40,19 +46,18 @@ describe('RR', function () {
   })
 
   describe('setClass', function () {
-    for (const i of [ 'IN', 'CH', 'ANY', 'NONE' ]) {
+    for (const i of ['IN', 'CH', 'ANY', 'NONE']) {
       it(`accepts valid class: ${i}`, async function () {
         r.setClass(i)
         assert.deepEqual(r.get('class'), i)
       })
     }
 
-    for (const i of [ 'matt', 'in', 0 ]) {
+    for (const i of ['matt', 'in', 0]) {
       it(`throws on invalid class: ${i}`, async function () {
         try {
           assert.strictEqual(r.setClass(i), false)
-        }
-        catch (e) {
+        } catch (e) {
           assert.ok(e.message)
         }
       })
@@ -86,20 +91,25 @@ describe('RR', function () {
 
   describe('isFullyQualified', function () {
     it('should detect FQDNs', async function () {
-      assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com.'), true)
+      assert.deepEqual(
+        r.isFullyQualified('$type', '$field', 'host.example.com.'),
+        true,
+      )
 
       try {
-        assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com'), false)
-      }
-      catch (e) {
+        assert.deepEqual(
+          r.isFullyQualified('$type', '$field', 'host.example.com'),
+          false,
+        )
+      } catch (e) {
         assert.deepEqual(e.message, '$type: $field must be fully qualified')
       }
     })
   })
 
   describe('is8bitInt', function () {
-    const valid = [ 1, 2, 255 ]
-    const invalid = [ -1, 'a', new Date(), undefined, 256 ]
+    const valid = [1, 2, 255]
+    const invalid = [-1, 'a', new Date(), undefined, 256]
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
@@ -111,17 +121,19 @@ describe('RR', function () {
       it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is8bitInt('test', 'field', i), false)
-        }
-        catch (e) {
-          assert.strictEqual(e.message, 'test field must be a 8-bit integer (in the range 0-255)')
+        } catch (e) {
+          assert.strictEqual(
+            e.message,
+            'test field must be a 8-bit integer (in the range 0-255)',
+          )
         }
       })
     }
   })
 
   describe('is16bitInt', function () {
-    const valid = [ 0, 1, 2, 55555, 65535 ]
-    const invalid = [ 'a', new Date(), undefined, 65536 ]
+    const valid = [0, 1, 2, 55555, 65535]
+    const invalid = ['a', new Date(), undefined, 65536]
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
@@ -133,17 +145,19 @@ describe('RR', function () {
       it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is16bitInt('test', 'field', i), false)
-        }
-        catch (e) {
-          assert.strictEqual(e.message, 'test field must be a 16-bit integer (in the range 0-65535)')
+        } catch (e) {
+          assert.strictEqual(
+            e.message,
+            'test field must be a 16-bit integer (in the range 0-65535)',
+          )
         }
       })
     }
   })
 
   describe('is32bitInt', function () {
-    const valid = [ 1, 2, 55555, 2147483647 ]
-    const invalid = [ 'a', new Date(), undefined, 2147483648 ]
+    const valid = [1, 2, 55555, 2147483647]
+    const invalid = ['a', new Date(), undefined, 2147483648]
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
@@ -155,9 +169,11 @@ describe('RR', function () {
       it(`throws on invalid int: ${i}`, async function () {
         try {
           assert.strictEqual(r.is32bitInt('test', 'field', i), false)
-        }
-        catch (e) {
-          assert.strictEqual(e.message, 'test field must be a 32-bit integer (in the range 0-2147483647)')
+        } catch (e) {
+          assert.strictEqual(
+            e.message,
+            'test field must be a 32-bit integer (in the range 0-2147483647)',
+          )
         }
       })
     }
@@ -170,7 +186,7 @@ describe('RR', function () {
       assert.equal(r.getQuoted('cpu'), '"already quoted"') // doesn't double quote
     })
 
-    it('doesn\'t double quote a quoted string', async () => {
+    it("doesn't double quote a quoted string", async () => {
       r.set('cpu', '"already quoted"')
       assert.equal(r.getQuoted('cpu'), '"already quoted"')
     })
@@ -187,7 +203,7 @@ describe('RR', function () {
   })
 
   describe('isValidHostname', function () {
-    for (const n of [ 'x', '2x', '*', '*.something' ]) {
+    for (const n of ['x', '2x', '*', '*.something']) {
       it(`passes name: ${n}`, async function () {
         assert.deepEqual(r.isValidHostname(n), true)
       })

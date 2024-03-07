@@ -1,21 +1,20 @@
-
 import net from 'net'
 
 import RR from '../rr.js'
 
 export default class MX extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setPreference (val) {
+  setPreference(val) {
     if (val === undefined) val = this?.default?.preference
     this.is16bitInt('MX', 'preference', val)
     this.set('preference', val)
   }
 
-  setExchange (val) {
+  setExchange(val) {
     if (!val) throw new Error('MX: exchange is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
@@ -28,47 +27,50 @@ export default class MX extends RR {
     this.set('exchange', val.toLowerCase())
   }
 
-  getDescription () {
+  getDescription() {
     return 'Mail Exchanger'
   }
 
-  getRdataFields (arg) {
-    return [ 'preference', 'exchange' ]
+  getRdataFields(arg) {
+    return ['preference', 'exchange']
   }
 
-  getRFCs () {
-    return [ 1035, 2181, 7505 ]
+  getRFCs() {
+    return [1035, 2181, 7505]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 15
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [ owner, ip, x, preference, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [owner, ip, x, preference, ttl, ts, loc] = opts.tinyline
+      .substring(1)
+      .split(':')
 
     return new MX({
-      type      : 'MX',
-      owner     : this.fullyQualify(owner),
-      exchange  : this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
+      type: 'MX',
+      owner: this.fullyQualify(owner),
+      exchange: this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
       preference: parseInt(preference, 10) || 0,
-      ttl       : parseInt(ttl, 10),
-      timestamp : ts,
-      location  : loc !== '' && loc !== '\n' ? loc : '',
+      ttl: parseInt(ttl, 10),
+      timestamp: ts,
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  MX  preference exchange
-    const [ owner, ttl, c, type, preference, exchange ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, preference, exchange] =
+      opts.bindline.split(/\s+/)
 
     return new MX({
       owner,
-      ttl       : parseInt(ttl, 10),
-      class     : c,
+      ttl: parseInt(ttl, 10),
+      class: c,
       type,
       preference: parseInt(preference),
       exchange,
@@ -76,11 +78,11 @@ export default class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind (zone_opts) {
+  toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
   }
 
-  toTinydns () {
+  toTinydns() {
     return `@${this.getTinyFQDN('owner')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`
   }
 }

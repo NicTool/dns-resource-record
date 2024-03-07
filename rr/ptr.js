@@ -1,13 +1,12 @@
-
 import RR from '../rr.js'
 
 export default class PTR extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setDname (val) {
+  setDname(val) {
     this.isFullyQualified('PTR', 'dname', val)
     this.isValidHostname('PTR', 'dname', val)
 
@@ -15,51 +14,51 @@ export default class PTR extends RR {
     this.set('dname', val.toLowerCase())
   }
 
-  getDescription () {
+  getDescription() {
     return 'Pointer'
   }
 
-  getRdataFields (arg) {
-    return [ 'dname' ]
+  getRdataFields(arg) {
+    return ['dname']
   }
 
-  getRFCs () {
-    return [ 1035 ]
+  getRFCs() {
+    return [1035]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 12
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // ^fqdn:p:ttl:timestamp:lo
-    const [ fqdn, p, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [fqdn, p, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
 
     return new PTR({
-      owner    : this.fullyQualify(fqdn),
-      ttl      : parseInt(ttl, 10),
-      type     : 'PTR',
-      dname    : this.fullyQualify(p),
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'PTR',
+      dname: this.fullyQualify(p),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  PTR  dname
-    const [ owner, ttl, c, type, dname ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, dname] = opts.bindline.split(/\s+/)
     return new PTR({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
-      type : type,
+      type: type,
       dname: dname,
     })
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
+  toTinydns() {
     return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }

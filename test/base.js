@@ -1,7 +1,6 @@
-
 import assert from 'assert'
 
-export function valid (type, validRecords, defaults) {
+export function valid(type, validRecords, defaults) {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
@@ -13,30 +12,36 @@ export function valid (type, validRecords, defaults) {
 
         for (const k of Object.keys(val)) {
           if (/^test/.test(k)) continue
-          assert.strictEqual(r.get(k), val[k], `${type.name} ${k} ${r.get(k)} !== ${val[k]}`)
+          assert.strictEqual(
+            r.get(k),
+            val[k],
+            `${type.name} ${k} ${r.get(k)} !== ${val[k]}`,
+          )
         }
       })
     }
   })
 }
 
-export function invalid (type, invalidRecords, defaults) {
+export function invalid(type, invalidRecords, defaults) {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
       if (defaults) inv.default = defaults
       it(`throws on record (${inv.owner})`, async function () {
-        assert.throws(() => {
-          new type(inv)
-        },
-        {
-          message: inv.msg,
-        })
+        assert.throws(
+          () => {
+            new type(inv)
+          },
+          {
+            message: inv.msg,
+          },
+        )
       })
     }
   })
 }
 
-export function toBind (type, validRecords) {
+export function toBind(type, validRecords) {
   describe('toBind', function () {
     for (const val of validRecords) {
       it(`exports to BIND: ${val.owner}`, async function () {
@@ -48,7 +53,7 @@ export function toBind (type, validRecords) {
   })
 }
 
-export function toTinydns (type, validRecords) {
+export function toTinydns(type, validRecords) {
   describe('toTinydns', function () {
     for (const val of validRecords) {
       if (val.testT === undefined) continue
@@ -61,7 +66,7 @@ export function toTinydns (type, validRecords) {
   })
 }
 
-export function getDescription (type) {
+export function getDescription(type) {
   describe('getDescription', function () {
     const desc = new type(null).getDescription()
     it(`gets description: ${desc}`, async function () {
@@ -70,7 +75,7 @@ export function getDescription (type) {
   })
 }
 
-export function getRFCs (type, valid) {
+export function getRFCs(type, valid) {
   describe('getRFCs', function () {
     const r = new type(null)
     const rfcs = r.getRFCs()
@@ -80,7 +85,7 @@ export function getRFCs (type, valid) {
   })
 }
 
-function checkFromNS (type, validRecords, nsName, nsLineName) {
+function checkFromNS(type, validRecords, nsName, nsLineName) {
   for (const val of validRecords) {
     const testLine = nsLineName === 'bindline' ? val.testB : val.testT
     if (testLine == undefined) continue
@@ -90,26 +95,31 @@ function checkFromNS (type, validRecords, nsName, nsLineName) {
       for (const f of r.getFields()) {
         if (f === 'class') continue
         let expected = val[f]
-        if (f === 'data' && Array.isArray(expected)) expected = expected.join('') // TXT
-        assert.deepStrictEqual(r.get(f), expected, `${f}: ${r.get(f)} !== ${expected}`)
+        if (f === 'data' && Array.isArray(expected))
+          expected = expected.join('') // TXT
+        assert.deepStrictEqual(
+          r.get(f),
+          expected,
+          `${f}: ${r.get(f)} !== ${expected}`,
+        )
       }
     })
   }
 }
 
-export function fromTinydns (type, validRecords) {
+export function fromTinydns(type, validRecords) {
   describe('fromTinydns', function () {
     checkFromNS(type, validRecords, 'tinydns', 'tinyline')
   })
 }
 
-export function fromBind (type, validRecords) {
+export function fromBind(type, validRecords) {
   describe('fromBind', function () {
     checkFromNS(type, validRecords, 'BIND', 'bindline')
   })
 }
 
-export function getRdataFields (type, rdataFields) {
+export function getRdataFields(type, rdataFields) {
   describe('getRdataFields', function () {
     const r = new type(null)
     it(`can retrieve rdata fields: (${r.getRdataFields('rdata')})`, async function () {
@@ -118,7 +128,7 @@ export function getRdataFields (type, rdataFields) {
   })
 }
 
-export function getFields (type, rdataFields) {
+export function getFields(type, rdataFields) {
   describe('getFields', function () {
     const r = new type(null)
     it(`can retrieve record fields`, async function () {
@@ -128,7 +138,7 @@ export function getFields (type, rdataFields) {
   })
 }
 
-export function getTypeId (type, val) {
+export function getTypeId(type, val) {
   describe('getTypeId', function () {
     const r = new type(null)
     it(`can retrieve record type ID (${r.getTypeId()})`, async function () {

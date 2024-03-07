@@ -1,15 +1,14 @@
-
 import net from 'net'
 
 import RR from '../rr.js'
 
 export default class CNAME extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setCname (val) {
+  setCname(val) {
     // A <domain-name> which specifies the canonical or primary
     // name for the owner.  The owner name is an alias.
 
@@ -25,43 +24,43 @@ export default class CNAME extends RR {
     this.set('cname', val.toLowerCase())
   }
 
-  getDescription () {
+  getDescription() {
     return 'Canonical Name'
   }
 
-  getRdataFields (arg) {
-    return [ 'cname' ]
+  getRdataFields(arg) {
+    return ['cname']
   }
 
-  getRFCs () {
-    return [ 1035, 2181 ]
+  getRFCs() {
+    return [1035, 2181]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 5
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // Cfqdn:p:ttl:timestamp:lo
-    const [ fqdn, p, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [fqdn, p, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
 
     return new CNAME({
-      owner    : this.fullyQualify(fqdn),
-      ttl      : parseInt(ttl, 10),
-      type     : 'CNAME',
-      cname    : this.fullyQualify(p),
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'CNAME',
+      cname: this.fullyQualify(p),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  CNAME  ...
-    const [ owner, ttl, c, type, cname ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, cname] = opts.bindline.split(/\s+/)
     return new CNAME({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
       type,
       cname,
@@ -70,7 +69,7 @@ export default class CNAME extends RR {
 
   /******  EXPORTERS   *******/
 
-  toTinydns () {
+  toTinydns() {
     return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
   }
 }

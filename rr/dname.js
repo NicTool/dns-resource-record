@@ -4,12 +4,12 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DNAME extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setTarget (val) {
+  setTarget(val) {
     if (!val) throw new Error('DNAME: target is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
@@ -22,44 +22,44 @@ export default class DNAME extends RR {
     this.set('target', val.toLowerCase())
   }
 
-  getDescription () {
+  getDescription() {
     return 'Delegation Name'
   }
 
-  getRdataFields (arg) {
-    return [ 'target' ]
+  getRdataFields(arg) {
+    return ['target']
   }
 
-  getRFCs () {
-    return [ 2672, 6672 ]
+  getRFCs() {
+    return [2672, 6672]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 39
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // DNAME via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
     if (n != 39) throw new Error('DNAME fromTinydns, invalid n')
 
     return new DNAME({
-      type     : 'DNAME',
-      owner    : this.fullyQualify(fqdn),
-      target   : (TINYDNS.unpackDomainName(rdata))[0],
-      ttl      : parseInt(ttl, 10),
+      type: 'DNAME',
+      owner: this.fullyQualify(fqdn),
+      target: TINYDNS.unpackDomainName(rdata)[0],
+      ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  DNAME  ...
-    const [ owner, ttl, c, type, target ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, target] = opts.bindline.split(/\s+/)
     return new DNAME({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
       type,
       target,
@@ -67,7 +67,7 @@ export default class DNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
+  toTinydns() {
     const rdata = TINYDNS.packDomainName(this.get('target'))
     return this.getTinydnsGeneric(rdata)
   }

@@ -1,54 +1,55 @@
-
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class HINFO extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setCpu (val) {
+  setCpu(val) {
     if (val.length > 255) throw new Error('HINFO cpu cannot exceed 255 chars')
     this.set('cpu', val.replace(/^["']|["']$/g, ''))
   }
 
-  setOs (val) {
+  setOs(val) {
     if (val.length > 255) throw new Error('HINFO os cannot exceed 255 chars')
     this.set('os', val.replace(/^["']|["']$/g, ''))
   }
 
-  getDescription () {
+  getDescription() {
     return 'Host Info'
   }
 
-  getRdataFields (arg) {
-    return [ 'cpu', 'os' ]
+  getRdataFields(arg) {
+    return ['cpu', 'os']
   }
 
-  getRFCs () {
-    return [ 1034, 1035, 8482 ]
+  getRFCs() {
+    return [1034, 1035, 8482]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 13
   }
 
-  getQuotedFields () {
-    return [ 'cpu', 'os' ]
+  getQuotedFields() {
+    return ['cpu', 'os']
   }
 
   /******  IMPORTERS   *******/
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const match = opts.bindline.match(/([^\s]+)\s+([0-9]+)\s+(IN)\s+(HINFO)\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)/i)
+    const match = opts.bindline.match(
+      /([^\s]+)\s+([0-9]+)\s+(IN)\s+(HINFO)\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)/i,
+    )
     if (!match) throw new Error(`unable to parse HINFO: ${opts.bindline}`)
-    const [ owner, ttl, c, type, cpu, os ] = match.slice(1)
+    const [owner, ttl, c, type, cpu, os] = match.slice(1)
 
     return new HINFO({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
       type,
       cpu,
@@ -56,29 +57,29 @@ export default class HINFO extends RR {
     })
   }
 
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, , rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
-    const [ cpu, os ] = [ ...TINYDNS.unpackString(rdata) ]
+    const [fqdn, , rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [cpu, os] = [...TINYDNS.unpackString(rdata)]
 
     return new this.constructor({
-      owner    : this.fullyQualify(fqdn),
-      ttl      : parseInt(ttl, 10),
-      type     : 'HINFO',
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'HINFO',
       cpu,
       os,
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
+  toTinydns() {
     return this.getTinydnsGeneric(
       [
         TINYDNS.packString(this.get('cpu')),
         TINYDNS.packString(this.get('os')),
-      ].join('')
+      ].join(''),
     )
   }
 }

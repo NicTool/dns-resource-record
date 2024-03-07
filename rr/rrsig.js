@@ -1,85 +1,92 @@
-
 import RR from '../rr.js'
 
 export default class RRSIG extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setTypeCovered (val) {
+  setTypeCovered(val) {
     // a 2 octet Type Covered field
     if (!val) throw new Error(`RRSIG: 'type covered' is required`)
-    if (val.length > 2) throw new Error(`RRSIG: 'type covered' is too long, ${this.citeRFC()}`)
+    if (val.length > 2)
+      throw new Error(`RRSIG: 'type covered' is too long, ${this.citeRFC()}`)
 
     this.set('type covered', val)
   }
 
-  setAlgorithm (val) {
+  setAlgorithm(val) {
     // a 1 octet Algorithm field
     // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![ 1,2,3,4,5,253,254 ].includes(val))
+    if (![1, 2, 3, 4, 5, 253, 254].includes(val))
       throw new Error(`RRSIG: algorithm invalid, ${this.citeRFC()}`)
 
     this.set('algorithm', val)
   }
 
-  setLabels (val) {
+  setLabels(val) {
     // a 1 octet Labels field
     this.is8bitInt('RRSIG', 'labels', val)
 
     this.set('labels', val)
   }
 
-  setOriginalTtl (val) {
+  setOriginalTtl(val) {
     // a 4 octet Original TTL field
     this.is32bitInt('RRSIG', 'original ttl', val)
 
     this.set('original ttl', val)
   }
 
-  setSignatureExpiration (val) {
+  setSignatureExpiration(val) {
     // a 4 octet Signature Expiration field
     this.set('signature expiration', val)
   }
 
-  setSignatureInception (val) {
+  setSignatureInception(val) {
     // a 4 octet Signature Inception field
     this.set('signature inception', val)
   }
 
-  setKeyTag (val) {
+  setKeyTag(val) {
     // a 2 octet Key tag
     this.set('key tag', val)
   }
 
-  setSignersName (val) {
+  setSignersName(val) {
     // the Signer's Name field
     this.set('signers name', val)
   }
 
-  setSignature (val) {
+  setSignature(val) {
     // the Signature field.
 
     this.set('signature', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'Resource Record Signature'
   }
 
-  getRdataFields (arg) {
+  getRdataFields(arg) {
     return [
-      'type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration',
-      'signature inception', 'key tag', 'signers name', 'signature',
+      'type covered',
+      'algorithm',
+      'labels',
+      'original ttl',
+      'signature expiration',
+      'signature inception',
+      'key tag',
+      'signers name',
+      'signature',
     ]
   }
 
-  getRFCs () {
-    return [ 4034 ]
+  getRFCs() {
+    return [4034]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 46
   }
 
@@ -97,5 +104,4 @@ export default class RRSIG extends RR {
   // }
 
   /******  EXPORTERS   *******/
-
 }

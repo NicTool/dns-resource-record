@@ -1,4 +1,3 @@
-
 import assert from 'assert'
 
 import * as base from './base.js'
@@ -21,8 +20,8 @@ const invalidRecords = [
   {
     ...defaults,
     owner: 'example.com.',
-    dname: '192.0.2.4',  // FQDN required
-    msg  : /dname must be fully qualified/,
+    dname: '192.0.2.4', // FQDN required
+    msg: /dname must be fully qualified/,
   },
 ]
 
@@ -32,7 +31,7 @@ describe('PTR record', function () {
 
   base.getDescription(PTR)
   base.getRFCs(PTR, validRecords[0])
-  base.getFields(PTR, [ 'dname' ])
+  base.getFields(PTR, ['dname'])
   base.getTypeId(PTR, 12)
 
   base.toBind(PTR, validRecords)
@@ -42,12 +41,15 @@ describe('PTR record', function () {
   base.fromTinydns(PTR, validRecords)
 
   for (const val of validRecords) {
-
     it.skip(`imports tinydns PTR (^) record (${val.owner})`, async function () {
       const r = new PTR({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'owner', 'dname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      for (const f of ['owner', 'dname', 'ttl']) {
+        assert.deepStrictEqual(
+          r.get(f),
+          val[f],
+          `${f}: ${r.get(f)} !== ${val[f]}`,
+        )
       }
     })
   }

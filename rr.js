@@ -1,6 +1,5 @@
-
 export default class RR extends Map {
-  constructor (opts) {
+  constructor(opts) {
     super()
 
     if (opts === null) return
@@ -15,36 +14,40 @@ export default class RR extends Map {
     this.setTimestamp(opts?.timestamp)
 
     this.setOwner(opts?.owner)
-    this.setType (opts?.type)
-    this.setTtl  (opts?.ttl)
+    this.setType(opts?.type)
+    this.setTtl(opts?.ttl)
     this.setClass(opts?.class)
 
     for (const f of this.getFields('rdata')) {
       const fnName = `set${this.ucfirst(f)}`
-      if (this[fnName] === undefined) throw new Error(`Missing ${fnName} in class ${this.get('type')}`)
+      if (this[fnName] === undefined)
+        throw new Error(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
     }
 
     if (opts.comment) this.set('comment', opts.comment)
   }
 
-  ucfirst (str) {
-    return str.split(/\s/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+  ucfirst(str) {
+    return str
+      .split(/\s/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join('')
   }
 
-  setClass (c) {
+  setClass(c) {
     switch (c) {
-      case 'IN':    // 1
+      case 'IN': // 1
       case undefined:
       case null:
       case '':
         this.set('class', 'IN')
         break
-      case 'CS':    // 2
-      case 'CH':    // 3
-      case 'HS':    // 4
-      case 'NONE':  // 254
-      case 'ANY':   // 255
+      case 'CS': // 2
+      case 'CH': // 3
+      case 'HS': // 4
+      case 'NONE': // 254
+      case 'ANY': // 255
         this.set('class', c)
         break
       default:
@@ -52,7 +55,7 @@ export default class RR extends Map {
     }
   }
 
-  setLocation (l) {
+  setLocation(l) {
     switch (l) {
       case undefined:
         return
@@ -61,7 +64,7 @@ export default class RR extends Map {
     }
   }
 
-  setTimestamp (l) {
+  setTimestamp(l) {
     switch (l) {
       case undefined:
         return
@@ -70,32 +73,35 @@ export default class RR extends Map {
     }
   }
 
-  setOwner (n) {
+  setOwner(n) {
     if (n === undefined) throw new Error(`owner is required`)
 
     if (n.length < 1 || n.length > 255)
-      throw new Error('Domain names must have 1-255 octets (characters): RFC 2181')
+      throw new Error(
+        'Domain names must have 1-255 octets (characters): RFC 2181',
+      )
 
     this.isFullyQualified('', 'owner', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
     if (/\*/.test(n)) {
-      if (!/^\*\./.test(n) && !/\.\*\./.test(n)) throw new Error('only *.something or * (by itself) is a valid wildcard')
+      if (!/^\*\./.test(n) && !/\.\*\./.test(n))
+        throw new Error('only *.something or * (by itself) is a valid wildcard')
     }
 
     this.set('owner', n.toLowerCase())
   }
 
-  setTtl (t) {
-
+  setTtl(t) {
     if (t === undefined) t = this?.default?.ttl
     if (t === undefined) {
-      if ([ 'SOA', 'SSHPF' ].includes(this.get('type'))) return
+      if (['SOA', 'SSHPF'].includes(this.get('type'))) return
       throw new Error('TTL is required, no default available')
     }
 
-    if (typeof t !== 'number') throw new Error(`TTL must be numeric (${typeof t})`)
+    if (typeof t !== 'number')
+      throw new Error(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
     this.is32bitInt(this.owner, 'TTL', t)
@@ -103,7 +109,7 @@ export default class RR extends Map {
     this.set('ttl', t)
   }
 
-  setType (t) {
+  setType(t) {
     switch (t) {
       case '':
       case undefined:
@@ -116,11 +122,11 @@ export default class RR extends Map {
     this.set('type', t.toUpperCase())
   }
 
-  citeRFC () {
+  citeRFC() {
     return `see RFC ${this.getRFCs()}`
   }
 
-  fullyQualify (hostname, origin) {
+  fullyQualify(hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin
     if (hostname.endsWith('.')) return hostname.toLowerCase()
@@ -128,7 +134,7 @@ export default class RR extends Map {
     return `${hostname}.`
   }
 
-  getPrefix (zone_opts = {}) {
+  getPrefix(zone_opts = {}) {
     const classVal = zone_opts.hide?.class ? '' : this.get('class')
 
     let rrTTL = this.get('ttl')
@@ -137,25 +143,24 @@ export default class RR extends Map {
     let owner = this.get('owner')
     if (zone_opts.hide?.sameOwner && zone_opts.previousOwner === owner) {
       owner = ''
-    }
-    else {
+    } else {
       owner = this.getFQDN('owner', zone_opts)
     }
 
     return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
   }
 
-  getEmpty (prop) {
+  getEmpty(prop) {
     return this.get(prop) === undefined ? '' : this.get(prop)
   }
 
-  getComment (prop) {
+  getComment(prop) {
     const c = this.get('comment')
     if (!c || !c[prop]) return ''
     return c[prop]
   }
 
-  getQuoted (prop) {
+  getQuoted(prop) {
     // if prop is not in quoted list, return bare
     if (!this.getQuotedFields().includes(prop)) return this.get(prop)
 
@@ -165,16 +170,16 @@ export default class RR extends Map {
     return `"${this.get(prop)}"` // add double quotes
   }
 
-  getQuotedFields () {
+  getQuotedFields() {
     return []
   }
 
-  getRdataFields () {
+  getRdataFields() {
     return []
   }
 
-  getFields (arg) {
-    const commonFields = [ 'owner', 'ttl', 'class', 'type' ]
+  getFields(arg) {
+    const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)
 
     switch (arg) {
@@ -187,23 +192,24 @@ export default class RR extends Map {
     }
   }
 
-  getFQDN (field, zone_opts = {}) {
+  getFQDN(field, zone_opts = {}) {
     let fqdn = this.get(field)
     if (!fqdn) throw new Error(`empty value for field ${field}`)
     if (!fqdn.endsWith('.')) fqdn += '.'
 
     if (zone_opts.hide?.origin && zone_opts.origin) {
       if (fqdn === zone_opts.origin) return '@'
-      if (fqdn.endsWith(zone_opts.origin)) return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
+      if (fqdn.endsWith(zone_opts.origin))
+        return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
     }
 
     return fqdn
   }
 
-  getTinyFQDN (field) {
+  getTinyFQDN(field) {
     const val = this.get(field)
-    if (val === '') return val   // empty
-    if (val === '.') return val  // null MX
+    if (val === '') return val // empty
+    if (val === '.') return val // null MX
 
     // strip off trailing ., tinydns doesn't require it for FQDN
     if (val.endsWith('.')) return val.slice(0, -1)
@@ -211,15 +217,17 @@ export default class RR extends Map {
     return val
   }
 
-  getTinydnsGeneric (rdata) {
+  getTinydnsGeneric(rdata) {
     return `:${this.getTinyFQDN('owner')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
   }
 
-  getTinydnsPostamble () {
-    return [ 'ttl', 'timestamp', 'location' ].map(f => this.getEmpty(f)).join(':')
+  getTinydnsPostamble() {
+    return ['ttl', 'timestamp', 'location']
+      .map((f) => this.getEmpty(f))
+      .join(':')
   }
 
-  hasValidLabels (hostname) {
+  hasValidLabels(hostname) {
     // RFC  952 defined valid hostnames
     // RFC 1035 limited domain label chars to letters, digits, and hyphen
     // RFC 1123 allowed hostnames to start with a digit
@@ -231,64 +239,90 @@ export default class RR extends Map {
     }
   }
 
-  is8bitInt (type, field, value) {
-    if (typeof value === 'number'
-      && parseInt(value, 10) === value  // assure integer
-      && value >= 0
-      && value <= 255) return true
+  is8bitInt(type, field, value) {
+    if (
+      typeof value === 'number' &&
+      parseInt(value, 10) === value && // assure integer
+      value >= 0 &&
+      value <= 255
+    )
+      return true
 
-    throw new Error(`${type} ${field} must be a 8-bit integer (in the range 0-255)`)
+    throw new Error(
+      `${type} ${field} must be a 8-bit integer (in the range 0-255)`,
+    )
   }
 
-  is16bitInt (type, field, value) {
-    if (typeof value === 'number'
-      && parseInt(value, 10) === value  // assure integer
-      && value >= 0
-      && value <= 65535) return true
+  is16bitInt(type, field, value) {
+    if (
+      typeof value === 'number' &&
+      parseInt(value, 10) === value && // assure integer
+      value >= 0 &&
+      value <= 65535
+    )
+      return true
 
-    throw new Error(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`)
+    throw new Error(
+      `${type} ${field} must be a 16-bit integer (in the range 0-65535)`,
+    )
   }
 
-  is32bitInt (type, field, value) {
-    if (typeof value === 'number'
-      && parseInt(value, 10) === value  // assure integer
-      && value >= 0
-      && value <= 2147483647) return true
+  is32bitInt(type, field, value) {
+    if (
+      typeof value === 'number' &&
+      parseInt(value, 10) === value && // assure integer
+      value >= 0 &&
+      value <= 2147483647
+    )
+      return true
 
-    throw new Error(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
+    throw new Error(
+      `${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`,
+    )
   }
 
-  isQuoted (val) {
+  isQuoted(val) {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  isFullyQualified (type, blah, hostname) {
+  isFullyQualified(type, blah, hostname) {
     if (hostname.endsWith('.')) return true
 
     throw new Error(`${type}: ${blah} must be fully qualified`)
   }
 
-  isValidHostname (type, field, hostname) {
+  isValidHostname(type, field, hostname) {
     const allowed = new RegExp(/[^a-zA-Z0-9\-._/\\]/)
     if (!allowed.test(hostname)) return true
 
     const matches = allowed.exec(hostname)
-    throw new Error(`${type}, ${field} has invalid hostname character (${matches[0]})`)
+    throw new Error(
+      `${type}, ${field} has invalid hostname character (${matches[0]})`,
+    )
   }
 
-  toBind (zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')}\n`
+  toBind(zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.getRdataFields()
+      .map((f) => this.getQuoted(f))
+      .join('\t')}\n`
   }
 
-  toMaraDNS () {
+  toMaraDNS() {
     const type = this.get('type')
-    const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(/\s+/g)
+    const supportedTypes =
+      'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
+        /\s+/g,
+      )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields().map(f => this.getQuoted(f)).join('\t')} ~\n`
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields()
+      .map((f) => this.getQuoted(f))
+      .join('\t')} ~\n`
   }
 
-  toMaraGeneric () {
+  toMaraGeneric() {
     // throw new Error(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields().map(f => this.getQuoted(f)).join(' ')}' ~\n`
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields()
+      .map((f) => this.getQuoted(f))
+      .join(' ')}' ~\n`
   }
 }
