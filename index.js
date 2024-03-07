@@ -30,8 +30,10 @@ import SPF from './rr/spf.js'
 import SRV from './rr/srv.js'
 import SSHFP from './rr/sshfp.js'
 import TLSA from './rr/tlsa.js'
+import TSIG from './rr/tsig.js'
 import TXT from './rr/txt.js'
 import URI from './rr/uri.js'
+import WKS from './rr/wks.js'
 
 export default RR
 
@@ -65,8 +67,10 @@ export {
   SPF,
   SRV,
   TLSA,
+  TSIG,
   TXT,
   URI,
+  WKS,
   typeMap,
 }
 
@@ -100,8 +104,10 @@ for (const c of [
   SPF,
   SRV,
   TLSA,
+  TSIG,
   TXT,
   URI,
+  WKS,
 ]) {
   const id = new c(null).getTypeId()
   typeMap[id] = c.name

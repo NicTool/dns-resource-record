@@ -4,10 +4,11 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-### [1.1.8] - 2024-03-06
+### [1.2.0] - 2024-03-07
 
 - feat(index): export typeMap (lookup table for type to id)
 - feat(NXT): added bind support
+- feat(TSIG, WKS): added stub class
 - doc(README): move synopsis section into table (#38)
 - chore(style): set up prettier
 

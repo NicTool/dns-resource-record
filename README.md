@@ -205,6 +205,7 @@ PRs are welcome, especially PRs with tests.
 |    **NSEC**    | :white_check_mark: |                    | :white_check_mark: |                    |
 |   **NSEC3**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 | **NSEC3PARAM** |                    |                    |                    |                    |
+|    **NXT**     |                    |                    |                    |                    |
 | **OPENPGPKEY** |                    |                    |                    |                    |
 |    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **RRSIG**    |                    |                    |                    |                    |
@@ -215,8 +216,10 @@ PRs are welcome, especially PRs with tests.
 |    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **WKS**     |                    |                    |                    |                    |
 
 ## TIPS
 

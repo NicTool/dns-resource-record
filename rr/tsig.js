@@ -7,7 +7,7 @@ export default class TSIG extends RR {
   }
 
   /****** Resource record specific setters   *******/
-  
+
   getDescription() {
     return 'Transaction Signature'
   }
