@@ -1,57 +1,56 @@
-
 import net from 'net'
 
 import RR from '../rr.js'
 
 export default class A extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setAddress (val) {
+  setAddress(val) {
     if (!val) throw new Error('A: address is required')
     if (!net.isIPv4(val)) throw new Error('A address must be IPv4')
     this.set('address', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'Address'
   }
 
-  getRdataFields (arg) {
-    return [ 'address' ]
+  getRdataFields(arg) {
+    return ['address']
   }
 
-  getRFCs () {
-    return [ 1035 ]
+  getRFCs() {
+    return [1035]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 1
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // +fqdn:ip:ttl:timestamp:lo
-    const [ owner, ip, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [owner, ip, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
 
     return new A({
-      owner    : this.fullyQualify(owner),
-      type     : 'A',
-      address  : ip,
-      ttl      : parseInt(ttl, 10),
+      owner: this.fullyQualify(owner),
+      type: 'A',
+      address: ip,
+      ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  A  192.0.2.127
-    const [ owner, ttl, c, type, address ] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, address] = opts.bindline.split(/\s+/)
     return new A({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
       type,
       address,
@@ -59,7 +58,7 @@ export default class A extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toTinydns () {
+  toTinydns() {
     return `+${this.getTinyFQDN('owner')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
   }
 }

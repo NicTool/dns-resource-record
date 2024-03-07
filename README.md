@@ -29,7 +29,7 @@ This package is for working with _individual_ Resource Records. For working with
 Load the index for access to all RR types:
 
 ```js
-import * as RR from 'dns-resource-record'
+import * as RR from '@nictool/dns-resource-record'
 ```
 
 ### EXAMPLES
@@ -179,65 +179,64 @@ A(5) [Map] {
 
 Consider this a "running with scissors" mode.
 
-
 ## Supported Records
 
 This module intends to include support for all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
 
 PRs are welcome, especially PRs with tests.
 
-| **RR**     | **toBind**       | **toTinydns**    | **fromBind**     |  **fromTinydns** |
-|:---------: |:----------------:|:----------------:|:----------------:|:----------------:|
-| **A**      |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **AAAA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CAA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **CERT**   |:white_check_mark:|                  |:white_check_mark:|                  |
-| **CNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNAME**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DNSKEY** |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **DS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **HINFO**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-|**IPSECKEY**|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **KEY**    |                  |                  |                  |                  |
-| **LOC**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **MX**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NAPTR**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NS**     |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **NSEC**   |:white_check_mark:|                  |:white_check_mark:|                  |
-| **NSEC3**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|                  |
-| **NSEC3PARAM**|               |                  |                  |                  |
-| **OPENPGPKEY**|               |                  |                  |                  |
-| **PTR**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **RRSIG**  |                  |                  |                  |                  |
-| **SIG**    |                  |                  |                  |                  |
-| **SMIMEA** |:white_check_mark:|                  |:white_check_mark:|                  |
-| **SOA**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SPF**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SRV**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **SSHFP**  |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **TLSA**   |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **TXT**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-| **URI**    |:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-
+|     **RR**     |     **toBind**     |   **toTinydns**    |    **fromBind**    |  **fromTinydns**   |
+| :------------: | :----------------: | :----------------: | :----------------: | :----------------: |
+|     **A**      | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **AAAA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **CAA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **CERT**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|   **CNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **DNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **DNSKEY**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **KEY**     |                    |                    |                    |                    |
+|    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|     **MX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **NAPTR**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|     **NS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **NSEC**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|   **NSEC3**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+| **NSEC3PARAM** |                    |                    |                    |                    |
+|    **NXT**     |                    |                    |                    |                    |
+| **OPENPGPKEY** |                    |                    |                    |                    |
+|    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **RRSIG**    |                    |                    |                    |                    |
+|    **SIG**     |                    |                    |                    |                    |
+|   **SMIMEA**   | :white_check_mark: |                    | :white_check_mark: |                    |
+|    **SOA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **TSIG**    |                    |                    |                    |                    |
+|    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **WKS**     |                    |                    |                    |                    |
 
 ## TIPS
 
 - Domain owner names are:
-    - stored fully qualified, aka absolute.
-    - normalized to lower case, because:
-        - DNS is case insensitive (see RFCs 4343, 1035, 1034)
-        - this library enforces duplicate suppression
-        - DNSSEC canonicalization (see RFC 4034)
-        - wire format for most RRs require it
-    - Master Zone File expansions exist in [dns-zone](https://github.com/NicTool/dns-zone)
+  - stored fully qualified, aka absolute.
+  - normalized to lower case, because:
+    - DNS is case insensitive (see RFCs 4343, 1035, 1034)
+    - this library enforces duplicate suppression
+    - DNSSEC canonicalization (see RFC 4034)
+    - wire format for most RRs require it
+  - Master Zone File expansions exist in [dns-zone](https://github.com/NicTool/dns-zone)
 - to{Bind|MaraDNS} output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/NicTool/dns-zone) package.
-
 
 ## SEE ALSO
 
 - [Dictionary of DNS terms](https://nictool.github.io/web/Dictionary)
 - [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
-
 
 ## TODO
 
@@ -249,15 +248,14 @@ PRs are welcome, especially PRs with tests.
 - [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
 - [x] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
       MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
-      NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase 
+      NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase
       letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
 - [x] LOC record ingest/out isn't consistent with API
 - [ ] export a web page for each RR type
-
 
 ## DEVELOP
 
 - There are no dependencies. That's no accident.
 - ES modules for use by node.js and browser
 - Platform independence is a goal
-    - [x] CI tests are on linux, windows, and macos
+  - [x] CI tests are on linux, windows, and macos

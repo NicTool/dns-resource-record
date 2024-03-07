@@ -1,61 +1,59 @@
-
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class TXT extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setData (val) {
+  setData(val) {
     this.set('data', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'Text'
   }
 
-  getRdataFields (arg) {
-    return [ 'data' ]
+  getRdataFields(arg) {
+    return ['data']
   }
 
-  getRFCs () {
-    return [ 1035 ]
+  getRFCs() {
+    return [1035]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 16
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     const str = opts.tinyline
     let fqdn, rdata, s, ttl, ts, loc
     // 'fqdn:s:ttl:timestamp:lo
     if (str[0] === "'") {
-      [ fqdn, s, ttl, ts, loc ] = str.substring(1).split(':')
+      ;[fqdn, s, ttl, ts, loc] = str.substring(1).split(':')
       rdata = TINYDNS.octalToChar(s)
-    }
-    else {
-      [ fqdn, rdata, ttl, ts, loc ] = this.fromTinydnsGeneric(str)
+    } else {
+      ;[fqdn, rdata, ttl, ts, loc] = this.fromTinydnsGeneric(str)
     }
 
     return new this.constructor({
-      owner    : this.fullyQualify(fqdn),
-      ttl      : parseInt(ttl, 10),
-      type     : 'TXT',
-      data     : rdata,
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'TXT',
+      data: rdata,
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromTinydnsGeneric (str) {
+  fromTinydnsGeneric(str) {
     // generic: :fqdn:n:rdata:ttl:timestamp:location
     // eslint-disable-next-line prefer-const
-    let [ fqdn, n, rdata, ttl, ts, loc ] = str.substring(1).split(':')
+    let [fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
     if (n != 16) throw new Error('TXT fromTinydns, invalid n')
 
     rdata = TINYDNS.octalToChar(rdata)
@@ -67,35 +65,40 @@ export default class TXT extends RR {
       pos = len + pos
       len = rdata.charCodeAt(pos + 1)
     }
-    return [ fqdn, s, ttl, ts, loc ]
+    return [fqdn, s, ttl, ts, loc]
   }
 
-  fromBind (opts) {
+  fromBind(opts) {
     // test.example.com  3600  IN  TXT  "..."
-    const match = opts.bindline.split(/^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/)
+    const match = opts.bindline.split(
+      /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/,
+    )
     if (!match) throw new Error(`unable to parse TXT: ${opts.bindline}`)
-    const [ owner, ttl, c, type, rdata ] = match.slice(1)
+    const [owner, ttl, c, type, rdata] = match.slice(1)
 
     return new this.constructor({
       owner,
-      ttl  : parseInt(ttl, 10),
+      ttl: parseInt(ttl, 10),
       class: c,
       type,
-      data : rdata.match(/"([^"]+?)"/g).map(s => s.replace(/^"|"$/g, '')).join(''),
+      data: rdata
+        .match(/"([^"]+?)"/g)
+        .map((s) => s.replace(/^"|"$/g, ''))
+        .join(''),
     })
   }
 
   /******  EXPORTERS   *******/
-  toBind (zone_opts) {
+  toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t"${asQuotedStrings(this.get('data'))}"\n`
   }
 
-  toMaraDNS () {
+  toMaraDNS() {
     const data = asQuotedStrings(this.get('data')).replace(/"/g, "'")
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
-  toTinydns () {
+  toTinydns() {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
@@ -103,15 +106,19 @@ export default class TXT extends RR {
   }
 }
 
-function asQuotedStrings (data) {
-
+function asQuotedStrings(data) {
   // BIND croaks when any string in the TXT RR data is longer than 255
   if (Array.isArray(data)) {
     let hasTooLong = false
     for (const str of data) {
       if (str.length > 255) hasTooLong = true
     }
-    return hasTooLong ? data.join('').match(/(.{1,255})/g).join('" "') : data.join('" "')
+    return hasTooLong
+      ? data
+          .join('')
+          .match(/(.{1,255})/g)
+          .join('" "')
+      : data.join('" "')
   }
 
   if (data.length > 255) {

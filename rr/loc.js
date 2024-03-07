@@ -1,9 +1,9 @@
-
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
-const REF = {  // RFC 1876
-  LATLON  : 2**31,  // LAT equator, LON prime meridian
+const REF = {
+  // RFC 1876
+  LATLON: 2 ** 31, // LAT equator, LON prime meridian
   ALTITUDE: 100000 * 100, // reference spheroid used by GPS, in cm
 }
 
@@ -14,12 +14,12 @@ const CONV = {
 }
 
 export default class LOC extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setAddress (val) {
+  setAddress(val) {
     if (!val) throw new Error('LOC: address is required')
 
     /*
@@ -32,29 +32,29 @@ export default class LOC extends RR {
     this.set('address', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'Location'
   }
 
-  getRdataFields (arg) {
-    return [ 'address' ]
+  getRdataFields(arg) {
+    return ['address']
   }
 
-  getRFCs () {
-    return [ 1876 ]
+  getRFCs() {
+    return [1876]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 29
   }
 
-  parseLoc (string) {
-
+  parseLoc(string) {
     // d1 [m1 [s1]]
     const dms = '(\\d+)\\s+(?:(\\d+)\\s+)?(?:([\\d.]+)\\s+)?'
 
     // alt["m"] [siz["m"] [hp["m"] [vp["m"]]]]
-    const alt = '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
+    const alt =
+      '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
 
     // put them all together
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
@@ -63,22 +63,22 @@ export default class LOC extends RR {
 
     const loc = {
       latitude: {
-        degrees   : r[1],
-        minutes   : r[2],
-        seconds   : r[3],
+        degrees: r[1],
+        minutes: r[2],
+        seconds: r[3],
         hemisphere: r[4].toUpperCase(),
       },
       longitude: {
-        degrees   : r[5],
-        minutes   : r[6],
-        seconds   : r[7],
+        degrees: r[5],
+        minutes: r[6],
+        seconds: r[7],
         hemisphere: r[8].toUpperCase(),
       },
-      altitude : r[9] * 100,  // m -> cm
-      size     : r[10] * 100,
+      altitude: r[9] * 100, // m -> cm
+      size: r[10] * 100,
       precision: {
         horizontal: r[11] * 100,
-        vertical  : r[12] * 100,
+        vertical: r[12] * 100,
       },
     }
 
@@ -86,48 +86,61 @@ export default class LOC extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns (opts) {
+  fromTinydns(opts) {
     // LOC via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [ fqdn, n, rdata, ttl, ts, loc ] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
     if (n != 29) throw new Error('LOC fromTinydns, invalid n')
 
     // divide by 100 is to convert cm to meters
     const l = {
-      version  : TINYDNS.octalToUInt8(rdata.substring(0, 4)),
-      size     : this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(4, 8))),
+      version: TINYDNS.octalToUInt8(rdata.substring(0, 4)),
+      size: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(4, 8))),
       precision: {
-        horizontal: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring( 8, 12))),
-        vertical  : this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(12, 16))),
+        horizontal: this.fromExponent(
+          TINYDNS.octalToUInt8(rdata.substring(8, 12)),
+        ),
+        vertical: this.fromExponent(
+          TINYDNS.octalToUInt8(rdata.substring(12, 16)),
+        ),
       },
-      latitude : this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(16, 32)), 'lat'),
-      longitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(32, 48)), 'lon'),
-      altitude : TINYDNS.octalToUInt32(rdata.substring(48, 64)) - REF.ALTITUDE,
+      latitude: this.arcSecToDMS(
+        TINYDNS.octalToUInt32(rdata.substring(16, 32)),
+        'lat',
+      ),
+      longitude: this.arcSecToDMS(
+        TINYDNS.octalToUInt32(rdata.substring(32, 48)),
+        'lon',
+      ),
+      altitude: TINYDNS.octalToUInt32(rdata.substring(48, 64)) - REF.ALTITUDE,
     }
 
     return new LOC({
-      type     : 'LOC',
-      owner    : this.fullyQualify(fqdn),
-      address  : this.toHuman(l),
-      ttl      : parseInt(ttl, 10),
+      type: 'LOC',
+      owner: this.fullyQualify(fqdn),
+      address: this.toHuman(l),
+      ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location : loc !== '' && loc !== '\n' ? loc : '',
+      location: loc !== '' && loc !== '\n' ? loc : '',
     })
   }
 
-  fromBind (opts) {
-    const [ owner, ttl, c, type ] = opts.bindline.split(/\s+/)
+  fromBind(opts) {
+    const [owner, ttl, c, type] = opts.bindline.split(/\s+/)
 
     return new LOC({
       owner,
-      ttl    : parseInt(ttl, 10),
-      class  : c,
-      type   : type,
+      ttl: parseInt(ttl, 10),
+      class: c,
+      type: type,
       address: opts.bindline.split(/\s+/).slice(4).join(' ').trim(),
     })
   }
 
-  dmsToArcSec (obj) {
-    let retval = (obj.degrees * CONV.deg) + ((obj.minutes || 0) * CONV.min) + ((obj.seconds || 0) * CONV.sec)
+  dmsToArcSec(obj) {
+    let retval =
+      obj.degrees * CONV.deg +
+      (obj.minutes || 0) * CONV.min +
+      (obj.seconds || 0) * CONV.sec
     switch (obj.hemisphere.toUpperCase()) {
       case 'W':
       case 'S':
@@ -138,7 +151,7 @@ export default class LOC extends RR {
     return retval
   }
 
-  arcSecToDMS (rawmsec, latlon) {
+  arcSecToDMS(rawmsec, latlon) {
     let msec = Math.abs(rawmsec - REF.LATLON)
     // console.log(`rawmsec: ${rawmsec}, abs msec: ${msec}`)
 
@@ -163,16 +176,16 @@ export default class LOC extends RR {
         throw new Error('unknown or missing hemisphere')
     }
 
-    return `${deg} ${min} ${sec}${msec ? '.'+msec : ''} ${hem}`
+    return `${deg} ${min} ${sec}${msec ? '.' + msec : ''} ${hem}`
   }
 
-  fromExponent (prec) {
+  fromExponent(prec) {
     const mantissa = ((prec >> 4) & 0x0f) % 10
     const exponent = ((prec >> 0) & 0x0f) % 10
     return mantissa * Math.pow(10, exponent)
   }
 
-  toExponent (val) {
+  toExponent(val) {
     /*
      RFC 1876, ... expressed as a pair of four-bit unsigned
      integers, each ranging from zero to nine, with the most
@@ -188,22 +201,22 @@ export default class LOC extends RR {
     return (parseInt(val) << 4) | (exponent & 0x0f)
   }
 
-  toHuman (obj) {
-    let r = `${obj.latitude} ${obj.longitude} ${(obj.altitude/100)}m`
-    if (obj.size)                 r += ` ${obj.size/100}m`
+  toHuman(obj) {
+    let r = `${obj.latitude} ${obj.longitude} ${obj.altitude / 100}m`
+    if (obj.size) r += ` ${obj.size / 100}m`
     if (obj.precision.horizontal) r += ` ${obj.precision.horizontal / 100}m`
-    if (obj.precision.vertical  ) r += ` ${obj.precision.vertical / 100}m`
+    if (obj.precision.vertical) r += ` ${obj.precision.vertical / 100}m`
     return r
   }
 
   /******  EXPORTERS   *******/
 
-  toTinydns () {
+  toTinydns() {
     const loc = this.parseLoc(this.get('address'))
 
     // LOC format declares in meters, tinydns uses cm (hence * 100)
     let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(0)  // version
+    rdata += TINYDNS.UInt8toOctal(0) // version
     rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.size))
     rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.precision.horizontal))
     rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.precision.vertical))

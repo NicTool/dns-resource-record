@@ -1,13 +1,10 @@
-
 import * as base from './base.js'
 
 import NSEC3PARAM from '../rr/nsec3param.js'
 
-const validRecords = [
-]
+const validRecords = []
 
-const invalidRecords = [
-]
+const invalidRecords = []
 
 describe('NSEC3PARAM record', function () {
   base.valid(NSEC3PARAM, validRecords)
@@ -15,7 +12,7 @@ describe('NSEC3PARAM record', function () {
 
   base.getDescription(NSEC3PARAM)
   base.getRFCs(NSEC3PARAM, validRecords[0])
-  base.getFields(NSEC3PARAM, [ 'hash algorithm', 'flags', 'iterations', 'salt' ])
+  base.getFields(NSEC3PARAM, ['hash algorithm', 'flags', 'iterations', 'salt'])
   base.getTypeId(NSEC3PARAM, 51)
 
   // base.toBind(NSEC3PARAM, validRecords)

@@ -1,6 +1,6 @@
 import RR from '../rr.js'
 
-export default class NSEC extends RR {
+export default class NXT extends RR {
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -9,20 +9,20 @@ export default class NSEC extends RR {
   /****** Resource record specific setters   *******/
   setNextDomain(val) {
     if (!val)
-      throw new Error(`NSEC: 'next domain' is required:, ${this.citeRFC()}`)
+      throw new Error(`NXT: 'next domain' is required:, ${this.citeRFC()}`)
 
-    this.isFullyQualified('NSEC', 'next domain', val)
-    this.isValidHostname('NSEC', 'next domain', val)
+    this.isFullyQualified('NXT', 'next domain', val)
+    this.isValidHostname('NXT', 'next domain', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', val.toLowerCase())
   }
 
-  setTypeBitMaps(val) {
+  setTypeBitMap(val) {
     if (!val)
-      throw new Error(`NSEC: 'type bit maps' is required, ${this.citeRFC()}`)
+      throw new Error(`NXT: 'type bit map' is required, ${this.citeRFC()}`)
 
-    this.set('type bit maps', val)
+    this.set('type bit map', val)
   }
 
   getDescription() {
@@ -30,29 +30,29 @@ export default class NSEC extends RR {
   }
 
   getRdataFields(arg) {
-    return ['next domain', 'type bit maps']
+    return ['next domain', 'type bit map']
   }
 
   getRFCs() {
-    return [4034]
+    return [2065]
   }
 
   getTypeId() {
-    return 47
+    return 30
   }
 
   /******  IMPORTERS   *******/
 
   fromBind(opts) {
-    // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
+    // test.example.com  3600  IN  NXT NextDomain TypeBitMap
     const [owner, ttl, c, type, next] = opts.bindline.split(/\s+/)
-    return new NSEC({
+    return new NXT({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
       'next domain': next,
-      'type bit maps': opts.bindline
+      'type bit map': opts.bindline
         .split(/\s+/)
         .slice(5)
         .filter(removeParens)

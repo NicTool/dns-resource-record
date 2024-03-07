@@ -1,4 +1,3 @@
-
 import assert from 'assert'
 
 import * as base from './base.js'
@@ -11,15 +10,15 @@ const validRecords = [
   {
     ...defaults,
     owner: 'example.com.',
-    data : 'v=spf1 mx a include:mx.example.com -all',
-    testB: 'example.com.\t86400\tIN\tSPF\t"v=spf1 mx a include:mx.example.com -all"\n',
-    testT: ':example.com:99:v=spf1 mx a include\\072mx.example.com -all:86400::\n',
+    data: 'v=spf1 mx a include:mx.example.com -all',
+    testB:
+      'example.com.\t86400\tIN\tSPF\t"v=spf1 mx a include:mx.example.com -all"\n',
+    testT:
+      ':example.com:99:v=spf1 mx a include\\072mx.example.com -all:86400::\n',
   },
 ]
 
-const invalidRecords = [
-
-]
+const invalidRecords = []
 
 describe('SPF record', function () {
   base.valid(SPF, validRecords)
@@ -27,7 +26,7 @@ describe('SPF record', function () {
 
   base.getDescription(SPF)
   base.getRFCs(SPF, validRecords[0])
-  base.getFields(SPF, [ 'data' ])
+  base.getFields(SPF, ['data'])
   base.getTypeId(SPF, 99)
 
   base.toBind(SPF, validRecords)
@@ -40,8 +39,12 @@ describe('SPF record', function () {
     it.skip(`imports tinydns SPF (generic) record`, async function () {
       const r = new SPF({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'owner', 'data', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      for (const f of ['owner', 'data', 'ttl']) {
+        assert.deepStrictEqual(
+          r.get(f),
+          val[f],
+          `${f}: ${r.get(f)} !== ${val[f]}`,
+        )
       }
     })
   }

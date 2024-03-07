@@ -1,4 +1,3 @@
-
 import assert from 'assert'
 
 import * as base from './base.js'
@@ -21,8 +20,8 @@ const invalidRecords = [
   {
     ...defaults,
     owner: 'example.com.',
-    dname: '1.2.3.4',  // FQDN required
-    msg  : /dname must be fully qualified/,
+    dname: '1.2.3.4', // FQDN required
+    msg: /dname must be fully qualified/,
   },
 ]
 
@@ -32,7 +31,7 @@ describe('NS record', function () {
 
   base.getDescription(NS)
   base.getRFCs(NS, validRecords[0])
-  base.getFields(NS, [ 'dname' ])
+  base.getFields(NS, ['dname'])
   base.getTypeId(NS, 2)
 
   base.toBind(NS, validRecords)
@@ -45,8 +44,12 @@ describe('NS record', function () {
     it.skip(`imports tinydns NS (&) record (${val.owner})`, async function () {
       const r = new NS({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [ 'owner', 'dname', 'ttl' ]) {
-        assert.deepStrictEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
+      for (const f of ['owner', 'dname', 'ttl']) {
+        assert.deepStrictEqual(
+          r.get(f),
+          val[f],
+          `${f}: ${r.get(f)} !== ${val[f]}`,
+        )
       }
     })
   }

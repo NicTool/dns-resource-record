@@ -1,5 +1,4 @@
-
-import A    from '../rr/a.js'
+import A from '../rr/a.js'
 import * as base from './base.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'A', address: '192.0.2.127' }
@@ -14,14 +13,14 @@ const validRecords = [
   {
     ...defaults,
     owner: 'test.example.com.',
-    ttl  : 2147483647,
+    ttl: 2147483647,
     testB: 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
     testT: '+test.example.com:192.0.2.127:2147483647::\n',
   },
   {
     ...defaults,
     owner: 'a.',
-    ttl  : 86400,
+    ttl: 86400,
     testB: 'a.\t86400\tIN\tA\t192.0.2.127\n',
     testT: '+a:192.0.2.127:86400::\n',
   },
@@ -64,8 +63,8 @@ describe('A record', function () {
 
   base.getDescription(A)
   base.getRFCs(A, validRecords[0])
-  base.getRdataFields(A, [ 'address' ])
-  base.getFields(A, [ 'address' ])
+  base.getRdataFields(A, ['address'])
+  base.getFields(A, ['address'])
   base.getTypeId(A, 1)
 
   base.toBind(A, validRecords)

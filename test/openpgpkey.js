@@ -1,4 +1,3 @@
-
 import * as base from './base.js'
 
 import OPENPGPKEY from '../rr/openpgpkey.js'
@@ -15,8 +14,7 @@ const validRecords = [
   // },
 ]
 
-const invalidRecords = [
-]
+const invalidRecords = []
 
 describe('OPENPGPKEY record', function () {
   base.valid(OPENPGPKEY, validRecords)
@@ -24,7 +22,7 @@ describe('OPENPGPKEY record', function () {
 
   base.getDescription(OPENPGPKEY)
   base.getRFCs(OPENPGPKEY)
-  base.getFields(OPENPGPKEY, [ 'public key' ])
+  base.getFields(OPENPGPKEY, ['public key'])
   base.getTypeId(OPENPGPKEY, 61)
 
   base.toBind(OPENPGPKEY, validRecords)

@@ -1,4 +1,3 @@
-
 import * as base from './base.js'
 
 import CNAME from '../rr/cname.js'
@@ -19,8 +18,8 @@ const invalidRecords = [
   {
     ...defaults,
     owner: 'example.com.',
-    cname: '192.0.2.4',  // FQDN required
-    msg  : /cname must be a FQDN/,
+    cname: '192.0.2.4', // FQDN required
+    msg: /cname must be a FQDN/,
   },
 ]
 
@@ -30,7 +29,7 @@ describe('CNAME record', function () {
 
   base.getDescription(CNAME)
   base.getRFCs(CNAME, validRecords[0])
-  base.getFields(CNAME, [ 'cname' ])
+  base.getFields(CNAME, ['cname'])
   base.getTypeId(CNAME, 5)
 
   base.toBind(CNAME, validRecords)
