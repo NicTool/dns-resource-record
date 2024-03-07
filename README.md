@@ -10,7 +10,7 @@ DNS resource record parser, validator, importer, and exporter.
 This module is used to:
 
 - validate well formedness and RFC compliance of DNS resource records
-- import RRs from and from the following formats:
+- import RRs to and from the following formats:
 
 |                      **RR format**                       |     **import**     |     **export**     |
 | :------------------------------------------------------: | :----------------: | :----------------: |
@@ -196,6 +196,7 @@ PRs are welcome, especially PRs with tests.
 |   **DNSKEY**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **HTTPS**    |                    |                    |                    |                    |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **KEY**     |                    |                    |                    |                    |
 |    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -215,6 +216,7 @@ PRs are welcome, especially PRs with tests.
 |    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **SVCB**    |                    |                    |                    |                    |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |

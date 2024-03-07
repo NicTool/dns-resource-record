@@ -13,16 +13,16 @@ const validRecords = [
     owner        : '_8443._foo.api.example.com.',
     ttl          : 7200,
     priority     : 0,
-    'domain name': 'svc4.example.net.',
-    'value'      : 'alpn="bar" port="8004" ech="..."',
+    'target name': 'svc4.example.net.',
+    params       : 'alpn="bar" port="8004" ech="..."',
     testB        : '_8443._foo.api.example.com.\t7200\tIN\tSVCB\t0\tsvc4.example.net.\talpn="bar" port="8004" ech="..."\n',
   },
   {
     ...defaults,
     owner        : '_8080._foo.example.com.',
     priority     : 0,
-    'domain name': 'foosvc.example.net.',
-    value        : '',
+    'target name': 'foosvc.example.net.',
+    params        : '',
     testB        : '_8080._foo.example.com.\t3600\tIN\tSVCB\t0\tfoosvc.example.net.\t\n',
   },
 /*
@@ -35,8 +35,8 @@ const invalidRecords = [
   // {
   //   ...defaults,
   //   owner : 'test.example.com.',
-  //   'domain name': 'not-full-qualified.example.com',
-  //   value  : /must be a 16-bit integer/,
+  //   'target name': 'not-full-qualified.example.com',
+  //   params  : /must be a 16-bit integer/,
   // },
 ]
 
@@ -45,8 +45,8 @@ describe('SVCB record', function () {
   base.invalid(SVCB, invalidRecords)
 
   base.getDescription(SVCB)
-  // base.getRFCs(SVCB, validRecords[0])
-  base.getFields(SVCB, [ 'priority', 'domain name', 'value' ])
+  base.getRFCs(SVCB, validRecords[0])
+  base.getFields(SVCB, [ 'priority', 'target name', 'params' ])
   base.getTypeId(SVCB, 64)
 
   base.toBind(SVCB, validRecords)
