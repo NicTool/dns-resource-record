@@ -29,7 +29,7 @@ This package is for working with _individual_ Resource Records. For working with
 Load the index for access to all RR types:
 
 ```js
-import * as RR from 'dns-resource-record'
+import * as RR from '@nictool/dns-resource-record'
 ```
 
 ### EXAMPLES

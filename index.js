@@ -1,3 +1,5 @@
+const typeMap = {}
+
 import RR from './rr.js'
 import A from './rr/a.js'
 import AAAA from './rr/aaaa.js'
@@ -17,6 +19,7 @@ import NS from './rr/ns.js'
 import NSEC from './rr/nsec.js'
 import NSEC3 from './rr/nsec3.js'
 import NSEC3PARAM from './rr/nsec3param.js'
+import NXT from './rr/nxt.js'
 import OPENPGPKEY from './rr/openpgpkey.js'
 import PTR from './rr/ptr.js'
 import RRSIG from './rr/rrsig.js'
@@ -51,6 +54,7 @@ export {
   NSEC,
   NSEC3,
   NSEC3PARAM,
+  NXT,
   OPENPGPKEY,
   PTR,
   RRSIG,
@@ -63,4 +67,43 @@ export {
   TLSA,
   TXT,
   URI,
+  typeMap,
+}
+
+for (const c of [
+  A,
+  AAAA,
+  CAA,
+  CERT,
+  CNAME,
+  DNAME,
+  DNSKEY,
+  DS,
+  HINFO,
+  IPSECKEY,
+  KEY,
+  LOC,
+  MX,
+  NAPTR,
+  NS,
+  NSEC,
+  NSEC3,
+  NSEC3PARAM,
+  NXT,
+  OPENPGPKEY,
+  PTR,
+  RRSIG,
+  SIG,
+  SMIMEA,
+  SSHFP,
+  SOA,
+  SPF,
+  SRV,
+  TLSA,
+  TXT,
+  URI,
+]) {
+  const id = new c(null).getTypeId()
+  typeMap[id] = c.name
+  typeMap[c.name] = id
 }

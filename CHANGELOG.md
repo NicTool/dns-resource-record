@@ -6,6 +6,8 @@ Notable changes to this project are documented in this file.
 
 ### [1.1.8] - 2024-03-06
 
+- feat(index): export typeMap (lookup table for type to id)
+- feat(NXT): added bind support
 - doc(README): move synopsis section into table (#38)
 - chore(style): set up prettier
 
