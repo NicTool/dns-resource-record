@@ -4,6 +4,8 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- feat(SVCB,HTTPS): add record support
+
 ### [1.2.0] - 2024-03-07
 
 - feat(index): export typeMap (lookup table for type to id)

@@ -10,6 +10,7 @@ import DNAME from './rr/dname.js'
 import DNSKEY from './rr/dnskey.js'
 import DS from './rr/ds.js'
 import HINFO from './rr/hinfo.js'
+import HTTPS from './rr/https.js'
 import IPSECKEY from './rr/ipseckey.js'
 import KEY from './rr/key.js'
 import LOC from './rr/loc.js'
@@ -29,6 +30,7 @@ import SOA from './rr/soa.js'
 import SPF from './rr/spf.js'
 import SRV from './rr/srv.js'
 import SSHFP from './rr/sshfp.js'
+import SVCB from './rr/svcb.js'
 import TLSA from './rr/tlsa.js'
 import TSIG from './rr/tsig.js'
 import TXT from './rr/txt.js'
@@ -47,6 +49,7 @@ export {
   DNSKEY,
   DS,
   HINFO,
+  HTTPS,
   IPSECKEY,
   KEY,
   LOC,
@@ -66,6 +69,7 @@ export {
   SOA,
   SPF,
   SRV,
+  SVCB,
   TLSA,
   TSIG,
   TXT,
@@ -84,6 +88,7 @@ for (const c of [
   DNSKEY,
   DS,
   HINFO,
+  HTTPS,
   IPSECKEY,
   KEY,
   LOC,
@@ -103,6 +108,7 @@ for (const c of [
   SOA,
   SPF,
   SRV,
+  SVCB,
   TLSA,
   TSIG,
   TXT,

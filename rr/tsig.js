@@ -13,7 +13,15 @@ export default class TSIG extends RR {
   }
 
   getRdataFields(arg) {
-    return ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
+    return [
+      'algorithm name',
+      'time signed',
+      'fudge',
+      'mac',
+      'original id',
+      'error',
+      'other',
+    ]
   }
 
   getRFCs() {
@@ -34,7 +42,7 @@ export default class TSIG extends RR {
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      'algorithm': algorithm,
+      algorithm: algorithm,
       // 'time signed': opts.bindline,
       // fudge
       // mac
