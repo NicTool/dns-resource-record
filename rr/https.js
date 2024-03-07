@@ -1,22 +1,18 @@
-
-// import net from 'net'
-
 import RR from '../rr.js'
 
 export default class HTTPS extends RR {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setPriority (val) {
+  setPriority(val) {
     this.is16bitInt('HTTPS', 'priority', val)
 
     this.set('priority', val)
   }
 
-  setTargetName (val) {
-
+  setTargetName(val) {
     // this.isFullyQualified('HTTPS', 'target name', val)
     // this.isValidHostname('HTTPS', 'target name', val)
 
@@ -24,41 +20,41 @@ export default class HTTPS extends RR {
     this.set('target name', val.toLowerCase())
   }
 
-  setParams (val) {
+  setParams(val) {
     // if (!val) throw new Error(`HTTPS: params is required, ${this.citeRFC()}`)
 
     this.set('params', val)
   }
 
-  getDescription () {
+  getDescription() {
     return 'HTTP Semantics'
   }
 
-  getRdataFields (arg) {
-    return [ 'priority', 'target name', 'params' ]
+  getRdataFields(arg) {
+    return ['priority', 'target name', 'params']
   }
 
-  getRFCs () {
+  getRFCs() {
     return [9460]
   }
 
-  getTypeId () {
+  getTypeId() {
     return 65
   }
 
   /******  IMPORTERS   *******/
 
-  fromBind (opts) {
-    // test.example.com  3600  IN  HTTPS Priority DomainName FieldValue
-    const [ owner, ttl, c, type, pri, fqdn ] = opts.bindline.split(/\s+/)
+  fromBind(opts) {
+    // test.example.com  3600  IN  HTTPS Priority TargetName Params
+    const [owner, ttl, c, type, pri, fqdn] = opts.bindline.split(/\s+/)
     return new HTTPS({
       owner,
-      ttl          : parseInt(ttl, 10),
-      class        : c,
+      ttl: parseInt(ttl, 10),
+      class: c,
       type,
-      priority     : parseInt(pri, 10),
+      priority: parseInt(pri, 10),
       'target name': fqdn,
-      params        : opts.bindline.split(/\s+/).slice(6).join(' ').trim(),
+      params: opts.bindline.split(/\s+/).slice(6).join(' ').trim(),
     })
   }
 

@@ -10,6 +10,7 @@ import DNAME from './rr/dname.js'
 import DNSKEY from './rr/dnskey.js'
 import DS from './rr/ds.js'
 import HINFO from './rr/hinfo.js'
+import HTTPS from './rr/https.js'
 import IPSECKEY from './rr/ipseckey.js'
 import KEY from './rr/key.js'
 import LOC from './rr/loc.js'
@@ -48,6 +49,7 @@ export {
   DNSKEY,
   DS,
   HINFO,
+  HTTPS,
   IPSECKEY,
   KEY,
   LOC,
@@ -86,6 +88,7 @@ for (const c of [
   DNSKEY,
   DS,
   HINFO,
+  HTTPS,
   IPSECKEY,
   KEY,
   LOC,
