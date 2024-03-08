@@ -28,10 +28,10 @@ export default class SRV extends RR {
   }
 
   setTarget(val) {
-    if (!val) throw new Error(`SRV: target is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`SRV: target is required`)
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`SRV: target must be a FQDN, ${this.citeRFC()}`)
+      this.throwHelp(`SRV: target must be a FQDN`)
 
     this.isFullyQualified('SRV', 'target', val)
     this.isValidHostname('SRV', 'target', val)
@@ -69,7 +69,7 @@ export default class SRV extends RR {
     } else {
       // tinydns generic record format
       ;[fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
-      if (n != 33) throw new Error('SRV fromTinydns: invalid n')
+      if (n != 33) this.throwHelp('SRV fromTinydns: invalid n')
 
       pri = TINYDNS.octalToUInt16(rdata.substring(0, 8))
       weight = TINYDNS.octalToUInt16(rdata.substring(8, 16))

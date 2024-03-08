@@ -73,7 +73,7 @@ describe('HINFO record', function () {
       try {
         assert.fail(r[`set${r.ucfirst(f)}`](tooLong))
       } catch (e) {
-        assert.equal(e.message, `HINFO ${f} cannot exceed 255 chars`)
+        assert.ok(/cannot exceed 255 chars/.test(e.message))
       }
     })
   }

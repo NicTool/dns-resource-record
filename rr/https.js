@@ -21,7 +21,7 @@ export default class HTTPS extends RR {
   }
 
   setParams(val) {
-    // if (!val) throw new Error(`HTTPS: params is required, ${this.citeRFC()}`)
+    // if (!val) this.throwHelp(`HTTPS: params is required`)
 
     this.set('params', val)
   }

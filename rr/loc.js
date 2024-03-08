@@ -20,7 +20,7 @@ export default class LOC extends RR {
 
   /****** Resource record specific setters   *******/
   setAddress(val) {
-    if (!val) throw new Error('LOC: address is required')
+    if (!val) this.throwHelp('LOC: address is required')
 
     /*
     ... LOC ( d1 [m1 [s1]] {"N"|"S"} d2 [m2 [s2]]
@@ -59,7 +59,7 @@ export default class LOC extends RR {
     // put them all together
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
     const r = string.match(locRe)
-    if (!r) throw new Error('LOC address: invalid format, see RFC 1876')
+    if (!r) this.throwHelp('LOC address: invalid format, see RFC 1876')
 
     const loc = {
       latitude: {
@@ -89,7 +89,7 @@ export default class LOC extends RR {
   fromTinydns(opts) {
     // LOC via generic, :fqdn:n:rdata:ttl:timestamp:lo
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 29) throw new Error('LOC fromTinydns, invalid n')
+    if (n != 29) this.throwHelp('LOC fromTinydns, invalid n')
 
     // divide by 100 is to convert cm to meters
     const l = {
@@ -173,7 +173,7 @@ export default class LOC extends RR {
         hem = rawmsec >= REF.LATLON ? 'E' : 'W'
         break
       default:
-        throw new Error('unknown or missing hemisphere')
+        this.throwHelp('unknown or missing hemisphere')
     }
 
     return `${deg} ${min} ${sec}${msec ? '.' + msec : ''} ${hem}`

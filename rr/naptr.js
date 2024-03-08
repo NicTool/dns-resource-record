@@ -41,7 +41,7 @@ export default class NAPTR extends RR {
 
   setFlags(val) {
     if (!['', 'S', 'A', 'U', 'P'].includes(val.toUpperCase()))
-      throw new Error(`NAPTR flags are invalid, ${this.citeRFC()}`)
+      this.throwHelp(`NAPTR flags are invalid`)
 
     this.set('flags', val.toUpperCase())
   }
@@ -62,7 +62,7 @@ export default class NAPTR extends RR {
   fromTinydns(opts) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 35) throw new Error('NAPTR fromTinydns, invalid n')
+    if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 

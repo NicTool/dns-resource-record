@@ -20,23 +20,20 @@ export default class IPSECKEY extends RR {
   setGatewayType(val) {
     // 0 (none), 1 (4-byte IPv4), 2 (16-byte IPv6), 3 (wire encoded domain name)
     if (![0, 1, 2, 3].includes(val))
-      throw new Error(`IPSECKEY: Gateway Type is invalid, ${this.citeRFC()}`)
+      this.throwHelp(`IPSECKEY: Gateway Type is invalid`)
 
     this.set('gateway type', val)
   }
 
   setAlgorithm(val) {
     // unsigned int, 1 octet, values: 1=DSA, 2=RSA
-    if (![1, 2].includes(val))
-      throw new Error(`IPSECKEY: Algorithm invalid, ${this.citeRFC()}`)
+    if (![1, 2].includes(val)) this.throwHelp(`IPSECKEY: Algorithm invalid`)
 
     this.set('algorithm', val)
   }
 
   setGateway(val) {
-    const gwErr = new Error(
-      `IPSECKEY: gateway invalid (${val}), ${this.citeRFC()}`,
-    )
+    const gwErr = new Error(`IPSECKEY: gateway invalid (${val})`)
     switch (this.get('gateway type')) {
       case 0:
         if (val !== '.') throw gwErr
@@ -53,7 +50,7 @@ export default class IPSECKEY extends RR {
   }
 
   setPublickey(val) {
-    // if (val) throw new Error(`IPSECKEY: publickey is optional, ${this.citeRFC()}`)
+    // if (val) this.throwHelp(`IPSECKEY: publickey is optional`)
 
     this.set('publickey', val)
   }
@@ -94,7 +91,7 @@ export default class IPSECKEY extends RR {
 
   fromTinydns(opts) {
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 45) throw new Error('IPSECKEY fromTinydns, invalid n')
+    if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n')
 
     const precedence = TINYDNS.octalToUInt8(rdata.substring(0, 4))
     const gwType = TINYDNS.octalToUInt8(rdata.substring(4, 8))

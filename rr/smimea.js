@@ -8,21 +8,19 @@ export default class SMIMEA extends RR {
   /****** Resource record specific setters   *******/
   setCertificateUsage(val) {
     if (![0, 1, 2, 3].includes(val))
-      throw new Error(`SMIMEA: certificate usage invalid, ${this.citeRFC()}`)
+      this.throwHelp(`SMIMEA: certificate usage invalid`)
 
     this.set('certificate usage', val)
   }
 
   setSelector(val) {
-    if (![0, 1].includes(val))
-      throw new Error(`SMIMEA: selector invalid, ${this.citeRFC()}`)
+    if (![0, 1].includes(val)) this.throwHelp(`SMIMEA: selector invalid`)
 
     this.set('selector', val)
   }
 
   setMatchingType(val) {
-    if (![0, 1, 2].includes(val))
-      throw new Error(`SMIMEA: matching type, ${this.citeRFC()}`)
+    if (![0, 1, 2].includes(val)) this.throwHelp(`SMIMEA: matching type`)
 
     this.set('matching type', val)
   }

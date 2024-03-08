@@ -8,8 +8,7 @@ export default class NXT extends RR {
 
   /****** Resource record specific setters   *******/
   setNextDomain(val) {
-    if (!val)
-      throw new Error(`NXT: 'next domain' is required:, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NXT: 'next domain' is required`)
 
     this.isFullyQualified('NXT', 'next domain', val)
     this.isValidHostname('NXT', 'next domain', val)
@@ -19,8 +18,7 @@ export default class NXT extends RR {
   }
 
   setTypeBitMap(val) {
-    if (!val)
-      throw new Error(`NXT: 'type bit map' is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NXT: 'type bit map' is required`)
 
     this.set('type bit map', val)
   }

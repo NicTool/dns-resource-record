@@ -9,8 +9,8 @@ export default class A extends RR {
 
   /****** Resource record specific setters   *******/
   setAddress(val) {
-    if (!val) throw new Error('A: address is required')
-    if (!net.isIPv4(val)) throw new Error('A address must be IPv4')
+    if (!val) this.throwHelp('A: address is required')
+    if (!net.isIPv4(val)) this.throwHelp('A address must be IPv4')
     this.set('address', val)
   }
 
@@ -28,6 +28,16 @@ export default class A extends RR {
 
   getTypeId() {
     return 1
+  }
+
+  getCanonical() {
+    return new A({
+      owner: 'host.example.com.',
+      class: 'IN',
+      ttl: 3600,
+      type: 'A',
+      address: '192.0.2.127',
+    })
   }
 
   /******  IMPORTERS   *******/

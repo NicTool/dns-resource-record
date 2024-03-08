@@ -102,7 +102,7 @@ describe('RR', function () {
           false,
         )
       } catch (e) {
-        assert.deepEqual(e.message, '$type: $field must be fully qualified')
+        assert.ok(/must be fully qualified/.test(e.message))
       }
     })
   })

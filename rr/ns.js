@@ -8,7 +8,7 @@ export default class NS extends RR {
 
   /****** Resource record specific setters   *******/
   setDname(val) {
-    if (!val) throw new Error(`NS: dname is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NS: dname is required`)
 
     this.isFullyQualified('NS', 'dname', val)
     this.isValidHostname('NS', 'dname', val)

@@ -13,8 +13,7 @@ export default class DNSKEY extends RR {
     this.is16bitInt('DNSKEY', 'flags', val)
 
     // the possible values are: 0, 256, and 257; RFC 4034
-    if (![0, 256, 257].includes(val))
-      throw new Error(`DNSKEY: flags invalid, ${this.citeRFC()}`)
+    if (![0, 256, 257].includes(val)) this.throwHelp(`DNSKEY: flags invalid`)
 
     this.set('flags', val)
   }
@@ -24,8 +23,7 @@ export default class DNSKEY extends RR {
     this.is8bitInt('DNSKEY', 'protocol', val)
 
     // The Protocol Field MUST be represented as an unsigned decimal integer with a value of 3.
-    if (![3].includes(val))
-      throw new Error(`DNSKEY: protocol invalid, ${this.citeRFC()}`)
+    if (![3].includes(val)) this.throwHelp(`DNSKEY: protocol invalid`)
 
     this.set('protocol', val)
   }
@@ -37,16 +35,13 @@ export default class DNSKEY extends RR {
     // https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![...Array(16).keys(), 253, 254].includes(val))
-      console.error(
-        `DNSKEY: algorithm (${val}) not recognized, ${this.citeRFC()}`,
-      )
+      console.error(`DNSKEY: algorithm (${val}) not recognized`)
 
     this.set('algorithm', val)
   }
 
   setPublickey(val) {
-    if (!val)
-      throw new Error(`DNSKEY: publickey is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`DNSKEY: publickey is required`)
 
     this.set('publickey', val)
   }
@@ -74,7 +69,7 @@ export default class DNSKEY extends RR {
     const match = opts.bindline.match(
       /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+\s*(.*?)\s*$/,
     )
-    if (!match) throw new Error(`unable to parse DNSKEY: ${opts.bindline}`)
+    if (!match) this.throwHelp(`unable to parse DNSKEY: ${opts.bindline}`)
     const [owner, ttl, c, type, flags, protocol, algorithm, publickey] =
       match.slice(1)
 
@@ -92,7 +87,7 @@ export default class DNSKEY extends RR {
 
   fromTinydns(opts) {
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 48) throw new Error('DNSKEY fromTinydns, invalid n')
+    if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 

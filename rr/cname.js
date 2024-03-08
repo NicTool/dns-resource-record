@@ -12,10 +12,10 @@ export default class CNAME extends RR {
     // A <domain-name> which specifies the canonical or primary
     // name for the owner.  The owner name is an alias.
 
-    if (!val) throw new Error('CNAME: cname is required')
+    if (!val) this.throwHelp('CNAME: cname is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`CNAME: cname must be a FQDN: RFC 2181`)
+      this.throwHelp(`CNAME: cname must be a FQDN: RFC 2181`)
 
     if (!this.isFullyQualified('CNAME', 'cname', val)) return
     if (!this.isValidHostname('CNAME', 'cname', val)) return
