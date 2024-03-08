@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 
@@ -10,15 +10,16 @@ export default class MX extends RR {
   /****** Resource record specific setters   *******/
   setPreference(val) {
     if (val === undefined) val = this?.default?.preference
+    if (val === undefined) this.throwHelp('MX: preference is required')
     this.is16bitInt('MX', 'preference', val)
     this.set('preference', val)
   }
 
   setExchange(val) {
-    if (!val) throw new Error('MX: exchange is required')
+    if (!val) this.throwHelp('MX: exchange is required')
 
     if (net.isIPv4(val) || net.isIPv6(val))
-      throw new Error(`MX: exchange must be a FQDN, ${this.citeRFC()}`)
+      this.throwHelp(`MX: exchange must be a FQDN`)
 
     this.isFullyQualified('MX', 'exchange', val)
     this.isValidHostname('MX', 'exchange', val)
@@ -41,6 +42,17 @@ export default class MX extends RR {
 
   getTypeId() {
     return 15
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 43200,
+      class: 'IN',
+      type: 'MX',
+      preference: 0,
+      exchange: 'mail.example.com.',
+    }
   }
 
   /******  IMPORTERS   *******/

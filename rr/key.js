@@ -24,13 +24,13 @@ export default class KEY extends RR {
     // 1 octet
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![1, 2, 3, 4, 5, 253, 254].includes(val))
-      throw new Error(`KEY: algorithm invalid, ${this.citeRFC()}`)
+      this.throwHelp(`KEY: algorithm invalid`)
 
     this.set('algorithm', val)
   }
 
   setPublickey(val) {
-    if (!val) throw new Error(`KEY: publickey is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`KEY: publickey is required`)
 
     this.set('publickey', val)
   }

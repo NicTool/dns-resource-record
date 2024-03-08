@@ -8,9 +8,8 @@ export default class RRSIG extends RR {
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
     // a 2 octet Type Covered field
-    if (!val) throw new Error(`RRSIG: 'type covered' is required`)
-    if (val.length > 2)
-      throw new Error(`RRSIG: 'type covered' is too long, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`RRSIG: 'type covered' is required`)
+    if (val.length > 2) this.throwHelp(`RRSIG: 'type covered' is too long`)
 
     this.set('type covered', val)
   }
@@ -19,7 +18,7 @@ export default class RRSIG extends RR {
     // a 1 octet Algorithm field
     // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![1, 2, 3, 4, 5, 253, 254].includes(val))
-      throw new Error(`RRSIG: algorithm invalid, ${this.citeRFC()}`)
+      this.throwHelp(`RRSIG: algorithm invalid`)
 
     this.set('algorithm', val)
   }

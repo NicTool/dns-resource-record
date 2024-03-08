@@ -21,7 +21,7 @@ export default class SVCB extends RR {
   }
 
   setParams(val) {
-    // if (!val) throw new Error(`SVCB: value is required, ${this.citeRFC()}`)
+    // if (!val) throw new Error(`SVCB: params is required`)
 
     this.set('params', val)
   }

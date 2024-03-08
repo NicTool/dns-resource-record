@@ -45,7 +45,7 @@ export default class SSHFP extends RR {
   fromTinydns(opts) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 44) throw new Error('SSHFP fromTinydns, invalid n')
+    if (n != 44) this.throwHelp('SSHFP fromTinydns, invalid n')
 
     return new SSHFP({
       owner: this.fullyQualify(fqdn),

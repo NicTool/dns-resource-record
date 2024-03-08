@@ -1,3 +1,5 @@
+import util from 'node:util'
+
 export default class RR extends Map {
   constructor(opts) {
     super()
@@ -21,7 +23,7 @@ export default class RR extends Map {
     for (const f of this.getFields('rdata')) {
       const fnName = `set${this.ucfirst(f)}`
       if (this[fnName] === undefined)
-        throw new Error(`Missing ${fnName} in class ${this.get('type')}`)
+        this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
     }
 
@@ -51,7 +53,7 @@ export default class RR extends Map {
         this.set('class', c)
         break
       default:
-        throw new Error(`invalid class ${c}`)
+        this.throwHelp(`invalid class ${c}`)
     }
   }
 
@@ -74,20 +76,20 @@ export default class RR extends Map {
   }
 
   setOwner(n) {
-    if (n === undefined) throw new Error(`owner is required`)
+    if (n === undefined) this.throwHelp(`owner is required`)
 
     if (n.length < 1 || n.length > 255)
-      throw new Error(
+      this.throwHelp(
         'Domain names must have 1-255 octets (characters): RFC 2181',
       )
 
-    this.isFullyQualified('', 'owner', n)
+    this.isFullyQualified(this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
     if (/\*/.test(n)) {
       if (!/^\*\./.test(n) && !/\.\*\./.test(n))
-        throw new Error('only *.something or * (by itself) is a valid wildcard')
+        this.throwHelp('only *.something or * (by itself) is a valid wildcard')
     }
 
     this.set('owner', n.toLowerCase())
@@ -97,11 +99,11 @@ export default class RR extends Map {
     if (t === undefined) t = this?.default?.ttl
     if (t === undefined) {
       if (['SOA', 'SSHPF'].includes(this.get('type'))) return
-      throw new Error('TTL is required, no default available')
+      this.throwHelp('TTL is required, no default available')
     }
 
     if (typeof t !== 'number')
-      throw new Error(`TTL must be numeric (${typeof t})`)
+      this.throwHelp(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
     this.is32bitInt(this.owner, 'TTL', t)
@@ -113,17 +115,27 @@ export default class RR extends Map {
     switch (t) {
       case '':
       case undefined:
-        throw new Error(`type is required`)
+        this.throwHelp(`type is required`)
     }
 
     if (t.toUpperCase() !== this.constructor.name)
-      throw new Error(`type ${t} doesn't match ${this.constructor.name}`)
+      this.throwHelp(`type ${t} doesn't match ${this.constructor.name}`)
 
     this.set('type', t.toUpperCase())
   }
 
+  throwHelp(e) {
+    if (this.constructor.name === 'RR') throw new Error(e)
+
+    const example = this.getCanonical
+      ? `Example ${this.constructor.name}:\n${util.inspect(this.getCanonical(), { depth: null })}\n\n`
+      : `${this.constructor.name} records have the fields: ${this.getFields().join(', ')}\n\n`
+
+    throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)
+  }
+
   citeRFC() {
-    return `see RFC ${this.getRFCs()}`
+    return `see RFC${this.getRFCs().length > 1 ? 's' : ''} ${this.getRFCs()}`
   }
 
   fullyQualify(hostname, origin) {
@@ -194,7 +206,7 @@ export default class RR extends Map {
 
   getFQDN(field, zone_opts = {}) {
     let fqdn = this.get(field)
-    if (!fqdn) throw new Error(`empty value for field ${field}`)
+    if (!fqdn) this.throwHelp(`empty value for field ${field}`)
     if (!fqdn.endsWith('.')) fqdn += '.'
 
     if (zone_opts.hide?.origin && zone_opts.origin) {
@@ -235,7 +247,7 @@ export default class RR extends Map {
     const fq = hostname.endsWith('.') ? hostname.slice(0, -1) : hostname
     for (const label of fq.split('.')) {
       if (label.length < 1 || label.length > 63)
-        throw new Error('Labels must have 1-63 octets (characters), RFC 2181')
+        this.throwHelp('Labels must have 1-63 octets (characters), RFC 2181')
     }
   }
 
@@ -248,7 +260,7 @@ export default class RR extends Map {
     )
       return true
 
-    throw new Error(
+    this.throwHelp(
       `${type} ${field} must be a 8-bit integer (in the range 0-255)`,
     )
   }
@@ -262,7 +274,7 @@ export default class RR extends Map {
     )
       return true
 
-    throw new Error(
+    this.throwHelp(
       `${type} ${field} must be a 16-bit integer (in the range 0-65535)`,
     )
   }
@@ -276,7 +288,7 @@ export default class RR extends Map {
     )
       return true
 
-    throw new Error(
+    this.throwHelp(
       `${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`,
     )
   }
@@ -285,10 +297,10 @@ export default class RR extends Map {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  isFullyQualified(type, blah, hostname) {
+  isFullyQualified(type, field, hostname) {
     if (hostname.endsWith('.')) return true
 
-    throw new Error(`${type}: ${blah} must be fully qualified`)
+    this.throwHelp(`${type}: ${field} must be fully qualified`)
   }
 
   isValidHostname(type, field, hostname) {
@@ -296,7 +308,7 @@ export default class RR extends Map {
     if (!allowed.test(hostname)) return true
 
     const matches = allowed.exec(hostname)
-    throw new Error(
+    this.throwHelp(
       `${type}, ${field} has invalid hostname character (${matches[0]})`,
     )
   }
@@ -320,7 +332,7 @@ export default class RR extends Map {
   }
 
   toMaraGeneric() {
-    // throw new Error(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
+    // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
     return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields()
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`

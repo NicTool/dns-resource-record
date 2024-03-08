@@ -21,7 +21,7 @@ export default class URI extends RR {
   }
 
   setTarget(val) {
-    if (!val) throw new Error(`URI: target is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`URI: target is required`)
 
     this.set('target', val)
   }
@@ -30,7 +30,7 @@ export default class URI extends RR {
   fromTinydns(opts) {
     // URI via generic, :fqdn:n:rdata:ttl:timestamp:lo
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 256) throw new Error('URI fromTinydns, invalid n')
+    if (n != 256) this.throwHelp('URI fromTinydns, invalid n')
 
     return new URI({
       type: 'URI',

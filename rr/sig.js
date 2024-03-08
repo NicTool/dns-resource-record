@@ -8,7 +8,7 @@ export default class SIG extends RR {
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
     // a 2 octet Type Covered field
-    if (!val) throw new Error(`SIG: 'type covered' is required`)
+    if (!val) this.throwHelp(`SIG: 'type covered' is required`)
 
     this.set('type covered', val)
   }

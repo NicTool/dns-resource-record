@@ -10,21 +10,19 @@ export default class TLSA extends RR {
   /****** Resource record specific setters   *******/
   setCertificateUsage(val) {
     if (![0, 1, 2, 3].includes(val))
-      throw new Error(`TLSA: certificate usage invalid, ${this.citeRFC()}`)
+      this.throwHelp(`TLSA: certificate usage invalid`)
 
     this.set('certificate usage', val)
   }
 
   setSelector(val) {
-    if (![0, 1].includes(val))
-      throw new Error(`TLSA: selector invalid, ${this.citeRFC()}`)
+    if (![0, 1].includes(val)) this.throwHelp(`TLSA: selector invalid`)
 
     this.set('selector', val)
   }
 
   setMatchingType(val) {
-    if (![0, 1, 2].includes(val))
-      throw new Error(`TLSA: matching type, ${this.citeRFC()}`)
+    if (![0, 1, 2].includes(val)) this.throwHelp(`TLSA: matching type`)
 
     this.set('matching type', val)
   }
@@ -65,7 +63,7 @@ export default class TLSA extends RR {
     const match = opts.bindline.split(
       /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)\s*$/,
     )
-    if (!match) throw new Error(`unable to parse TLSA: ${opts.bindline}`)
+    if (!match) this.throwHelp(`unable to parse TLSA: ${opts.bindline}`)
     const [owner, ttl, c, type, usage, selector, matchtype, cad] =
       match.slice(1)
     return new TLSA({
@@ -82,7 +80,7 @@ export default class TLSA extends RR {
 
   fromTinydns(opts) {
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 52) throw new Error('TLSA fromTinydns, invalid n')
+    if (n != 52) this.throwHelp('TLSA fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 

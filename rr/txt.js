@@ -54,7 +54,7 @@ export default class TXT extends RR {
     // generic: :fqdn:n:rdata:ttl:timestamp:location
     // eslint-disable-next-line prefer-const
     let [fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
-    if (n != 16) throw new Error('TXT fromTinydns, invalid n')
+    if (n != 16) this.throwHelp('TXT fromTinydns, invalid n')
 
     rdata = TINYDNS.octalToChar(rdata)
     let s = ''
@@ -73,7 +73,7 @@ export default class TXT extends RR {
     const match = opts.bindline.split(
       /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/,
     )
-    if (!match) throw new Error(`unable to parse TXT: ${opts.bindline}`)
+    if (!match) this.throwHelp(`unable to parse TXT: ${opts.bindline}`)
     const [owner, ttl, c, type, rdata] = match.slice(1)
 
     return new this.constructor({

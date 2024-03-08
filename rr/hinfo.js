@@ -9,12 +9,12 @@ export default class HINFO extends RR {
 
   /****** Resource record specific setters   *******/
   setCpu(val) {
-    if (val.length > 255) throw new Error('HINFO cpu cannot exceed 255 chars')
+    if (val.length > 255) this.throwHelp('HINFO cpu cannot exceed 255 chars')
     this.set('cpu', val.replace(/^["']|["']$/g, ''))
   }
 
   setOs(val) {
-    if (val.length > 255) throw new Error('HINFO os cannot exceed 255 chars')
+    if (val.length > 255) this.throwHelp('HINFO os cannot exceed 255 chars')
     this.set('os', val.replace(/^["']|["']$/g, ''))
   }
 
@@ -44,7 +44,7 @@ export default class HINFO extends RR {
     const match = opts.bindline.match(
       /([^\s]+)\s+([0-9]+)\s+(IN)\s+(HINFO)\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)/i,
     )
-    if (!match) throw new Error(`unable to parse HINFO: ${opts.bindline}`)
+    if (!match) this.throwHelp(`unable to parse HINFO: ${opts.bindline}`)
     const [owner, ttl, c, type, cpu, os] = match.slice(1)
 
     return new HINFO({

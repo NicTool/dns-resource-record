@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
@@ -10,8 +10,8 @@ export default class AAAA extends RR {
 
   /****** Resource record specific setters   *******/
   setAddress(val) {
-    if (!val) throw new Error('AAAA: address is required')
-    if (!net.isIPv6(val)) throw new Error(`AAAA: address must be IPv6 (${val})`)
+    if (!val) this.throwHelp('AAAA: address is required')
+    if (!net.isIPv6(val)) this.throwHelp(`AAAA: address must be IPv6 (${val})`)
 
     this.set('address', this.expand(val.toLowerCase())) // lower case: RFC 5952
   }
@@ -36,6 +36,16 @@ export default class AAAA extends RR {
     return 28
   }
 
+  getCanonical() {
+    return {
+      owner: 'host.example.com.',
+      address: '2001:0db8:0020:000a:0000:0000:0000:0004',
+      class: 'IN',
+      ttl: 3600,
+      type: 'A',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     const str = opts.tinyline
@@ -45,7 +55,7 @@ export default class AAAA extends RR {
       case ':':
         // GENERIC  =>  :fqdn:28:rdata:ttl:timestamp:lo
         ;[fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
-        if (n != 28) throw new Error('AAAA fromTinydns, invalid n')
+        if (n != 28) this.throwHelp('AAAA fromTinydns, invalid n')
         ip = TINYDNS.octalToHex(rdata)
           .match(/([0-9a-fA-F]{4})/g)
           .join(':')

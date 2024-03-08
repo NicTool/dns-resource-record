@@ -12,8 +12,7 @@ export default class NSEC3 extends RR {
   setHashAlgorithm(val) {
     // Hash Algorithm is a single octet.
     // The Hash Algorithm field is represented as an unsigned decimal integer.
-    if (!val)
-      throw new Error(`NSEC3: 'hash algorithm' is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NSEC3: 'hash algorithm' is required`)
 
     this.is8bitInt('NSEC3', 'hash algorithm', val)
 
@@ -22,7 +21,7 @@ export default class NSEC3 extends RR {
 
   setFlags(val) {
     // The Flags field is represented as an unsigned decimal integer.
-    if (!val) throw new Error(`NSEC3: 'flags' is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NSEC3: 'flags' is required`)
 
     this.is8bitInt('NSEC3', 'flags', val)
 
@@ -31,8 +30,7 @@ export default class NSEC3 extends RR {
 
   setIterations(val) {
     // The Iterations field is represented as an unsigned decimal integer. 0-65535
-    if (!val)
-      throw new Error(`NSEC3: 'iterations' is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NSEC3: 'iterations' is required`)
 
     this.is16bitInt('NSEC3', 'flags', val)
 
@@ -50,18 +48,14 @@ export default class NSEC3 extends RR {
   setNextHashedOwnerName(val) {
     // The Next Hashed Owner Name field is represented as an unpadded
     // sequence of case-insensitive base32 digits, without whitespace
-    if (!val)
-      throw new Error(
-        `NSEC3: 'next hashed owner name' is required, ${this.citeRFC()}`,
-      )
+    if (!val) this.throwHelp(`NSEC3: 'next hashed owner name' is required`)
 
     this.set('next hashed owner name', val)
   }
 
   setTypeBitMaps(val) {
     // The Type Bit Maps field is represented as a sequence of RR type mnemonics.
-    if (!val)
-      throw new Error(`NSEC3: 'type bit maps' is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`NSEC3: 'type bit maps' is required`)
 
     this.set('type bit maps', val)
   }
@@ -113,7 +107,7 @@ export default class NSEC3 extends RR {
 
   fromTinydns(opts) {
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 50) throw new Error('NSEC3 fromTinydns, invalid n')
+    if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 

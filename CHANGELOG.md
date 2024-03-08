@@ -5,6 +5,8 @@ Notable changes to this project are documented in this file.
 #### Unreleased
 
 - feat(SVCB,HTTPS): add record support
+- feat(throwHelp): far more useful error messages
+- feat(A,MX,AAAA,CAA): added getCanonical
 
 ### [1.2.0] - 2024-03-07
 

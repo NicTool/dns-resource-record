@@ -10,9 +10,8 @@ export default class DS extends RR {
   /****** Resource record specific setters   *******/
   setKeyTag(val) {
     // a 2 octet Key Tag field...in network byte order
-    if (!val) throw new Error(`DS: key tag is required`)
-    if (val.length > 2)
-      throw new Error(`DS: key tag is too long, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`DS: key tag is required`)
+    if (val.length > 2) this.throwHelp(`DS: key tag is too long`)
 
     this.set('key tag', val)
   }
@@ -20,20 +19,19 @@ export default class DS extends RR {
   setAlgorithm(val) {
     // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
     if (![1, 2, 3, 4, 5, 253, 254].includes(val))
-      throw new Error(`DS: algorithm invalid, ${this.citeRFC()}`)
+      this.throwHelp(`DS: algorithm invalid`)
 
     this.set('algorithm', val)
   }
 
   setDigestType(val) {
-    if (![1, 2].includes(val))
-      throw new Error(`DS: digest type invalid, ${this.citeRFC()}`)
+    if (![1, 2].includes(val)) this.throwHelp(`DS: digest type invalid`)
 
     this.set('digest type', val)
   }
 
   setDigest(val) {
-    if (!val) throw new Error(`DS: digest is required, ${this.citeRFC()}`)
+    if (!val) this.throwHelp(`DS: digest is required`)
 
     this.set('digest', val)
   }
@@ -74,7 +72,7 @@ export default class DS extends RR {
 
   fromTinydns(opts) {
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 43) throw new Error('DS fromTinydns, invalid n')
+    if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 

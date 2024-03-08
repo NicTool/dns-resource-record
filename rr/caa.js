@@ -11,7 +11,7 @@ export default class CAA extends RR {
     this.is8bitInt('CAA', 'flags', val)
 
     if (![0, 128].includes(val)) {
-      throw new Error(`CAA flags ${val} not recognized, ${this.citeRFC()}`)
+      this.throwHelp(`CAA flags ${val} not recognized`)
     }
 
     this.set('flags', val)
@@ -19,12 +19,12 @@ export default class CAA extends RR {
 
   setTag(val) {
     if (typeof val !== 'string' || val.length < 1 || /[^a-z0-9]/.test(val))
-      throw new Error(
-        `CAA tag must be a sequence of ASCII letters and numbers in lowercase, ${this.citeRFC()}`,
+      this.throwHelp(
+        `CAA tag must be a sequence of ASCII letters and numbers in lowercase`,
       )
 
     if (!['issue', 'issuewild', 'iodef'].includes(val)) {
-      throw new Error(`CAA tag ${val} not recognized: ${this.citeRFC()}`)
+      this.throwHelp(`CAA tag ${val} not recognized`)
     }
     this.set('tag', val)
   }
@@ -35,16 +35,14 @@ export default class CAA extends RR {
     if (this.isQuoted(val)) {
       val = val.replace(/^["']|["']$/g, '') // strip quotes
     } else {
-      // if (/\s/.test(val)) throw new Error(`CAA value may not have spaces unless quoted: RFC 8659`)
+      // if (/\s/.test(val)) this.throwHelp(`CAA value may not have spaces unless quoted`)
     }
 
     // check if val starts with one of iodefSchemes
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:']
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {
-        throw new Error(
-          `CAA value must have valid iodefScheme prefix, ${this.citeRFC()}`,
-        )
+        this.throwHelp(`CAA value must have valid iodefScheme prefix`)
       }
     }
 
@@ -71,11 +69,23 @@ export default class CAA extends RR {
     return 257
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'CAA',
+      flags: 0,
+      tag: 'issue',
+      value: 'http://letsencrypt.org',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
     const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
-    if (n != 257) throw new Error('CAA fromTinydns, invalid n')
+    if (n != 257) this.throwHelp('CAA fromTinydns, invalid n')
 
     const flags = TINYDNS.octalToUInt8(rdata.substring(0, 4))
     const taglen = TINYDNS.octalToUInt8(rdata.substring(4, 8))
@@ -101,7 +111,7 @@ export default class CAA extends RR {
     const fields = opts.bindline.match(
       /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[^\s]+?)\s*$/i,
     )
-    if (!fields) throw new Error(`unable to parse: ${opts.bindline}`)
+    if (!fields) this.throwHelp(`unable to parse: ${opts.bindline}`)
 
     const [owner, ttl, c, type, flags, tag, value] = fields.slice(1)
     return new CAA({
