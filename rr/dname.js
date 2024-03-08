@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'

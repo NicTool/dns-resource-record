@@ -4,7 +4,7 @@ export function valid(type, validRecords, defaults) {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
-      it(`parses record: ${val.owner}`, async function () {
+      it(`parses record: ${val.owner}`, function () {
         if (defaults) val.default = defaults
         const r = new type(val)
         if (defaults) delete val.default
@@ -27,7 +27,7 @@ export function invalid(type, invalidRecords, defaults) {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
       if (defaults) inv.default = defaults
-      it(`throws on record (${inv.owner})`, async function () {
+      it(`throws on record (${inv.owner})`, function () {
         assert.throws(
           () => {
             new type(inv)
@@ -44,7 +44,7 @@ export function invalid(type, invalidRecords, defaults) {
 export function toBind(type, validRecords) {
   describe('toBind', function () {
     for (const val of validRecords) {
-      it(`exports to BIND: ${val.owner}`, async function () {
+      it(`exports to BIND: ${val.owner}`, function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testB)
@@ -57,7 +57,7 @@ export function toTinydns(type, validRecords) {
   describe('toTinydns', function () {
     for (const val of validRecords) {
       if (val.testT === undefined) continue
-      it(`exports to tinydns: ${val.owner}`, async function () {
+      it(`exports to tinydns: ${val.owner}`, function () {
         const r = new type(val).toTinydns()
         if (process.env.DEBUG) console.dir(r)
         assert.strictEqual(r, val.testT)
@@ -69,7 +69,7 @@ export function toTinydns(type, validRecords) {
 export function getDescription(type) {
   describe('getDescription', function () {
     const desc = new type(null).getDescription()
-    it(`gets description: ${desc}`, async function () {
+    it(`gets description: ${desc}`, function () {
       assert.ok(desc)
     })
   })
@@ -79,7 +79,7 @@ export function getRFCs(type, valid) {
   describe('getRFCs', function () {
     const r = new type(null)
     const rfcs = r.getRFCs()
-    it(`can retrieve RFCs: ${rfcs.join(',')}`, async function () {
+    it(`can retrieve RFCs: ${rfcs.join(',')}`, function () {
       assert.ok(rfcs.length)
     })
   })
@@ -89,7 +89,7 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
   for (const val of validRecords) {
     const testLine = nsLineName === 'bindline' ? val.testB : val.testT
     if (testLine == undefined) continue
-    it(`imports ${nsName} record: ${val.owner}`, async function () {
+    it(`imports ${nsName} record: ${val.owner}`, function () {
       const r = new type({ [nsLineName]: testLine })
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
@@ -122,7 +122,7 @@ export function fromBind(type, validRecords) {
 export function getRdataFields(type, rdataFields) {
   describe('getRdataFields', function () {
     const r = new type(null)
-    it(`can retrieve rdata fields: (${r.getRdataFields('rdata')})`, async function () {
+    it(`can retrieve rdata fields: (${r.getRdataFields('rdata')})`, function () {
       assert.deepEqual(r.getRdataFields('rdata'), rdataFields)
     })
   })
@@ -131,7 +131,7 @@ export function getRdataFields(type, rdataFields) {
 export function getFields(type, rdataFields) {
   describe('getFields', function () {
     const r = new type(null)
-    it(`can retrieve record fields`, async function () {
+    it(`can retrieve record fields`, function () {
       assert.deepEqual(r.getFields('rdata'), rdataFields)
       assert.deepEqual(r.getFields(), r.getFields('common').concat(rdataFields))
     })
@@ -141,7 +141,7 @@ export function getFields(type, rdataFields) {
 export function getTypeId(type, val) {
   describe('getTypeId', function () {
     const r = new type(null)
-    it(`can retrieve record type ID (${r.getTypeId()})`, async function () {
+    it(`can retrieve record type ID (${r.getTypeId()})`, function () {
       assert.deepEqual(r.getTypeId(), val)
     })
   })

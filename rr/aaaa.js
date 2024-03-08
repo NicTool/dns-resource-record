@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
@@ -37,13 +37,13 @@ export default class AAAA extends RR {
   }
 
   getCanonical() {
-    return new AAAA({
+    return {
       owner: 'host.example.com.',
       address: '2001:0db8:0020:000a:0000:0000:0000:0004',
       class: 'IN',
       ttl: 3600,
       type: 'A',
-    })
+    }
   }
 
   /******  IMPORTERS   *******/

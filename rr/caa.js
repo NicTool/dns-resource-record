@@ -70,7 +70,7 @@ export default class CAA extends RR {
   }
 
   getCanonical() {
-    return new CAA({
+    return {
       owner: 'example.com.',
       ttl: 3600,
       class: 'IN',
@@ -78,7 +78,7 @@ export default class CAA extends RR {
       flags: 0,
       tag: 'issue',
       value: 'http://letsencrypt.org',
-    })
+    }
   }
 
   /******  IMPORTERS   *******/

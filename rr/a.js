@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 
@@ -31,13 +31,13 @@ export default class A extends RR {
   }
 
   getCanonical() {
-    return new A({
+    return {
       owner: 'host.example.com.',
       class: 'IN',
       ttl: 3600,
       type: 'A',
       address: '192.0.2.127',
-    })
+    }
   }
 
   /******  IMPORTERS   *******/

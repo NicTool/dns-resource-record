@@ -1,4 +1,4 @@
-import net from 'net'
+import net from 'node:net'
 
 import RR from '../rr.js'
 
@@ -45,14 +45,14 @@ export default class MX extends RR {
   }
 
   getCanonical() {
-    return new MX({
+    return {
       owner: 'example.com.',
       ttl: 43200,
       class: 'IN',
       type: 'MX',
       preference: 0,
       exchange: 'mail.example.com.',
-    })
+    }
   }
 
   /******  IMPORTERS   *******/
