@@ -11,9 +11,6 @@ Notable changes to this project are documented in this file.
 - feat(OPENGPGPKEY): improved bindline parser, added test
 - feat(throwHelp): far more useful error messages (#41)
 - feat(A,MX,AAAA,CAA,IPSECKEY): added getCanonical
-- feat(NS): add nsdname as alias for dname
-- feat(PTR): added ptrdname as alias for dname
-- feat(TXT): added rdata as alias for data
 
 ### [1.2.0] - 2024-03-07
 

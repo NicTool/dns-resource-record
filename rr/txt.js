@@ -12,10 +12,6 @@ export default class TXT extends RR {
     this.set('data', val)
   }
 
-  setRdata(val) {
-    this.set('data', val)
-  }
-
   getDescription() {
     return 'Text'
   }
