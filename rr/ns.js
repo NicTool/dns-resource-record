@@ -17,6 +17,10 @@ export default class NS extends RR {
     this.set('dname', val.toLowerCase())
   }
 
+  setNSDname(val) {
+    return this.setDname(val)
+  }
+
   getDescription() {
     return 'Name Server'
   }

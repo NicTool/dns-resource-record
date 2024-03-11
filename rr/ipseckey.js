@@ -71,6 +71,20 @@ export default class IPSECKEY extends RR {
     return 45
   }
 
+  getCanonical() {
+    return {
+      owner: '38.2.0.192.in-addr.arpa.',
+      ttl: 7200,
+      class: 'IN',
+      type: 'IPSECKEY',
+      precedence: 10,
+      'gateway type': 1,
+      algorithm: 2,
+      gateway: '192.0.2.38',
+      publickey: 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromBind(opts) {
     // FQDN TTL CLASS IPSECKEY Precedence GatewayType Algorithm Gateway PublicKey

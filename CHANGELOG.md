@@ -4,9 +4,17 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-- feat(SVCB,HTTPS): add record support
-- feat(throwHelp): far more useful error messages
-- feat(A,MX,AAAA,CAA): added getCanonical
+
+### [1.2.1] - 2024-03-10
+
+- fix(nsec3param): fixed setHash fname typo
+- feat(SVCB,HTTPS): add record support (#29)
+- feat(OPENGPGPKEY): improved bindline parser, added test
+- feat(throwHelp): far more useful error messages (#41)
+- feat(A,MX,AAAA,CAA,IPSECKEY): added getCanonical
+- feat(NS): add nsdname as alias for dname
+- feat(PTR): added ptrdname as alias for dname
+- feat(TXT): added rdata as alias for data
 
 ### [1.2.0] - 2024-03-07
 
@@ -290,3 +298,4 @@ Notable changes to this project are documented in this file.
 [1.1.5]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.5
 [1.1.6]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.6
 [1.1.8]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.8
+[1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.1

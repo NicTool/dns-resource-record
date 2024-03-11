@@ -14,6 +14,10 @@ export default class PTR extends RR {
     this.set('dname', val.toLowerCase())
   }
 
+  setPtrdname(val) {
+    return this.setDname(val)
+  }
+
   getDescription() {
     return 'Pointer'
   }
