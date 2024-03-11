@@ -27,15 +27,19 @@ export default class OPENPGPKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(str) {
+  fromBind(obj) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
-    const [owner, ttl, c, type, privatekey] = str.split(/\s+/)
+    // eslint-disable-next-line no-unused-vars
+    const [ignore, owner, ttl, c, type, publickey] = obj.bindline.match(
+      /^([\S]+)\s+(\d+)\s+(\w+)\s+(\w+)\s+([\W\w]*)$/,
+    )
+
     return new OPENPGPKEY({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      'private key': privatekey,
+      'public key': publickey.trim(),
     })
   }
 

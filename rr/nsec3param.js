@@ -7,7 +7,7 @@ export default class NSEC3PARAM extends RR {
   }
 
   /****** Resource record specific setters   *******/
-  setHashAlgoritm(val) {
+  setHashAlgorithm(val) {
     // Hash Algorithm is a single octet.
     // The Hash Algorithm field is represented as an unsigned decimal integer.
     if (!val) this.throwHelp(`NSEC3PARAM: 'hash algorithm' is required`)
