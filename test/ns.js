@@ -13,7 +13,7 @@ const validRecords = [
     dname: 'ns1.example.com.',
     testB: 'example.com.\t3600\tIN\tNS\tns1.example.com.\n',
     testT: '&example.com::ns1.example.com:3600::\n',
-  }
+  },
 ]
 
 const invalidRecords = [
