@@ -4,7 +4,6 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-
 ### [1.2.1] - 2024-03-10
 
 - fix(nsec3param): fixed setHash fname typo
