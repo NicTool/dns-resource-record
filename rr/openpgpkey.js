@@ -30,9 +30,9 @@ export default class OPENPGPKEY extends RR {
   fromBind(obj) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
     // eslint-disable-next-line no-unused-vars
-    const [ignore, owner, ttl, c, type, publickey] = obj.bindline.match(
-      /^([\S]+)\s+(\d+)\s+(\w+)\s+(\w+)\s+([\W\w]*)$/,
-    )
+    const [ignore, owner, ttl, c, type, publickey] = obj.bindline
+      .trim()
+      .match(/^([\S]+)\s+(\d{1,10})\s+(IN)\s+(OPENPGPKEY)\s+([\W\w]*)$/)
 
     return new OPENPGPKEY({
       owner,
