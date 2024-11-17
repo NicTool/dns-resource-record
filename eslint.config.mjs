@@ -15,7 +15,7 @@ const compat = new FlatCompat({
 export default [
   {
     languageOptions: {
-      ecmaVersion: "latest",
+      ecmaVersion: 'latest',
       globals: {
         ...globals.node,
         ...globals.browser,
@@ -37,5 +37,5 @@ export default [
       'prefer-const': 'warn',
     },
   },
-  js.configs.recommended
+  js.configs.recommended,
 ]
