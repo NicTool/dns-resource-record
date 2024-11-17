@@ -6,9 +6,9 @@ Notable changes to this project are documented in this file.
 
 ### [1.2.2] - 2024-11-17
 
+- dep(eslint): update to v9 & config
 - chore: tighten up fromBind regex
 - packaging tweaks (#43)
-
 
 ### [1.2.1] - 2024-03-10
 
