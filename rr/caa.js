@@ -108,9 +108,11 @@ export default class CAA extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const fields = opts.bindline.match(
-      /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[^\s]+?)\s*$/i,
-    )
+    const fields = opts.bindline
+      .trim()
+      .match(
+        /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(CAA)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[\S]+?)$/i,
+      )
     if (!fields) this.throwHelp(`unable to parse: ${opts.bindline}`)
 
     const [owner, ttl, c, type, flags, tag, value] = fields.slice(1)

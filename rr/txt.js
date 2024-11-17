@@ -70,9 +70,11 @@ export default class TXT extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  TXT  "..."
-    const match = opts.bindline.split(
-      /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+?\s*(.*?)\s*$/,
-    )
+    const match = opts.bindline
+      .trim()
+      .split(
+        /^([\S]{1,255})\s+([0-9]{1,10})\s+(IN)\s+(\w{3})\s+?\s*(.*?)$/i,
+      )
     if (!match) this.throwHelp(`unable to parse TXT: ${opts.bindline}`)
     const [owner, ttl, c, type, rdata] = match.slice(1)
 

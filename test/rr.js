@@ -4,13 +4,13 @@ import RR from '../rr.js'
 import A from '../rr/a.js'
 
 const cases = [
-  // { name: 'RR class'   , obj: RR          , expect: [ 'owner', 'ttl', 'class', 'type' ] },
+  // { name: 'RR class', obj: RR, expect: [ 'owner', 'ttl', 'class', 'type' ] },
   {
     name: 'RR instance',
     obj: new RR(null),
     expect: ['owner', 'ttl', 'class', 'type'],
   },
-  // { name: 'A class'    , obj: A           , expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
+  // { name: 'A class', obj: A, expect: [ 'owner', 'ttl', 'class', 'type', 'address' ] },
   {
     name: 'A instance',
     obj: new A(null),

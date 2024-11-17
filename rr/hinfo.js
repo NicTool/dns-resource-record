@@ -41,9 +41,11 @@ export default class HINFO extends RR {
   /******  IMPORTERS   *******/
   fromBind(opts) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const match = opts.bindline.match(
-      /([^\s]+)\s+([0-9]+)\s+(IN)\s+(HINFO)\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)/i,
-    )
+    const match = opts.bindline
+      .trim()
+      .match(
+        /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(HINFO)\s+("[^"]+"|[\S]+)\s+("[^"]+"|[\S]+)/i,
+      )
     if (!match) this.throwHelp(`unable to parse HINFO: ${opts.bindline}`)
     const [owner, ttl, c, type, cpu, os] = match.slice(1)
 
