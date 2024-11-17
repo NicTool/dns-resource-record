@@ -20,7 +20,7 @@ This module is used to:
 |                       **MaraDNS**                        |                    | :white_check_mark: |
 |                          **JS**                          | :white_check_mark: | :white_check_mark: |
 
-This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if you a valid resource record fails to pass or an invalid resource record passes.
+This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if a valid resource record fails to pass or an invalid resource record passes.
 
 This package is for working with _individual_ Resource Records. For working with zones of RRs, use [dns-zone](https://github.com/NicTool/dns-zone).
 
@@ -239,6 +239,8 @@ PRs are welcome, especially PRs with tests.
 
 - [Dictionary of DNS terms](https://nictool.github.io/web/Dictionary)
 - [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
+- @nictool/[dns-zone](https://www.npmjs.com/package/@nictool/dns-zone)
+- @nictool/[dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver)
 
 ## TODO
 

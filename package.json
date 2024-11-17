@@ -1,8 +1,14 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "DNS Resource Records",
   "main": "index.js",
+  "file": [
+    "lib",
+    "rr",
+    "CHANGELOG.md",
+    "rr.js"
+  ],
   "type": "module",
   "scripts": {
     "format:check": "npm run prettier; npm run lint",
@@ -39,6 +45,6 @@
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "devDependencies": {
-    "mocha": "^10.3.0"
+    "mocha": "^11.0.0"
   }
 }

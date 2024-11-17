@@ -4,6 +4,12 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.2.2] - 2024-11-17
+
+- chore: tighten up fromBind regex
+- packaging tweaks (#43)
+
+
 ### [1.2.1] - 2024-03-10
 
 - fix(nsec3param): fixed setHash fname typo
@@ -295,3 +301,6 @@ Notable changes to this project are documented in this file.
 [1.1.6]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.6
 [1.1.8]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.8
 [1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.1
+[1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.2
+[1.1.7]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.7
+[1.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.0
