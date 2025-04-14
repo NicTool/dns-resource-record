@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
@@ -50,15 +50,11 @@ describe('URI record', function () {
   base.fromTinydns(URI, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns (generic) record`, async function () {
+    it(`imports tinydns (generic) record`, async function () {
       const r = new URI({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'priority', 'weight', 'target', 'ttl']) {
-        assert.deepStrictEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 
 export default class A extends RR {
@@ -10,7 +8,7 @@ export default class A extends RR {
   /****** Resource record specific setters   *******/
   setAddress(val) {
     if (!val) this.throwHelp('A: address is required')
-    if (!net.isIPv4(val)) this.throwHelp('A address must be IPv4')
+    if (!this.isIPv4(val)) this.throwHelp('A address must be IPv4')
     this.set('address', val)
   }
 

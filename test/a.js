@@ -50,11 +50,9 @@ const invalidRecords = [
   { ...defaults, ttl: 2147483648, msg: /TTL must be a 32-bit integer/ },
 ]
 
-// copy invalid properties to a valid object
+// merge invalid properties with properties of a valid object
 for (let i = 0; i < invalidRecords.length; i++) {
-  const temp = JSON.parse(JSON.stringify(validRecords[0]))
-  Object.assign(temp, invalidRecords[i])
-  invalidRecords[i] = temp
+  invalidRecords[i] = { ...validRecords[0], ...invalidRecords[i] }
 }
 
 describe('A record', function () {

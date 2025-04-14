@@ -4,6 +4,14 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.2.3] - 2025-04-14
+
+- test(\*): fully qualify node modules
+- feat(rr.isIPv?): added regexes to validate format
+- dep(node:{net|util): remove, for browser compatiblity
+- doc(CONTRIBUTORS.md): added
+- ci: disable codeql schedule (#45)
+
 ### [1.2.2] - 2024-11-17
 
 - dep(eslint): update to v9 & config
@@ -300,7 +308,8 @@ Notable changes to this project are documented in this file.
 [1.1.5]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.5
 [1.1.6]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.6
 [1.1.8]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.8
-[1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.1
-[1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.2
 [1.1.7]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.7
 [1.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.0
+[1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.1
+[1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.2
+[1.2.3]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.3

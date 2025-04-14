@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
@@ -30,7 +28,7 @@ export default class SRV extends RR {
   setTarget(val) {
     if (!val) this.throwHelp(`SRV: target is required`)
 
-    if (net.isIPv4(val) || net.isIPv6(val))
+    if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`SRV: target must be a FQDN`)
 
     this.isFullyQualified('SRV', 'target', val)

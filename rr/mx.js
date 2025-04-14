@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 
 export default class MX extends RR {
@@ -18,7 +16,7 @@ export default class MX extends RR {
   setExchange(val) {
     if (!val) this.throwHelp('MX: exchange is required')
 
-    if (net.isIPv4(val) || net.isIPv6(val))
+    if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`MX: exchange must be a FQDN`)
 
     this.isFullyQualified('MX', 'exchange', val)

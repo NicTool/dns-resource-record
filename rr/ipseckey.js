@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
@@ -39,10 +37,10 @@ export default class IPSECKEY extends RR {
         if (val !== '.') throw gwErr
         break
       case 1:
-        if (!net.isIPv4(val)) throw gwErr
+        if (!this.isIPv4(val)) throw gwErr
         break
       case 2:
-        if (!net.isIPv6(val)) throw gwErr
+        if (!this.isIPv6(val)) throw gwErr
         break
     }
 
