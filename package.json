@@ -49,5 +49,10 @@
     "eslint": "^9.15.0",
     "globals": "^16.0.0",
     "mocha": "^11.2.2"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   }
 }
