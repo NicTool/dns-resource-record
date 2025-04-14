@@ -46,11 +46,7 @@ describe('DNAME record', function () {
       const r = new DNAME({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'target', 'ttl']) {
-        assert.deepEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

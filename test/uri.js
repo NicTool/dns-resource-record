@@ -54,11 +54,7 @@ describe('URI record', function () {
       const r = new URI({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'priority', 'weight', 'target', 'ttl']) {
-        assert.deepEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

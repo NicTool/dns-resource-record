@@ -88,11 +88,7 @@ describe('SOA record', function () {
         'expire',
         'ttl',
       ]) {
-        assert.deepEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

@@ -13,7 +13,6 @@ Notable changes to this project are documented in this file.
 - doc(CONTRIBUTORS.md): added
 - ci: disable codeql schedule (#45)
 
-
 ### [1.2.2] - 2024-11-17
 
 - dep(eslint): update to v9 & config

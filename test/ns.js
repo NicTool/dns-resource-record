@@ -45,11 +45,7 @@ describe('NS record', function () {
       const r = new NS({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'dname', 'ttl']) {
-        assert.deepEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

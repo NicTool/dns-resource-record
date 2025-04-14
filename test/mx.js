@@ -67,11 +67,7 @@ describe('MX record', function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'exchange', 'preference', 'ttl']) {
-        assert.deepEqual(
-          r.get(f),
-          val[f],
-          `${f}: ${r.get(f)} !== ${val[f]}`,
-        )
+        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })
   }

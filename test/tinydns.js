@@ -87,28 +87,19 @@ describe('TINYDNS', function () {
 
   describe('UInt32toOctal', function () {
     it('converts a 32-bit number to escaped octal', function (done) {
-      assert.equal(
-        TINYDNS.UInt32toOctal(2319310648),
-        '\\212\\075\\337\\070',
-      )
+      assert.equal(TINYDNS.UInt32toOctal(2319310648), '\\212\\075\\337\\070')
       done()
     })
 
     it('converts a 32-bit number to escaped octal', function (done) {
-      assert.equal(
-        TINYDNS.UInt32toOctal(1706988648),
-        '\\145\\276\\224\\150',
-      )
+      assert.equal(TINYDNS.UInt32toOctal(1706988648), '\\145\\276\\224\\150')
       done()
     })
   })
 
   describe('octalToUInt32', function () {
     it('converts escaped octal to 32-bit integer', function () {
-      assert.equal(
-        TINYDNS.octalToUInt32('\\145\\276\\224\\150'),
-        1706988648,
-      )
+      assert.equal(TINYDNS.octalToUInt32('\\145\\276\\224\\150'), 1706988648)
     })
   })
 
@@ -146,10 +137,7 @@ describe('TINYDNS', function () {
 
   describe('packString', function () {
     it(`packs a string to wire format`, async () => {
-      assert.equal(
-        TINYDNS.packString('matt wuz here'),
-        '\\015matt wuz here',
-      )
+      assert.equal(TINYDNS.packString('matt wuz here'), '\\015matt wuz here')
     })
   })
 

@@ -72,11 +72,7 @@ describe('TXT record', function () {
     if (process.env.DEBUG) console.dir(r)
     for (const f of r.getFields()) {
       if (f === 'class') continue
-      assert.deepEqual(
-        r.get(f),
-        val[f],
-        `${f}: ${r.get(f)} !== ${val[f]}`,
-      )
+      assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
     }
   })
 })
