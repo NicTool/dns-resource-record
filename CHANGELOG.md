@@ -6,10 +6,9 @@ Notable changes to this project are documented in this file.
 
 ### [1.2.3] - 2025-04-14
 
-- test(\*): fully quality node modules
-- feat(rr.isIPv?): added regex to validate format
-- dep(node:net): remove, for browser compatiblity
-- dep(node:util): remove, for browser compatiblity
+- test(\*): fully qualify node modules
+- feat(rr.isIPv?): added regexes to validate format
+- dep(node:{net|util): remove, for browser compatiblity
 - doc(CONTRIBUTORS.md): added
 - ci: disable codeql schedule (#45)
 
