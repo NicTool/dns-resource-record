@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as TINYDNS from '../lib/tinydns.js'
 
@@ -11,7 +11,7 @@ describe('TINYDNS', function () {
   describe('base64toOctal', function () {
     for (const c in b64cases) {
       it('octal escapes a base64 encoded string', async function () {
-        assert.strictEqual(TINYDNS.base64toOctal(c), b64cases[c])
+        assert.equal(TINYDNS.base64toOctal(c), b64cases[c])
       })
     }
   })
@@ -19,7 +19,7 @@ describe('TINYDNS', function () {
   describe('octalToBase64', function () {
     for (const c in b64cases) {
       it('converts octal escaped to base64 encoded string', async function () {
-        assert.deepStrictEqual(TINYDNS.octalToBase64(b64cases[c]), c)
+        assert.deepEqual(TINYDNS.octalToBase64(b64cases[c]), c)
       })
     }
   })
@@ -31,7 +31,7 @@ describe('TINYDNS', function () {
         rdataRe,
         'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
       )
-      assert.strictEqual(
+      assert.equal(
         e,
         'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN\\057nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64\\057cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn\\057LAf+3kzW58AjsERpsNCSTD2RquxbnyoR\\0571wdGKb8cUlD\\057EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
       )
@@ -45,7 +45,7 @@ describe('TINYDNS', function () {
 
     for (const c of Object.keys(specialChars)) {
       it(`escapes tinydns rdata special char ${c}`, function () {
-        assert.strictEqual(TINYDNS.escapeOctal(rdataRe, c), specialChars[c])
+        assert.equal(TINYDNS.escapeOctal(rdataRe, c), specialChars[c])
       })
     }
   })
@@ -56,7 +56,7 @@ describe('TINYDNS', function () {
 
   describe('octalToHex', function () {
     it('unescapes octal to hex digits', function () {
-      assert.strictEqual(
+      assert.equal(
         TINYDNS.octalToHex(
           '\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001',
         ),
@@ -67,27 +67,27 @@ describe('TINYDNS', function () {
 
   describe('UInt16toOctal', function () {
     it('converts a 16-bit number to escaped octal', function () {
-      assert.strictEqual(TINYDNS.UInt16toOctal(65535), '\\377\\377')
+      assert.equal(TINYDNS.UInt16toOctal(65535), '\\377\\377')
     })
 
     it('converts a 16-bit number to escaped octal', function () {
-      assert.strictEqual(TINYDNS.UInt16toOctal(1), '\\000\\001')
+      assert.equal(TINYDNS.UInt16toOctal(1), '\\000\\001')
     })
   })
 
   describe('octalToUInt16', function () {
     it('converts a 16-bit number to escaped octal', function () {
-      assert.strictEqual(TINYDNS.octalToUInt16('\\377\\377'), 65535)
+      assert.equal(TINYDNS.octalToUInt16('\\377\\377'), 65535)
     })
 
     it('converts a 16-bit number to escaped octal', function () {
-      assert.strictEqual(TINYDNS.octalToUInt16('\\000\\001'), 1)
+      assert.equal(TINYDNS.octalToUInt16('\\000\\001'), 1)
     })
   })
 
   describe('UInt32toOctal', function () {
     it('converts a 32-bit number to escaped octal', function (done) {
-      assert.strictEqual(
+      assert.equal(
         TINYDNS.UInt32toOctal(2319310648),
         '\\212\\075\\337\\070',
       )
@@ -95,7 +95,7 @@ describe('TINYDNS', function () {
     })
 
     it('converts a 32-bit number to escaped octal', function (done) {
-      assert.strictEqual(
+      assert.equal(
         TINYDNS.UInt32toOctal(1706988648),
         '\\145\\276\\224\\150',
       )
@@ -105,7 +105,7 @@ describe('TINYDNS', function () {
 
   describe('octalToUInt32', function () {
     it('converts escaped octal to 32-bit integer', function () {
-      assert.strictEqual(
+      assert.equal(
         TINYDNS.octalToUInt32('\\145\\276\\224\\150'),
         1706988648,
       )
@@ -117,8 +117,8 @@ describe('TINYDNS', function () {
       const r = TINYDNS.unpackDomainName(
         '\\006sipdir\\006online\\004lync\\003com\\000',
       )
-      assert.strictEqual(r[0], 'sipdir.online.lync.com.')
-      assert.strictEqual(r[1], 40)
+      assert.equal(r[0], 'sipdir.online.lync.com.')
+      assert.equal(r[1], 40)
     })
   })
 
@@ -131,7 +131,7 @@ describe('TINYDNS', function () {
   describe('ipv4toOctal', function () {
     for (const c in cases) {
       it(`converts dotted quad IPv4 to octal escaped integer ${c}`, async () => {
-        assert.strictEqual(TINYDNS.ipv4toOctal(c), cases[c])
+        assert.equal(TINYDNS.ipv4toOctal(c), cases[c])
       })
     }
   })
@@ -139,14 +139,14 @@ describe('TINYDNS', function () {
   describe('octalToIPv4', function () {
     for (const c in cases) {
       it(`converts octal escaped integer to dotted quad IPv4 ${cases[c]}`, async () => {
-        assert.strictEqual(TINYDNS.octalToIPv4(cases[c]), c)
+        assert.equal(TINYDNS.octalToIPv4(cases[c]), c)
       })
     }
   })
 
   describe('packString', function () {
     it(`packs a string to wire format`, async () => {
-      assert.strictEqual(
+      assert.equal(
         TINYDNS.packString('matt wuz here'),
         '\\015matt wuz here',
       )
@@ -155,7 +155,7 @@ describe('TINYDNS', function () {
 
   describe('uppackString', function () {
     it(`uppacks a string from wire format`, async () => {
-      assert.deepStrictEqual(TINYDNS.unpackString('\\015matt wuz here'), [
+      assert.deepEqual(TINYDNS.unpackString('\\015matt wuz here'), [
         'matt wuz here',
       ])
     })

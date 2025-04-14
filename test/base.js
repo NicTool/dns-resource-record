@@ -1,18 +1,16 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
-export function valid(type, validRecords, defaults) {
+export function valid(type, validRecords) {
   describe('valid', function () {
     for (const val of validRecords) {
       // console.log(val)
       it(`parses record: ${val.owner}`, function () {
-        if (defaults) val.default = defaults
         const r = new type(val)
-        if (defaults) delete val.default
         if (process.env.DEBUG) console.dir(r)
 
         for (const k of Object.keys(val)) {
           if (/^test/.test(k)) continue
-          assert.strictEqual(
+          assert.equal(
             r.get(k),
             val[k],
             `${type.name} ${k} ${r.get(k)} !== ${val[k]}`,
@@ -23,10 +21,9 @@ export function valid(type, validRecords, defaults) {
   })
 }
 
-export function invalid(type, invalidRecords, defaults) {
+export function invalid(type, invalidRecords) {
   describe('invalid', function () {
     for (const inv of invalidRecords) {
-      if (defaults) inv.default = defaults
       it(`throws on record (${inv.owner})`, function () {
         assert.throws(
           () => {
@@ -47,7 +44,7 @@ export function toBind(type, validRecords) {
       it(`exports to BIND: ${val.owner}`, function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
-        assert.strictEqual(r, val.testB)
+        assert.equal(r, val.testB)
       })
     }
   })
@@ -60,7 +57,7 @@ export function toTinydns(type, validRecords) {
       it(`exports to tinydns: ${val.owner}`, function () {
         const r = new type(val).toTinydns()
         if (process.env.DEBUG) console.dir(r)
-        assert.strictEqual(r, val.testT)
+        assert.equal(r, val.testT)
       })
     }
   })
@@ -97,7 +94,7 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
         let expected = val[f]
         if (f === 'data' && Array.isArray(expected))
           expected = expected.join('') // TXT
-        assert.deepStrictEqual(
+        assert.deepEqual(
           r.get(f),
           expected,
           `${f}: ${r.get(f)} !== ${expected}`,

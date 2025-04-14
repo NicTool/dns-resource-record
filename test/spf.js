@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
@@ -36,11 +36,11 @@ describe('SPF record', function () {
   base.fromTinydns(SPF, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns SPF (generic) record`, async function () {
+    it(`imports tinydns SPF (generic) record`, async function () {
       const r = new SPF({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'data', 'ttl']) {
-        assert.deepStrictEqual(
+        assert.deepEqual(
           r.get(f),
           val[f],
           `${f}: ${r.get(f)} !== ${val[f]}`,

@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
@@ -63,11 +63,11 @@ describe('MX record', function () {
   base.fromTinydns(MX, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns MX (@) record (${val.owner})`, async function () {
+    it(`imports tinydns MX (@) record (${val.owner})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'exchange', 'preference', 'ttl']) {
-        assert.deepStrictEqual(
+        assert.deepEqual(
           r.get(f),
           val[f],
           `${f}: ${r.get(f)} !== ${val[f]}`,

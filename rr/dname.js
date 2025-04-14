@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
@@ -12,7 +10,7 @@ export default class DNAME extends RR {
   setTarget(val) {
     if (!val) this.throwHelp('DNAME: target is required')
 
-    if (net.isIPv4(val) || net.isIPv6(val))
+    if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`DNAME: target must be a domain name`)
 
     this.isFullyQualified('DNAME', 'target', val)

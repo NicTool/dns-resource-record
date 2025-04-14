@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
@@ -75,7 +75,7 @@ describe('SRV record', function () {
         'port',
         'ttl',
       ]) {
-        assert.deepStrictEqual(
+        assert.deepEqual(
           r.get(f),
           val[f],
           `${f}: ${r.get(f)} !== ${val[f]}`,
@@ -91,7 +91,7 @@ describe('SRV record', function () {
     })
     if (process.env.DEBUG) console.dir(r)
     for (const f of ['owner', 'target', 'priority', 'weight', 'port', 'ttl']) {
-      assert.deepStrictEqual(
+      assert.deepEqual(
         r.get(f),
         val[f],
         `${f}: ${r.get(f)} !== ${val[f]}`,

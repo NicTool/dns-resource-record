@@ -12,6 +12,13 @@ const validRecords = [
     testB: 'ns1.example.com.\t3600\tIN\tCNAME\tns2.example.com.\n',
     testT: 'Cns1.example.com:ns2.example.com.:3600::\n',
   },
+  {
+    ...defaults,
+    owner: '*.example.com.',
+    cname: 'www.example.com.',
+    testB: '*.example.com.\t3600\tIN\tCNAME\twww.example.com.\n',
+    testT: 'C*.example.com:www.example.com.:3600::\n',
+  },
 ]
 
 const invalidRecords = [

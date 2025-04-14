@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 
 export default class CNAME extends RR {
@@ -14,7 +12,7 @@ export default class CNAME extends RR {
 
     if (!val) this.throwHelp('CNAME: cname is required')
 
-    if (net.isIPv4(val) || net.isIPv6(val))
+    if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`CNAME: cname must be a FQDN: RFC 2181`)
 
     if (!this.isFullyQualified('CNAME', 'cname', val)) return

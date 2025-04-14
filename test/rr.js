@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import RR from '../rr.js'
 import A from '../rr/a.js'
@@ -22,7 +22,7 @@ for (const c of cases) {
   describe(`${c.name}`, function () {
     describe('getFields', function () {
       it('gets expected fields', async function () {
-        assert.deepStrictEqual(c.obj.getFields(), c.expect)
+        assert.deepEqual(c.obj.getFields(), c.expect)
       })
     })
   })
@@ -36,10 +36,10 @@ describe('RR', function () {
     for (const i of invalid) {
       it(`throws on invalid TTL: ${i}`, async function () {
         try {
-          assert.deepStrictEqual(r.setTtl(i), false)
+          assert.deepEqual(r.setTtl(i), false)
         } catch (e) {
           assert.ok(e.message)
-          console.error(e.message)
+          // console.error(e.message)
         }
       })
     }
@@ -56,7 +56,7 @@ describe('RR', function () {
     for (const i of ['matt', 'in', 0]) {
       it(`throws on invalid class: ${i}`, async function () {
         try {
-          assert.strictEqual(r.setClass(i), false)
+          assert.equal(r.setClass(i), false)
         } catch (e) {
           assert.ok(e.message)
         }
@@ -113,16 +113,16 @@ describe('RR', function () {
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
-        assert.strictEqual(r.is8bitInt('test', 'field', i), true)
+        assert.equal(r.is8bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
       it(`throws on invalid int: ${i}`, async function () {
         try {
-          assert.strictEqual(r.is8bitInt('test', 'field', i), false)
+          assert.equal(r.is8bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.strictEqual(
+          assert.equal(
             e.message,
             'test field must be a 8-bit integer (in the range 0-255)',
           )
@@ -137,16 +137,16 @@ describe('RR', function () {
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
-        assert.strictEqual(r.is16bitInt('test', 'field', i), true)
+        assert.equal(r.is16bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
       it(`throws on invalid int: ${i}`, async function () {
         try {
-          assert.strictEqual(r.is16bitInt('test', 'field', i), false)
+          assert.equal(r.is16bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.strictEqual(
+          assert.equal(
             e.message,
             'test field must be a 16-bit integer (in the range 0-65535)',
           )
@@ -161,16 +161,16 @@ describe('RR', function () {
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
-        assert.strictEqual(r.is32bitInt('test', 'field', i), true)
+        assert.equal(r.is32bitInt('test', 'field', i), true)
       })
     }
 
     for (const i of invalid) {
       it(`throws on invalid int: ${i}`, async function () {
         try {
-          assert.strictEqual(r.is32bitInt('test', 'field', i), false)
+          assert.equal(r.is32bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.strictEqual(
+          assert.equal(
             e.message,
             'test field must be a 32-bit integer (in the range 0-2147483647)',
           )

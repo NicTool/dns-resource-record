@@ -1,9 +1,9 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "DNS Resource Records",
   "main": "index.js",
-  "file": [
+  "files": [
     "lib",
     "rr",
     "CHANGELOG.md",
@@ -13,7 +13,7 @@
   "scripts": {
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint --fix",
-    "lint": "npx eslint@9 **/*.js",
+    "lint": "npx eslint **/*.js",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --ignore-path .gitignore --check .",
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
@@ -45,9 +45,9 @@
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^10.0.0",
     "eslint": "^9.15.0",
-    "globals": "^15.12.0",
-    "mocha": "^10.8.2"
+    "globals": "^16.0.0",
+    "mocha": "^11.2.2"
   }
 }

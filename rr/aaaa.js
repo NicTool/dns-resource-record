@@ -1,5 +1,3 @@
-import net from 'node:net'
-
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
@@ -11,7 +9,7 @@ export default class AAAA extends RR {
   /****** Resource record specific setters   *******/
   setAddress(val) {
     if (!val) this.throwHelp('AAAA: address is required')
-    if (!net.isIPv6(val)) this.throwHelp(`AAAA: address must be IPv6 (${val})`)
+    if (!this.isIPv6(val)) this.throwHelp(`AAAA: address must be IPv6 (${val})`)
 
     this.set('address', this.expand(val.toLowerCase())) // lower case: RFC 5952
   }

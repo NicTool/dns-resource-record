@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
@@ -75,7 +75,7 @@ describe('SOA record', function () {
   base.fromTinydns(SOA, validRecords)
 
   for (const val of validRecords) {
-    it.skip(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
+    it(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
       const r = new SOA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
       for (const f of [
@@ -88,7 +88,7 @@ describe('SOA record', function () {
         'expire',
         'ttl',
       ]) {
-        assert.deepStrictEqual(
+        assert.deepEqual(
           r.get(f),
           val[f],
           `${f}: ${r.get(f)} !== ${val[f]}`,
