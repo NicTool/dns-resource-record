@@ -41,11 +41,8 @@ export default class HINFO extends RR {
   /******  IMPORTERS   *******/
   fromBind(opts) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const match = opts.bindline
-      .trim()
-      .match(
-        /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(HINFO)\s+("[^"]+"|[\S]+)\s+("[^"]+"|[\S]+)/i,
-      )
+    const regex = /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(HINFO)\s+("[^"]+"|[\S]+)\s+("[^"]+"|[\S]+)/i
+    const match = opts.bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse HINFO: ${opts.bindline}`)
     const [owner, ttl, c, type, cpu, os] = match.slice(1)
 
@@ -78,10 +75,7 @@ export default class HINFO extends RR {
   /******  EXPORTERS   *******/
   toTinydns() {
     return this.getTinydnsGeneric(
-      [
-        TINYDNS.packString(this.get('cpu')),
-        TINYDNS.packString(this.get('os')),
-      ].join(''),
+      [TINYDNS.packString(this.get('cpu')), TINYDNS.packString(this.get('os'))].join(''),
     )
   }
 }

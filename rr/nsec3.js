@@ -65,14 +65,7 @@ export default class NSEC3 extends RR {
   }
 
   getRdataFields(arg) {
-    return [
-      'hash algorithm',
-      'flags',
-      'iterations',
-      'salt',
-      'next hashed owner name',
-      'type bit maps',
-    ]
+    return ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
   }
 
   getRFCs() {
@@ -87,8 +80,7 @@ export default class NSEC3 extends RR {
 
   fromBind(opts) {
     // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
-    const [owner, ttl, c, type, ha, flags, iterations, salt] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, ha, flags, iterations, salt] = opts.bindline.split(/\s+/)
     const rdata = opts.bindline.split(/\(|\)/)[1]
 
     return new NSEC3({

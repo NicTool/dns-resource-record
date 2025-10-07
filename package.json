@@ -52,6 +52,7 @@
     "mocha": "^11.7.4"
   },
   "prettier": {
+    "printWidth": 110,
     "semi": false,
     "singleQuote": true,
     "trailingComma": "all"

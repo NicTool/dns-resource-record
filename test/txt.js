@@ -33,8 +33,7 @@ const validRecords = [
     ttl: 86400,
     type: 'TXT',
     data: 'v=spf1 mx a include:mx.example.com -all',
-    testB:
-      'example.com.\t86400\tIN\tTXT\t"v=spf1 mx a include:mx.example.com -all"\n',
+    testB: 'example.com.\t86400\tIN\tTXT\t"v=spf1 mx a include:mx.example.com -all"\n',
     testT: "'example.com:v=spf1 mx a include\\072mx.example.com -all:86400::\n",
   },
 ]

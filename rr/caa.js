@@ -26,9 +26,7 @@ export default class CAA extends RR {
 
   setTag(val) {
     if (typeof val !== 'string' || val.length < 1 || /[^a-z0-9]/.test(val))
-      this.throwHelp(
-        `CAA tag must be a sequence of ASCII letters and numbers in lowercase`,
-      )
+      this.throwHelp(`CAA tag must be a sequence of ASCII letters and numbers in lowercase`)
 
     if (!this.getTagOptions().has(val)) {
       this.throwHelp(`CAA tag ${val} not recognized`)
@@ -119,11 +117,8 @@ export default class CAA extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const fields = opts.bindline
-      .trim()
-      .match(
-        /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(CAA)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[\S]+?)$/i,
-      )
+    const regex = /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(CAA)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[\S]+?)$/i
+    const fields = opts.bindline.trim().match(regex)
     if (!fields) this.throwHelp(`unable to parse: ${opts.bindline}`)
 
     const [owner, ttl, c, type, flags, tag, value] = fields.slice(1)

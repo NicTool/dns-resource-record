@@ -91,16 +91,10 @@ describe('RR', function () {
 
   describe('isFullyQualified', function () {
     it('should detect FQDNs', async function () {
-      assert.deepEqual(
-        r.isFullyQualified('$type', '$field', 'host.example.com.'),
-        true,
-      )
+      assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com.'), true)
 
       try {
-        assert.deepEqual(
-          r.isFullyQualified('$type', '$field', 'host.example.com'),
-          false,
-        )
+        assert.deepEqual(r.isFullyQualified('$type', '$field', 'host.example.com'), false)
       } catch (e) {
         assert.ok(/must be fully qualified/.test(e.message))
       }
@@ -122,10 +116,7 @@ describe('RR', function () {
         try {
           assert.equal(r.is8bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.equal(
-            e.message,
-            'test field must be a 8-bit integer (in the range 0-255)',
-          )
+          assert.equal(e.message, 'test field must be a 8-bit integer (in the range 0-255)')
         }
       })
     }
@@ -146,10 +137,7 @@ describe('RR', function () {
         try {
           assert.equal(r.is16bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.equal(
-            e.message,
-            'test field must be a 16-bit integer (in the range 0-65535)',
-          )
+          assert.equal(e.message, 'test field must be a 16-bit integer (in the range 0-65535)')
         }
       })
     }
@@ -170,10 +158,7 @@ describe('RR', function () {
         try {
           assert.equal(r.is32bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.equal(
-            e.message,
-            'test field must be a 32-bit integer (in the range 0-2147483647)',
-          )
+          assert.equal(e.message, 'test field must be a 32-bit integer (in the range 0-2147483647)')
         }
       })
     }

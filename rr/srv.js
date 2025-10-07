@@ -28,8 +28,7 @@ export default class SRV extends RR {
   setTarget(val) {
     if (!val) this.throwHelp(`SRV: target is required`)
 
-    if (this.isIPv4(val) || this.isIPv6(val))
-      this.throwHelp(`SRV: target must be a FQDN`)
+    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`SRV: target must be a FQDN`)
 
     this.isFullyQualified('SRV', 'target', val)
     this.isValidHostname('SRV', 'target', val)
@@ -61,9 +60,7 @@ export default class SRV extends RR {
 
     if (str[0] === 'S') {
       // patched tinydns with S records
-      ;[fqdn, addr, port, pri, weight, ttl, ts, loc] = str
-        .substring(1)
-        .split(':')
+      ;[fqdn, addr, port, pri, weight, ttl, ts, loc] = str.substring(1).split(':')
     } else {
       // tinydns generic record format
       ;[fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
@@ -90,8 +87,7 @@ export default class SRV extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [owner, ttl, c, type, pri, weight, port, target] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, pri, weight, port, target] = opts.bindline.split(/\s+/)
     return new SRV({
       owner: owner,
       ttl: parseInt(ttl, 10),

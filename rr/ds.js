@@ -17,8 +17,7 @@ export default class DS extends RR {
   }
 
   setAlgorithm(val) {
-    if (!this.getAlgorithmOptions().has(val))
-      this.throwHelp(`DS: algorithm invalid`)
+    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`DS: algorithm invalid`)
 
     this.set('algorithm', val)
   }
@@ -67,8 +66,7 @@ export default class DS extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [owner, ttl, c, type, keytag, algorithm, digesttype] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, keytag, algorithm, digesttype] = opts.bindline.split(/\s+/)
     return new DS({
       owner,
       ttl: parseInt(ttl, 10),

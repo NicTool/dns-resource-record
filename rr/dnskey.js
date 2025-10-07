@@ -13,9 +13,7 @@ export default class DNSKEY extends RR {
     this.is16bitInt('DNSKEY', 'flags', val)
 
     if (!this.getFlagsOptions().has(val)) {
-      this.throwHelp(
-        `DNSKEY: flags must be in the set: ${this.getFlagsOptions()}`,
-      )
+      this.throwHelp(`DNSKEY: flags must be in the set: ${this.getFlagsOptions()}`)
     }
 
     this.set('flags', val)
@@ -31,8 +29,7 @@ export default class DNSKEY extends RR {
     this.is8bitInt('DNSKEY', 'protocol', val)
 
     // The Protocol Field MUST be represented as an unsigned decimal integer with a value of 3.
-    if (!this.getProtocolOptions().has(val))
-      this.throwHelp(`DNSKEY: protocol invalid`)
+    if (!this.getProtocolOptions().has(val)) this.throwHelp(`DNSKEY: protocol invalid`)
 
     this.set('protocol', val)
   }
@@ -46,8 +43,7 @@ export default class DNSKEY extends RR {
     this.is8bitInt('DNSKEY', 'algorithm', val)
 
     // https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
-    if (!this.getAlgorithmOptions().has(val))
-      console.error(`DNSKEY: algorithm (${val}) not recognized`)
+    if (!this.getAlgorithmOptions().has(val)) console.error(`DNSKEY: algorithm (${val}) not recognized`)
 
     this.set('algorithm', val)
   }
@@ -99,12 +95,10 @@ export default class DNSKEY extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const match = opts.bindline.match(
-      /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+\s*(.*?)\s*$/,
-    )
+    const regex = /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+\s*(.*?)\s*$/
+    const match = opts.bindline.match(regex)
     if (!match) this.throwHelp(`unable to parse DNSKEY: ${opts.bindline}`)
-    const [owner, ttl, c, type, flags, protocol, algorithm, publickey] =
-      match.slice(1)
+    const [owner, ttl, c, type, flags, protocol, algorithm, publickey] = match.slice(1)
 
     return new DNSKEY({
       owner,

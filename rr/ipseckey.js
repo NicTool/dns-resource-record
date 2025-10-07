@@ -16,8 +16,7 @@ export default class IPSECKEY extends RR {
   }
 
   setGatewayType(val) {
-    if (!this.getGatewayTypeOptions().has(val))
-      this.throwHelp(`IPSECKEY: Gateway Type is invalid`)
+    if (!this.getGatewayTypeOptions().has(val)) this.throwHelp(`IPSECKEY: Gateway Type is invalid`)
 
     this.set('gateway type', val)
   }
@@ -32,8 +31,7 @@ export default class IPSECKEY extends RR {
   }
 
   setAlgorithm(val) {
-    if (!this.getAlgorithmOptions().has(val))
-      this.throwHelp(`IPSECKEY: Algorithm invalid`)
+    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`IPSECKEY: Algorithm invalid`)
 
     this.set('algorithm', val)
   }
@@ -47,9 +45,7 @@ export default class IPSECKEY extends RR {
 
   setGateway(val) {
     const type = this.get('gateway type')
-    const gwErr = new Error(
-      `IPSECKEY: gateway invalid (${val}) for type ${type}`,
-    )
+    const gwErr = new Error(`IPSECKEY: gateway invalid (${val}) for type ${type}`)
     switch (type) {
       case 0:
         if (val !== '.') throw gwErr
@@ -104,8 +100,7 @@ export default class IPSECKEY extends RR {
   /******  IMPORTERS   *******/
   fromBind(opts) {
     // FQDN TTL CLASS IPSECKEY Precedence GatewayType Algorithm Gateway PublicKey
-    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] = opts.bindline.split(/\s+/)
     return new IPSECKEY({
       owner,
       ttl: parseInt(ttl, 10),

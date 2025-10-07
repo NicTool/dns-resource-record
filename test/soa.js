@@ -18,8 +18,7 @@ const validRecords = [
     expire: 1209600,
     minimum: 3600,
     testB: `example.com.\t3600\tIN\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
-    testT:
-      'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+    testT: 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
   {
     ...defaults,
@@ -32,8 +31,7 @@ const validRecords = [
     expire: 1209600,
     minimum: 3600,
     testB: `2.example.com.\t3600\tIN\tSOA\tns2.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
-    testT:
-      'Z2.example.com:ns2.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+    testT: 'Z2.example.com:ns2.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
   },
 ]
 
@@ -57,15 +55,7 @@ describe('SOA record', function () {
 
   base.getDescription(SOA)
   base.getRFCs(SOA, validRecords[0])
-  base.getFields(SOA, [
-    'mname',
-    'rname',
-    'serial',
-    'refresh',
-    'retry',
-    'expire',
-    'minimum',
-  ])
+  base.getFields(SOA, ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'])
   base.getTypeId(SOA, 6)
 
   base.toBind(SOA, validRecords)
@@ -78,16 +68,7 @@ describe('SOA record', function () {
     it(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
       const r = new SOA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
-      for (const f of [
-        'owner',
-        'mname',
-        'rname',
-        'serial',
-        'refresh',
-        'retry',
-        'expire',
-        'ttl',
-      ]) {
+      for (const f of ['owner', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
       }
     })

@@ -12,8 +12,7 @@ export default class CNAME extends RR {
 
     if (!val) this.throwHelp('CNAME: cname is required')
 
-    if (this.isIPv4(val) || this.isIPv6(val))
-      this.throwHelp(`CNAME: cname must be a FQDN: RFC 2181`)
+    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`CNAME: cname must be a FQDN: RFC 2181`)
 
     if (!this.isFullyQualified('CNAME', 'cname', val)) return
     if (!this.isValidHostname('CNAME', 'cname', val)) return

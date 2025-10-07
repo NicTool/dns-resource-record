@@ -48,10 +48,7 @@ export default class SPF extends TXT {
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const rdata = TINYDNS.escapeOctal(
-      new RegExp(/[\r\n\t:\\/]/, 'g'),
-      this.get('data'),
-    )
+    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return this.getTinydnsGeneric(rdata)
   }
 }

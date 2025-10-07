@@ -53,8 +53,7 @@ export default class LOC extends RR {
     const dms = '(\\d+)\\s+(?:(\\d+)\\s+)?(?:([\\d.]+)\\s+)?'
 
     // alt["m"] [siz["m"] [hp["m"] [vp["m"]]]]
-    const alt =
-      '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
+    const alt = '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
 
     // put them all together
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
@@ -96,21 +95,11 @@ export default class LOC extends RR {
       version: TINYDNS.octalToUInt8(rdata.substring(0, 4)),
       size: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(4, 8))),
       precision: {
-        horizontal: this.fromExponent(
-          TINYDNS.octalToUInt8(rdata.substring(8, 12)),
-        ),
-        vertical: this.fromExponent(
-          TINYDNS.octalToUInt8(rdata.substring(12, 16)),
-        ),
+        horizontal: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(8, 12))),
+        vertical: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(12, 16))),
       },
-      latitude: this.arcSecToDMS(
-        TINYDNS.octalToUInt32(rdata.substring(16, 32)),
-        'lat',
-      ),
-      longitude: this.arcSecToDMS(
-        TINYDNS.octalToUInt32(rdata.substring(32, 48)),
-        'lon',
-      ),
+      latitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(16, 32)), 'lat'),
+      longitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(32, 48)), 'lon'),
       altitude: TINYDNS.octalToUInt32(rdata.substring(48, 64)) - REF.ALTITUDE,
     }
 
@@ -137,10 +126,7 @@ export default class LOC extends RR {
   }
 
   dmsToArcSec(obj) {
-    let retval =
-      obj.degrees * CONV.deg +
-      (obj.minutes || 0) * CONV.min +
-      (obj.seconds || 0) * CONV.sec
+    let retval = obj.degrees * CONV.deg + (obj.minutes || 0) * CONV.min + (obj.seconds || 0) * CONV.sec
     switch (obj.hemisphere.toUpperCase()) {
       case 'W':
       case 'S':

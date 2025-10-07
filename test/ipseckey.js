@@ -59,8 +59,7 @@ const validRecords = [
   },
   {
     ...common,
-    owner:
-      '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
+    owner: '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
     precedence: 10,
     'gateway type': 2,
     algorithm: 2,
@@ -89,8 +88,7 @@ const validRecords = [
 const invalidRecords = [
   {
     ...common,
-    owner:
-      '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
+    owner: '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
     precedence: 10,
     'gateway type': 4,
     algorithm: 2,
@@ -100,8 +98,7 @@ const invalidRecords = [
   },
   {
     ...common,
-    owner:
-      '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
+    owner: '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
     precedence: 10,
     'gateway type': 3,
     algorithm: 3,
@@ -117,20 +114,8 @@ describe('IPSECKEY record', function () {
 
   base.getDescription(IPSECKEY)
   base.getRFCs(IPSECKEY, validRecords[0])
-  base.getRdataFields(IPSECKEY, [
-    'precedence',
-    'gateway type',
-    'algorithm',
-    'gateway',
-    'publickey',
-  ])
-  base.getFields(IPSECKEY, [
-    'precedence',
-    'gateway type',
-    'algorithm',
-    'gateway',
-    'publickey',
-  ])
+  base.getRdataFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
+  base.getFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
   base.getTypeId(IPSECKEY, 45)
 
   base.toBind(IPSECKEY, validRecords)

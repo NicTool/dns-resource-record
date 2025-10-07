@@ -16,8 +16,7 @@ export default class RRSIG extends RR {
 
   setAlgorithm(val) {
     // a 1 octet Algorithm field
-    if (!this.getAlgorithmOptions().has(val))
-      this.throwHelp(`RRSIG: algorithm invalid`)
+    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`RRSIG: algorithm invalid`)
 
     this.set('algorithm', val)
   }

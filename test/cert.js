@@ -12,8 +12,7 @@ const validRecords = [
     'key tag': 0,
     algorithm: 0,
     certificate: 'hexidecimalkeystring1',
-    testB:
-      'mail.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring1\n',
+    testB: 'mail.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring1\n',
   },
   {
     owner: 'smith.example.com.',
@@ -24,8 +23,7 @@ const validRecords = [
     'key tag': 0,
     algorithm: 0,
     certificate: 'hexidecimalkeystring2',
-    testB:
-      'smith.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring2\n',
+    testB: 'smith.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring2\n',
   },
 ]
 

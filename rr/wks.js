@@ -28,8 +28,7 @@ export default class WKS extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  WKS 192.168.1.1 TCP 25
-    const [owner, ttl, c, type, address, protocol, bitmap] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, address, protocol, bitmap] = opts.bindline.split(/\s+/)
     return new WKS({
       owner,
       ttl: parseInt(ttl, 10),

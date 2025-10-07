@@ -14,8 +14,7 @@ const validRecords = [
     tag: 'issue',
     value: 'http://letsencrypt.org',
     testB: `ns1.example.com.\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n`,
-    testT:
-      ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
+    testT: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
   },
   {
     owner: 'ns2.example.com.',
@@ -26,8 +25,7 @@ const validRecords = [
     tag: 'issue',
     value: 'mailto:lets-crypt.org',
     testB: `ns2.example.com.\t3600\tIN\tCAA\t0\tissue\t"mailto:lets-crypt.org"\n`,
-    testT:
-      ':ns2.example.com:257:\\000\\005issue"mailto\\072lets-crypt.org":3600::\n',
+    testT: ':ns2.example.com:257:\\000\\005issue"mailto\\072lets-crypt.org":3600::\n',
   },
   {
     owner: 'example.net.',
@@ -36,10 +34,8 @@ const validRecords = [
     flags: 0,
     tag: 'issuewild',
     value: 'https://letsencrypt.org',
-    testB:
-      'example.net.\t86400\tIN\tCAA\t0\tissuewild\t"https://letsencrypt.org"\n',
-    testT:
-      ':example.net:257:\\000\\011issuewild"https\\072\\057\\057letsencrypt.org":86400::\n',
+    testB: 'example.net.\t86400\tIN\tCAA\t0\tissuewild\t"https://letsencrypt.org"\n',
+    testT: ':example.net:257:\\000\\011issuewild"https\\072\\057\\057letsencrypt.org":86400::\n',
   },
   {
     owner: 'certs.example.com.',

@@ -10,8 +10,7 @@ const validRecords = [
     owner: 'mail.example.com.',
     algorithm: 1,
     fptype: 1,
-    fingerprint:
-      'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
     testB:
       'mail.example.com.\t86400\tIN\tSSHFP\t1\t1\ted8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26\n',
     testT:
@@ -23,8 +22,7 @@ const validRecords = [
     algorithm: 1,
     fptype: 1,
     fingerprint: '684981f1b57cc6b05bb2a5a7fd51a9114fef064d',
-    testB:
-      'jails.example.com.\t86400\tIN\tSSHFP\t1\t1\t684981f1b57cc6b05bb2a5a7fd51a9114fef064d\n',
+    testB: 'jails.example.com.\t86400\tIN\tSSHFP\t1\t1\t684981f1b57cc6b05bb2a5a7fd51a9114fef064d\n',
     testT:
       ':jails.example.com:44:\\001\\001\\150\\111\\201\\361\\265\\174\\306\\260\\133\\262\\245\\247\\375\\121\\251\\021\\117\\357\\006\\115:86400::\n',
   },
@@ -33,8 +31,7 @@ const validRecords = [
     owner: 'jails.example.com.',
     algorithm: 3,
     fptype: 2,
-    fingerprint:
-      '81f9dbc4c009a1297336d69fcc2264f2a28417b781dafdd9c1ef7ff256066a35',
+    fingerprint: '81f9dbc4c009a1297336d69fcc2264f2a28417b781dafdd9c1ef7ff256066a35',
     testB:
       'jails.example.com.\t86400\tIN\tSSHFP\t3\t2\t81f9dbc4c009a1297336d69fcc2264f2a28417b781dafdd9c1ef7ff256066a35\n',
   },
@@ -43,8 +40,7 @@ const validRecords = [
     owner: 'jails.example.com.',
     algorithm: 1,
     fptype: 2,
-    fingerprint:
-      'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
     testB:
       'jails.example.com.\t86400\tIN\tSSHFP\t1\t2\ted8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26\n',
   },
