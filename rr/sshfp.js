@@ -8,17 +8,32 @@ export default class SSHFP extends RR {
 
   /****** Resource record specific setters   *******/
   setAlgorithm(val) {
-    // 0: reserved  1: RSA  2: DSA  3: ECDSA  4: Ed25519  6: Ed448
     this.is8bitInt('SSHFP', 'algorithm', val)
 
     this.set('algorithm', val)
   }
 
+  getAlgorithmOptions () {
+    return new Map([
+      [ 0, 'reserved' ],
+      [ 1, 'RSA' ],
+      [ 2, 'DSA' ],
+      [ 3, 'ECDSA' ],
+      [ 4, 'Ed25519' ],
+      [ 6, 'Ed448' ],
+    ])
+  }
+
   setFptype(val) {
-    // 0: reserved, 1: SHA-1, 2: SHA-256
-    this.is8bitInt('SSHFP', 'type', val)
+    this.is8bitInt('SSHFP', 'fptype', val)
 
     this.set('fptype', val)
+  }
+
+  getFptypeOptions() {
+    return new Map([
+      [0, 'reserved'], [1, 'SHA-1'], [2, 'SHA-256']
+    ])
   }
 
   setFingerprint(val) {

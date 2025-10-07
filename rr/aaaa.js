@@ -15,7 +15,7 @@ export default class AAAA extends RR {
   }
 
   getCompressed(val) {
-    this.compress(val || this.get('address'))
+    return this.compress(val || this.get('address'))
   }
 
   getDescription() {
@@ -112,12 +112,12 @@ export default class AAAA extends RR {
 
     for (const re of mostConsecutiveZeros) {
       if (re.test(r)) {
-        r = r.replace(re, '::')
+        r = r.replace(re, '::')           // 4.2
         break
       }
     }
 
-    return r
+    return r.toLowerCase()               // 4.3
   }
 
   expand(val, delimiter) {
@@ -133,12 +133,12 @@ export default class AAAA extends RR {
     return val
       .split(':')
       .map((s) => s.padStart(4, 0))
-      .join(delimiter)
+      .join(delimiter).toLowerCase()
   }
 
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.compress(this.get('address'))}\n`
+    return `${this.getPrefix(zone_opts)}\t${this.getCompressed()}\n`
   }
 
   toTinydns() {

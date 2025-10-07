@@ -3,7 +3,7 @@
 
 # dns-resource-record
 
-DNS resource record parser, validator, importer, and exporter.
+DNS resource record parser, validator, importer, and exporter for node.js & browsers.
 
 ## SYNOPSIS
 
@@ -181,7 +181,7 @@ Consider this a "running with scissors" mode.
 
 ## Supported Records
 
-This module intends to include support for all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
+This module intends to support all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
 
 PRs are welcome, especially PRs with tests.
 
@@ -244,17 +244,6 @@ PRs are welcome, especially PRs with tests.
 
 ## TODO
 
-- [x] Change all IPs to use [RFC example/doc](https://en.wikipedia.org/wiki/Reserved_IP_addresses) address space
-- [x] change all domains to use reserved doc names
-- [x] import tests from nictool/server/t/12_records.t
-- [x] add defaults for empty values like TTL
-- [x] DNSSEC RRs: DS, NSEC, NSEC3, NSEC3PARAM, RRSIG
-- [x] CERT RRs: CERT, KEY, SIG, OPENPGPKEY
-- [x] RFC 4034: if the type of RR is NS, MD, MF, CNAME, SOA, MB,
-      MG, MR, PTR, HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT,
-      NAPTR, KX, SRV, DNAME, A6, RRSIG, or NSEC, all uppercase
-      letters in the DNS names contained within the RDATA are replaced by the lowercase letters;
-- [x] LOC record ingest/out isn't consistent with API
 - [ ] export a web page for each RR type
 
 ## DEVELOP

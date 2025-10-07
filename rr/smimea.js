@@ -7,22 +7,44 @@ export default class SMIMEA extends RR {
 
   /****** Resource record specific setters   *******/
   setCertificateUsage(val) {
-    if (![0, 1, 2, 3].includes(val))
+    if (!this.getCertificateUsageOptions().has(val))
       this.throwHelp(`SMIMEA: certificate usage invalid`)
 
     this.set('certificate usage', val)
   }
 
+  getCertificateUsageOptions() {
+    return new Map([
+      [0, 'CA certificate'],
+      [1, 'an end entity certificate'],
+      [2, 'the trust anchor'],
+      [3, 'domain-issued certificate'],
+    ])
+  }
+
   setSelector(val) {
-    if (![0, 1].includes(val)) this.throwHelp(`SMIMEA: selector invalid`)
+    if (!this.getSelectorOptions().has(val)) this.throwHelp(`SMIMEA: selector invalid`)
 
     this.set('selector', val)
   }
 
+  getSelectorOptions() {
+    return new Map([
+      [ 0, 'Full certificate'],
+      [ 1, 'SubjectPublicKeyInfo'],
+    ])
+  }
+
   setMatchingType(val) {
-    if (![0, 1, 2].includes(val)) this.throwHelp(`SMIMEA: matching type`)
+    if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`SMIMEA: matching type`)
 
     this.set('matching type', val)
+  }
+
+  getMatchingTypeOptions () {
+    return new Map([
+      [0, 'Exact match'], [1, 'SHA-256 hash'], [2, 'SHA-512 hash']
+    ])
   }
 
   setCertificateAssociationData(val) {

@@ -67,7 +67,7 @@ describe('HINFO record', function () {
         'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
       const r = new HINFO(null)
       try {
-        assert.fail(r[`set${r.ucfirst(f)}`](tooLong))
+        assert.fail(r[`set${r.ucFirst(f)}`](tooLong))
       } catch (e) {
         assert.ok(/cannot exceed 255 chars/.test(e.message))
       }

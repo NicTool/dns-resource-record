@@ -22,11 +22,23 @@ export default class KEY extends RR {
 
   setAlgorithm(val) {
     // 1 octet
-    // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![1, 2, 3, 4, 5, 253, 254].includes(val))
+
+    if (!this.getAlgorithmOptions().has(val))
       this.throwHelp(`KEY: algorithm invalid`)
 
     this.set('algorithm', val)
+  }
+
+  getAlgorithmOptions () {
+    return new Map([
+      [ 1, 'RSA/MD5' ],
+      [ 2, 'DH' ],
+      [ 3, 'DSA/SHA-1' ],
+      [ 4, 'EC' ],
+      [ 5, 'RSA/SHA-1' ],
+      [ 253, '' ],
+      [ 254, '' ],
+    ]);
   }
 
   setPublickey(val) {

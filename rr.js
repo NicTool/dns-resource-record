@@ -19,7 +19,7 @@ export default class RR extends Map {
     this.setClass(opts?.class)
 
     for (const f of this.getFields('rdata')) {
-      const fnName = `set${this.ucfirst(f)}`
+      const fnName = `set${this.ucFirst(f)}`
       if (this[fnName] === undefined)
         this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
@@ -28,7 +28,7 @@ export default class RR extends Map {
     if (opts.comment) this.set('comment', opts.comment)
   }
 
-  ucfirst(str) {
+  ucFirst(str) {
     return str
       .split(/\s/)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -104,7 +104,7 @@ export default class RR extends Map {
       this.throwHelp(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
-    this.is32bitInt(this.owner, 'TTL', t)
+    this.is32bitInt(this.get('type'), 'TTL', t)
 
     this.set('ttl', t)
   }
@@ -126,7 +126,7 @@ export default class RR extends Map {
     if (this.constructor.name === 'RR') throw new Error(e)
 
     const example = this.getCanonical
-      ? `Example ${this.constructor.name}:\n${this.getCanonical()}\n\n`
+      ? `Example ${this.constructor.name}:\n${JSON.stringify(this.getCanonical(), null, "\t")}\n\n`
       : `${this.constructor.name} records have the fields: ${this.getFields().join(', ')}\n\n`
 
     throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)

@@ -12,32 +12,57 @@ export default class DNSKEY extends RR {
     // a 2 octet Flags Field
     this.is16bitInt('DNSKEY', 'flags', val)
 
-    // the possible values are: 0, 256, and 257; RFC 4034
-    if (![0, 256, 257].includes(val)) this.throwHelp(`DNSKEY: flags invalid`)
+    if (!this.getFlagsOptions().has(val)) {
+      this.throwHelp(`DNSKEY: flags must be in the set: ${this.getFlagsOptions()}`)
+    }
 
     this.set('flags', val)
   }
+
+  // possible values are: 0, 256, and 257; RFC 4034
+  getFlagsOptions () { return new Map([ [0], [256], [257] ]) }
 
   setProtocol(val) {
     // 1 octet
     this.is8bitInt('DNSKEY', 'protocol', val)
 
     // The Protocol Field MUST be represented as an unsigned decimal integer with a value of 3.
-    if (![3].includes(val)) this.throwHelp(`DNSKEY: protocol invalid`)
+    if (!this.getProtocolOptions().has(val)) this.throwHelp(`DNSKEY: protocol invalid`)
 
     this.set('protocol', val)
   }
+
+  getProtocolOptions () { return new Map([ [3] ]) }
 
   setAlgorithm(val) {
     // 1 octet
     this.is8bitInt('DNSKEY', 'algorithm', val)
 
     // https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
-    // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![...Array(16).keys(), 253, 254].includes(val))
+    if (!this.getAlgorithmOptions().has(val))
       console.error(`DNSKEY: algorithm (${val}) not recognized`)
 
     this.set('algorithm', val)
+  }
+
+  getAlgorithmOptions () { return new Map([
+      [1, 'RSA/MD5 (DEPRECATED)' ],
+      [2, 'DH' ],
+      [3, 'DSA/SHA-1'],
+      [4, 'EC'],
+      [5, 'RSA/SHA-1' ],
+      [6, 'DSA-NSEC3-SHA1'],
+      [7, 'RSASHA1-NSEC3-SHA1'],
+      [8, 'RSA/SHA-256'],
+      [9, ''],
+      [10, 'RSA/SHA-512'],
+      [13, 'ECDSA Curve P-256 with SHA-256'],
+      [14, 'ECDSA Curve P-384 with SHA-384'],
+      [15, 'Ed25519'],
+      [16, 'Ed448'],
+      [253],
+      [254],
+    ])
   }
 
   setPublickey(val) {
