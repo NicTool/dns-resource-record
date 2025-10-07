@@ -16,11 +16,22 @@ export default class RRSIG extends RR {
 
   setAlgorithm(val) {
     // a 1 octet Algorithm field
-    // 1=RSA/MD5, 2=DH, 3=RRSIGA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![1, 2, 3, 4, 5, 253, 254].includes(val))
+    if (!this.getAlgorithmOptions().has(val))
       this.throwHelp(`RRSIG: algorithm invalid`)
 
     this.set('algorithm', val)
+  }
+
+  getAlgorithmOptions() {
+    return new Map([
+      [1, 'RSA/MD5'],
+      [2, 'DH'],
+      [3, 'RRSIGA/SHA-1'],
+      [4, 'EC'],
+      [5, 'RSA/SHA-1'],
+      [253],
+      [254],
+    ])
   }
 
   setLabels(val) {

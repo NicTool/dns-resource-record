@@ -17,11 +17,22 @@ export default class DS extends RR {
   }
 
   setAlgorithm(val) {
-    // 1=RSA/MD5, 2=DH, 3=DSA/SHA-1, 4=EC, 5=RSA/SHA-1
-    if (![1, 2, 3, 4, 5, 253, 254].includes(val))
+    if (!this.getAlgorithmOptions().has(val))
       this.throwHelp(`DS: algorithm invalid`)
 
     this.set('algorithm', val)
+  }
+
+  getAlgorithmOptions() {
+    return new Map([
+      [1, 'RSA/MD5'],
+      [2, 'DH'],
+      [3, 'DSA/SHA-1'],
+      [4, 'EC'],
+      [5, 'RSA/SHA-1'],
+      [253, ''],
+      [254, ''],
+    ])
   }
 
   setDigestType(val) {

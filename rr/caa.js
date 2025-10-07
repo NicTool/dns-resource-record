@@ -10,11 +10,18 @@ export default class CAA extends RR {
   setFlags(val) {
     this.is8bitInt('CAA', 'flags', val)
 
-    if (![0, 128].includes(val)) {
+    if (!this.getFlagsOptions().has(val)) {
       this.throwHelp(`CAA flags ${val} not recognized`)
     }
 
     this.set('flags', val)
+  }
+
+  getFlagsOptions() {
+    return new Map([
+      [0, 'Non Critical'],
+      [128, 'Critical'],
+    ])
   }
 
   setTag(val) {
@@ -23,10 +30,14 @@ export default class CAA extends RR {
         `CAA tag must be a sequence of ASCII letters and numbers in lowercase`,
       )
 
-    if (!['issue', 'issuewild', 'iodef'].includes(val)) {
+    if (!this.getTagOptions().has(val)) {
       this.throwHelp(`CAA tag ${val} not recognized`)
     }
     this.set('tag', val)
+  }
+
+  getTagOptions() {
+    return new Map([['issue'], ['issuewild'], ['iodef']])
   }
 
   setValue(val) {

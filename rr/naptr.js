@@ -40,10 +40,14 @@ export default class NAPTR extends RR {
   }
 
   setFlags(val) {
-    if (!['', 'S', 'A', 'U', 'P'].includes(val.toUpperCase()))
+    if (!this.getFlagsOptions().has(val.toUpperCase()))
       this.throwHelp(`NAPTR flags are invalid`)
 
     this.set('flags', val.toUpperCase())
+  }
+
+  getFlagsOptions() {
+    return new Map([[''], ['S'], ['A'], ['U'], ['P']])
   }
 
   setService(val) {
