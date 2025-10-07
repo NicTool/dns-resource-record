@@ -4,6 +4,14 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.2.4] - 2025-10-06
+
+- rr: rename ucfirst -> ucFirst
+- rr: setTTL was checking this.owner (copy/paste error)
+- rr: improved throwHelp message formatting
+- aaaa: compress & expand returns lower case
+- caa, dnskey, ds, ipseckey, key, naptr, rrsig, smimea, sshfp, tlsa: refactored opts as JS maps
+
 ### [1.2.3] - 2025-04-14
 
 - test(\*): fully qualify node modules
@@ -310,6 +318,7 @@ Notable changes to this project are documented in this file.
 [1.1.8]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.8
 [1.1.7]: https://github.com/NicTool/dns-resource-record/releases/tag/1.1.7
 [1.2.0]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.0
-[1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.1
+[1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.1
 [1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.2
-[1.2.3]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.3
+[1.2.3]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.3
+[1.2.4]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.4

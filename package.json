@@ -1,6 +1,6 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "DNS Resource Records",
   "main": "index.js",
   "files": [
@@ -19,7 +19,8 @@
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
     "test": "npx mocha",
     "versions": "npx dependency-version-checker check",
-    "watch": "npm run test -- --watch"
+    "watch": "npm run test -- --watch",
+    "versions:fix": "npx dependency-version-checker update"
   },
   "repository": {
     "type": "git",
@@ -48,7 +49,8 @@
     "@eslint/js": "^10.0.0",
     "eslint": "^9.15.0",
     "globals": "^16.0.0",
-    "mocha": "^11.2.2"
+    "mocha": "^11.2.2",
+    "@haraka/eslint-config": "^2.0.2"
   },
   "prettier": {
     "semi": false,
