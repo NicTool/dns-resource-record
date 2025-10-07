@@ -112,12 +112,12 @@ export default class AAAA extends RR {
 
     for (const re of mostConsecutiveZeros) {
       if (re.test(r)) {
-        r = r.replace(re, '::')           // 4.2
+        r = r.replace(re, '::') // 4.2
         break
       }
     }
 
-    return r.toLowerCase()               // 4.3
+    return r.toLowerCase() // 4.3
   }
 
   expand(val, delimiter) {
@@ -133,7 +133,8 @@ export default class AAAA extends RR {
     return val
       .split(':')
       .map((s) => s.padStart(4, 0))
-      .join(delimiter).toLowerCase()
+      .join(delimiter)
+      .toLowerCase()
   }
 
   /******  EXPORTERS   *******/

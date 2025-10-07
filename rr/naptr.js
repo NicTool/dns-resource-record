@@ -46,14 +46,8 @@ export default class NAPTR extends RR {
     this.set('flags', val.toUpperCase())
   }
 
-  getFlagsOptions () {
-    return new Map([
-      [ '' ],
-      [ 'S' ],
-      [ 'A' ],
-      [ 'U' ],
-      [ 'P' ],
-    ])
+  getFlagsOptions() {
+    return new Map([[''], ['S'], ['A'], ['U'], ['P']])
   }
 
   setService(val) {

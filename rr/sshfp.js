@@ -13,14 +13,14 @@ export default class SSHFP extends RR {
     this.set('algorithm', val)
   }
 
-  getAlgorithmOptions () {
+  getAlgorithmOptions() {
     return new Map([
-      [ 0, 'reserved' ],
-      [ 1, 'RSA' ],
-      [ 2, 'DSA' ],
-      [ 3, 'ECDSA' ],
-      [ 4, 'Ed25519' ],
-      [ 6, 'Ed448' ],
+      [0, 'reserved'],
+      [1, 'RSA'],
+      [2, 'DSA'],
+      [3, 'ECDSA'],
+      [4, 'Ed25519'],
+      [6, 'Ed448'],
     ])
   }
 
@@ -32,7 +32,9 @@ export default class SSHFP extends RR {
 
   getFptypeOptions() {
     return new Map([
-      [0, 'reserved'], [1, 'SHA-1'], [2, 'SHA-256']
+      [0, 'reserved'],
+      [1, 'SHA-1'],
+      [2, 'SHA-256'],
     ])
   }
 

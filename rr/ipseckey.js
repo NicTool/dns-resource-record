@@ -22,32 +22,34 @@ export default class IPSECKEY extends RR {
     this.set('gateway type', val)
   }
 
-  getGatewayTypeOptions () {
+  getGatewayTypeOptions() {
     return new Map([
-      [ 0, 'none' ],
-      [ 1, '4-byte IPv4' ],
-      [ 2, '16-byte IPv6' ],
-      [ 3, 'wire encoded domain name' ],
+      [0, 'none'],
+      [1, '4-byte IPv4'],
+      [2, '16-byte IPv6'],
+      [3, 'wire encoded domain name'],
     ])
   }
 
   setAlgorithm(val) {
-    
-    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`IPSECKEY: Algorithm invalid`)
+    if (!this.getAlgorithmOptions().has(val))
+      this.throwHelp(`IPSECKEY: Algorithm invalid`)
 
     this.set('algorithm', val)
   }
 
-  getAlgorithmOptions () {
+  getAlgorithmOptions() {
     return new Map([
-      [ 1, 'DSA' ],
-      [ 2, 'RSA' ],
+      [1, 'DSA'],
+      [2, 'RSA'],
     ])
   }
 
   setGateway(val) {
     const type = this.get('gateway type')
-    const gwErr = new Error(`IPSECKEY: gateway invalid (${val}) for type ${type}`)
+    const gwErr = new Error(
+      `IPSECKEY: gateway invalid (${val}) for type ${type}`,
+    )
     switch (type) {
       case 0:
         if (val !== '.') throw gwErr

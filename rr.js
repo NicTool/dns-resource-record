@@ -126,7 +126,7 @@ export default class RR extends Map {
     if (this.constructor.name === 'RR') throw new Error(e)
 
     const example = this.getCanonical
-      ? `Example ${this.constructor.name}:\n${JSON.stringify(this.getCanonical(), null, "\t")}\n\n`
+      ? `Example ${this.constructor.name}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
       : `${this.constructor.name} records have the fields: ${this.getFields().join(', ')}\n\n`
 
     throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)

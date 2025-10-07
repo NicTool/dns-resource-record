@@ -15,7 +15,7 @@ export default class TLSA extends RR {
     this.set('certificate usage', val)
   }
 
-  getCertificateUsageOptions () {
+  getCertificateUsageOptions() {
     return new Map([
       [0, 'CA certificate'],
       [1, 'an end entity certificate'],
@@ -25,27 +25,31 @@ export default class TLSA extends RR {
   }
 
   setSelector(val) {
-    if (!this.getSelectorOptions().has(val)) this.throwHelp(`TLSA: selector invalid`)
+    if (!this.getSelectorOptions().has(val))
+      this.throwHelp(`TLSA: selector invalid`)
 
     this.set('selector', val)
   }
 
   getSelectorOptions() {
     return new Map([
-      [ 0, 'Full certificate'],
-      [ 1, 'SubjectPublicKeyInfo'],
+      [0, 'Full certificate'],
+      [1, 'SubjectPublicKeyInfo'],
     ])
   }
 
   setMatchingType(val) {
-    if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`TLSA: matching type`)
+    if (!this.getMatchingTypeOptions().has(val))
+      this.throwHelp(`TLSA: matching type`)
 
     this.set('matching type', val)
   }
 
-  getMatchingTypeOptions () {
+  getMatchingTypeOptions() {
     return new Map([
-      [0, 'Exact match'], [1, 'SHA-256 hash'], [2, 'SHA-512 hash']
+      [0, 'Exact match'],
+      [1, 'SHA-256 hash'],
+      [2, 'SHA-512 hash'],
     ])
   }
 

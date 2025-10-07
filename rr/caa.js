@@ -17,10 +17,10 @@ export default class CAA extends RR {
     this.set('flags', val)
   }
 
-  getFlagsOptions () {
+  getFlagsOptions() {
     return new Map([
-      [ 0, 'Non Critical' ],
-      [ 128, 'Critical' ],
+      [0, 'Non Critical'],
+      [128, 'Critical'],
     ])
   }
 
@@ -36,12 +36,8 @@ export default class CAA extends RR {
     this.set('tag', val)
   }
 
-  getTagOptions () {
-    return new Map([
-      ['issue'],
-      ['issuewild'],
-      ['iodef']
-    ])
+  getTagOptions() {
+    return new Map([['issue'], ['issuewild'], ['iodef']])
   }
 
   setValue(val) {

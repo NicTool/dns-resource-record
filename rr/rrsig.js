@@ -22,13 +22,13 @@ export default class RRSIG extends RR {
     this.set('algorithm', val)
   }
 
-  getAlgorithmOptions () {
+  getAlgorithmOptions() {
     return new Map([
-      [1, 'RSA/MD5' ],
-      [2, 'DH' ],
-      [3, 'RRSIGA/SHA-1' ],
-      [4, 'EC' ],
-      [5, 'RSA/SHA-1' ],
+      [1, 'RSA/MD5'],
+      [2, 'DH'],
+      [3, 'RRSIGA/SHA-1'],
+      [4, 'EC'],
+      [5, 'RSA/SHA-1'],
       [253],
       [254],
     ])
