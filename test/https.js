@@ -21,8 +21,7 @@ const validRecords = [
     priority: 0,
     'target name': 'foosvc.example.net.',
     params: '',
-    testB:
-      '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\t\n',
+    testB: '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\t\n',
   },
   /*
   _1234._bar.example.com. 300 IN HTTPS 1 svc1.example.net. ( ech="111..." ipv6hint=2001:db8::1 port=1234 )

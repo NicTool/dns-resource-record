@@ -9,8 +9,7 @@ export default class TLSA extends RR {
 
   /****** Resource record specific setters   *******/
   setCertificateUsage(val) {
-    if (!this.getCertificateUsageOptions().has(val))
-      this.throwHelp(`TLSA: certificate usage invalid`)
+    if (!this.getCertificateUsageOptions().has(val)) this.throwHelp(`TLSA: certificate usage invalid`)
 
     this.set('certificate usage', val)
   }
@@ -25,8 +24,7 @@ export default class TLSA extends RR {
   }
 
   setSelector(val) {
-    if (!this.getSelectorOptions().has(val))
-      this.throwHelp(`TLSA: selector invalid`)
+    if (!this.getSelectorOptions().has(val)) this.throwHelp(`TLSA: selector invalid`)
 
     this.set('selector', val)
   }
@@ -39,8 +37,7 @@ export default class TLSA extends RR {
   }
 
   setMatchingType(val) {
-    if (!this.getMatchingTypeOptions().has(val))
-      this.throwHelp(`TLSA: matching type`)
+    if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`TLSA: matching type`)
 
     this.set('matching type', val)
   }
@@ -62,12 +59,7 @@ export default class TLSA extends RR {
   }
 
   getRdataFields(arg) {
-    return [
-      'certificate usage',
-      'selector',
-      'matching type',
-      'certificate association data',
-    ]
+    return ['certificate usage', 'selector', 'matching type', 'certificate association data']
   }
 
   getRFCs() {
@@ -86,19 +78,17 @@ export default class TLSA extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const match = opts.bindline
-      .trim()
-      .split(
-        /^([^\s]+)\s+([0-9]{1,10})\s+(IN)\s+(TLSA)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+(.*?)$/,
-      )
+    const regex =
+      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>TLSA)\s+(?<usage>\d+)\s+(?<selector>\d+)\s+(?<matchtype>\d+)\s+(?<cad>.*?)$/i
+    const match = opts.bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse TLSA: ${opts.bindline}`)
-    const [owner, ttl, c, type, usage, selector, matchtype, cad] =
-      match.slice(1)
+    const { owner, ttl, cls, type, usage, selector, matchtype, cad } = match.groups
+
     return new TLSA({
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
-      class: c,
-      type,
+      class: cls.toUpperCase(),
+      type: type.toUpperCase(),
       'certificate usage': parseInt(usage, 10),
       selector: parseInt(selector, 10),
       'matching type': parseInt(matchtype, 10),

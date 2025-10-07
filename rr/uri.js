@@ -46,8 +46,7 @@ export default class URI extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  URI  priority, weight, target
-    const [owner, ttl, c, type, priority, weight, target] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, priority, weight, target] = opts.bindline.split(/\s+/)
     return new URI({
       class: c,
       type: type,

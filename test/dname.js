@@ -12,8 +12,7 @@ const validRecords = [
     owner: '_tcp.example.com.',
     target: '_tcp.example.net.',
     testB: '_tcp.example.com.\t86400\tIN\tDNAME\t_tcp.example.net.\n',
-    testT:
-      ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
+    testT: ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
   },
 ]
 

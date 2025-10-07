@@ -50,12 +50,7 @@ export default class NSEC extends RR {
       class: c,
       type: type,
       'next domain': next,
-      'type bit maps': opts.bindline
-        .split(/\s+/)
-        .slice(5)
-        .filter(removeParens)
-        .join(' ')
-        .trim(),
+      'type bit maps': opts.bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
     })
   }
 

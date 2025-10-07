@@ -12,10 +12,8 @@ const validRecords = [
     algorithm: 5,
     'digest type': 1,
     digest: `( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )`,
-    testB:
-      'dskey.example.com.\t3600\tIN\tDS\t60485\t5\t1\t( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )\n',
-    testT:
-      ':dskey.example.com:43:\\354\\105\\005\\001( 2BB183AF5F22588179A53B0A 98631FAD1A292118 ):3600::\n',
+    testB: 'dskey.example.com.\t3600\tIN\tDS\t60485\t5\t1\t( 2BB183AF5F22588179A53B0A 98631FAD1A292118 )\n',
+    testT: ':dskey.example.com:43:\\354\\105\\005\\001( 2BB183AF5F22588179A53B0A 98631FAD1A292118 ):3600::\n',
   },
 ]
 

@@ -12,10 +12,8 @@ const validRecords = [
     owner: 'server-under-my-desk.example.com.',
     cpu: 'PDP-11/73',
     os: 'UNIX',
-    testB:
-      'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
-    testT:
-      ':server-under-my-desk.example.com:13:\\011PDP-11/73\\004UNIX:86400::\n',
+    testB: 'server-under-my-desk.example.com.\t86400\tIN\tHINFO\t"PDP-11/73"\t"UNIX"\n',
+    testT: ':server-under-my-desk.example.com:13:\\011PDP-11/73\\004UNIX:86400::\n',
   },
   {
     ...defaults,

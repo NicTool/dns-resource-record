@@ -40,8 +40,7 @@ export default class NAPTR extends RR {
   }
 
   setFlags(val) {
-    if (!this.getFlagsOptions().has(val.toUpperCase()))
-      this.throwHelp(`NAPTR flags are invalid`)
+    if (!this.getFlagsOptions().has(val.toUpperCase())) this.throwHelp(`NAPTR flags are invalid`)
 
     this.set('flags', val.toUpperCase())
   }

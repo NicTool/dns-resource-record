@@ -23,8 +23,7 @@ export default class KEY extends RR {
   setAlgorithm(val) {
     // 1 octet
 
-    if (!this.getAlgorithmOptions().has(val))
-      this.throwHelp(`KEY: algorithm invalid`)
+    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`KEY: algorithm invalid`)
 
     this.set('algorithm', val)
   }
@@ -67,8 +66,7 @@ export default class KEY extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
-    const [owner, ttl, c, type, flags, protocol, algorithm] =
-      opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, flags, protocol, algorithm] = opts.bindline.split(/\s+/)
     return new KEY({
       owner,
       ttl: parseInt(ttl, 10),

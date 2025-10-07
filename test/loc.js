@@ -19,8 +19,7 @@ const validRecords = [
     ...defaults,
     owner: 'cambridge-net.kei.com.',
     address: '42 21 54 N 71 6 18 W -24m 30m',
-    testB:
-      'cambridge-net.kei.com.\t3600\tIN\tLOC\t42 21 54 N 71 6 18 W -24m 30m\n',
+    testB: 'cambridge-net.kei.com.\t3600\tIN\tLOC\t42 21 54 N 71 6 18 W -24m 30m\n',
     testT:
       ':cambridge-net.kei.com:29:\\000\\063\\000\\000\\211\\027\\055\\320\\160\\276\\025\\360\\000\\230\\215\\040:3600::\n',
   },
@@ -28,8 +27,7 @@ const validRecords = [
     ...defaults,
     owner: 'rwy04l.logan-airport.boston.',
     address: '42 21 28.764 N 71 0 51.617 W -44m 2000m',
-    testB:
-      'rwy04l.logan-airport.boston.\t3600\tIN\tLOC\t42 21 28.764 N 71 0 51.617 W -44m 2000m\n',
+    testB: 'rwy04l.logan-airport.boston.\t3600\tIN\tLOC\t42 21 28.764 N 71 0 51.617 W -44m 2000m\n',
     testT:
       ':rwy04l.logan-airport.boston:29:\\000\\045\\000\\000\\211\\026\\313\\074\\160\\303\\020\\337\\000\\230\\205\\120:3600::\n',
   },

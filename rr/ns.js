@@ -37,16 +37,12 @@ export default class NS extends RR {
   fromTinydns(opts) {
     // &fqdn:ip:x:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [fqdn, ip, dname, ttl, ts, loc] = opts.tinyline
-      .substring(1)
-      .split(':')
+    const [fqdn, ip, dname, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
 
     return new NS({
       type: 'NS',
       owner: this.fullyQualify(fqdn),
-      dname: this.fullyQualify(
-        /\./.test(dname) ? dname : `${dname}.ns.${fqdn}`,
-      ),
+      dname: this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc !== '' && loc !== '\n' ? loc : '',

@@ -10,11 +10,7 @@ export function valid(type, validRecords) {
 
         for (const k of Object.keys(val)) {
           if (/^test/.test(k)) continue
-          assert.equal(
-            r.get(k),
-            val[k],
-            `${type.name} ${k} ${r.get(k)} !== ${val[k]}`,
-          )
+          assert.equal(r.get(k), val[k], `${type.name} ${k} ${r.get(k)} !== ${val[k]}`)
         }
       })
     }
@@ -92,13 +88,8 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
       for (const f of r.getFields()) {
         if (f === 'class') continue
         let expected = val[f]
-        if (f === 'data' && Array.isArray(expected))
-          expected = expected.join('') // TXT
-        assert.deepEqual(
-          r.get(f),
-          expected,
-          `${f}: ${r.get(f)} !== ${expected}`,
-        )
+        if (f === 'data' && Array.isArray(expected)) expected = expected.join('') // TXT
+        assert.deepEqual(r.get(f), expected, `${f}: ${r.get(f)} !== ${expected}`)
       }
     })
   }

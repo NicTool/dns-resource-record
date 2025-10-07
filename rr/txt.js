@@ -70,17 +70,18 @@ export default class TXT extends RR {
 
   fromBind(opts) {
     // test.example.com  3600  IN  TXT  "..."
-    const match = opts.bindline
-      .trim()
-      .split(/^([\S]{1,255})\s+([0-9]{1,10})\s+(IN)\s+(\w{3})\s+?\s*(.*?)$/i)
+    const regex =
+      /^(?<owner>[\S]{1,255})\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>\w{3})\s+?\s*(?<rdata>.+?)$/i
+    const match = opts.bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse TXT: ${opts.bindline}`)
-    const [owner, ttl, c, type, rdata] = match.slice(1)
+
+    const { owner, ttl, cls, type, rdata } = match.groups
 
     return new this.constructor({
       owner,
       ttl: parseInt(ttl, 10),
-      class: c,
-      type,
+      class: cls,
+      type: type.toUpperCase(),
       data: rdata
         .match(/"([^"]+?)"/g)
         .map((s) => s.replace(/^"|"$/g, ''))

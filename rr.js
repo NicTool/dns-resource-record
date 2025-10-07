@@ -20,8 +20,7 @@ export default class RR extends Map {
 
     for (const f of this.getFields('rdata')) {
       const fnName = `set${this.ucFirst(f)}`
-      if (this[fnName] === undefined)
-        this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
+      if (this[fnName] === undefined) this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
       this[fnName](opts[f])
     }
 
@@ -77,9 +76,7 @@ export default class RR extends Map {
     if (n === undefined) this.throwHelp(`owner is required`)
 
     if (n.length < 1 || n.length > 255)
-      this.throwHelp(
-        'Domain names must have 1-255 octets (characters): RFC 2181',
-      )
+      this.throwHelp('Domain names must have 1-255 octets (characters): RFC 2181')
 
     this.isFullyQualified(this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
@@ -100,8 +97,7 @@ export default class RR extends Map {
       this.throwHelp('TTL is required, no default available')
     }
 
-    if (typeof t !== 'number')
-      this.throwHelp(`TTL must be numeric (${typeof t})`)
+    if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`)
 
     // RFC 1035, 2181
     this.is32bitInt(this.get('type'), 'TTL', t)
@@ -209,8 +205,7 @@ export default class RR extends Map {
 
     if (zone_opts.hide?.origin && zone_opts.origin) {
       if (fqdn === zone_opts.origin) return '@'
-      if (fqdn.endsWith(zone_opts.origin))
-        return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
+      if (fqdn.endsWith(zone_opts.origin)) return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
     }
 
     return fqdn
@@ -232,9 +227,7 @@ export default class RR extends Map {
   }
 
   getTinydnsPostamble() {
-    return ['ttl', 'timestamp', 'location']
-      .map((f) => this.getEmpty(f))
-      .join(':')
+    return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
   }
 
   hasValidLabels(hostname) {
@@ -258,9 +251,7 @@ export default class RR extends Map {
     )
       return true
 
-    this.throwHelp(
-      `${type} ${field} must be a 8-bit integer (in the range 0-255)`,
-    )
+    this.throwHelp(`${type} ${field} must be a 8-bit integer (in the range 0-255)`)
   }
 
   is16bitInt(type, field, value) {
@@ -272,9 +263,7 @@ export default class RR extends Map {
     )
       return true
 
-    this.throwHelp(
-      `${type} ${field} must be a 16-bit integer (in the range 0-65535)`,
-    )
+    this.throwHelp(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`)
   }
 
   is32bitInt(type, field, value) {
@@ -286,9 +275,7 @@ export default class RR extends Map {
     )
       return true
 
-    this.throwHelp(
-      `${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`,
-    )
+    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
   }
 
   isQuoted(val) {
@@ -306,9 +293,7 @@ export default class RR extends Map {
     if (!allowed.test(hostname)) return true
 
     const matches = allowed.exec(hostname)
-    this.throwHelp(
-      `${type}, ${field} has invalid hostname character (${matches[0]})`,
-    )
+    this.throwHelp(`${type}, ${field} has invalid hostname character (${matches[0]})`)
   }
 
   isIPv4(string) {
@@ -330,10 +315,9 @@ export default class RR extends Map {
 
   toMaraDNS() {
     const type = this.get('type')
-    const supportedTypes =
-      'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
-        /\s+/g,
-      )
+    const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
+      /\s+/g,
+    )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
     return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields()
       .map((f) => this.getQuoted(f))

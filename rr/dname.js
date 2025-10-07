@@ -10,8 +10,7 @@ export default class DNAME extends RR {
   setTarget(val) {
     if (!val) this.throwHelp('DNAME: target is required')
 
-    if (this.isIPv4(val) || this.isIPv6(val))
-      this.throwHelp(`DNAME: target must be a domain name`)
+    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`DNAME: target must be a domain name`)
 
     this.isFullyQualified('DNAME', 'target', val)
     this.isValidHostname('DNAME', 'target', val)
