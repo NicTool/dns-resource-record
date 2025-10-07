@@ -11,6 +11,7 @@ Notable changes to this project are documented in this file.
 - rr: improved throwHelp message formatting
 - aaaa: compress & expand returns lower case
 - caa, dnskey, ds, ipseckey, key, naptr, rrsig, smimea, sshfp, tlsa: refactored opts as JS maps
+- deps: bump to latest versions
 
 ### [1.2.3] - 2025-04-14
 
