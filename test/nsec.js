@@ -11,7 +11,7 @@ const validRecords = [
     'next domain': 'host.example.com.',
     'type bit maps': 'A MX RRSIG NSEC TYPE1234',
     testB: `alfa.example.com.\t86400\tIN\tNSEC\thost.example.com.\tA MX RRSIG NSEC TYPE1234\n`,
-    // testT        : '\n',
+    testT: ':alfa.example.com:47:\\004host\\007example\\003com\\000A MX RRSIG NSEC TYPE1234:86400::\n',
   },
 ]
 
@@ -30,7 +30,7 @@ describe('NSEC record', function () {
   base.getTypeId(NSEC, 47)
 
   base.toBind(NSEC, validRecords)
-  // base.toTinydns(NSEC, validRecords)
+  base.toTinydns(NSEC, validRecords)
 
   base.fromBind(NSEC, validRecords)
   // base.fromTinydns(NSEC, validRecords)

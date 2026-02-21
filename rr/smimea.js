@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class SMIMEA extends RR {
   constructor(opts) {
     super(opts)
@@ -87,5 +89,17 @@ export default class SMIMEA extends RR {
       'matching type': parseInt(match, 10),
       'certificate association data': opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
+  }
+
+  /******  EXPORTERS   *******/
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('certificate usage')) +
+        TINYDNS.UInt8toOctal(this.get('selector')) +
+        TINYDNS.UInt8toOctal(this.get('matching type')) +
+        TINYDNS.escapeOctal(dataRe, this.get('certificate association data')),
+    )
   }
 }

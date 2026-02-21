@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class NSEC extends RR {
   constructor(opts) {
     super(opts)
@@ -55,6 +57,14 @@ export default class NSEC extends RR {
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.packDomainName(this.get('next domain')) + TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
+    )
+  }
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
