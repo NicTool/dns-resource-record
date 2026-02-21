@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class CERT extends RR {
   constructor(opts) {
     super(opts)
@@ -12,6 +14,13 @@ export default class CERT extends RR {
     // this.is16bitInt('CERT', 'type', val)
 
     this.set('cert type', val)
+  }
+
+  getCertTypeValue(val) {
+    if (typeof val === 'number') return val
+    const types = { PKIX: 1, SPKI: 2, PGP: 3, IPKIX: 4, ISPKI: 5, IPGP: 6, ACPKIX: 7, IACPKIX: 8, URI: 253, OID: 254 }
+    if (Object.hasOwn(types, val)) return types[val]
+    this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
   }
 
   setKeyTag(val) {
@@ -71,4 +80,15 @@ export default class CERT extends RR {
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.getCertTypeValue(this.get('cert type'))) +
+        TINYDNS.UInt16toOctal(this.get('key tag')) +
+        TINYDNS.UInt8toOctal(this.get('algorithm')) +
+        TINYDNS.escapeOctal(dataRe, this.get('certificate')),
+    )
+  }
 }

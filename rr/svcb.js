@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class SVCB extends RR {
   constructor(opts) {
     super(opts)
@@ -61,4 +63,14 @@ export default class SVCB extends RR {
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.get('priority')) +
+        TINYDNS.packDomainName(this.get('target name')) +
+        TINYDNS.escapeOctal(dataRe, this.get('params')),
+    )
+  }
 }

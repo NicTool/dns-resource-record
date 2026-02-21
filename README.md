@@ -191,7 +191,7 @@ PRs are welcome, especially PRs with tests.
 |    **AAAA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **APL**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **CAA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **CERT**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|    **CERT**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **CNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **DHCID**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **DNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -199,7 +199,7 @@ PRs are welcome, especially PRs with tests.
 |     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **HIP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
-|   **HTTPS**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|   **HTTPS**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **KEY**     |                    |                    |                    |                    |
 |     **KX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
@@ -207,7 +207,7 @@ PRs are welcome, especially PRs with tests.
 |     **MX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **NAPTR**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **NS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **NSEC**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|    **NSEC**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **NSEC3**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 | **NSEC3PARAM** |                    |                    |                    |                    |
 |    **NXT**     |                    |                    |                    |                    |
@@ -216,17 +216,17 @@ PRs are welcome, especially PRs with tests.
 |     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **RRSIG**    |                    |                    |                    |                    |
 |    **SIG**     |                    |                    |                    |                    |
-|   **SMIMEA**   | :white_check_mark: |                    | :white_check_mark: |                    |
+|   **SMIMEA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **SOA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **SVCB**    | :white_check_mark: |                    | :white_check_mark: |                    |
+|    **SVCB**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **WKS**     | :white_check_mark: |                    | :white_check_mark: |                    |
+|    **WKS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 
 ## TIPS
 

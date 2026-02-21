@@ -12,6 +12,7 @@ const validRecords = [
     protocol: 'TCP',
     'bit map': 'ftp smtp',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.1\tTCP\tftp smtp\n',
+    testT: ':host.example.com:11:\\300\\000\\002\\001\\006ftp smtp:3600::\n',
   },
   {
     ...defaults,
@@ -20,6 +21,7 @@ const validRecords = [
     protocol: 'UDP',
     'bit map': 'domain',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.2\tUDP\tdomain\n',
+    testT: ':host.example.com:11:\\300\\000\\002\\002\\021domain:3600::\n',
   },
   {
     ...defaults,
@@ -28,6 +30,7 @@ const validRecords = [
     protocol: 'TCP',
     'bit map': '',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.3\tTCP\t\n',
+    testT: ':host.example.com:11:\\300\\000\\002\\003\\006:3600::\n',
   },
 ]
 
@@ -61,6 +64,7 @@ describe('WKS record', function () {
   base.getTypeId(WKS, 11)
 
   base.toBind(WKS, validRecords)
+  base.toTinydns(WKS, validRecords)
 
   base.fromBind(WKS, validRecords)
 })

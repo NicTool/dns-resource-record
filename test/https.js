@@ -14,6 +14,8 @@ const validRecords = [
     params: 'alpn="bar" port="8004" ech="..."',
     testB:
       '_8443._foo.api.example.com.\t7200\tIN\tHTTPS\t0\tsvc4.example.net.\talpn="bar" port="8004" ech="..."\n',
+    testT:
+      ':_8443._foo.api.example.com:65:\\000\\000\\004svc4\\007example\\003net\\000alpn="bar" port="8004" ech="...":7200::\n',
   },
   {
     ...defaults,
@@ -22,6 +24,7 @@ const validRecords = [
     'target name': 'foosvc.example.net.',
     params: '',
     testB: '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\t\n',
+    testT: ':_8080._foo.example.com:65:\\000\\000\\006foosvc\\007example\\003net\\000:3600::\n',
   },
   /*
   _1234._bar.example.com. 300 IN HTTPS 1 svc1.example.net. ( ech="111..." ipv6hint=2001:db8::1 port=1234 )
@@ -48,7 +51,7 @@ describe('HTTPS record', function () {
   base.getTypeId(HTTPS, 65)
 
   base.toBind(HTTPS, validRecords)
-  // base.toTinydns(HTTPS, validRecords)
+  base.toTinydns(HTTPS, validRecords)
 
   base.fromBind(HTTPS, validRecords)
   // base.fromTinydns(HTTPS, validRecords)

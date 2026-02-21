@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class WKS extends RR {
   constructor(opts) {
     super(opts)
@@ -57,4 +59,16 @@ export default class WKS extends RR {
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 }
+    const protoNum = protoMap[this.get('protocol')]
+
+    return this.getTinydnsGeneric(
+      TINYDNS.ipv4toOctal(this.get('address')) +
+        TINYDNS.UInt8toOctal(protoNum) +
+        TINYDNS.escapeOctal(dataRe, this.get('bit map')),
+    )
+  }
 }
