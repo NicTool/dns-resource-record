@@ -189,16 +189,20 @@ PRs are welcome, especially PRs with tests.
 | :------------: | :----------------: | :----------------: | :----------------: | :----------------: |
 |     **A**      | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **AAAA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **APL**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **CAA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **CERT**    | :white_check_mark: |                    | :white_check_mark: |                    |
 |   **CNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **DHCID**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **DNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **DNSKEY**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **HIP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **HTTPS**    | :white_check_mark: |                    | :white_check_mark: |                    |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **KEY**     |                    |                    |                    |                    |
+|     **KX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **MX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **NAPTR**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -209,6 +213,7 @@ PRs are welcome, especially PRs with tests.
 |    **NXT**     |                    |                    |                    |                    |
 | **OPENPGPKEY** |                    |                    |                    |                    |
 |    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **RRSIG**    |                    |                    |                    |                    |
 |    **SIG**     |                    |                    |                    |                    |
 |   **SMIMEA**   | :white_check_mark: |                    | :white_check_mark: |                    |
