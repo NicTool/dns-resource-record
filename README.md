@@ -196,7 +196,7 @@ PRs are welcome, especially PRs with tests.
 |   **DNSKEY**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|   **HTTPS**    |                    |                    |                    |                    |
+|   **HTTPS**    | :white_check_mark: |                    | :white_check_mark: |                    |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **KEY**     |                    |                    |                    |                    |
 |    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -216,12 +216,12 @@ PRs are welcome, especially PRs with tests.
 |    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **SVCB**    |                    |                    |                    |                    |
+|    **SVCB**    | :white_check_mark: |                    | :white_check_mark: |                    |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **WKS**     |                    |                    |                    |                    |
+|    **WKS**     | :white_check_mark: |                    | :white_check_mark: |                    |
 
 ## TIPS
 
