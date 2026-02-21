@@ -3,16 +3,20 @@ const typeMap = {}
 import RR from './rr.js'
 import A from './rr/a.js'
 import AAAA from './rr/aaaa.js'
+import APL from './rr/apl.js'
 import CAA from './rr/caa.js'
 import CERT from './rr/cert.js'
 import CNAME from './rr/cname.js'
+import DHCID from './rr/dhcid.js'
 import DNAME from './rr/dname.js'
 import DNSKEY from './rr/dnskey.js'
 import DS from './rr/ds.js'
 import HINFO from './rr/hinfo.js'
+import HIP from './rr/hip.js'
 import HTTPS from './rr/https.js'
 import IPSECKEY from './rr/ipseckey.js'
 import KEY from './rr/key.js'
+import KX from './rr/kx.js'
 import LOC from './rr/loc.js'
 import MX from './rr/mx.js'
 import NAPTR from './rr/naptr.js'
@@ -23,6 +27,7 @@ import NSEC3PARAM from './rr/nsec3param.js'
 import NXT from './rr/nxt.js'
 import OPENPGPKEY from './rr/openpgpkey.js'
 import PTR from './rr/ptr.js'
+import RP from './rr/rp.js'
 import RRSIG from './rr/rrsig.js'
 import SIG from './rr/sig.js'
 import SMIMEA from './rr/smimea.js'
@@ -42,16 +47,20 @@ export default RR
 export {
   A,
   AAAA,
+  APL,
   CAA,
   CERT,
   CNAME,
+  DHCID,
   DNAME,
   DNSKEY,
   DS,
   HINFO,
+  HIP,
   HTTPS,
   IPSECKEY,
   KEY,
+  KX,
   LOC,
   MX,
   NAPTR,
@@ -62,6 +71,7 @@ export {
   NXT,
   OPENPGPKEY,
   PTR,
+  RP,
   RRSIG,
   SIG,
   SMIMEA,
@@ -81,16 +91,20 @@ export {
 for (const c of [
   A,
   AAAA,
+  APL,
   CAA,
   CERT,
   CNAME,
+  DHCID,
   DNAME,
   DNSKEY,
   DS,
   HINFO,
+  HIP,
   HTTPS,
   IPSECKEY,
   KEY,
+  KX,
   LOC,
   MX,
   NAPTR,
@@ -101,6 +115,7 @@ for (const c of [
   NXT,
   OPENPGPKEY,
   PTR,
+  RP,
   RRSIG,
   SIG,
   SMIMEA,
