@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class HIP extends RR {
   constructor(opts) {
     super(opts)
@@ -77,5 +79,23 @@ export default class HIP extends RR {
     const rs = this.get('rendezvous servers')
     const rsPart = rs ? `\t${rs}` : ''
     return `${this.getPrefix(zone_opts)}\t${this.get('pk algorithm')}\t${this.get('hit')}\t${this.get('public key')}${rsPart}\n`
+  }
+
+  toTinydns() {
+    const hitBytes = Buffer.from(this.get('hit'), 'hex')
+    const pkBytes = Buffer.from(this.get('public key'), 'base64')
+    const rs = this.get('rendezvous servers')
+
+    let rdata = ''
+    rdata += TINYDNS.UInt8toOctal(hitBytes.length)
+    rdata += TINYDNS.UInt8toOctal(this.get('pk algorithm'))
+    rdata += TINYDNS.UInt16toOctal(pkBytes.length)
+    for (const b of hitBytes) rdata += TINYDNS.UInt8toOctal(b)
+    for (const b of pkBytes) rdata += TINYDNS.UInt8toOctal(b)
+    if (rs) {
+      for (const name of rs.split(/\s+/)) rdata += TINYDNS.packDomainName(name)
+    }
+
+    return this.getTinydnsGeneric(rdata)
   }
 }

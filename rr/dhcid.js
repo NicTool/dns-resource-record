@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class DHCID extends RR {
   constructor(opts) {
     super(opts)
@@ -52,4 +54,7 @@ export default class DHCID extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toTinydns() {
+    return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('data')))
+  }
 }

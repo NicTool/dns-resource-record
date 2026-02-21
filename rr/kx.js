@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class KX extends RR {
   constructor(opts) {
     super(opts)
@@ -63,4 +65,13 @@ export default class KX extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toBind(zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchanger', zone_opts)}\n`
+  }
+
+  toTinydns() {
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.get('preference')) + TINYDNS.packDomainName(this.get('exchanger')),
+    )
+  }
 }

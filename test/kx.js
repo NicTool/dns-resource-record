@@ -11,6 +11,7 @@ const validRecords = [
     preference: 10,
     exchanger: 'kx.example.com.',
     testB: 'example.com.\t3600\tIN\tKX\t10\tkx.example.com.\n',
+    testT: ':example.com:36:\\000\\012\\002kx\\007example\\003com\\000:3600::\n',
   },
   {
     owner: 'host.example.com.',
@@ -20,6 +21,7 @@ const validRecords = [
     preference: 0,
     exchanger: 'kx2.example.com.',
     testB: 'host.example.com.\t86400\tIN\tKX\t0\tkx2.example.com.\n',
+    testT: ':host.example.com:36:\\000\\000\\003kx2\\007example\\003com\\000:86400::\n',
   },
 ]
 
@@ -63,6 +65,7 @@ describe('KX record', function () {
   base.getTypeId(KX, 36)
 
   base.toBind(KX, validRecords)
+  base.toTinydns(KX, validRecords)
 
   base.fromBind(KX, validRecords)
 })

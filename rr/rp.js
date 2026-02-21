@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class RP extends RR {
   constructor(opts) {
     super(opts)
@@ -64,4 +66,13 @@ export default class RP extends RR {
   }
 
   /******  EXPORTERS   *******/
+  toBind(zone_opts) {
+    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('mbox', zone_opts)}\t${this.getFQDN('txt', zone_opts)}\n`
+  }
+
+  toTinydns() {
+    return this.getTinydnsGeneric(
+      TINYDNS.packDomainName(this.get('mbox')) + TINYDNS.packDomainName(this.get('txt')),
+    )
+  }
 }

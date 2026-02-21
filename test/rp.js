@@ -11,6 +11,7 @@ const validRecords = [
     mbox: 'admin.example.com.',
     txt: 'info.example.com.',
     testB: 'example.com.\t3600\tIN\tRP\tadmin.example.com.\tinfo.example.com.\n',
+    testT: ':example.com:17:\\005admin\\007example\\003com\\000\\004info\\007example\\003com\\000:3600::\n',
   },
   {
     owner: 'host.example.com.',
@@ -20,6 +21,7 @@ const validRecords = [
     mbox: 'hostmaster.example.com.',
     txt: '.',
     testB: 'host.example.com.\t86400\tIN\tRP\thostmaster.example.com.\t.\n',
+    testT: ':host.example.com:17:\\012hostmaster\\007example\\003com\\000\\000:86400::\n',
   },
 ]
 
@@ -63,6 +65,7 @@ describe('RP record', function () {
   base.getTypeId(RP, 17)
 
   base.toBind(RP, validRecords)
+  base.toTinydns(RP, validRecords)
 
   base.fromBind(RP, validRecords)
 })
