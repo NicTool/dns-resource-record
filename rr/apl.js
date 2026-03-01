@@ -77,8 +77,14 @@ export default class APL extends RR {
             const dblIdx = addr.indexOf('::')
             let groups
             if (dblIdx !== -1) {
-              const left = addr.slice(0, dblIdx).split(':').filter((s) => s !== '')
-              const right = addr.slice(dblIdx + 2).split(':').filter((s) => s !== '')
+              const left = addr
+                .slice(0, dblIdx)
+                .split(':')
+                .filter((s) => s !== '')
+              const right = addr
+                .slice(dblIdx + 2)
+                .split(':')
+                .filter((s) => s !== '')
               groups = [...left, ...Array(8 - left.length - right.length).fill('0000'), ...right]
             } else {
               groups = addr.split(':')

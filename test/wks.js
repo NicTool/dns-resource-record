@@ -35,7 +35,14 @@ const validRecords = [
 ]
 
 const invalidRecords = [
-  { ...defaults, owner: 'host.example.com.', address: '', protocol: 'TCP', 'bit map': '', msg: /address is required/ },
+  {
+    ...defaults,
+    owner: 'host.example.com.',
+    address: '',
+    protocol: 'TCP',
+    'bit map': '',
+    msg: /address is required/,
+  },
   {
     ...defaults,
     owner: 'host.example.com.',

@@ -62,7 +62,8 @@ export default class NSEC extends RR {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
 
     return this.getTinydnsGeneric(
-      TINYDNS.packDomainName(this.get('next domain')) + TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
+      TINYDNS.packDomainName(this.get('next domain')) +
+        TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
   }
 }

@@ -11,7 +11,7 @@ Notable changes to this project are documented in this file.
 - feat: add WKS record setters, rdata fields, and tests #49
 - style: wrap lines to 110 (was 80) chars
 - tlsa: require cert assocc data
-- deps(*): update to latest, eslint 9 -> 10
+- deps(\*): update to latest, eslint 9 -> 10
 
 ### [1.2.4] - 2025-10-06
 

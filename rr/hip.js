@@ -52,7 +52,8 @@ export default class HIP extends RR {
       type: 'HIP',
       'pk algorithm': 2,
       hit: '200100107B1A74DF365639CC39F1D578',
-      'public key': 'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
+      'public key':
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
       'rendezvous servers': '',
     }
   }
