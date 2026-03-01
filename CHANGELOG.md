@@ -4,6 +4,15 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.3.0] - 2026-03-01
+
+- feat: add toTinydns for CERT, HTTPS, NSEC, SMIMEA, SVCB, WKS #51
+- feat: add APL, KX, DHCID, HIP, and RP RR types #50
+- feat: add WKS record setters, rdata fields, and tests #49
+- style: wrap lines to 110 (was 80) chars
+- tlsa: require cert assocc data
+- deps(\*): update to latest, eslint 9 -> 10
+
 ### [1.2.4] - 2025-10-06
 
 - rr: rename ucfirst -> ucFirst
@@ -19,20 +28,20 @@ Notable changes to this project are documented in this file.
 - feat(rr.isIPv?): added regexes to validate format
 - dep(node:{net|util): remove, for browser compatiblity
 - doc(CONTRIBUTORS.md): added
-- ci: disable codeql schedule (#45)
+- ci: disable codeql schedule #45
 
 ### [1.2.2] - 2024-11-17
 
 - dep(eslint): update to v9 & config
 - chore: tighten up fromBind regex
-- packaging tweaks (#43)
+- packaging tweaks #43
 
 ### [1.2.1] - 2024-03-10
 
 - fix(nsec3param): fixed setHash fname typo
-- feat(SVCB,HTTPS): add record support (#29)
+- feat(SVCB,HTTPS): add record support #29
 - feat(OPENGPGPKEY): improved bindline parser, added test
-- feat(throwHelp): far more useful error messages (#41)
+- feat(throwHelp): far more useful error messages #41
 - feat(A,MX,AAAA,CAA,IPSECKEY): added getCanonical
 
 ### [1.2.0] - 2024-03-07
@@ -40,7 +49,7 @@ Notable changes to this project are documented in this file.
 - feat(index): export typeMap (lookup table for type to id)
 - feat(NXT): added bind support
 - feat(TSIG, WKS): added stub class
-- doc(README): move synopsis section into table (#38)
+- doc(README): move synopsis section into table #38
 - chore(style): set up prettier
 
 ### [1.1.6] - 2022-06-21
@@ -322,4 +331,5 @@ Notable changes to this project are documented in this file.
 [1.2.1]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.1
 [1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.2
 [1.2.3]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.3
-[1.2.4]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.2.4
+[1.2.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.4
+[1.3.0]: https://github.com/NicTool/dns-resource-record/releases/tag/1.3.0

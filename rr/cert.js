@@ -18,7 +18,18 @@ export default class CERT extends RR {
 
   getCertTypeValue(val) {
     if (typeof val === 'number') return val
-    const types = { PKIX: 1, SPKI: 2, PGP: 3, IPKIX: 4, ISPKI: 5, IPGP: 6, ACPKIX: 7, IACPKIX: 8, URI: 253, OID: 254 }
+    const types = {
+      PKIX: 1,
+      SPKI: 2,
+      PGP: 3,
+      IPKIX: 4,
+      ISPKI: 5,
+      IPGP: 6,
+      ACPKIX: 7,
+      IACPKIX: 8,
+      URI: 253,
+      OID: 254,
+    }
     if (Object.hasOwn(types, val)) return types[val]
     this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
   }
