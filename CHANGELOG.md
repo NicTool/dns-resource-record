@@ -4,6 +4,10 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.3.1] - 2026-03-13
+
+- ci: update workflow triggers
+
 ### [1.3.0] - 2026-03-01
 
 - feat: add toTinydns for CERT, HTTPS, NSEC, SMIMEA, SVCB, WKS #51
@@ -332,4 +336,5 @@ Notable changes to this project are documented in this file.
 [1.2.2]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.2
 [1.2.3]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.3
 [1.2.4]: https://github.com/NicTool/dns-resource-record/releases/tag/1.2.4
-[1.3.0]: https://github.com/NicTool/dns-resource-record/releases/tag/1.3.0
+[1.3.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.0
+[1.3.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.1
