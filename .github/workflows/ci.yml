@@ -16,6 +16,5 @@ jobs:
     secrets: inherit
 
   test:
-    needs: lint
     uses: NicTool/.github/.github/workflows/test.yml@main
     secrets: inherit

@@ -1,5 +1,7 @@
 import RR from '../rr.js'
 
+import * as TINYDNS from '../lib/tinydns.js'
+
 export default class NXT extends RR {
   constructor(opts) {
     super(opts)
@@ -41,6 +43,24 @@ export default class NXT extends RR {
 
   /******  IMPORTERS   *******/
 
+  fromTinydns(opts) {
+    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    if (n != 30) this.throwHelp('NXT fromTinydns, invalid n')
+
+    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
+
+    return new NXT({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'NXT',
+      'next domain': nextDomain,
+      'type bit map': binaryRdata.slice(binaryLen).toString(),
+      timestamp: ts,
+      location: loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
   fromBind(opts) {
     // test.example.com  3600  IN  NXT NextDomain TypeBitMap
     const [owner, ttl, c, type, next] = opts.bindline.split(/\s+/)
@@ -55,6 +75,14 @@ export default class NXT extends RR {
   }
 
   /******  EXPORTERS   *******/
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.packDomainName(this.get('next domain')) + TINYDNS.escapeOctal(dataRe, this.get('type bit map')),
+    )
+  }
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)

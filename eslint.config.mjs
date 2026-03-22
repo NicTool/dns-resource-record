@@ -17,12 +17,12 @@ export default defineConfig([
     rules: {
       // 'no-undef': [ 'warn' ],
       'no-unused-vars': [
-        'error',
+        'warn',
         {
           args: 'none',
+          destructuredArrayIgnorePattern: '^_',
         },
       ],
-
       'dot-notation': 'error',
       'prefer-const': 'warn',
     },

@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import OPENPGPKEY from '../rr/openpgpkey.js'
@@ -79,7 +80,7 @@ describe('OPENPGPKEY record', function () {
 
   base.toBind(OPENPGPKEY, validRecords)
   // base.toTinydns(OPENPGPKEY, validRecords)
+  base.toTinydns(OPENPGPKEY, validRecords)
 
-  base.fromBind(OPENPGPKEY, validRecords)
-  // base.fromTinydns(OPENPGPKEY, validRecords)
+  base.fromTinydns(OPENPGPKEY, validRecords)
 })

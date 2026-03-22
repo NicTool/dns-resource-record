@@ -102,4 +102,14 @@ export default class SIG extends RR {
   // }
 
   /******  EXPORTERS   *******/
+
+  toBind(zone_opts) {
+    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	SIG${this.getRdataFields()
+      .slice(0, 4)
+      .map((f) => '	' + this.get(f))
+      .join('')}	${this.getRdataFields()
+      .slice(4, 8)
+      .map((f) => this.get(f))
+      .join('	')}	( ${this.get('signature')} )`
+  }
 }

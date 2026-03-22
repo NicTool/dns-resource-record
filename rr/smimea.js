@@ -91,6 +91,23 @@ export default class SMIMEA extends RR {
     })
   }
 
+  fromTinydns(opts) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+
+    return new SMIMEA({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'SMIMEA',
+      'certificate usage': binaryRdata.readUInt8(0),
+      selector: binaryRdata.readUInt8(1),
+      'matching type': binaryRdata.readUInt8(2),
+      'certificate association data': binaryRdata.slice(3).toString(),
+      timestamp: ts,
+      location: loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
   /******  EXPORTERS   *******/
   toTinydns() {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')

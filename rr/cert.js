@@ -75,6 +75,41 @@ export default class CERT extends RR {
 
   /******  IMPORTERS   *******/
 
+  fromTinydns(opts) {
+    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
+
+    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const typeNum = bytes.readUInt16BE(0)
+    let certType = typeNum
+
+    const types = {
+      1: 'PKIX',
+      2: 'SPKI',
+      3: 'PGP',
+      4: 'IPKIX',
+      5: 'ISPKI',
+      6: 'IPGP',
+      7: 'ACPKIX',
+      8: 'IACPKIX',
+      253: 'URI',
+      254: 'OID',
+    }
+    if (types[typeNum]) certType = types[typeNum]
+
+    return new CERT({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'CERT',
+      'cert type': certType,
+      'key tag': bytes.readUInt16BE(2),
+      algorithm: bytes.readUInt8(4),
+      certificate: bytes.slice(5).toString(),
+      timestamp: ts,
+      location: loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
   fromBind(opts) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
     const [owner, ttl, c, type, certtype, keytag, algo, certificate] = opts.bindline.split(/\s+/)

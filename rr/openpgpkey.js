@@ -1,4 +1,5 @@
 import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
 export default class OPENPGPKEY extends RR {
   constructor(opts) {
@@ -42,5 +43,22 @@ export default class OPENPGPKEY extends RR {
     })
   }
 
+  fromTinydns(opts) {
+    return new OPENPGPKEY({
+      owner: this.fullyQualify(opts.owner),
+      ttl: parseInt(opts.ttl, 10),
+      type: 'OPENPGPKEY',
+      'public key': Buffer.from(TINYDNS.unescapeOctal(opts.rd), 'base64').toString('utf-8'),
+    })
+  }
+
   /******  EXPORTERS   *******/
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+    const escapedPublicKey = TINYDNS.escapeOctal(
+      dataRe,
+      Buffer.from(this.get('public key'), 'utf-8').toString('base64'),
+    )
+    return this.getTinydnsGeneric(escapedPublicKey)
+  }
 }
