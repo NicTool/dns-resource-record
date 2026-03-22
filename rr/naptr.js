@@ -62,9 +62,9 @@ export default class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -103,8 +103,7 @@ export default class NAPTR extends RR {
   }
 
   fromBind({ bindline }) {
-    const naptrPattern =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>.*?)["']\s+["'](?<service>.*?)["']\s+["'](?<regexp>.*?)["']\s+(?<replacement>\S+)$/
+    const naptrPattern = /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/;
 
     const match = bindline.trim().match(naptrPattern)
 
