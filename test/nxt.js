@@ -34,5 +34,5 @@ describe('NXT record', function () {
   // base.toTinydns(NXT, validRecords)
 
   base.fromBind(NXT, validRecords)
-  // base.fromTinydns(NXT, validRecords)
+  base.fromTinydns(NXT, validRecords)
 })

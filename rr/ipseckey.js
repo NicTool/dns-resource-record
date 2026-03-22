@@ -98,9 +98,9 @@ export default class IPSECKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // FQDN TTL CLASS IPSECKEY Precedence GatewayType Algorithm Gateway PublicKey
-    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] = bindline.split(/\s+/)
     return new IPSECKEY({
       owner,
       ttl: parseInt(ttl, 10),
@@ -114,8 +114,8 @@ export default class IPSECKEY extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n')
 
     const precedence = TINYDNS.octalToUInt8(rdata.slice(0, 4))

@@ -62,9 +62,9 @@ export default class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -102,26 +102,29 @@ export default class NAPTR extends RR {
     return new NAPTR(rec)
   }
 
-  fromBind(opts) {
-    const str = opts.bindline
-    // test.example.com  3600  IN  NAPTR order, preference, "flags", "service", "regexp", replacement
-    const [owner, ttl, c, type, order, preference] = str.split(/\s+/)
-    const [flags, service, regexp] = str.match(/(?:").*?(?:"\s)/g)
-    const replacement = str.trim().split(/\s+/).pop()
+  fromBind({ bindline }) {
+    const naptrPattern = /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/;
 
-    const bits = {
-      owner: owner,
+    const match = bindline.trim().match(naptrPattern)
+
+    if (!match) {
+      throw new Error(`Invalid NAPTR BIND line: ${bindline}`)
+    }
+
+    const { owner, ttl, type, order, preference, flags, service, regexp, replacement } = match.groups
+
+    return new NAPTR({
+      owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
+      class: match.groups.class,
+      type,
       order: parseInt(order, 10),
       preference: parseInt(preference, 10),
-      flags: flags.trim().replace(/^['"]|['"]$/g, ''),
-      service: service.trim().replace(/^['"]|['"]$/g, ''),
-      regexp: regexp.trim().replace(/^['"]|['"]/g, ''),
-      replacement: replacement,
-    }
-    return new NAPTR(bits)
+      flags,
+      service,
+      regexp,
+      replacement,
+    })
   }
 
   /******  EXPORTERS   *******/

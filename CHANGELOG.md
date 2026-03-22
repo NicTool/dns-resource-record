@@ -4,12 +4,16 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-### [1.4.0] - 2026-03-21
-
+- fix: hardened polynomial regexes
+- style(es6): use ?. and ?? operators
+- style(es6): use argument expansion / destructured parameters
+- feat(fromTinydns): added to rp, wks
+- fix(NAPTR): replace polynomial regexp
+- doc(README): updated RR table completion status
 - style(es6): substring -> slice
 - style(es6): use more trim()
 
-#### Changed
+### [1.4.0] - 2026-03-21
 
 - feat(toBind): added to nsec3param, rrsig
 - feat(toTinydns): added to key, nsec3param, nxt, openpgpkey

@@ -45,8 +45,8 @@ export default class AAAA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
-    const str = opts.tinyline
+  fromTinydns({ tinyline }) {
+    const str = tinyline
     let fqdn, ip, n, rdata, ttl, ts, loc
 
     switch (str[0]) {
@@ -77,9 +77,9 @@ export default class AAAA extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  AAAA  ...
-    const [owner, ttl, c, type, ip] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, ip] = bindline.split(/\s+/)
     return new AAAA({
       owner,
       ttl: parseInt(ttl, 10),
@@ -124,7 +124,7 @@ export default class AAAA extends RR {
     if (delimiter === undefined) delimiter = ':'
 
     const colons = val.match(/:/g)
-    if (colons && colons.length < 7) {
+    if (colons?.length < 7) {
       // console.log(`AAAA: restoring compressed colons`)
       val = val.replace(/::/, ':'.repeat(9 - colons.length))
     }

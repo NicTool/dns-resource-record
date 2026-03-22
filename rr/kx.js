@@ -51,9 +51,9 @@ export default class KX extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  KX  preference exchanger
-    const [owner, ttl, c, type, preference, exchanger] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, preference, exchanger] = bindline.split(/\s+/)
     return new KX({
       owner,
       ttl: parseInt(ttl, 10),

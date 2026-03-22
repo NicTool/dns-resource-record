@@ -78,10 +78,10 @@ export default class NSEC3 extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = opts.bindline.split(/\s+/)
-    const rdata = opts.bindline.split(/\(|\)/)[1]
+    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
+    const rdata = bindline.split(/\(|\)/)[1]
 
     return new NSEC3({
       owner,
@@ -97,8 +97,8 @@ export default class NSEC3 extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -112,7 +112,7 @@ export default class NSEC3 extends RR {
     // Salt (variable length based on Salt Length)
     // Next Hashed Owner Name (variable length)
     // Type Bit Maps (variable length)
-    const { salt, nextHashedOwnerName, typeBitMaps } = TINYDNS.parseNSEC3Buffer(bytes)
+    const { salt, nextHashedOwnerName, typeBitMaps } = parseNSEC3Buffer(bytes)
 
     return new NSEC3({
       owner: this.fullyQualify(fqdn),
@@ -153,5 +153,50 @@ export default class NSEC3 extends RR {
         TINYDNS.escapeOctal(dataRe, this.get('next hashed owner name')) +
         TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
+  }
+}
+
+function parseNSEC3Buffer (bytes) {
+  // bytes is a Buffer containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
+  // Start after the first 4 bytes (hash alg, flags, iterations)
+  const rest = bytes.slice(4).toString('utf8')
+
+  // determine expected next hashed owner name length from hash algorithm
+  const hashAlgorithm = bytes.readUInt8(0)
+  // common mapping: algorithm 1 => SHA-1 => 20 bytes => base32 length 32
+  const expectedLen = hashAlgorithm === 1 ? 32 : hashAlgorithm === 2 ? 52 : 32
+
+  // salt length is ambiguous in this representation; try to find a split where
+  // the following segment matches expected base32 length
+  let salt = ''
+  let nextHashedOwnerName = ''
+  let typeBitMaps = ''
+
+  const maxSl = Math.min(64, rest.length)
+  for (let sl = maxSl; sl >= 1; sl--) {
+    const candNext = rest.slice(sl, sl + expectedLen)
+    if (candNext.length !== expectedLen) continue
+    if (!/^[0-9a-z]+$/.test(candNext)) continue
+    // candidate looks like a base32 name; accept and treat remainder as type bit maps
+    const saltCandidate = rest.slice(0, sl)
+    if (!/^[0-9A-Fa-f]+$/.test(saltCandidate)) continue
+    salt = saltCandidate
+    nextHashedOwnerName = candNext
+    typeBitMaps = rest.slice(sl + expectedLen)
+    break
+  }
+
+  // fallback: if we couldn't find a split, treat everything up to first non-hex as salt
+  if (!nextHashedOwnerName) {
+    const saltMatch = rest.match(/^([0-9A-Fa-f]*)/)
+    salt = saltMatch ? saltMatch[1] : ''
+    nextHashedOwnerName = rest.slice(salt.length)
+    typeBitMaps = ''
+  }
+
+  return {
+    salt,
+    nextHashedOwnerName,
+    typeBitMaps,
   }
 }

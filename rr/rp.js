@@ -52,9 +52,9 @@ export default class RP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  RP  mbox txt
-    const [owner, ttl, c, type, mbox, txt] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, mbox, txt] = bindline.split(/\s+/)
     return new RP({
       owner,
       ttl: parseInt(ttl, 10),
@@ -62,6 +62,23 @@ export default class RP extends RR {
       type,
       mbox,
       txt,
+    })
+  }
+
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
+
+    const [mbox, consumed] = TINYDNS.unpackDomainName(rdata)
+    const txt = TINYDNS.unpackDomainName(rdata.slice(consumed))[0]
+
+    return new RP({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'RP',
+      mbox,
+      txt,
+      timestamp: ts,
+      location: loc?.trim() || '',
     })
   }
 

@@ -75,8 +75,8 @@ export default class CERT extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns(opts) {
-    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -110,9 +110,9 @@ export default class CERT extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
-    const [owner, ttl, c, type, certtype, keytag, algo, certificate] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, certtype, keytag, algo, certificate] = bindline.split(/\s+/)
     return new CERT({
       owner,
       ttl: parseInt(ttl, 10),

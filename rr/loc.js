@@ -85,9 +85,9 @@ export default class LOC extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // LOC via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 29) this.throwHelp('LOC fromTinydns, invalid n')
 
     // divide by 100 is to convert cm to meters
@@ -113,15 +113,15 @@ export default class LOC extends RR {
     })
   }
 
-  fromBind(opts) {
-    const [owner, ttl, c, type] = opts.bindline.split(/\s+/)
+  fromBind({ bindline }) {
+    const [owner, ttl, c, type] = bindline.split(/\s+/)
 
     return new LOC({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      address: opts.bindline.split(/\s+/).slice(4).join(' ').trim(),
+      address: bindline.split(/\s+/).slice(4).join(' ').trim(),
     })
   }
 
