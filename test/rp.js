@@ -69,5 +69,5 @@ describe('RP record', function () {
   base.toTinydns(RP, validRecords)
 
   base.fromBind(RP, validRecords)
-  // base.fromTinydns(RP, validRecords)
+  base.fromTinydns(RP, validRecords)
 })

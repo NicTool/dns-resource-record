@@ -55,5 +55,5 @@ describe('SVCB record', function () {
   base.toTinydns(SVCB, validRecords)
 
   base.fromBind(SVCB, validRecords)
-  // base.fromTinydns(SVCB, validRecords)
+  base.fromTinydns(SVCB, validRecords)
 })

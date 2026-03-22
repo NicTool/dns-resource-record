@@ -58,6 +58,24 @@ export default class WKS extends RR {
     })
   }
 
+  fromTinydns(opts) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const address = TINYDNS.octalToIPv4(rdata.slice(0, 12))
+    const protocol = TINYDNS.octalToUInt8(rdata.slice(12, 15))
+    const bitmap = TINYDNS.unescapeOctal(rdata.slice(15))
+
+    return new WKS({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'WKS',
+      address,
+      protocol,
+      'bit map': bitmap,
+      timestamp: ts,
+      location: loc?.trim() || '',
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {

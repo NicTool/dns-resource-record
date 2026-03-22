@@ -62,18 +62,31 @@ export default class SVCB extends RR {
     })
   }
 
-  fromTinydns({ rd, owner, ttl }) {
+  fromTinydns(opts) {
+    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+
     if (rd.length < 6) {
       this.throwHelp(`SVCB: RDATA too short: ${rd}`)
     }
 
-    const priority = TINYDNS.octalToUInt16(rd.slice(0, 6))
-    const remainingRdata = rd.slice(6)
+    // Convert escaped octal RDATA into a binary buffer for reliable parsing
+    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
 
-    const [targetName, consumedLength] = TINYDNS.unpackDomainName(remainingRdata)
+    const priority = binary.readUInt16BE(0)
 
-    const params = remainingRdata.slice(consumedLength)
-    const unescapedParams = TINYDNS.unescapeOctal(params)
+    // parse domain name from binary starting at offset 2
+    let pos = 2
+    const labels = []
+    while (true) {
+      const len = binary.readUInt8(pos)
+      pos += 1
+      if (len === 0) break
+      labels.push(binary.slice(pos, pos + len).toString())
+      pos += len
+    }
+    const targetName = `${labels.join('.')}.`
+    // remaining params are ASCII text after the domain
+    const params = binary.slice(pos).toString()
 
     return new SVCB({
       owner: this.fullyQualify(owner),
@@ -81,7 +94,9 @@ export default class SVCB extends RR {
       type: 'SVCB',
       priority: priority,
       'target name': targetName,
-      params: unescapedParams,
+      params: params,
+      timestamp: ts,
+      location: loc?.trim() || '',
     })
   }
 

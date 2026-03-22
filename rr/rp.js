@@ -65,6 +65,23 @@ export default class RP extends RR {
     })
   }
 
+  fromTinydns(opts) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+
+    const [mbox, consumed] = TINYDNS.unpackDomainName(rdata)
+    const txt = TINYDNS.unpackDomainName(rdata.slice(consumed))[0]
+
+    return new RP({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'RP',
+      mbox,
+      txt,
+      timestamp: ts,
+      location: loc?.trim() || '',
+    })
+  }
+
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getFQDN('mbox', zone_opts)}\t${this.getFQDN('txt', zone_opts)}\n`

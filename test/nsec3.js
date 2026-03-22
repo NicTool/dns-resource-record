@@ -44,5 +44,5 @@ describe('NSEC3 record', function () {
   base.toTinydns(NSEC3, validRecords)
 
   base.fromBind(NSEC3, validRecords)
-  // base.fromTinydns(NSEC3, validRecords)
+  base.fromTinydns(NSEC3, validRecords)
 })

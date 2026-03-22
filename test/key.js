@@ -33,5 +33,6 @@ describe('KEY record', function () {
   // base.toTinydns(KEY, validRecords)
 
   base.fromBind(KEY, validRecords)
-  // base.fromTinydns(KEY, validRecords)
+  base.fromBind(KEY, validRecords)
+  base.fromTinydns(KEY, validRecords)
 })

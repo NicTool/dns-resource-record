@@ -19,6 +19,7 @@ This module is used to:
 | **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)** | :white_check_mark: | :white_check_mark: |
 |                       **MaraDNS**                        |                    | :white_check_mark: |
 |                          **JS**                          | :white_check_mark: | :white_check_mark: |
+|                       **PowerDNS**                       |                    |                    |
 
 This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if a valid resource record fails to pass or an invalid resource record passes.
 
@@ -191,7 +192,7 @@ PRs are welcome, especially PRs with tests.
 |    **AAAA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **APL**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **CAA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **CERT**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|    **CERT**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **CNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **DHCID**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **DNAME**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -199,29 +200,29 @@ PRs are welcome, especially PRs with tests.
 |     **DS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **HINFO**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **HIP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
-|   **HTTPS**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|   **HTTPS**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **KEY**     |                    |                    |                    |                    |
+|    **KEY**     |                    | :white_check_mark: |                    | :white_check_mark: |
 |     **KX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **MX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **NAPTR**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **NS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **NSEC**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
-|   **NSEC3**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
-| **NSEC3PARAM** |                    |                    |                    |                    |
-|    **NXT**     |                    |                    |                    |                    |
-| **OPENPGPKEY** |                    |                    |                    |                    |
+|    **NSEC**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|   **NSEC3**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **NSEC3PARAM** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **NXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **OPENPGPKEY** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
-|   **RRSIG**    |                    |                    |                    |                    |
+|   **RRSIG**    | :white_check_mark: |                    |                    |                    |
 |    **SIG**     |                    |                    |                    |                    |
-|   **SMIMEA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|   **SMIMEA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SOA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SRV**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **SVCB**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|    **SVCB**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |

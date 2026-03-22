@@ -60,7 +60,8 @@ export default class HTTPS extends RR {
     })
   }
 
-  fromTinydns({ rd, owner, ttl }) {
+  fromTinydns(opts) {
+    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (rd.length < 6) {
       this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
     }
@@ -79,6 +80,8 @@ export default class HTTPS extends RR {
       priority,
       'target name': targetName,
       params,
+      timestamp: ts,
+      location: loc?.trim() || '',
     })
   }
 

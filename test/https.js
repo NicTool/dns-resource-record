@@ -55,5 +55,5 @@ describe('HTTPS record', function () {
   base.toTinydns(HTTPS, validRecords)
 
   base.fromBind(HTTPS, validRecords)
-  // base.fromTinydns(HTTPS, validRecords)
+  base.fromTinydns(HTTPS, validRecords)
 })

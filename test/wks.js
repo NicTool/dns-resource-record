@@ -75,5 +75,5 @@ describe('WKS record', function () {
   base.toTinydns(WKS, validRecords)
 
   base.fromBind(WKS, validRecords)
-  // base.fromTinydns(WKS, validRecords)
+  base.fromTinydns(WKS, validRecords)
 })
