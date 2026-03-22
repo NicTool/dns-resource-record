@@ -60,9 +60,13 @@ export default class WKS extends RR {
 
   fromTinydns(opts) {
     const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
-    const address = TINYDNS.octalToIPv4(rdata.slice(0, 12))
-    const protocol = TINYDNS.octalToUInt8(rdata.slice(12, 15))
-    const bitmap = TINYDNS.unescapeOctal(rdata.slice(15))
+
+    const binary = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join('.')
+    const protoNum = binary.readUInt8(4)
+    const protoMap = { 6: 'TCP', 17: 'UDP' }
+    const protocol = protoMap[protoNum] || protoNum
+    const bitmap = binary.slice(5).toString()
 
     return new WKS({
       owner: this.fullyQualify(owner),

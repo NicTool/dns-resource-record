@@ -62,16 +62,25 @@ export default class HTTPS extends RR {
 
   fromTinydns(opts) {
     const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+
     if (rd.length < 6) {
       this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
     }
 
-    const priority = TINYDNS.octalToUInt16(rd.slice(0, 6))
-    const remaining = rd.slice(6)
+    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
+    const priority = binary.readUInt16BE(0)
 
-    const [targetName, consumed] = TINYDNS.unpackDomainName(remaining)
-
-    const params = TINYDNS.unescapeOctal(remaining.slice(consumed))
+    let pos = 2
+    const labels = []
+    while (true) {
+      const len = binary.readUInt8(pos)
+      pos += 1
+      if (len === 0) break
+      labels.push(binary.slice(pos, pos + len).toString())
+      pos += len
+    }
+    const targetName = `${labels.join('.')}.`
+    const params = binary.slice(pos).toString()
 
     return new HTTPS({
       owner: this.fullyQualify(owner),
