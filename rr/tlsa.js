@@ -76,12 +76,12 @@ export default class TLSA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
     const regex =
       /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>TLSA)\s+(?<usage>\d+)\s+(?<selector>\d+)\s+(?<matchtype>\d+)\s+(?<cad>.+)$/i
-    const match = opts.bindline.trim().match(regex)
-    if (!match) this.throwHelp(`unable to parse TLSA: ${opts.bindline}`)
+    const match = bindline.trim().match(regex)
+    if (!match) this.throwHelp(`unable to parse TLSA: ${bindline}`)
     const { owner, ttl, cls, type, usage, selector, matchtype, cad } = match.groups
 
     return new TLSA({
@@ -96,8 +96,8 @@ export default class TLSA extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 52) this.throwHelp('TLSA fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')

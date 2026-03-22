@@ -38,9 +38,9 @@ export default class CNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // Cfqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, p, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new CNAME({
       owner: this.fullyQualify(fqdn),
@@ -52,9 +52,9 @@ export default class CNAME extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  CNAME  ...
-    const [owner, ttl, c, type, cname] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, cname] = bindline.split(/\s+/)
     return new CNAME({
       owner,
       ttl: parseInt(ttl, 10),

@@ -227,7 +227,7 @@ PRs are welcome, especially PRs with tests.
 |    **TSIG**    |                    |                    |                    |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **WKS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|    **WKS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 ## TIPS
 

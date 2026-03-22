@@ -39,11 +39,11 @@ export default class HINFO extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
     const regex = /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(HINFO)\s+("[^"]+"|[\S]+)\s+("[^"]+"|[\S]+)/i
-    const match = opts.bindline.trim().match(regex)
-    if (!match) this.throwHelp(`unable to parse HINFO: ${opts.bindline}`)
+    const match = bindline.trim().match(regex)
+    if (!match) this.throwHelp(`unable to parse HINFO: ${bindline}`)
     const [owner, ttl, c, type, cpu, os] = match.slice(1)
 
     return new HINFO({
@@ -56,9 +56,9 @@ export default class HINFO extends RR {
     })
   }
 
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, , rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, , rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     const [cpu, os] = [...TINYDNS.unpackString(rdata)]
 
     return new this.constructor({

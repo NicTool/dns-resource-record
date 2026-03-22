@@ -78,9 +78,9 @@ export default class NSEC3PARAM extends RR {
     })
   }
 
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
-    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (rd.length < 12) {
       this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
     }

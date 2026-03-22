@@ -84,10 +84,9 @@ export default class SOA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // example.com TTL IN  SOA mname rname serial refresh retry expire minimum
-    const [owner, ttl, c, type, mname, rname, serial, refresh, retry, expire, minimum] =
-      opts.bindline.split(/[\s+]/)
+    const [owner, ttl, c, type, mname, rname, serial, refresh, retry, expire, minimum] = bindline.split(/[\s+]/)
 
     return new SOA({
       owner,
@@ -104,9 +103,9 @@ export default class SOA extends RR {
     })
   }
 
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
-    const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new SOA({
       owner: this.fullyQualify(fqdn),

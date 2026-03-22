@@ -43,8 +43,8 @@ export default class NSEC extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
     const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
 

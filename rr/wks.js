@@ -43,9 +43,9 @@ export default class WKS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  WKS 192.168.1.1 TCP ftp smtp
-    const parts = opts.bindline.split(/\s+/)
+    const parts = bindline.split(/\s+/)
     const [owner, ttl, c, type, address, protocol] = parts
     return new WKS({
       owner,
@@ -58,8 +58,8 @@ export default class WKS extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     const binary = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
     const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join('.')

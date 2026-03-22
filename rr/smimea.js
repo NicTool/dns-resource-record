@@ -76,9 +76,9 @@ export default class SMIMEA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  SMIMEA, usage, selector, match, data
-    const [owner, ttl, c, type, usage, selector, match] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, usage, selector, match] = bindline.split(/\s+/)
     return new SMIMEA({
       owner,
       ttl: parseInt(ttl, 10),
@@ -87,12 +87,12 @@ export default class SMIMEA extends RR {
       'certificate usage': parseInt(usage, 10),
       selector: parseInt(selector, 10),
       'matching type': parseInt(match, 10),
-      'certificate association data': opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
+      'certificate association data': bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
     return new SMIMEA({

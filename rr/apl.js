@@ -42,9 +42,9 @@ export default class APL extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  APL  {[!]afi:address/prefix}*
-    const parts = opts.bindline.split(/\s+/)
+    const parts = bindline.split(/\s+/)
     const [owner, ttl, c, type] = parts
     return new APL({
       owner,

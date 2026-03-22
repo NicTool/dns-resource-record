@@ -65,9 +65,9 @@ export default class KEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
-    const [owner, ttl, c, type, flags, protocol, algorithm] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, flags, protocol, algorithm] = bindline.split(/\s+/)
     return new KEY({
       owner,
       ttl: parseInt(ttl, 10),
@@ -76,13 +76,13 @@ export default class KEY extends RR {
       flags: parseInt(flags, 10),
       protocol: parseInt(protocol, 10),
       algorithm: parseInt(algorithm, 10),
-      publickey: opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
+      publickey: bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // RDATA format: Flags (6 octal chars) + Protocol (3 octal chars) + Algorithm (3 octal chars) + Public Key (escaped data)
-    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (rd.length < 12) {
       this.throwHelp(`KEY: RDATA too short: ${rd}`)
     }

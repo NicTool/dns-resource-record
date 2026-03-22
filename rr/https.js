@@ -46,9 +46,9 @@ export default class HTTPS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  HTTPS Priority TargetName Params
-    const [owner, ttl, c, type, pri, fqdn] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/)
     return new HTTPS({
       owner,
       ttl: parseInt(ttl, 10),
@@ -56,12 +56,12 @@ export default class HTTPS extends RR {
       type,
       priority: parseInt(pri, 10),
       'target name': fqdn,
-      params: opts.bindline.split(/\s+/).slice(6).join(' ').trim(),
+      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
     })
   }
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     if (rd.length < 6) {
       this.throwHelp(`HTTPS: RDATA too short: ${rd}`)

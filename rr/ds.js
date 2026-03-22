@@ -64,9 +64,9 @@ export default class DS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [owner, ttl, c, type, keytag, algorithm, digesttype] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, keytag, algorithm, digesttype] = bindline.split(/\s+/)
     return new DS({
       owner,
       ttl: parseInt(ttl, 10),
@@ -75,12 +75,12 @@ export default class DS extends RR {
       'key tag': parseInt(keytag, 10),
       algorithm: parseInt(algorithm, 10),
       'digest type': parseInt(digesttype, 10),
-      digest: opts.bindline.split(/\s+/).slice(7).join(' ').trim(),
+      digest: bindline.split(/\s+/).slice(7).join(' ').trim(),
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')

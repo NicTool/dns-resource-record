@@ -28,11 +28,11 @@ export default class OPENPGPKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(obj) {
+  fromBind({ bindline: bindline }) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
     const regex = /^([\S]+)\s+(\d{1,10})\s+(IN)\s+(OPENPGPKEY)\s+([\W\w]*)$/
     // eslint-disable-next-line no-unused-vars
-    const [ignore, owner, ttl, c, type, publickey] = obj.bindline.trim().match(regex)
+    const [ignore, owner, ttl, c, type, publickey] = bindline.trim().match(regex)
 
     return new OPENPGPKEY({
       owner,
@@ -43,8 +43,8 @@ export default class OPENPGPKEY extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
     return new OPENPGPKEY({
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
