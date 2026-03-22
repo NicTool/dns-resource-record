@@ -45,7 +45,7 @@ export default class NS extends RR {
       dname: this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

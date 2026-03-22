@@ -109,7 +109,7 @@ export default class LOC extends RR {
       address: this.toHuman(l),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 
@@ -126,7 +126,7 @@ export default class LOC extends RR {
   }
 
   dmsToArcSec(obj) {
-    let retval = obj.degrees * CONV.deg + (obj.minutes || 0) * CONV.min + (obj.seconds || 0) * CONV.sec
+    let retval = obj.degrees * CONV.deg + (obj.minutes ?? 0) * CONV.min + (obj.seconds ?? 0) * CONV.sec
     switch (obj.hemisphere.toUpperCase()) {
       case 'W':
       case 'S':

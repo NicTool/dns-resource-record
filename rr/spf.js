@@ -42,7 +42,7 @@ export default class SPF extends TXT {
       data: TINYDNS.octalToChar(rdata),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

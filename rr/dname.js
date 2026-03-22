@@ -47,7 +47,7 @@ export default class DNAME extends RR {
       target: TINYDNS.unpackDomainName(rdata)[0],
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

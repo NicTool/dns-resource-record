@@ -57,7 +57,7 @@ export default class NXT extends RR {
       'next domain': nextDomain,
       'type bit map': binaryRdata.slice(binaryLen).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

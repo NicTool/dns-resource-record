@@ -119,7 +119,7 @@ export default class SOA extends RR {
       expire: parseInt(exp, 10) || 1048576,
       minimum: parseInt(min, 10) || 2560,
       timestamp: parseInt(ts) || '',
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

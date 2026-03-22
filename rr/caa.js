@@ -111,7 +111,7 @@ export default class CAA extends RR {
       tag,
       value: fingerprint,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

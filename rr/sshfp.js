@@ -72,7 +72,7 @@ export default class SSHFP extends RR {
       fptype: TINYDNS.octalToUInt8(rdata.slice(4, 8)),
       fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

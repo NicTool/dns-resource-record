@@ -96,7 +96,7 @@ export default class SVCB extends RR {
       'target name': targetName,
       params: params,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

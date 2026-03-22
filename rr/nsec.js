@@ -55,7 +55,7 @@ export default class NSEC extends RR {
       'next domain': nextDomain,
       'type bit maps': binaryRdata.slice(binaryLen).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

@@ -41,7 +41,7 @@ export default class PTR extends RR {
       type: 'PTR',
       dname: this.fullyQualify(p),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

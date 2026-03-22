@@ -90,7 +90,7 @@ export default class HTTPS extends RR {
       'target name': targetName,
       params,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

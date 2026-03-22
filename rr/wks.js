@@ -65,7 +65,7 @@ export default class WKS extends RR {
     const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join('.')
     const protoNum = binary.readUInt8(4)
     const protoMap = { 6: 'TCP', 17: 'UDP' }
-    const protocol = protoMap[protoNum] || protoNum
+    const protocol = protoMap[protoNum] ?? protoNum
     const bitmap = binary.slice(5).toString()
 
     return new WKS({
@@ -76,7 +76,7 @@ export default class WKS extends RR {
       protocol,
       'bit map': bitmap,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

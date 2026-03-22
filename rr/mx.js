@@ -65,7 +65,7 @@ export default class MX extends RR {
       preference: parseInt(preference, 10) || 0,
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

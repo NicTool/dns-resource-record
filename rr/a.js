@@ -49,7 +49,7 @@ export default class A extends RR {
       address: ip,
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

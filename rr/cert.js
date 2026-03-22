@@ -106,7 +106,7 @@ export default class CERT extends RR {
       algorithm: bytes.readUInt8(4),
       certificate: bytes.slice(5).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

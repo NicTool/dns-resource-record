@@ -48,7 +48,7 @@ export default class CNAME extends RR {
       type: 'CNAME',
       cname: this.fullyQualify(p),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 
