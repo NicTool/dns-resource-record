@@ -54,8 +54,8 @@ export default class SRV extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
-    const str = opts.tinyline
+  fromTinydns({ tinyline }) {
+    const str = tinyline
     let fqdn, addr, port, pri, weight, ttl, ts, loc, n, rdata
 
     if (str[0] === 'S') {
@@ -85,9 +85,9 @@ export default class SRV extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [owner, ttl, c, type, pri, weight, port, target] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, pri, weight, port, target] = bindline.split(/\s+/)
     return new SRV({
       owner: owner,
       ttl: parseInt(ttl, 10),

@@ -117,11 +117,16 @@ export default class CAA extends RR {
 
   fromBind({ bindline }) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const regex = /^([\S]+)\s+([0-9]{1,10})\s+(IN)\s+(CAA)\s+([0-9]+)\s+(\w+)\s+("[^"]+"|[\S]+?)$/i
-    const fields = bindline.trim().match(regex)
-    if (!fields) this.throwHelp(`unable to parse: ${bindline}`)
+    const caaPattern = /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>CAA)\s+(?<flags>\d+)\s+(?<tag>\w+)\s+(?:"(?<quotedValue>[^"]+)"|(?<unquotedValue>\S+))$/i;
 
-    const [owner, ttl, c, type, flags, tag, value] = fields.slice(1)
+    const match = bindline.trim().match(caaPattern);
+
+    if (!match) {
+      this.throwHelp(`unable to parse CAA: ${bindline}`);
+    }
+
+    const { owner, ttl, class: c, type, flags, tag, quotedValue, unquotedValue } = match.groups
+
     return new CAA({
       owner,
       ttl: parseInt(ttl, 10),
@@ -129,8 +134,8 @@ export default class CAA extends RR {
       type,
       flags: parseInt(flags, 10),
       tag,
-      value,
-    })
+      value: quotedValue ?? unquotedValue,
+    });
   }
 
   /******  EXPORTERS   *******/

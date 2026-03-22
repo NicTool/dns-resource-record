@@ -78,10 +78,10 @@ export default class NSEC3 extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = opts.bindline.split(/\s+/)
-    const rdata = opts.bindline.split(/\(|\)/)[1]
+    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
+    const rdata = bindline.split(/\(|\)/)[1]
 
     return new NSEC3({
       owner,
@@ -97,8 +97,8 @@ export default class NSEC3 extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')

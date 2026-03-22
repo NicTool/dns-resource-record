@@ -46,11 +46,11 @@ export default class SVCB extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  SVCB Priority TargetName Params
     // _8443._foo.api.example.com. 7200 IN SVCB 0 svc4.example.net.
     // svc4.example.net.  7200  IN SVCB 3 svc4.example.net. ( alpn="bar" port="8004" )
-    const [owner, ttl, c, type, pri, fqdn] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/)
     return new SVCB({
       owner,
       ttl: parseInt(ttl, 10),
@@ -58,12 +58,12 @@ export default class SVCB extends RR {
       type,
       priority: parseInt(pri, 10),
       'target name': fqdn,
-      params: opts.bindline.split(/\s+/).slice(6).join(' ').trim(),
+      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
     })
   }
 
-  fromTinydns(opts) {
-    const [owner, _typeId, rd, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     if (rd.length < 6) {
       this.throwHelp(`SVCB: RDATA too short: ${rd}`)

@@ -93,11 +93,11 @@ export default class DNSKEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
     const regex = /^([^\s]+)\s+([0-9]+)\s+(\w+)\s+(\w+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+\s*(.*?)\s*$/
-    const match = opts.bindline.match(regex)
-    if (!match) this.throwHelp(`unable to parse DNSKEY: ${opts.bindline}`)
+    const match = bindline.match(regex)
+    if (!match) this.throwHelp(`unable to parse DNSKEY: ${bindline}`)
     const [owner, ttl, c, type, flags, protocol, algorithm, publickey] = match.slice(1)
 
     return new DNSKEY({
@@ -112,8 +112,8 @@ export default class DNSKEY extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+  fromTinydns({ tinyline }) {
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')

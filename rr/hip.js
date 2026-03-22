@@ -59,9 +59,9 @@ export default class HIP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
-    const parts = opts.bindline.split(/\s+/)
+    const parts = bindline.split(/\s+/)
     const [owner, ttl, c, type, pkAlgorithm, hit, publicKey] = parts
     return new HIP({
       owner,

@@ -29,8 +29,8 @@ export default class TXT extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
-    const str = opts.tinyline
+  fromTinydns({ tinyline }) {
+    const str = tinyline
     let fqdn, rdata, s, ttl, ts, loc
     // 'fqdn:s:ttl:timestamp:lo
     if (str[0] === "'") {
@@ -68,11 +68,11 @@ export default class TXT extends RR {
     return [fqdn, s, ttl, ts, loc]
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  TXT  "..."
     const regex =
       /^(?<owner>[\S]{1,255})\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>\w{3})\s+?\s*(?<rdata>.+?)$/i
-    const match = opts.bindline.trim().match(regex)
+    const match = bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse TXT: ${opts.bindline}`)
 
     const { owner, ttl, cls, type, rdata } = match.groups
