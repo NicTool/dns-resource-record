@@ -4,6 +4,7 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- style(es6): use ?. and ?? operators
 - style(es6): use argument expansion / destructured parameters
 - feat(fromTinydns): added to rp, wks
 - fix(NAPTR): replace polynomial regexp

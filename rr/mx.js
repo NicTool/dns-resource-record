@@ -53,10 +53,10 @@ export default class MX extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns(opts) {
+  fromTinydns({ tinyline }) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [owner, ip, x, preference, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    const [owner, ip, x, preference, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new MX({
       type: 'MX',
@@ -69,9 +69,9 @@ export default class MX extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  MX  preference exchange
-    const [owner, ttl, c, type, preference, exchange] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, preference, exchange] = bindline.split(/\s+/)
 
     return new MX({
       owner,

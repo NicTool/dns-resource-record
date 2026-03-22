@@ -40,9 +40,9 @@ export default class DHCID extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // host.example.com  3600  IN  DHCID  <base64data>
-    const parts = opts.bindline.split(/\s+/)
+    const parts = bindline.split(/\s+/)
     const [owner, ttl, c, type] = parts
     return new DHCID({
       owner,

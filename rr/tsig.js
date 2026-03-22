@@ -26,16 +26,16 @@ export default class TSIG extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  TSIG SAMPLE-ALG.EXAMPLE. 853804800 300 0 0 0
-    const [owner, ttl, c, type, algorithm] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, algorithm] = bindline.split(/\s+/)
     return new TSIG({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
       algorithm: algorithm,
-      // 'time signed': opts.bindline,
+      // 'time signed': bindline,
       // fudge
       // mac
       // original id

@@ -214,7 +214,7 @@ PRs are welcome, especially PRs with tests.
 |    **NXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | **OPENPGPKEY** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
+|     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **RRSIG**    | :white_check_mark: |                    |                    |                    |
 |    **SIG**     |                    |                    |                    |                    |
 |   **SMIMEA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |

@@ -59,16 +59,16 @@ export default class NSEC extends RR {
     })
   }
 
-  fromBind(opts) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [owner, ttl, c, type, next] = opts.bindline.split(/\s+/)
+    const [owner, ttl, c, type, next] = bindline.split(/\s+/)
     return new NSEC({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
       'next domain': next,
-      'type bit maps': opts.bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
+      'type bit maps': bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
     })
   }
 
