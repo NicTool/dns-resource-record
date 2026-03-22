@@ -4,6 +4,20 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.5.0] - 2026-03-22
+
+#### Changed
+
+- v1.5.0
+
+#### Other
+
+- enable more testing (#58)
+- nullish coalescing (#57)
+- es6 features & regex hardening (#56)
+- style(es6): substring -> slice, more trim() (#55)
+
+
 - feat(SIG): added toBind, toTinydns, fromTinydns
 - feat(TSIG): added missing setters, fromBind, toBind, toTinydns
 - feat(fromTinydns): added to rp, wks
@@ -362,3 +376,4 @@ Notable changes to this project are documented in this file.
 [1.3.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.0
 [1.3.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.1
 [1.4.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.4.0
+[1.5.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.5.0
