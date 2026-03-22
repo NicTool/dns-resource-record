@@ -41,7 +41,7 @@ export default class A extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // +fqdn:ip:ttl:timestamp:lo
-    const [owner, ip, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [owner, ip, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
 
     return new A({
       owner: this.fullyQualify(owner),
@@ -49,7 +49,7 @@ export default class A extends RR {
       address: ip,
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

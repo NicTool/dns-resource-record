@@ -61,18 +61,18 @@ export default class SSHFP extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 44) this.throwHelp('SSHFP fromTinydns, invalid n')
 
     return new SSHFP({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SSHFP',
-      algorithm: TINYDNS.octalToUInt8(rdata.substring(0, 4)),
-      fptype: TINYDNS.octalToUInt8(rdata.substring(4, 8)),
-      fingerprint: TINYDNS.octalToHex(rdata.substring(8)),
+      algorithm: TINYDNS.octalToUInt8(rdata.slice(0, 4)),
+      fptype: TINYDNS.octalToUInt8(rdata.slice(4, 8)),
+      fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

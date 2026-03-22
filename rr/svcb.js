@@ -67,7 +67,7 @@ export default class SVCB extends RR {
       this.throwHelp(`SVCB: RDATA too short: ${rd}`)
     }
 
-    const priority = TINYDNS.octalToUInt16(rd.substring(0, 6))
+    const priority = TINYDNS.octalToUInt16(rd.slice(0, 6))
     const remainingRdata = rd.slice(6)
 
     const [targetName, consumedLength] = TINYDNS.unpackDomainName(remainingRdata)

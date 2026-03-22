@@ -87,20 +87,20 @@ export default class LOC extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // LOC via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 29) this.throwHelp('LOC fromTinydns, invalid n')
 
     // divide by 100 is to convert cm to meters
     const l = {
-      version: TINYDNS.octalToUInt8(rdata.substring(0, 4)),
-      size: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(4, 8))),
+      version: TINYDNS.octalToUInt8(rdata.slice(0, 4)),
+      size: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(4, 8))),
       precision: {
-        horizontal: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(8, 12))),
-        vertical: this.fromExponent(TINYDNS.octalToUInt8(rdata.substring(12, 16))),
+        horizontal: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(8, 12))),
+        vertical: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(12, 16))),
       },
-      latitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(16, 32)), 'lat'),
-      longitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.substring(32, 48)), 'lon'),
-      altitude: TINYDNS.octalToUInt32(rdata.substring(48, 64)) - REF.ALTITUDE,
+      latitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.slice(16, 32)), 'lat'),
+      longitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.slice(32, 48)), 'lon'),
+      altitude: TINYDNS.octalToUInt32(rdata.slice(48, 64)) - REF.ALTITUDE,
     }
 
     return new LOC({
@@ -109,7 +109,7 @@ export default class LOC extends RR {
       address: this.toHuman(l),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

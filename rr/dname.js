@@ -38,7 +38,7 @@ export default class DNAME extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // DNAME via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 39) this.throwHelp('DNAME fromTinydns, invalid n')
 
     return new DNAME({
@@ -47,7 +47,7 @@ export default class DNAME extends RR {
       target: TINYDNS.unpackDomainName(rdata)[0],
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

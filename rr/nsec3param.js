@@ -78,22 +78,20 @@ export default class NSEC3PARAM extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const rd = opts.rd
-
+  fromTinydns({ rd, owner, ttl }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
     if (rd.length < 12) {
       this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
     }
 
     return new NSEC3PARAM({
-      owner: this.fullyQualify(opts.owner),
-      ttl: parseInt(opts.ttl, 10),
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
       type: 'NSEC3PARAM',
-      'hash algorithm': TINYDNS.octalToUInt8(rd.substring(0, 3)),
-      flags: TINYDNS.octalToUInt8(rd.substring(3, 6)),
-      iterations: TINYDNS.octalToUInt16(rd.substring(6, 12)),
-      salt: TINYDNS.unescapeOctal(rd.substring(12)),
+      'hash algorithm': TINYDNS.octalToUInt8(rd.slice(0, 3)),
+      flags: TINYDNS.octalToUInt8(rd.slice(3, 6)),
+      iterations: TINYDNS.octalToUInt16(rd.slice(6, 12)),
+      salt: TINYDNS.unescapeOctal(rd.slice(12)),
     })
   }
 
@@ -108,12 +106,11 @@ export default class NSEC3PARAM extends RR {
   toTinydns() {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
 
-    let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(this.get('hash algorithm'))
-    rdata += TINYDNS.UInt8toOctal(this.get('flags'))
-    rdata += TINYDNS.UInt16toOctal(this.get('iterations'))
-    rdata += TINYDNS.escapeOctal(dataRe, this.get('salt'))
-
-    return this.getTinydnsGeneric(rdata)
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('hash algorithm')) +
+        TINYDNS.UInt8toOctal(this.get('flags')) +
+        TINYDNS.UInt16toOctal(this.get('iterations')) +
+        TINYDNS.escapeOctal(dataRe, this.get('salt')),
+    )
   }
 }

@@ -33,7 +33,7 @@ export default class PTR extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // ^fqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, p, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
 
     return new PTR({
       owner: this.fullyQualify(fqdn),
@@ -41,7 +41,7 @@ export default class PTR extends RR {
       type: 'PTR',
       dname: this.fullyQualify(p),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

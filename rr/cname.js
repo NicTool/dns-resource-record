@@ -40,7 +40,7 @@ export default class CNAME extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // Cfqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, p, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
 
     return new CNAME({
       owner: this.fullyQualify(fqdn),
@@ -48,7 +48,7 @@ export default class CNAME extends RR {
       type: 'CNAME',
       cname: this.fullyQualify(p),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

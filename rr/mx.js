@@ -56,7 +56,7 @@ export default class MX extends RR {
   fromTinydns(opts) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
     // eslint-disable-next-line no-unused-vars
-    const [owner, ip, x, preference, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [owner, ip, x, preference, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
 
     return new MX({
       type: 'MX',
@@ -65,7 +65,7 @@ export default class MX extends RR {
       preference: parseInt(preference, 10) || 0,
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

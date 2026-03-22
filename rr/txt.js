@@ -34,7 +34,7 @@ export default class TXT extends RR {
     let fqdn, rdata, s, ttl, ts, loc
     // 'fqdn:s:ttl:timestamp:lo
     if (str[0] === "'") {
-      ;[fqdn, s, ttl, ts, loc] = str.substring(1).split(':')
+      ;[fqdn, s, ttl, ts, loc] = str.slice(1).split(':')
       rdata = TINYDNS.octalToChar(s)
     } else {
       ;[fqdn, rdata, ttl, ts, loc] = this.fromTinydnsGeneric(str)
@@ -46,14 +46,14 @@ export default class TXT extends RR {
       type: 'TXT',
       data: rdata,
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 
   fromTinydnsGeneric(str) {
     // generic: :fqdn:n:rdata:ttl:timestamp:location
     // eslint-disable-next-line prefer-const
-    let [fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
+    let [fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
     if (n != 16) this.throwHelp('TXT fromTinydns, invalid n')
 
     rdata = TINYDNS.octalToChar(rdata)
@@ -61,7 +61,7 @@ export default class TXT extends RR {
     let len = rdata[0].charCodeAt(0)
     let pos = 1
     while (pos < rdata.length) {
-      s += rdata.substring(pos, +(len + pos))
+      s += rdata.slice(pos, +(len + pos))
       pos = len + pos
       len = rdata.charCodeAt(pos + 1)
     }

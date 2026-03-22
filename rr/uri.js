@@ -29,18 +29,18 @@ export default class URI extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // URI via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 256) this.throwHelp('URI fromTinydns, invalid n')
 
     return new URI({
       type: 'URI',
       owner: this.fullyQualify(fqdn),
-      priority: TINYDNS.octalToUInt16(rdata.substring(0, 8)),
-      weight: TINYDNS.octalToUInt16(rdata.substring(8, 16)),
-      target: TINYDNS.octalToChar(rdata.substring(16)),
+      priority: TINYDNS.octalToUInt16(rdata.slice(0, 8)),
+      weight: TINYDNS.octalToUInt16(rdata.slice(8, 16)),
+      target: TINYDNS.octalToChar(rdata.slice(16)),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc.trim() || '',
+      location: loc?.trim() || '',
     })
   }
 

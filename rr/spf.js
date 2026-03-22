@@ -33,7 +33,7 @@ export default class SPF extends TXT {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // SPF via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 99) this.throwHelp('SPF fromTinydns, invalid n')
 
     return new SPF({
@@ -42,7 +42,7 @@ export default class SPF extends TXT {
       data: TINYDNS.octalToChar(rdata),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

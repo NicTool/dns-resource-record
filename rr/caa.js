@@ -93,15 +93,15 @@ export default class CAA extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 257) this.throwHelp('CAA fromTinydns, invalid n')
 
-    const flags = TINYDNS.octalToUInt8(rdata.substring(0, 4))
-    const taglen = TINYDNS.octalToUInt8(rdata.substring(4, 8))
+    const flags = TINYDNS.octalToUInt8(rdata.slice(0, 4))
+    const taglen = TINYDNS.octalToUInt8(rdata.slice(4, 8))
 
-    const unescaped = TINYDNS.octalToChar(rdata.substring(8))
-    const tag = unescaped.substring(0, taglen)
-    const fingerprint = unescaped.substring(taglen)
+    const unescaped = TINYDNS.octalToChar(rdata.slice(8))
+    const tag = unescaped.slice(0, taglen)
+    const fingerprint = unescaped.slice(taglen)
 
     return new CAA({
       owner: this.fullyQualify(fqdn),
@@ -111,7 +111,7 @@ export default class CAA extends RR {
       tag,
       value: fingerprint,
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

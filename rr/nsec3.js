@@ -98,7 +98,7 @@ export default class NSEC3 extends RR {
   }
 
   fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -125,7 +125,7 @@ export default class NSEC3 extends RR {
       'next hashed owner name': nextHashedOwnerName,
       'type bit maps': typeBitMaps,
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

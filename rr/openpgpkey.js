@@ -43,12 +43,12 @@ export default class OPENPGPKEY extends RR {
     })
   }
 
-  fromTinydns(opts) {
+  fromTinydns({ rd, owner, ttl }) {
     return new OPENPGPKEY({
-      owner: this.fullyQualify(opts.owner),
-      ttl: parseInt(opts.ttl, 10),
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
       type: 'OPENPGPKEY',
-      'public key': Buffer.from(TINYDNS.unescapeOctal(opts.rd), 'base64').toString('utf-8'),
+      'public key': Buffer.from(TINYDNS.unescapeOctal(rd), 'base64').toString('utf-8'),
     })
   }
 
