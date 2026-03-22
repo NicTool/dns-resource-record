@@ -5,7 +5,7 @@ Notable changes to this project are documented in this file.
 #### Unreleased
 
 - style(es6): use argument expansion / destructured parameters
-- feat(fromTinydns): added to wks
+- feat(fromTinydns): added to rp, wks
 - fix(NAPTR): replace polynomial regexp
 - doc(README): updated RR table completion status
 - style(es6): substring -> slice

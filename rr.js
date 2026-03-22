@@ -91,7 +91,7 @@ export default class RR extends Map {
   }
 
   setTtl(t) {
-    if (t === undefined) t = this?.default?.ttl
+    t = t ?? this.default?.ttl
     if (t === undefined) {
       if (['SOA', 'SSHPF'].includes(this.get('type'))) return
       this.throwHelp('TTL is required, no default available')
@@ -157,7 +157,7 @@ export default class RR extends Map {
   }
 
   getEmpty(prop) {
-    return this.get(prop) === undefined ? '' : this.get(prop)
+    return this.get(prop) ?? ''
   }
 
   getComment(prop) {
