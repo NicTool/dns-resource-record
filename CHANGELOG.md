@@ -6,6 +6,9 @@ Notable changes to this project are documented in this file.
 
 ### [1.4.0] - 2026-03-21
 
+- style(es6): substring -> slice
+- style(es6): use more trim()
+
 #### Changed
 
 - feat(toBind): added to nsec3param, rrsig

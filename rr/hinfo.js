@@ -58,7 +58,7 @@ export default class HINFO extends RR {
 
   fromTinydns(opts) {
     // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, , rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, , rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     const [cpu, os] = [...TINYDNS.unpackString(rdata)]
 
     return new this.constructor({
@@ -68,7 +68,7 @@ export default class HINFO extends RR {
       cpu,
       os,
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

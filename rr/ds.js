@@ -80,7 +80,7 @@ export default class DS extends RR {
   }
 
   fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -94,7 +94,7 @@ export default class DS extends RR {
       'digest type': binRdata.readUInt8(3),
       digest: binRdata.slice(4).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

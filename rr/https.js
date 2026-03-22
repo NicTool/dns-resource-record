@@ -65,11 +65,12 @@ export default class HTTPS extends RR {
       this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
     }
 
-    const priority = TINYDNS.octalToUInt16(rd.substring(0, 6))
+    const priority = TINYDNS.octalToUInt16(rd.slice(0, 6))
     const remaining = rd.slice(6)
 
     const [targetName, consumed] = TINYDNS.unpackDomainName(remaining)
-    const params = TINYDNS.escapeOctal(remaining.slice(consumed))
+
+    const params = TINYDNS.unescapeOctal(remaining.slice(consumed))
 
     return new HTTPS({
       owner: this.fullyQualify(owner),

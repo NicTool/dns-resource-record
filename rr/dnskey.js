@@ -113,7 +113,7 @@ export default class DNSKEY extends RR {
   }
 
   fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -127,7 +127,7 @@ export default class DNSKEY extends RR {
       algorithm: bytes.readUInt8(3),
       publickey: bytes.slice(4).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

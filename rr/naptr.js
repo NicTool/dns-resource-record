@@ -64,7 +64,7 @@ export default class NAPTR extends RR {
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
 
     const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -74,7 +74,7 @@ export default class NAPTR extends RR {
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
       order: binRdata.readUInt16BE(0, 2),
       preference: binRdata.readUInt16BE(2, 4),
     }

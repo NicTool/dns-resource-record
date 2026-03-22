@@ -44,7 +44,7 @@ export default class NXT extends RR {
   /******  IMPORTERS   *******/
 
   fromTinydns(opts) {
-    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 30) this.throwHelp('NXT fromTinydns, invalid n')
 
     const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -57,7 +57,7 @@ export default class NXT extends RR {
       'next domain': nextDomain,
       'type bit map': binaryRdata.slice(binaryLen).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

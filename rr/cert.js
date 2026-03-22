@@ -76,7 +76,7 @@ export default class CERT extends RR {
   /******  IMPORTERS   *******/
 
   fromTinydns(opts) {
-    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [owner, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
@@ -106,7 +106,7 @@ export default class CERT extends RR {
       algorithm: bytes.readUInt8(4),
       certificate: bytes.slice(5).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

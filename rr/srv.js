@@ -60,16 +60,16 @@ export default class SRV extends RR {
 
     if (str[0] === 'S') {
       // patched tinydns with S records
-      ;[fqdn, addr, port, pri, weight, ttl, ts, loc] = str.substring(1).split(':')
+      ;[fqdn, addr, port, pri, weight, ttl, ts, loc] = str.slice(1).split(':')
     } else {
       // tinydns generic record format
-      ;[fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
+      ;[fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
       if (n != 33) this.throwHelp('SRV fromTinydns: invalid n')
 
-      pri = TINYDNS.octalToUInt16(rdata.substring(0, 8))
-      weight = TINYDNS.octalToUInt16(rdata.substring(8, 16))
-      port = TINYDNS.octalToUInt16(rdata.substring(16, 24))
-      addr = TINYDNS.unpackDomainName(rdata.substring(24))[0]
+      pri = TINYDNS.octalToUInt16(rdata.slice(0, 8))
+      weight = TINYDNS.octalToUInt16(rdata.slice(8, 16))
+      port = TINYDNS.octalToUInt16(rdata.slice(16, 24))
+      addr = TINYDNS.unpackDomainName(rdata.slice(24))[0]
     }
 
     return new SRV({
@@ -81,7 +81,7 @@ export default class SRV extends RR {
       port: parseInt(port, 10),
       target: this.fullyQualify(addr),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

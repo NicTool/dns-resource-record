@@ -92,7 +92,7 @@ export default class SMIMEA extends RR {
   }
 
   fromTinydns(opts) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
     return new SMIMEA({
@@ -104,7 +104,7 @@ export default class SMIMEA extends RR {
       'matching type': binaryRdata.readUInt8(2),
       'certificate association data': binaryRdata.slice(3).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

@@ -115,31 +115,31 @@ export default class IPSECKEY extends RR {
   }
 
   fromTinydns(opts) {
-    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const [fqdn, n, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n')
 
-    const precedence = TINYDNS.octalToUInt8(rdata.substring(0, 4))
-    const gwType = TINYDNS.octalToUInt8(rdata.substring(4, 8))
-    const algorithm = TINYDNS.octalToUInt8(rdata.substring(8, 12))
+    const precedence = TINYDNS.octalToUInt8(rdata.slice(0, 4))
+    const gwType = TINYDNS.octalToUInt8(rdata.slice(4, 8))
+    const algorithm = TINYDNS.octalToUInt8(rdata.slice(8, 12))
 
     let len, gateway, octalKey
 
     switch (gwType) {
       case 0: // no gateway
-        gateway = rdata.substring(12, 13) // should always be: '.'
-        octalKey = rdata.substring(13)
+        gateway = rdata.slice(12, 13) // should always be: '.'
+        octalKey = rdata.slice(13)
         break
       case 1: // 4-byte IPv4 address
-        gateway = TINYDNS.octalToIPv4(rdata.substring(12, 28))
-        octalKey = rdata.substring(28)
+        gateway = TINYDNS.octalToIPv4(rdata.slice(12, 28))
+        octalKey = rdata.slice(28)
         break
       case 2: // 16-byte IPv6
-        gateway = TINYDNS.octalToHex(rdata.substring(12, 76))
-        octalKey = rdata.substring(76)
+        gateway = TINYDNS.octalToHex(rdata.slice(12, 76))
+        octalKey = rdata.slice(76)
         break
       case 3: // wire encoded domain name
-        ;[gateway, len] = TINYDNS.unpackDomainName(rdata.substring(12))
-        octalKey = rdata.substring(12 + len)
+        ;[gateway, len] = TINYDNS.unpackDomainName(rdata.slice(12))
+        octalKey = rdata.slice(12 + len)
         break
     }
 
@@ -153,7 +153,7 @@ export default class IPSECKEY extends RR {
       gateway,
       publickey: TINYDNS.octalToBase64(octalKey),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 

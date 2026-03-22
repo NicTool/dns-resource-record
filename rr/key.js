@@ -80,27 +80,20 @@ export default class KEY extends RR {
     })
   }
 
-  fromTinydns(opts) {
-    const rd = opts.rd
-
+  fromTinydns({ rd, owner, ttl }) {
     // RDATA format: Flags (6 octal chars) + Protocol (3 octal chars) + Algorithm (3 octal chars) + Public Key (escaped data)
     if (rd.length < 12) {
       this.throwHelp(`KEY: RDATA too short: ${rd}`)
     }
 
-    const flags = TINYDNS.octalToUInt16(rd.substring(0, 6))
-    const protocol = TINYDNS.octalToUInt8(rd.substring(6, 9))
-    const algorithm = TINYDNS.octalToUInt8(rd.substring(9, 12))
-    const publicKeyData = TINYDNS.unescapeOctal(rd.substring(12))
-
     return new KEY({
-      owner: this.fullyQualify(opts.owner),
-      ttl: parseInt(opts.ttl, 10),
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
       type: 'KEY',
-      flags: flags,
-      protocol: protocol,
-      algorithm: algorithm,
-      publickey: publicKeyData,
+      flags: TINYDNS.octalToUInt16(rd.slice(0, 6)),
+      protocol: TINYDNS.octalToUInt8(rd.slice(6, 9)),
+      algorithm: TINYDNS.octalToUInt8(rd.slice(9, 12)),
+      publickey: TINYDNS.unescapeOctal(rd.slice(12)),
     })
   }
 

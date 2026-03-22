@@ -52,7 +52,7 @@ export default class AAAA extends RR {
     switch (str[0]) {
       case ':':
         // GENERIC  =>  :fqdn:28:rdata:ttl:timestamp:lo
-        ;[fqdn, n, rdata, ttl, ts, loc] = str.substring(1).split(':')
+        ;[fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
         if (n != 28) this.throwHelp('AAAA fromTinydns, invalid n')
         ip = TINYDNS.octalToHex(rdata)
           .match(/([0-9a-fA-F]{4})/g)
@@ -62,7 +62,7 @@ export default class AAAA extends RR {
       case '6':
         // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
         // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
-        ;[fqdn, rdata, ttl, ts, loc] = str.substring(1).split(':')
+        ;[fqdn, rdata, ttl, ts, loc] = str.slice(1).split(':')
         ip = rdata.match(/(.{4})/g).join(':')
         break
     }
@@ -73,7 +73,7 @@ export default class AAAA extends RR {
       type: 'AAAA',
       address: ip,
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc?.trim() || '',
     })
   }
 
