@@ -79,8 +79,8 @@ describe('OPENPGPKEY record', function () {
   base.getTypeId(OPENPGPKEY, 61)
 
   base.toBind(OPENPGPKEY, validRecords)
-  // base.toTinydns(OPENPGPKEY, validRecords)
   base.toTinydns(OPENPGPKEY, validRecords)
 
+  base.fromBind(OPENPGPKEY, validRecords)
   base.fromTinydns(OPENPGPKEY, validRecords)
 })

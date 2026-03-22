@@ -103,9 +103,10 @@ export default class NAPTR extends RR {
   }
 
   fromBind({ bindline }) {
-    const naptrPattern = /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/;
+    const regex =
+      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/
 
-    const match = bindline.trim().match(naptrPattern)
+    const match = bindline.trim().match(regex)
 
     if (!match) {
       throw new Error(`Invalid NAPTR BIND line: ${bindline}`)

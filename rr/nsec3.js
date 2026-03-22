@@ -156,7 +156,7 @@ export default class NSEC3 extends RR {
   }
 }
 
-function parseNSEC3Buffer (bytes) {
+function parseNSEC3Buffer(bytes) {
   // bytes is a Buffer containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
   // Start after the first 4 bytes (hash alg, flags, iterations)
   const rest = bytes.slice(4).toString('utf8')

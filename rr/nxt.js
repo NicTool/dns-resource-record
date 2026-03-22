@@ -45,7 +45,7 @@ export default class NXT extends RR {
 
   fromTinydns({ tinyline }) {
     const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 30) this.throwHelp('NXT fromTinydns, invalid n')
+    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('NXT fromTinydns, invalid n')
 
     const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
     const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)

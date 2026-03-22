@@ -1,9 +1,8 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
-
+import { describe } from 'node:test'
 import * as base from './base.js'
-
 import CAA from '../rr/caa.js'
+
+const defaults = { class: 'IN', ttl: 3600, type: 'CAA' }
 
 const validRecords = [
   {
@@ -14,7 +13,7 @@ const validRecords = [
     flags: 0,
     tag: 'issue',
     value: 'http://letsencrypt.org',
-    testB: `ns1.example.com.\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n`,
+    testB: 'ns1.example.com.\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n',
     testT: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
   },
   {
@@ -25,7 +24,7 @@ const validRecords = [
     flags: 0,
     tag: 'issue',
     value: 'mailto:lets-crypt.org',
-    testB: `ns2.example.com.\t3600\tIN\tCAA\t0\tissue\t"mailto:lets-crypt.org"\n`,
+    testB: 'ns2.example.com.\t3600\tIN\tCAA\t0\tissue\t"mailto:lets-crypt.org"\n',
     testT: ':ns2.example.com:257:\\000\\005issue"mailto\\072lets-crypt.org":3600::\n',
   },
   {
@@ -52,34 +51,34 @@ const validRecords = [
 
 const invalidRecords = [
   {
+    ...defaults,
     owner: 'example.com.',
-    type: 'CAA',
     flags: 128,
     tag: 'iodef',
     value: 'letsencrypt.org', // missing iodef prefix
-    msg: /RFC/,
+    msg: /prefix/,
   },
   {
+    ...defaults,
     owner: 'example.com.',
-    type: 'CAA',
     flags: 128,
     tag: 'invalid', // invalid
     value: 'http://letsencrypt.org',
-    msg: /RFC/,
+    msg: /not recognized/,
   },
   {
+    ...defaults,
     owner: 'example.com.',
-    type: 'CAA',
     flags: 15, // invalid
     tag: 'issue',
     value: 'http://letsencrypt.org',
-    msg: /RFC/,
+    msg: /not recognized/,
   },
 ]
 
 describe('CAA record', function () {
   base.valid(CAA, validRecords)
-  base.invalid(CAA, invalidRecords, { ttl: 3600 })
+  base.invalid(CAA, invalidRecords)
 
   base.getDescription(CAA)
   base.getRFCs(CAA, validRecords[0])
@@ -91,14 +90,4 @@ describe('CAA record', function () {
 
   base.fromBind(CAA, validRecords)
   base.fromTinydns(CAA, validRecords)
-
-  for (const val of validRecords) {
-    it(`imports tinydns CAA (generic) record`, async function () {
-      const r = new CAA({ tinyline: val.testT })
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of ['owner', 'flags', 'tag', 'value', 'ttl']) {
-        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
 })

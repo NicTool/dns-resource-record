@@ -95,15 +95,16 @@ export default class DNSKEY extends RR {
 
   fromBind({ bindline }) {
     // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const regex = /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>DNSKEY)\s+(?<flags>\d+)\s+(?<protocol>\d+)\s+(?<algorithm>\d+)\s+(?<publickey>\S.*)$/i;
+    const regex =
+      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>DNSKEY)\s+(?<flags>\d+)\s+(?<protocol>\d+)\s+(?<algorithm>\d+)\s+(?<publickey>\S.*)$/i
 
-    const match = bindline.trim().match(regex);
+    const match = bindline.trim().match(regex)
 
     if (!match) {
-      this.throwHelp(`unable to parse DNSKEY: ${bindline}`);
+      this.throwHelp(`unable to parse DNSKEY: ${bindline}`)
     }
 
-    const { owner, ttl, c, type, flags, protocol, algorithm, publickey} = match.groups
+    const { owner, ttl, c, type, flags, protocol, algorithm, publickey } = match.groups
 
     return new DNSKEY({
       owner,

@@ -12,7 +12,7 @@ const validRecords = [
     'next domain': 'medium.example.com.',
     'type bit map': 'A SIG NXT',
     testB: `big.example.com.\t86400\tIN\tNXT\tmedium.example.com.\tA SIG NXT\n`,
-    // testT        : '\n',
+    testT: ':big.example.com:30:\\006medium\\007example\\003com\\000A SIG NXT:86400::\n',
   },
 ]
 
@@ -31,7 +31,7 @@ describe('NXT record', function () {
   base.getTypeId(NXT, 30)
 
   base.toBind(NXT, validRecords)
-  // base.toTinydns(NXT, validRecords)
+  base.toTinydns(NXT, validRecords)
 
   base.fromBind(NXT, validRecords)
   base.fromTinydns(NXT, validRecords)

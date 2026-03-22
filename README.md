@@ -202,7 +202,7 @@ PRs are welcome, especially PRs with tests.
 |    **HIP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |   **HTTPS**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |  **IPSECKEY**  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **KEY**     |                    | :white_check_mark: |                    | :white_check_mark: |
+|    **KEY**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **KX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **LOC**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **MX**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -215,8 +215,8 @@ PRs are welcome, especially PRs with tests.
 | **OPENPGPKEY** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **PTR**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |     **RP**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|   **RRSIG**    | :white_check_mark: |                    |                    |                    |
-|    **SIG**     |                    |                    |                    |                    |
+|   **RRSIG**    |                    | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|    **SIG**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |   **SMIMEA**   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SOA**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SPF**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -224,7 +224,7 @@ PRs are welcome, especially PRs with tests.
 |   **SSHFP**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **SVCB**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **TLSA**    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|    **TSIG**    |                    |                    |                    |                    |
+|    **TSIG**    | :white_check_mark: | :white_check_mark: | :white_check_mark: |                    |
 |    **TXT**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **URI**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |    **WKS**     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
