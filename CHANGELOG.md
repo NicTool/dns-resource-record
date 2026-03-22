@@ -4,7 +4,7 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-- style(es6): use argument expansion
+- style(es6): use argument expansion / destructured parameters
 - feat(fromTinydns): added to wks
 - fix(NAPTR): replace polynomial regexp
 - doc(README): updated RR table completion status
