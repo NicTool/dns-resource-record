@@ -47,7 +47,24 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    ...common,
+    owner: 'mail.example.com.',
+    algorithm: 256,
+    fptype: 1,
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    msg: /SSHFP algorithm must be a 8-bit integer/i,
+  },
+  {
+    ...common,
+    owner: 'mail.example.com.',
+    algorithm: 1,
+    fptype: 999,
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    msg: /SSHFP fptype must be a 8-bit integer/i,
+  },
+]
 
 describe('SSHFP record', function () {
   base.valid(SSHFP, validRecords)

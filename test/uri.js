@@ -30,7 +30,17 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    class: 'IN',
+    owner: 'www.example.com.',
+    type: 'URI',
+    priority: 1,
+    weight: 0,
+    ttl: 3600,
+    msg: /target is required/i,
+  },
+]
 
 describe('URI record', function () {
   base.valid(URI, validRecords)

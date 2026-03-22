@@ -40,6 +40,21 @@ export default class DHCID extends RR {
   }
 
   /******  IMPORTERS   *******/
+  fromTinydns({ tinyline }) {
+    // DHCID via generic, :fqdn:49:rdata:ttl:timestamp:lo
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
+    if (n != 49) this.throwHelp('DHCID fromTinydns, invalid n')
+
+    return new DHCID({
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'DHCID',
+      data: TINYDNS.octalToBase64(rdata),
+      timestamp: ts,
+      location: loc?.trim() ?? '',
+    })
+  }
+
   fromBind({ bindline }) {
     // host.example.com  3600  IN  DHCID  <base64data>
     const parts = bindline.split(/\s+/)

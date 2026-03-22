@@ -73,21 +73,9 @@ export default class TSIG extends RR {
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {
-    // test.example.com 0 ANY TSIG SAMPLE-ALG.EXAMPLE. 853804800 300 0 0 0
-    const parts = bindline.trim().split(/\s+/)
-
-    if (parts.length < 11) {
-      // this.throwHelp(`unable to parse TSIG (insufficient fields): ${bindline}`)
-    }
-
-    const [owner, ttl, cls, type, alg, time, fudge, mac, origId, error] = parts
-
-    let other = ''
-    const errorIndex = bindline.indexOf(error)
-    if (errorIndex !== -1) {
-      const remainder = bindline.slice(errorIndex + error.length).trim()
-      other = remainder
-    }
+    // owner ttl ANY TSIG alg time fudge mac_size mac original_id error other_len
+    const parts = bindline.trimEnd().split('\t')
+    const [owner, ttl, cls, type, alg, time, fudge, , mac, origId, error] = parts
 
     return new TSIG({
       owner,
@@ -97,11 +85,10 @@ export default class TSIG extends RR {
       'algorithm name': alg,
       'time signed': parseInt(time, 10),
       fudge: parseInt(fudge, 10),
-      'mac size': mac.length,
-      mac: mac === '-' ? '' : mac,
+      mac: mac || '',
       'original id': parseInt(origId, 10),
       error: parseInt(error, 10),
-      other: other,
+      other: '',
     })
   }
 
@@ -109,57 +96,64 @@ export default class TSIG extends RR {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     const algUnpacked = TINYDNS.unpackDomainName(rdata)
-    let pos = algUnpacked[1]
+    const algBinaryLen = algUnpacked[2]
 
-    const consume = (len) => {
-      if (len === 0) return ''
-      const segment = rdata.substring(pos, pos + len)
-      pos += len
-      return segment
-    }
+    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    let bpos = algBinaryLen
 
-    const timeSigned = TINYDNS.octalToUInt32(consume(12))
-    const fudge = TINYDNS.octalToUInt16(consume(6))
-    const macSize = TINYDNS.octalToUInt16(consume(6))
-    const mac = TINYDNS.unescapeOctal(consume(macSize * 3))
-    const originalId = TINYDNS.octalToUInt16(consume(6))
-    const error = TINYDNS.octalToUInt16(consume(6))
-    const otherLen = TINYDNS.octalToUInt16(consume(6))
-    const other = TINYDNS.unescapeOctal(consume(otherLen * 3))
+    const timeSigned = bytes.readUInt32BE(bpos)
+    bpos += 4
+    const fudge = bytes.readUInt16BE(bpos)
+    bpos += 2
+    const macSize = bytes.readUInt16BE(bpos)
+    bpos += 2
+    const mac = macSize > 0 ? bytes.slice(bpos, bpos + macSize).toString('hex') : ''
+    bpos += macSize
+    const originalId = bytes.readUInt16BE(bpos)
+    bpos += 2
+    const error = bytes.readUInt16BE(bpos)
+    bpos += 2
+    const other = bpos < bytes.length ? bytes.slice(bpos).toString() : ''
 
     return new TSIG({
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
+      class: 'ANY',
       type: 'TSIG',
       'algorithm name': algUnpacked[0],
       'time signed': timeSigned,
       fudge,
-      'mac size': macSize,
       mac,
       'original id': originalId,
       error,
       other,
-      ts,
+      timestamp: ts,
       location: loc?.trim() ?? '',
     })
   }
 
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
-    const parts = [
-      this.getFQDN('owner', zone_opts),
-      this.get('ttl'),
-      this.get('class'),
-      this.get('type'),
-      this.get('algorithm name'),
-      this.get('time signed'),
-      this.get('fudge'),
-      this.get('mac') === 0 ? '0' : this.get('mac'),
-      this.get('original id'),
-      this.get('error'),
-    ]
+    const mac = this.get('mac') ?? ''
+    const macSize = mac.length > 0 ? mac.length : ''
     const other = this.get('other') ?? ''
-    return `${parts.join('\t')}${other ? '\t' + other : ''}\n`
+    const otherLen = other.length > 0 ? other.length : 0
+    return (
+      [
+        this.getFQDN('owner', zone_opts),
+        this.get('ttl'),
+        this.get('class'),
+        this.get('type'),
+        this.get('algorithm name'),
+        this.get('time signed'),
+        this.get('fudge'),
+        macSize,
+        mac,
+        this.get('original id'),
+        this.get('error'),
+        otherLen,
+      ].join('\t') + '\n'
+    )
   }
 
   toTinydns() {

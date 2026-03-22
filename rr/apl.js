@@ -42,6 +42,53 @@ export default class APL extends RR {
   }
 
   /******  IMPORTERS   *******/
+  fromTinydns({ tinyline }) {
+    // APL via generic, :fqdn:42:rdata:ttl:timestamp:lo
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
+    if (n != 42) this.throwHelp('APL fromTinydns, invalid n')
+
+    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const items = []
+    let pos = 0
+
+    while (pos < bytes.length) {
+      const afi = bytes.readUInt16BE(pos)
+      pos += 2
+      const prefix = bytes.readUInt8(pos)
+      pos++
+      const adfLenByte = bytes.readUInt8(pos)
+      pos++
+      const neg = (adfLenByte & 0x80) !== 0
+      const addrLen = adfLenByte & 0x7f
+      const addrBytes = bytes.slice(pos, pos + addrLen)
+      pos += addrLen
+
+      let addr
+      if (afi === 1) {
+        const padded = Buffer.alloc(4)
+        addrBytes.copy(padded)
+        addr = [...padded].join('.')
+      } else {
+        const padded = Buffer.alloc(16)
+        addrBytes.copy(padded)
+        const groups = []
+        for (let i = 0; i < 16; i += 2) groups.push(padded.readUInt16BE(i).toString(16).padStart(4, '0'))
+        addr = this.compressIPv6(groups.join(':'))
+      }
+
+      items.push(`${neg ? '!' : ''}${afi}:${addr}/${prefix}`)
+    }
+
+    return new APL({
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'APL',
+      'apl rdata': items.join(' '),
+      timestamp: ts,
+      location: loc?.trim() ?? '',
+    })
+  }
+
   fromBind({ bindline }) {
     // test.example.com  3600  IN  APL  {[!]afi:address/prefix}*
     const parts = bindline.split(/\s+/)

@@ -307,6 +307,51 @@ export default class RR extends Map {
     )
   }
 
+  compressIPv6(val) {
+    //  * RFC 5952
+    //  * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
+    //  * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
+    //  * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
+    //  * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
+    //  * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
+
+    // 4.3 Lowercase and 4.1 remove leading zeros per segment
+    const segments = val
+      .toLowerCase()
+      .split(':')
+      .map((s) => s.replace(/^0+/, '') || '0')
+
+    let bestStart = -1
+    let bestLen = 0
+    let curStart = -1
+    let curLen = 0
+
+    // 4.2.1 & 4.2.3 Find the longest consecutive run of '0'
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i] === '0') {
+        if (curStart === -1) curStart = i
+        curLen++
+        if (curLen > bestLen) {
+          bestLen = curLen
+          bestStart = curStart
+        }
+      } else {
+        curStart = -1
+        curLen = 0
+      }
+    }
+
+    // 4.2.2 Don't shorten a single 16-bit 0 field
+    if (bestLen < 2) {
+      return segments.join(':')
+    }
+
+    const head = segments.slice(0, bestStart).join(':')
+    const tail = segments.slice(bestStart + bestLen).join(':')
+
+    return `${head}::${tail}`
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getRdataFields()
       .map((f) => this.getQuoted(f))

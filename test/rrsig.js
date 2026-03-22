@@ -19,10 +19,42 @@ const validRecords = [
     'key tag': 12345,
     'signers name': 'example.com.',
     signature: 'dummysignature==',
+    testB:
+      'example.com.\t3600\tIN\tRRSIG\t1\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tdummysignature==\n',
+    testT:
+      ':example.com:46:\\000\\001\\005\\001\\000\\000\\016\\020\\144\\021\\306\\000\\144\\021\\306\\000\\060\\071\\007example\\003com\\000dummysignature==:3600::\n',
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    ...defaults,
+    owner: 'example.com.',
+    algorithm: 5,
+    labels: 1,
+    'original ttl': 3600,
+    'signature expiration': 1678886400,
+    'signature inception': 1678886400,
+    'key tag': 12345,
+    'signers name': 'example.com.',
+    signature: 'dummysignature==',
+    msg: /'type covered' is required/i,
+  },
+  {
+    ...defaults,
+    owner: 'example.com.',
+    'type covered': 1,
+    algorithm: 99,
+    labels: 1,
+    'original ttl': 3600,
+    'signature expiration': 1678886400,
+    'signature inception': 1678886400,
+    'key tag': 12345,
+    'signers name': 'example.com.',
+    signature: 'dummysignature==',
+    msg: /algorithm invalid/i,
+  },
+]
 
 describe('RRSIG record', function () {
   base.valid(RRSIG, validRecords)
@@ -43,7 +75,7 @@ describe('RRSIG record', function () {
   ])
   base.getTypeId(RRSIG, 46)
 
-  // base.toBind(RRSIG, validRecords)
+  base.toBind(RRSIG, validRecords)
   base.toTinydns(RRSIG, validRecords)
 
   base.fromBind(RRSIG, validRecords)

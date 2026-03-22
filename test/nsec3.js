@@ -22,7 +22,48 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    flags: 1,
+    iterations: 12,
+    salt: 'aabbccdd',
+    'type bit maps': 'A',
+    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
+    msg: /'hash algorithm' is required/i,
+  },
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    'hash algorithm': 1,
+    iterations: 12,
+    salt: 'aabbccdd',
+    'type bit maps': 'A',
+    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
+    msg: /'flags' is required/i,
+  },
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    'hash algorithm': 1,
+    flags: 1,
+    salt: 'aabbccdd',
+    'type bit maps': 'A',
+    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
+    msg: /'iterations' is required/i,
+  },
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    'hash algorithm': 1,
+    flags: 1,
+    iterations: 12,
+    salt: 'aabbccdd',
+    'type bit maps': 'A',
+    msg: /'next hashed owner name' is required/i,
+  },
+]
 
 describe('NSEC3 record', function () {
   base.valid(NSEC3, validRecords)

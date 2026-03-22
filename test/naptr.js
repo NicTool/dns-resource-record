@@ -21,7 +21,21 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    owner: 'cid.urn.arpa.',
+    ttl: 86400,
+    class: 'IN',
+    type: 'NAPTR',
+    order: 100,
+    preference: 10,
+    flags: 'X',
+    service: '',
+    regexp: '',
+    replacement: '.',
+    msg: /flags are invalid/i,
+  },
+]
 
 describe('NAPTR record', function () {
   base.valid(NAPTR, validRecords)
