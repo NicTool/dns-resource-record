@@ -124,7 +124,7 @@ export default class AAAA extends RR {
     if (delimiter === undefined) delimiter = ':'
 
     const colons = val.match(/:/g)
-    if (colons && colons.length < 7) {
+    if (colons?.length < 7) {
       // console.log(`AAAA: restoring compressed colons`)
       val = val.replace(/::/, ':'.repeat(9 - colons.length))
     }

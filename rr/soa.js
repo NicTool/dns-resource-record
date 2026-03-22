@@ -113,7 +113,7 @@ export default class SOA extends RR {
       type: 'SOA',
       mname: this.fullyQualify(mname),
       rname: this.fullyQualify(rname),
-      serial: parseInt(ser || opts.default?.serial, 10),
+      serial: parseInt(ser ?? this.default?.serial, 10),
       refresh: parseInt(ref, 10) || 16384,
       retry: parseInt(ret, 10) || 2048,
       expire: parseInt(exp, 10) || 1048576,
