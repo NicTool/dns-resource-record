@@ -78,7 +78,7 @@ export default class RP extends RR {
       mbox,
       txt,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

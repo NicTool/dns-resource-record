@@ -74,7 +74,7 @@ export default class NAPTR extends RR {
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
       order: binRdata.readUInt16BE(0, 2),
       preference: binRdata.readUInt16BE(2, 4),
     }

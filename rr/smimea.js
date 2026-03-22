@@ -104,7 +104,7 @@ export default class SMIMEA extends RR {
       'matching type': binaryRdata.readUInt8(2),
       'certificate association data': binaryRdata.slice(3).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

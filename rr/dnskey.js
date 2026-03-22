@@ -132,7 +132,7 @@ export default class DNSKEY extends RR {
       algorithm: bytes.readUInt8(3),
       publickey: bytes.slice(4).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

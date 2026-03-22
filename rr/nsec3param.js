@@ -94,7 +94,7 @@ export default class NSEC3PARAM extends RR {
       iterations: TINYDNS.octalToUInt16(rd.slice(6, 12)),
       salt: TINYDNS.unescapeOctal(rd.slice(12)),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

@@ -153,7 +153,7 @@ export default class IPSECKEY extends RR {
       gateway,
       publickey: TINYDNS.octalToBase64(octalKey),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

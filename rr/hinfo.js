@@ -41,9 +41,9 @@ export default class HINFO extends RR {
   /******  IMPORTERS   *******/
   fromBind({ bindline }) {
     // test.example.com  3600  IN  HINFO   DEC-2060 TOPS20
-    const hinfoPattern = /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>HINFO)\s+(?:"(?<qCPU>[^"]*)"|(?<uCPU>\S+))\s+(?:"(?<qOS>[^"]*)"|(?<uOS>\S+))$/i;
+    const regex = /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>HINFO)\s+(?:"(?<qCPU>[^"]*)"|(?<uCPU>\S+))\s+(?:"(?<qOS>[^"]*)"|(?<uOS>\S+))$/i;
 
-    const match = bindline.trim().match(hinfoPattern)
+    const match = bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse HINFO: ${bindline}`)
 
       const { owner, ttl, class: c, type, qCPU, uCPU, qOS, uOS } = match.groups
@@ -70,7 +70,7 @@ export default class HINFO extends RR {
       cpu,
       os,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

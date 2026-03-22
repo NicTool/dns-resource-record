@@ -40,7 +40,7 @@ export default class URI extends RR {
       target: TINYDNS.octalToChar(rdata.slice(16)),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

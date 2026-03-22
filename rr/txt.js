@@ -46,7 +46,7 @@ export default class TXT extends RR {
       type: 'TXT',
       data: rdata,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

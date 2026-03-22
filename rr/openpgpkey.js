@@ -53,7 +53,7 @@ export default class OPENPGPKEY extends RR {
       type: 'OPENPGPKEY',
       'public key': Buffer.from(TINYDNS.unescapeOctal(rd), 'base64').toString('utf-8'),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

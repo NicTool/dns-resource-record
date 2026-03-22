@@ -96,7 +96,7 @@ export default class KEY extends RR {
       algorithm: TINYDNS.octalToUInt8(rd.slice(9, 12)),
       publickey: TINYDNS.unescapeOctal(rd.slice(12)),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

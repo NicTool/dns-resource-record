@@ -81,7 +81,7 @@ export default class SRV extends RR {
       port: parseInt(port, 10),
       target: this.fullyQualify(addr),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

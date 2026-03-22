@@ -94,7 +94,7 @@ export default class DS extends RR {
       'digest type': binRdata.readUInt8(3),
       digest: binRdata.slice(4).toString(),
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

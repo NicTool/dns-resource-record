@@ -125,7 +125,7 @@ export default class NSEC3 extends RR {
       'next hashed owner name': nextHashedOwnerName,
       'type bit maps': typeBitMaps,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 

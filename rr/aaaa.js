@@ -15,7 +15,7 @@ export default class AAAA extends RR {
   }
 
   getCompressed(val) {
-    return this.compress(val || this.get('address'))
+    return this.compress(val ?? this.get('address'))
   }
 
   getDescription() {
@@ -73,7 +73,7 @@ export default class AAAA extends RR {
       type: 'AAAA',
       address: ip,
       timestamp: ts,
-      location: loc?.trim() || '',
+      location: loc?.trim() ?? '',
     })
   }
 
