@@ -17,8 +17,7 @@ export default class SIG extends RR {
 
   setAlgorithm(val) {
     // a 1 octet Algorithm field
-
-    this.is8bitInt('SIG', 'labels', val)
+    this.is8bitInt('SIG', 'algorithm', val)
 
     this.set('algorithm', val)
   }

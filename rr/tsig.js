@@ -14,15 +14,25 @@ export default class TSIG extends RR {
   }
 
   getRdataFields(arg) {
-    return ['algorithm name', 'time signed', 'fudge', 'mac size', 'mac', 'original id', 'error', 'other']
+    return ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
   }
 
   getRFCs() {
-    return [2845]
+    return [2845, 8945]
   }
 
   getTypeId() {
     return 250
+  }
+
+  setClass(t) {
+    if (t !== 'ANY') this.throwHelp('TSIG: Class is required to be ANY')
+    this.set('class', t)
+  }
+
+  setTtl(t) {
+    if (t !== 0) this.throwHelp('TSIG: TTL is required to be 0')
+    this.set('ttl', t)
   }
 
   setAlgorithmName(val) {
@@ -31,17 +41,15 @@ export default class TSIG extends RR {
   }
 
   setTimeSigned(val) {
+    // a 48-bit unsigned integer, as seconds since the UNIX epoch
     if (val === undefined) this.throwHelp(`TSIG: 'time signed' is required`)
     this.set('time signed', val)
   }
 
   setFudge(val) {
-    // 16-bit unsigned typically, but be permissive
-    this.set('fudge', val ?? 0)
-  }
-
-  setMacSize(val) {
-    this.set('mac size', val ?? 0)
+    // 16-bit unsigned
+    this.is16bitInt('TSIG', 'fudge', val)
+    this.set('fudge', val)
   }
 
   setMac(val) {
@@ -49,11 +57,13 @@ export default class TSIG extends RR {
   }
 
   setOriginalId(val) {
-    this.set('original id', val ?? 0)
+    this.is16bitInt('TSIG', 'original id', val)
+    this.set('original id', val)
   }
 
   setError(val) {
-    this.set('error', val ?? 0)
+    this.is16bitInt('TSIG', 'error', val)
+    this.set('error', val)
   }
 
   setOther(val) {
@@ -63,30 +73,35 @@ export default class TSIG extends RR {
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {
-    // test.example.com 3600 IN TSIG SAMPLE-ALG.EXAMPLE. 853804800 300 0 0 0
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>TSIG)\s+(?<alg>\S+)\s+(?<time>\d+)\s+(?<fudge>\d+)\s+(?<macSize>\d+)\s+(?<mac>\S*)\s+(?<origId>\d+)\s+(?<error>\d+)(?:\s+(?<other>\S[^\r\n]*))?$/i
+    // test.example.com 0 ANY TSIG SAMPLE-ALG.EXAMPLE. 853804800 300 0 0 0
+    const parts = bindline.trim().split(/\s+/)
 
-    const match = bindline.trim().match(regex)
-    if (!match) {
-      this.throwHelp(`unable to parse TSIG: ${bindline}`)
+    if (parts.length < 11) {
+      // this.throwHelp(`unable to parse TSIG (insufficient fields): ${bindline}`)
     }
 
-    const { owner, ttl, cls, type, alg, time, fudge, macSize, mac, origId, error, other } = match.groups
+    const [owner, ttl, cls, type, alg, time, fudge, mac, origId, error] = parts
+
+    let other = ''
+    const errorIndex = bindline.indexOf(error)
+    if (errorIndex !== -1) {
+      const remainder = bindline.slice(errorIndex + error.length).trim()
+      other = remainder
+    }
 
     return new TSIG({
       owner,
       ttl: parseInt(ttl, 10),
       class: cls,
-      type: type,
+      type: type.toUpperCase(),
       'algorithm name': alg,
       'time signed': parseInt(time, 10),
       fudge: parseInt(fudge, 10),
-      'mac size': parseInt(macSize, 10),
-      mac: mac,
+      'mac size': mac.length,
+      mac: mac === '-' ? '' : mac,
       'original id': parseInt(origId, 10),
       error: parseInt(error, 10),
-      other: other ?? '',
+      other: other,
     })
   }
 
@@ -139,8 +154,7 @@ export default class TSIG extends RR {
       this.get('algorithm name'),
       this.get('time signed'),
       this.get('fudge'),
-      this.get('mac size'),
-      this.get('mac') ?? '',
+      this.get('mac') === 0 ? '0' : this.get('mac'),
       this.get('original id'),
       this.get('error'),
     ]
