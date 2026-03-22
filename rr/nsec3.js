@@ -93,7 +93,7 @@ export default class NSEC3 extends RR {
       iterations: parseInt(iterations, 10),
       salt,
       'next hashed owner name': rdata.split(/\s+/)[0],
-      'type bit maps': rdata.split(/\s+/).slice(1).join('\t'),
+      'type bit maps': rdata.split(/\s+/).slice(1).join('	'),
     })
   }
 
@@ -103,16 +103,27 @@ export default class NSEC3 extends RR {
 
     const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
 
+    const hashAlgorithm = bytes.readUInt8(0)
+    const flags = bytes.readUInt8(1)
+    const iterations = bytes.readUInt16BE(2)
+
+    // The remaining bytes in the buffer contain:
+    // Salt Length (1 octet)
+    // Salt (variable length based on Salt Length)
+    // Next Hashed Owner Name (variable length)
+    // Type Bit Maps (variable length)
+    const { salt, nextHashedOwnerName, typeBitMaps } = TINYDNS.parseNSEC3Buffer(bytes)
+
     return new NSEC3({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'NSEC3',
-      'hash algorithm': bytes.readUInt8(0),
-      flags: bytes.readUInt8(1),
-      iterations: bytes.readUInt16BE(2),
-      // salt                    : ,
-      // 'next hashed owner name': ,
-      // 'type bit maps'         : ,
+      'hash algorithm': hashAlgorithm,
+      flags: flags,
+      iterations: iterations,
+      salt: salt,
+      'next hashed owner name': nextHashedOwnerName,
+      'type bit maps': typeBitMaps,
       timestamp: ts,
       location: loc !== '' && loc !== '\n' ? loc : '',
     })
@@ -121,13 +132,14 @@ export default class NSEC3 extends RR {
   /******  EXPORTERS   *******/
 
   toBind(zone_opts) {
-    return `${this.getFQDN('owner', zone_opts)}\t${this.get('ttl')}\t${this.get('class')}\tNSEC3${this.getRdataFields()
+    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	NSEC3${this.getRdataFields()
       .slice(0, 4)
-      .map((f) => '\t' + this.get(f))
-      .join('')}\t(${this.getRdataFields()
+      .map((f) => '	' + this.get(f))
+      .join('')}	(${this.getRdataFields()
       .slice(4)
       .map((f) => this.get(f))
-      .join('\t')})\n`
+      .join('	')})
+`
   }
 
   toTinydns() {

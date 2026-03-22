@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import NSEC3PARAM from '../rr/nsec3param.js'
@@ -15,9 +16,9 @@ describe('NSEC3PARAM record', function () {
   base.getFields(NSEC3PARAM, ['hash algorithm', 'flags', 'iterations', 'salt'])
   base.getTypeId(NSEC3PARAM, 51)
 
-  // base.toBind(NSEC3PARAM, validRecords)
-  // base.toTinydns(NSEC3PARAM, validRecords)
+  base.toBind(NSEC3PARAM, validRecords)
+  base.toTinydns(NSEC3PARAM, validRecords)
 
-  // base.fromBind(NSEC3PARAM, validRecords)
-  // base.fromTinydns(NSEC3PARAM, validRecords)
+  base.fromBind(NSEC3PARAM, validRecords)
+  base.fromTinydns(NSEC3PARAM, validRecords)
 })

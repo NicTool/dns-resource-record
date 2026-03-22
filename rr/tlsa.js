@@ -111,7 +111,7 @@ export default class TLSA extends RR {
       'matching type': bytes.readUInt8(2),
       'certificate association data': bytes.slice(3).toString(),
       timestamp: ts,
-      location: loc !== '' && loc !== '\n' ? loc : '',
+      location: loc.trim() || '',
     })
   }
 

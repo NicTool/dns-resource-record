@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import NAPTR from '../rr/naptr.js'

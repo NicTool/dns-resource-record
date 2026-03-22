@@ -82,7 +82,7 @@ export default class NAPTR extends RR {
     let idx = 4
     const flagsLength = binRdata.readUInt8(idx)
     idx++
-    rec.flags = binRdata.slice(idx, flagsLength).toString()
+    rec.flags = binRdata.slice(idx, idx + flagsLength).toString()
     idx += flagsLength
 
     const serviceLen = binRdata.readUInt8(idx)

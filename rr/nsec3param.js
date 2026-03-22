@@ -1,4 +1,5 @@
 import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NSEC3PARAM extends RR {
   constructor(opts) {
@@ -62,21 +63,57 @@ export default class NSEC3PARAM extends RR {
   /******  IMPORTERS   *******/
 
   fromBind(str) {
-    // test.example.com  3600  IN  NSEC3PARAM
-    const [owner, ttl, c, type] = str.split(/\s+/)
+    // test.example.com  3600  IN  NSEC3PARAM  <hash> <flags> <iterations> <salt>
+    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
+    const [owner, ttl, c, type, ha, flags, iterations, salt] = str.split(/\s+/)
     return new NSEC3PARAM({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      'hash algorithm': '',
-      flags: '',
-      iterations: '',
-      salt: '',
-      'next hashed owner name': '',
-      'type bit maps': '',
+      'hash algorithm': parseInt(ha, 10),
+      flags: parseInt(flags, 10),
+      iterations: parseInt(iterations, 10),
+      salt: salt,
+    })
+  }
+
+  fromTinydns(opts) {
+    const rd = opts.rd
+
+    // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
+    if (rd.length < 12) {
+      this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
+    }
+
+    return new NSEC3PARAM({
+      owner: this.fullyQualify(opts.owner),
+      ttl: parseInt(opts.ttl, 10),
+      type: 'NSEC3PARAM',
+      'hash algorithm': TINYDNS.octalToUInt8(rd.substring(0, 3)),
+      flags: TINYDNS.octalToUInt8(rd.substring(3, 6)),
+      iterations: TINYDNS.octalToUInt16(rd.substring(6, 12)),
+      salt: TINYDNS.unescapeOctal(rd.substring(12)),
     })
   }
 
   /******  EXPORTERS   *******/
+
+  toBind(zone_opts) {
+    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
+    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	NSEC3PARAM	${this.get('hash algorithm')}	${this.get('flags')}	${this.get('iterations')}	${this.get('salt')}
+`
+  }
+
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    let rdata = ''
+    rdata += TINYDNS.UInt8toOctal(this.get('hash algorithm'))
+    rdata += TINYDNS.UInt8toOctal(this.get('flags'))
+    rdata += TINYDNS.UInt16toOctal(this.get('iterations'))
+    rdata += TINYDNS.escapeOctal(dataRe, this.get('salt'))
+
+    return this.getTinydnsGeneric(rdata)
+  }
 }

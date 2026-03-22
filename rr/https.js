@@ -60,6 +60,27 @@ export default class HTTPS extends RR {
     })
   }
 
+  fromTinydns({ rd, owner, ttl }) {
+    if (rd.length < 6) {
+      this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
+    }
+
+    const priority = TINYDNS.octalToUInt16(rd.substring(0, 6))
+    const remaining = rd.slice(6)
+
+    const [targetName, consumed] = TINYDNS.unpackDomainName(remaining)
+    const params = TINYDNS.escapeOctal(remaining.slice(consumed))
+
+    return new HTTPS({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'HTTPS',
+      priority,
+      'target name': targetName,
+      params,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {

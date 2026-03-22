@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import HIP from '../rr/hip.js'

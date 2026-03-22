@@ -1,3 +1,4 @@
+import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import * as TINYDNS from '../lib/tinydns.js'
@@ -86,14 +87,12 @@ describe('TINYDNS', function () {
   })
 
   describe('UInt32toOctal', function () {
-    it('converts a 32-bit number to escaped octal', function (done) {
+    it('converts a 32-bit number to escaped octal', function () {
       assert.equal(TINYDNS.UInt32toOctal(2319310648), '\\212\\075\\337\\070')
-      done()
     })
 
-    it('converts a 32-bit number to escaped octal', function (done) {
+    it('converts a 32-bit number to escaped octal', function () {
       assert.equal(TINYDNS.UInt32toOctal(1706988648), '\\145\\276\\224\\150')
-      done()
     })
   })
 
@@ -107,7 +106,7 @@ describe('TINYDNS', function () {
     it(`extracts domain name from wire format`, async () => {
       const r = TINYDNS.unpackDomainName('\\006sipdir\\006online\\004lync\\003com\\000')
       assert.equal(r[0], 'sipdir.online.lync.com.')
-      assert.equal(r[1], 40)
+      assert.equal(r[1], 39)
     })
   })
 

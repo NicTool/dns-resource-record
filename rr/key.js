@@ -1,4 +1,5 @@
 import RR from '../rr.js'
+import * as TINYDNS from '../lib/tinydns.js'
 
 export default class KEY extends RR {
   constructor(opts) {
@@ -79,5 +80,39 @@ export default class KEY extends RR {
     })
   }
 
+  fromTinydns(opts) {
+    const rd = opts.rd
+
+    // RDATA format: Flags (6 octal chars) + Protocol (3 octal chars) + Algorithm (3 octal chars) + Public Key (escaped data)
+    if (rd.length < 12) {
+      this.throwHelp(`KEY: RDATA too short: ${rd}`)
+    }
+
+    const flags = TINYDNS.octalToUInt16(rd.substring(0, 6))
+    const protocol = TINYDNS.octalToUInt8(rd.substring(6, 9))
+    const algorithm = TINYDNS.octalToUInt8(rd.substring(9, 12))
+    const publicKeyData = TINYDNS.unescapeOctal(rd.substring(12))
+
+    return new KEY({
+      owner: this.fullyQualify(opts.owner),
+      ttl: parseInt(opts.ttl, 10),
+      type: 'KEY',
+      flags: flags,
+      protocol: protocol,
+      algorithm: algorithm,
+      publickey: publicKeyData,
+    })
+  }
+
   /******  EXPORTERS   *******/
+  toTinydns() {
+    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt16toOctal(this.get('flags')) +
+        TINYDNS.UInt8toOctal(this.get('protocol')) +
+        TINYDNS.UInt8toOctal(this.get('algorithm')) +
+        TINYDNS.escapeOctal(dataRe, this.get('publickey')),
+    )
+  }
 }

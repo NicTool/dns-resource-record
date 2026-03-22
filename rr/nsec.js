@@ -43,6 +43,22 @@ export default class NSEC extends RR {
 
   /******  IMPORTERS   *******/
 
+  fromTinydns(opts) {
+    const [owner, _typeId, rdata, ttl, ts, loc] = opts.tinyline.substring(1).split(':')
+    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
+
+    return new NSEC({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'NSEC',
+      'next domain': nextDomain,
+      'type bit maps': binaryRdata.slice(binaryLen).toString(),
+      timestamp: ts,
+      location: loc !== '' && loc !== '\n' ? loc : '',
+    })
+  }
+
   fromBind(opts) {
     // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
     const [owner, ttl, c, type, next] = opts.bindline.split(/\s+/)

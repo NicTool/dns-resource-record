@@ -107,3 +107,5 @@ package-lock.json
 ignore/
 out
 config.yml
+GEMINI.md
+.release/

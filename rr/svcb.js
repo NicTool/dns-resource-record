@@ -62,6 +62,29 @@ export default class SVCB extends RR {
     })
   }
 
+  fromTinydns({ rd, owner, ttl }) {
+    if (rd.length < 6) {
+      this.throwHelp(`SVCB: RDATA too short: ${rd}`)
+    }
+
+    const priority = TINYDNS.octalToUInt16(rd.substring(0, 6))
+    const remainingRdata = rd.slice(6)
+
+    const [targetName, consumedLength] = TINYDNS.unpackDomainName(remainingRdata)
+
+    const params = remainingRdata.slice(consumedLength)
+    const unescapedParams = TINYDNS.unescapeOctal(params)
+
+    return new SVCB({
+      owner: this.fullyQualify(owner),
+      ttl: parseInt(ttl, 10),
+      type: 'SVCB',
+      priority: priority,
+      'target name': targetName,
+      params: unescapedParams,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {

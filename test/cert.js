@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import CERT from '../rr/cert.js'
@@ -44,5 +45,5 @@ describe('CERT record', function () {
   base.toTinydns(CERT, validRecords)
 
   base.fromBind(CERT, validRecords)
-  // base.fromTinydns(CERT, validRecords)
+  base.fromTinydns(CERT, validRecords)
 })

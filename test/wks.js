@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import * as base from './base.js'
 
 import WKS from '../rr/wks.js'
@@ -74,4 +75,5 @@ describe('WKS record', function () {
   base.toTinydns(WKS, validRecords)
 
   base.fromBind(WKS, validRecords)
+  // base.fromTinydns(WKS, validRecords)
 })
