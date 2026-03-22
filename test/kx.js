@@ -69,4 +69,5 @@ describe('KX record', function () {
   base.toTinydns(KX, validRecords)
 
   base.fromBind(KX, validRecords)
+  // base.fromTinydns(KX, validRecords)
 })

@@ -30,9 +30,8 @@ describe('KEY record', function () {
   base.getTypeId(KEY, 25)
 
   base.toBind(KEY, validRecords)
-  // base.toTinydns(KEY, validRecords)
+  base.toTinydns(KEY, validRecords)
 
-  base.fromBind(KEY, validRecords)
   base.fromBind(KEY, validRecords)
   base.fromTinydns(KEY, validRecords)
 })

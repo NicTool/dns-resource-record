@@ -62,7 +62,9 @@ export default class WKS extends RR {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     const binary = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join('.')
+    const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join(
+      '.',
+    )
     const protoNum = binary.readUInt8(4)
     const protoMap = { 6: 'TCP', 17: 'UDP' }
     const protocol = protoMap[protoNum] ?? protoNum

@@ -4,12 +4,17 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- feat(SIG): added toBind, toTinydns, fromTinydns
+- feat(TSIG): added missing setters, fromBind, toBind, toTinydns
+- feat(fromTinydns): added to rp, wks
+- feat(CERT): validate mnemonic values
 - fix: hardened polynomial regexes
+- fix(NAPTR): replace polynomial regexp
+- test(NSEC3PARAM): added test cases, better binary parser, better salt
+- test(AAAA, APL, CERT, NSEC3PARAM, RRSIG, TSIG): added test coverage
+- doc(README): updated RR table completion status
 - style(es6): use ?. and ?? operators
 - style(es6): use argument expansion / destructured parameters
-- feat(fromTinydns): added to rp, wks
-- fix(NAPTR): replace polynomial regexp
-- doc(README): updated RR table completion status
 - style(es6): substring -> slice
 - style(es6): use more trim()
 

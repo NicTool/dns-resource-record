@@ -11,7 +11,7 @@ export default class NSEC3PARAM extends RR {
   setHashAlgorithm(val) {
     // Hash Algorithm is a single octet.
     // The Hash Algorithm field is represented as an unsigned decimal integer.
-    if (!val) this.throwHelp(`NSEC3PARAM: 'hash algorithm' is required`)
+    if (val === undefined || val === null) this.throwHelp(`NSEC3PARAM: 'hash algorithm' is required`)
 
     this.is8bitInt('NSEC3PARAM', 'hash algorithm', val)
 
@@ -20,7 +20,7 @@ export default class NSEC3PARAM extends RR {
 
   setFlags(val) {
     // The Flags field is represented as an unsigned decimal integer.
-    if (!val) this.throwHelp(`NSEC3PARAM: 'flags' is required`)
+    if (val === undefined || val === null) this.throwHelp(`NSEC3PARAM: 'flags' is required`)
 
     this.is8bitInt('NSEC3PARAM', 'flags', val)
 
@@ -29,7 +29,7 @@ export default class NSEC3PARAM extends RR {
 
   setIterations(val) {
     // The Iterations field is represented as an unsigned decimal integer. 0-65535
-    if (!val) this.throwHelp(`NSEC3PARAM: 'iterations' is required`)
+    if (val === undefined || val === null) this.throwHelp(`NSEC3PARAM: 'iterations' is required`)
 
     this.is16bitInt('NSEC3PARAM', 'iterations', val)
 
@@ -41,6 +41,15 @@ export default class NSEC3PARAM extends RR {
     // hexadecimal digits.  Whitespace is not allowed within the
     // sequence.  The Salt field is represented as "-" (without the
     // quotes) when the Salt Length field has a value of 0
+    if (val === '-') {
+      this.set('salt', val)
+      return
+    }
+
+    if (val !== undefined && val !== null && !/^[0-9A-Fa-f]*$/.test(val)) {
+      this.throwHelp(`NSEC3PARAM: 'salt' must be hex or '-'`)
+    }
+
     this.set('salt', val)
   }
 
@@ -62,10 +71,10 @@ export default class NSEC3PARAM extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind(str) {
+  fromBind({ bindline }) {
     // test.example.com  3600  IN  NSEC3PARAM  <hash> <flags> <iterations> <salt>
     // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = str.split(/\s+/)
+    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
     return new NSEC3PARAM({
       owner,
       ttl: parseInt(ttl, 10),
@@ -81,18 +90,22 @@ export default class NSEC3PARAM extends RR {
   fromTinydns({ tinyline }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
     const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (rd.length < 12) {
+    if (rd.length < 4) {
       this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
     }
+
+    // rd may contain actual binary characters (from JS string '\\001' -> char 0x01),
+    // so convert via octalToChar and read bytes from a Buffer for robust parsing.
+    const bytes = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
 
     return new NSEC3PARAM({
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
       type: 'NSEC3PARAM',
-      'hash algorithm': TINYDNS.octalToUInt8(rd.slice(0, 3)),
-      flags: TINYDNS.octalToUInt8(rd.slice(3, 6)),
-      iterations: TINYDNS.octalToUInt16(rd.slice(6, 12)),
-      salt: TINYDNS.unescapeOctal(rd.slice(12)),
+      'hash algorithm': bytes.readUInt8(0),
+      flags: bytes.readUInt8(1),
+      iterations: bytes.readUInt16BE(2),
+      salt: bytes.slice(4).toString('utf8'),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

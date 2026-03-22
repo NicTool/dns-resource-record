@@ -11,8 +11,29 @@ export default class CERT extends RR {
   setCertType(val) {
     // The type field is the certificate type
     // the type field as an unsigned decimal integer or as a mnemonic symbol
-    // this.is16bitInt('CERT', 'type', val)
-
+    if (val === undefined || val === null || val === '') {
+      this.throwHelp('cert type is required')
+    }
+    // Accept both mnemonic and numeric, but validate mnemonic
+    if (typeof val === 'string') {
+      const types = {
+        PKIX: 1,
+        SPKI: 2,
+        PGP: 3,
+        IPKIX: 4,
+        ISPKI: 5,
+        IPGP: 6,
+        ACPKIX: 7,
+        IACPKIX: 8,
+        URI: 253,
+        OID: 254,
+      }
+      if (!Object.hasOwn(types, val)) {
+        this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
+      }
+    } else {
+      this.is16bitInt('CERT', 'cert type', val)
+    }
     this.set('cert type', val)
   }
 
@@ -54,6 +75,9 @@ export default class CERT extends RR {
   setCertificate(val) {
     // certificate/CRL portion is represented in base 64 [16] and may be
     // divided into any number of white-space-separated substrings
+    if (val === undefined || val === null || val === '') {
+      this.throwHelp('certificate is required and cannot be empty')
+    }
     this.set('certificate', val)
   }
 

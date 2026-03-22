@@ -117,12 +117,13 @@ export default class CAA extends RR {
 
   fromBind({ bindline }) {
     // test.example.com  3600  IN  CAA flags, tags, value
-    const caaPattern = /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>CAA)\s+(?<flags>\d+)\s+(?<tag>\w+)\s+(?:"(?<quotedValue>[^"]+)"|(?<unquotedValue>\S+))$/i;
+    const regex =
+      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>CAA)\s+(?<flags>\d+)\s+(?<tag>\w+)\s+(?:"(?<quotedValue>[^"]+)"|(?<unquotedValue>\S+))$/i
 
-    const match = bindline.trim().match(caaPattern);
+    const match = bindline.trim().match(regex)
 
     if (!match) {
-      this.throwHelp(`unable to parse CAA: ${bindline}`);
+      this.throwHelp(`unable to parse CAA: ${bindline}`)
     }
 
     const { owner, ttl, class: c, type, flags, tag, quotedValue, unquotedValue } = match.groups
@@ -135,20 +136,17 @@ export default class CAA extends RR {
       flags: parseInt(flags, 10),
       tag,
       value: quotedValue ?? unquotedValue,
-    });
+    })
   }
 
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(this.get('flags'))
-
-    rdata += TINYDNS.UInt8toOctal(this.get('tag').length)
-    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag'))
-
-    rdata += TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value'))
-
-    return this.getTinydnsGeneric(rdata)
+    return this.getTinydnsGeneric(
+      TINYDNS.UInt8toOctal(this.get('flags')) +
+        TINYDNS.UInt8toOctal(this.get('tag').length) +
+        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
+        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value')),
+    )
   }
 }

@@ -40,4 +40,5 @@ describe('DHCID record', function () {
   base.toTinydns(DHCID, validRecords)
 
   base.fromBind(DHCID, validRecords)
+  // base.fromTinydns(DHCID, validRecords)
 })

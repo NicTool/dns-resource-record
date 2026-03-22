@@ -1,8 +1,7 @@
-import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-
-import * as base from './base.js'
+import { describe, it } from 'node:test'
 import AAAA from '../rr/aaaa.js'
+import * as base from './base.js'
 
 const defaults = { class: 'IN', ttl: 3600, type: 'AAAA' }
 
@@ -15,16 +14,53 @@ const validRecords = [
     testT:
       ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:3600::\n',
   },
-]
-
-const invalidRecords = [
   {
     ...defaults,
     owner: 'test.example.com.',
-    address: '192.0.2.204',
-    msg: /address must be IPv6/,
+    ttl: 2147483647,
+    address: '2001:0db8:0020:000a:0000:0000:0000:0004',
+    testB: 'test.example.com.\t2147483647\tIN\tAAAA\t2001:db8:20:a::4\n',
+    testT:
+      ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:2147483647::\n',
+  },
+  {
+    ...defaults,
+    owner: 'a.',
+    ttl: 86400,
+    address: '0000:0000:0000:0000:0000:0000:0000:0001',
+    testB: 'a.\t86400\tIN\tAAAA\t::1\n',
+    testT: ':a:28:\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001:86400::\n',
+  },
+  {
+    ...defaults,
+    owner: '*.example.com.',
+    address: '2001:0db8:0000:0000:0000:0000:0002:0001',
+    testB: '*.example.com.\t3600\tIN\tAAAA\t2001:db8::2:1\n',
+    testT:
+      ':*.example.com:28:\\040\\001\\015\\270\\000\\000\\000\\000\\000\\000\\000\\000\\000\\002\\000\\001:3600::\n',
   },
 ]
+
+const invalidRecords = [
+  { ...defaults, owner: '', msg: /RFC/ },
+  { ...defaults, owner: 'something*', msg: /fully/ },
+  { ...defaults, owner: 'some*thing', msg: /fully/ },
+  { ...defaults, owner: '*something', msg: /fully/ },
+  { ...defaults, owner: 'something.*', msg: /fully/ },
+  { ...defaults, address: '192.0.2.204', msg: /address must be IPv6/ },
+  { ...defaults, address: '2001:db8::zzzz', msg: /address must be IPv6/ },
+  { ...defaults, address: '', msg: /address is required/ },
+  { ...defaults, address: undefined, msg: /address is required/ },
+  { ...defaults, type: '', msg: /type is required/ },
+  { ...defaults, type: undefined, msg: /type is required/ },
+  { ...defaults, ttl: '', msg: /TTL must be numeric/ },
+  { ...defaults, ttl: -299, msg: /TTL must be a 32-bit integer/ },
+  { ...defaults, ttl: 2147483648, msg: /TTL must be a 32-bit integer/ },
+]
+
+for (let i = 0; i < invalidRecords.length; i++) {
+  invalidRecords[i] = { ...validRecords[0], ...invalidRecords[i] }
+}
 
 describe('AAAA record', function () {
   base.valid(AAAA, validRecords)
@@ -32,6 +68,7 @@ describe('AAAA record', function () {
 
   base.getDescription(AAAA)
   base.getRFCs(AAAA, validRecords[0])
+  base.getRdataFields(AAAA, ['address'])
   base.getFields(AAAA, ['address'])
   base.getTypeId(AAAA, 28)
 
