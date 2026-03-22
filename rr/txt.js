@@ -73,7 +73,7 @@ export default class TXT extends RR {
     const regex =
       /^(?<owner>[\S]{1,255})\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>\w{3})\s+?\s*(?<rdata>.+?)$/i
     const match = bindline.trim().match(regex)
-    if (!match) this.throwHelp(`unable to parse TXT: ${opts.bindline}`)
+    if (!match) this.throwHelp(`unable to parse TXT: ${bindline}`)
 
     const { owner, ttl, cls, type, rdata } = match.groups
 

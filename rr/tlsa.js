@@ -79,7 +79,7 @@ export default class TLSA extends RR {
   fromBind({ bindline }) {
     // test.example.com  3600  IN  TLSA, usage, selector, match, data
     const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>TLSA)\s+(?<usage>\d+)\s+(?<selector>\d+)\s+(?<matchtype>\d+)\s+(?<cad>.+)$/i
+      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>TLSA)\s+(?<usage>\d+)\s+(?<selector>\d+)\s+(?<matchtype>\d+)\s+(?<cad>\S.*)$/i;
     const match = bindline.trim().match(regex)
     if (!match) this.throwHelp(`unable to parse TLSA: ${bindline}`)
     const { owner, ttl, cls, type, usage, selector, matchtype, cad } = match.groups
@@ -92,7 +92,7 @@ export default class TLSA extends RR {
       'certificate usage': parseInt(usage, 10),
       selector: parseInt(selector, 10),
       'matching type': parseInt(matchtype, 10),
-      'certificate association data': cad,
+      'certificate association data': cad.trim(),
     })
   }
 
