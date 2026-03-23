@@ -27,7 +27,21 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    ...defaults,
+    owner: 'example.com.',
+    algorithm: 5,
+    labels: 1,
+    'original ttl': 3600,
+    'signature expiration': 1678886400,
+    'signature inception': 1678886400,
+    'key tag': 12345,
+    'signers name': 'example.com.',
+    signature: 'AQPSK==',
+    msg: /'type covered' is required/i,
+  },
+]
 
 describe('SIG record', function () {
   base.valid(SIG, validRecords)

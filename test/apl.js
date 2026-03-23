@@ -72,5 +72,5 @@ describe('APL record', function () {
   base.toTinydns(APL, validRecords)
 
   base.fromBind(APL, validRecords)
-  // base.fromTinydns(APL, validRecords)
+  base.fromTinydns(APL, validRecords)
 })

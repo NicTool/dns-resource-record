@@ -51,6 +51,22 @@ export default class KX extends RR {
   }
 
   /******  IMPORTERS   *******/
+  fromTinydns({ tinyline }) {
+    // KX via generic, :fqdn:36:rdata:ttl:timestamp:lo
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
+    if (n != 36) this.throwHelp('KX fromTinydns, invalid n')
+
+    return new KX({
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'KX',
+      preference: TINYDNS.octalToUInt16(rdata.slice(0, 8)),
+      exchanger: TINYDNS.unpackDomainName(rdata.slice(8))[0],
+      timestamp: ts,
+      location: loc?.trim() ?? '',
+    })
+  }
+
   fromBind({ bindline }) {
     // test.example.com  3600  IN  KX  preference exchanger
     const [owner, ttl, c, type, preference, exchanger] = bindline.split(/\s+/)

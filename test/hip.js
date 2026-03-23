@@ -88,5 +88,5 @@ describe('HIP record', function () {
   base.toTinydns(HIP, validRecords)
 
   base.fromBind(HIP, validRecords)
-  // base.fromTinydns(HIP, validRecords)
+  base.fromTinydns(HIP, validRecords)
 })

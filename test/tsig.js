@@ -56,9 +56,9 @@ describe('TSIG record', function () {
   base.getFields(TSIG, ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other'])
   base.getTypeId(TSIG, 250)
 
-  // base.toBind(TSIG, validRecords)
+  base.toBind(TSIG, validRecords)
   base.toTinydns(TSIG, validRecords)
 
-  // base.fromBind(TSIG, validRecords)
-  // base.fromTinydns(TSIG, validRecords)
+  base.fromBind(TSIG, validRecords)
+  base.fromTinydns(TSIG, validRecords)
 })

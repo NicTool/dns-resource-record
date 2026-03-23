@@ -4,19 +4,22 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-- feat(SIG): added toBind, toTinydns, fromTinydns
-- feat(TSIG): added missing setters, fromBind, toBind, toTinydns
-- feat(fromTinydns): added to rp, wks
+### [1.5.0] - 2026-03-22
+
+- feat(RRSIG, SIG, TSIG): added toBind, toTinydns, fromTinydns
+- feat(TSIG): added missing setters
+- feat(fromTinydns): added to APL, DHCID, HIP, KX, RRSIG, RP, WKS
 - feat(CERT): validate mnemonic values
-- fix: hardened polynomial regexes
+- fix: hardened polynomial regexes #56
 - fix(NAPTR): replace polynomial regexp
+- test: coverage is at 98% 🎉
 - test(NSEC3PARAM): added test cases, better binary parser, better salt
-- test(AAAA, APL, CERT, NSEC3PARAM, RRSIG, TSIG): added test coverage
+- test(AAAA, APL, CERT, KEY, NAPTR, NSEC3, NSEC3PARAM, RRSIG, SIG, SSHFP, TSIG, URL): added test coverage
 - doc(README): updated RR table completion status
-- style(es6): use ?. and ?? operators
+- style(es6): use ?. and ?? operators (nullish coalescing) #57
 - style(es6): use argument expansion / destructured parameters
-- style(es6): substring -> slice
-- style(es6): use more trim()
+- style(es6): substring -> slice #55
+- style(es6): use more trim() #55
 
 ### [1.4.0] - 2026-03-21
 
@@ -362,3 +365,4 @@ Notable changes to this project are documented in this file.
 [1.3.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.0
 [1.3.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.1
 [1.4.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.4.0
+[1.5.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.5.0

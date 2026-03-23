@@ -18,7 +18,30 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    owner: 'example.com.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'KEY',
+    flags: 256,
+    protocol: 3,
+    algorithm: 99,
+    publickey: 'AQPSK==',
+    msg: /algorithm invalid/i,
+  },
+  {
+    owner: 'example.com.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'KEY',
+    flags: 256,
+    protocol: 3,
+    algorithm: 5,
+    publickey: '',
+    msg: /publickey is required/i,
+  },
+]
 
 describe('KEY record', function () {
   base.valid(KEY, validRecords)

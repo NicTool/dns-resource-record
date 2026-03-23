@@ -59,6 +59,47 @@ export default class HIP extends RR {
   }
 
   /******  IMPORTERS   *******/
+  fromTinydns({ tinyline }) {
+    // HIP via generic, :fqdn:55:rdata:ttl:timestamp:lo
+    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
+    if (n != 55) this.throwHelp('HIP fromTinydns, invalid n')
+
+    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const hitLen = bytes.readUInt8(0)
+    const pkAlgorithm = bytes.readUInt8(1)
+    const pkLen = bytes.readUInt16BE(2)
+
+    const hit = bytes
+      .slice(4, 4 + hitLen)
+      .toString('hex')
+      .toUpperCase()
+    const publicKey = bytes.slice(4 + hitLen, 4 + hitLen + pkLen).toString('base64')
+
+    const rvsNames = []
+    let pos = 4 + hitLen + pkLen
+    while (pos < bytes.length) {
+      const [name, newPos] = TINYDNS.unpackDomainName(
+        [...bytes.slice(pos)]
+          .map((b) => (b < 32 || b > 126 ? TINYDNS.UInt8toOctal(b) : String.fromCharCode(b)))
+          .join(''),
+      )
+      pos += newPos
+      if (name !== '.') rvsNames.push(name)
+    }
+
+    return new HIP({
+      owner: this.fullyQualify(fqdn),
+      ttl: parseInt(ttl, 10),
+      type: 'HIP',
+      'pk algorithm': pkAlgorithm,
+      hit,
+      'public key': publicKey,
+      'rendezvous servers': rvsNames.join(' '),
+      timestamp: ts,
+      location: loc?.trim() ?? '',
+    })
+  }
+
   fromBind({ bindline }) {
     // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
     const parts = bindline.split(/\s+/)
