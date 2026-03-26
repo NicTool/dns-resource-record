@@ -54,9 +54,11 @@ describe('SRV record', function () {
   base.getDescription(SRV)
   base.getRFCs(SRV, validRecords[0])
   base.getFields(SRV, ['priority', 'weight', 'port', 'target'])
+  base.getCanonical(SRV)
   base.getTypeId(SRV, 33)
 
   base.toBind(SRV, validRecords)
+  base.toWire(SRV, validRecords)
   base.toTinydns(SRV, validRecords)
 
   base.fromBind(SRV, validRecords)

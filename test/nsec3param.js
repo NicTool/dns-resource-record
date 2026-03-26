@@ -67,9 +67,11 @@ describe('NSEC3PARAM record', function () {
   base.getDescription(NSEC3PARAM)
   base.getRFCs(NSEC3PARAM, validRecords[0])
   base.getFields(NSEC3PARAM, ['hash algorithm', 'flags', 'iterations', 'salt'])
+  base.getCanonical(NSEC3PARAM)
   base.getTypeId(NSEC3PARAM, 51)
 
   base.toBind(NSEC3PARAM, validRecords)
+  base.toWire(NSEC3PARAM, validRecords)
   base.toTinydns(NSEC3PARAM, validRecords)
 
   base.fromBind(NSEC3PARAM, validRecords)

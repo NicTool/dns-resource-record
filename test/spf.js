@@ -26,9 +26,11 @@ describe('SPF record', function () {
   base.getDescription(SPF)
   base.getRFCs(SPF, validRecords[0])
   base.getFields(SPF, ['data'])
+  base.getCanonical(SPF)
   base.getTypeId(SPF, 99)
 
   base.toBind(SPF, validRecords)
+  base.toWire(SPF, validRecords)
   base.toTinydns(SPF, validRecords)
 
   base.fromBind(SPF, validRecords)

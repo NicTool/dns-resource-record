@@ -54,9 +54,11 @@ describe('TSIG record', function () {
   base.getDescription(TSIG)
   base.getRFCs(TSIG, validRecords[0])
   base.getFields(TSIG, ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other'])
+  base.getCanonical(TSIG)
   base.getTypeId(TSIG, 250)
 
   base.toBind(TSIG, validRecords)
+  base.toWire(TSIG, validRecords)
   base.toTinydns(TSIG, validRecords)
 
   base.fromBind(TSIG, validRecords)

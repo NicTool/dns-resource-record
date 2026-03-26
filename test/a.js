@@ -64,9 +64,11 @@ describe('A record', function () {
   base.getRFCs(A, validRecords[0])
   base.getRdataFields(A, ['address'])
   base.getFields(A, ['address'])
+  base.getCanonical(A)
   base.getTypeId(A, 1)
 
   base.toBind(A, validRecords)
+  base.toWire(A, validRecords)
   base.toTinydns(A, validRecords)
 
   base.fromBind(A, validRecords)

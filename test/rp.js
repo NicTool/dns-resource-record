@@ -63,9 +63,11 @@ describe('RP record', function () {
   base.getDescription(RP)
   base.getRFCs(RP, validRecords[0])
   base.getFields(RP, ['mbox', 'txt'])
+  base.getCanonical(RP)
   base.getTypeId(RP, 17)
 
   base.toBind(RP, validRecords)
+  base.toWire(RP, validRecords)
   base.toTinydns(RP, validRecords)
 
   base.fromBind(RP, validRecords)

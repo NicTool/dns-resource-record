@@ -49,9 +49,11 @@ describe('URI record', function () {
   base.getDescription(URI)
   base.getRFCs(URI, validRecords[0])
   base.getFields(URI, ['priority', 'weight', 'target'])
+  base.getCanonical(URI)
   base.getTypeId(URI, 256)
 
   base.toBind(URI, validRecords)
+  base.toWire(URI, validRecords)
   base.toTinydns(URI, validRecords)
 
   base.fromBind(URI, validRecords)

@@ -63,9 +63,11 @@ describe('KX record', function () {
   base.getDescription(KX)
   base.getRFCs(KX, validRecords[0])
   base.getFields(KX, ['preference', 'exchanger'])
+  base.getCanonical(KX)
   base.getTypeId(KX, 36)
 
   base.toBind(KX, validRecords)
+  base.toWire(KX, validRecords)
   base.toTinydns(KX, validRecords)
 
   base.fromBind(KX, validRecords)

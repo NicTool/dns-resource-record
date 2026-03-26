@@ -33,9 +33,11 @@ describe('DNAME record', function () {
   base.getDescription(DNAME)
   base.getRFCs(DNAME, validRecords[0])
   base.getFields(DNAME, ['target'])
+  base.getCanonical(DNAME)
   base.getTypeId(DNAME, 39)
 
   base.toBind(DNAME, validRecords)
+  base.toWire(DNAME, validRecords)
   base.toTinydns(DNAME, validRecords)
 
   base.fromBind(DNAME, validRecords)

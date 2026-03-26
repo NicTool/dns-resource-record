@@ -49,9 +49,11 @@ describe('HTTPS record', function () {
   base.getDescription(HTTPS)
   base.getRFCs(HTTPS, validRecords[0])
   base.getFields(HTTPS, ['priority', 'target name', 'params'])
+  base.getCanonical(HTTPS)
   base.getTypeId(HTTPS, 65)
 
   base.toBind(HTTPS, validRecords)
+  base.toWire(HTTPS, validRecords)
   base.toTinydns(HTTPS, validRecords)
 
   base.fromBind(HTTPS, validRecords)

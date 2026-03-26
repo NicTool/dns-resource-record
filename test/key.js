@@ -50,9 +50,11 @@ describe('KEY record', function () {
   base.getDescription(KEY)
   base.getRFCs(KEY, validRecords[0])
   base.getFields(KEY, ['flags', 'protocol', 'algorithm', 'publickey'])
+  base.getCanonical(KEY)
   base.getTypeId(KEY, 25)
 
   base.toBind(KEY, validRecords)
+  base.toWire(KEY, validRecords)
   base.toTinydns(KEY, validRecords)
 
   base.fromBind(KEY, validRecords)

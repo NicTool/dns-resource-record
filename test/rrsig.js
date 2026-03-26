@@ -73,9 +73,11 @@ describe('RRSIG record', function () {
     'signers name',
     'signature',
   ])
+  base.getCanonical(RRSIG)
   base.getTypeId(RRSIG, 46)
 
   base.toBind(RRSIG, validRecords)
+  base.toWire(RRSIG, validRecords)
   base.toTinydns(RRSIG, validRecords)
 
   base.fromBind(RRSIG, validRecords)

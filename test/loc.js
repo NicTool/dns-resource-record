@@ -50,9 +50,11 @@ describe('LOC record', function () {
   base.getDescription(LOC)
   base.getRFCs(LOC, validRecords[0])
   base.getFields(LOC, ['address'])
+  base.getCanonical(LOC)
   base.getTypeId(LOC, 29)
 
   base.toBind(LOC, validRecords)
+  base.toWire(LOC, validRecords)
   base.toTinydns(LOC, validRecords)
 
   describe('toExponent', function () {

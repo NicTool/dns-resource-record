@@ -138,7 +138,7 @@ export default class IPSECKEY extends RR {
         octalKey = rdata.slice(28)
         break
       case 2: // 16-byte IPv6
-        gateway = TINYDNS.octalToHex(rdata.slice(12, 76))
+        gateway = TINYDNS.octalToIPv6(rdata.slice(12, 76))
         octalKey = rdata.slice(76)
         break
       case 3: // wire encoded domain name

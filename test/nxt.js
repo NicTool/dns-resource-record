@@ -28,9 +28,11 @@ describe('NXT record', function () {
   base.getDescription(NXT)
   base.getRFCs(NXT, validRecords[0])
   base.getFields(NXT, ['next domain', 'type bit map'])
+  base.getCanonical(NXT)
   base.getTypeId(NXT, 30)
 
   base.toBind(NXT, validRecords)
+  base.toWire(NXT, validRecords)
   base.toTinydns(NXT, validRecords)
 
   base.fromBind(NXT, validRecords)

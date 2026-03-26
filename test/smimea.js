@@ -39,9 +39,11 @@ describe('SMIMEA record', function () {
   base.getDescription(SMIMEA)
   base.getRFCs(SMIMEA, validRecords[0])
   base.getFields(SMIMEA, ['certificate usage', 'selector', 'matching type', 'certificate association data'])
+  base.getCanonical(SMIMEA)
   base.getTypeId(SMIMEA, 53)
 
   base.toBind(SMIMEA, validRecords)
+  base.toWire(SMIMEA, validRecords)
   base.toTinydns(SMIMEA, validRecords)
 
   base.fromBind(SMIMEA, validRecords)

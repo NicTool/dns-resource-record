@@ -79,9 +79,11 @@ describe('NSEC3 record', function () {
     'next hashed owner name',
     'type bit maps',
   ])
+  base.getCanonical(NSEC3)
   base.getTypeId(NSEC3, 50)
 
   base.toBind(NSEC3, validRecords)
+  base.toWire(NSEC3, validRecords)
   base.toTinydns(NSEC3, validRecords)
 
   base.fromBind(NSEC3, validRecords)

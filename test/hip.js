@@ -82,9 +82,11 @@ describe('HIP record', function () {
   base.getDescription(HIP)
   base.getRFCs(HIP, validRecords[0])
   base.getFields(HIP, ['pk algorithm', 'hit', 'public key', 'rendezvous servers'])
+  base.getCanonical(HIP)
   base.getTypeId(HIP, 55)
 
   base.toBind(HIP, validRecords)
+  base.toWire(HIP, validRecords)
   base.toTinydns(HIP, validRecords)
 
   base.fromBind(HIP, validRecords)
