@@ -29,6 +29,10 @@ export default class NSEC extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['next domain', 'type bit maps']
   }
@@ -39,6 +43,17 @@ export default class NSEC extends RR {
 
   getTypeId() {
     return 47
+  }
+
+  getCanonical() {
+    return {
+      owner: 'alfa.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NSEC',
+      'next domain': 'host.example.com.',
+      'type bit maps': 'A MX RRSIG NSEC TYPE1234',
+    }
   }
 
   /******  IMPORTERS   *******/

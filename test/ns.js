@@ -33,9 +33,12 @@ describe('NS record', function () {
   base.getDescription(NS)
   base.getRFCs(NS, validRecords[0])
   base.getFields(NS, ['dname'])
+  base.getCanonical(NS)
   base.getTypeId(NS, 2)
+  base.getTags(NS)
 
   base.toBind(NS, validRecords)
+  base.toWire(NS, validRecords)
   base.toTinydns(NS, validRecords)
 
   base.fromBind(NS, validRecords)

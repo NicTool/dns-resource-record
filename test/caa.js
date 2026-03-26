@@ -83,9 +83,12 @@ describe('CAA record', function () {
   base.getDescription(CAA)
   base.getRFCs(CAA, validRecords[0])
   base.getFields(CAA, ['flags', 'tag', 'value'])
+  base.getCanonical(CAA)
   base.getTypeId(CAA, 257)
+  base.getTags(CAA)
 
   base.toBind(CAA, validRecords)
+  base.toWire(CAA, validRecords)
   base.toTinydns(CAA, validRecords)
 
   base.fromBind(CAA, validRecords)

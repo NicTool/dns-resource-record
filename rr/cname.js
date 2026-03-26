@@ -25,6 +25,10 @@ export default class CNAME extends RR {
     return 'Canonical Name'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['cname']
   }
@@ -35,6 +39,16 @@ export default class CNAME extends RR {
 
   getTypeId() {
     return 5
+  }
+
+  getCanonical() {
+    return {
+      owner: 'www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'CNAME',
+      cname: 'web.example.com.',
+    }
   }
 
   /******  IMPORTERS   *******/
@@ -65,6 +79,9 @@ export default class CNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('cname'))
+  }
 
   toTinydns() {
     return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`

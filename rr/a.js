@@ -16,6 +16,10 @@ export default class A extends RR {
     return 'Address'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['address']
   }
@@ -66,6 +70,10 @@ export default class A extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return Buffer.from(this.get('address').split('.').map(Number))
+  }
+
   toTinydns() {
     return `+${this.getTinyFQDN('owner')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
   }

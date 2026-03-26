@@ -83,6 +83,22 @@ export default class SOA extends RR {
     return 6
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SOA',
+      mname: 'ns1.example.com.',
+      rname: 'admin.example.com.',
+      serial: 2023051001,
+      refresh: 7200,
+      retry: 3600,
+      expire: 1209600,
+      minimum: 3600,
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromBind({ bindline }) {
     // example.com TTL IN  SOA mname rname serial refresh retry expire minimum
@@ -134,6 +150,20 @@ export default class SOA extends RR {
     return `${this.get('owner')}\t SOA\t${this.getRdataFields()
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
+  }
+
+  getWireRdata() {
+    const nums = Buffer.alloc(20)
+    nums.writeUInt32BE(this.get('serial'), 0)
+    nums.writeUInt32BE(this.get('refresh'), 4)
+    nums.writeUInt32BE(this.get('retry'), 8)
+    nums.writeUInt32BE(this.get('expire'), 12)
+    nums.writeUInt32BE(this.get('minimum'), 16)
+    return Buffer.concat([
+      this.wirePackDomain(this.get('mname')),
+      this.wirePackDomain(this.get('rname')),
+      nums,
+    ])
   }
 
   toTinydns() {

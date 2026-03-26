@@ -55,9 +55,12 @@ describe('MX record', function () {
   base.getDescription(MX)
   base.getRFCs(MX, validRecords[0])
   base.getFields(MX, ['preference', 'exchange'])
+  base.getCanonical(MX)
   base.getTypeId(MX, 15)
+  base.getTags(MX)
 
   base.toBind(MX, validRecords)
+  base.toWire(MX, validRecords)
   base.toTinydns(MX, validRecords)
 
   base.fromBind(MX, validRecords)

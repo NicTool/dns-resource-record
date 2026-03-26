@@ -34,9 +34,12 @@ describe('DS record', function () {
   base.getDescription(DS)
   base.getRFCs(DS, validRecords[0])
   base.getFields(DS, ['key tag', 'algorithm', 'digest type', 'digest'])
+  base.getCanonical(DS)
   base.getTypeId(DS, 43)
+  base.getTags(DS)
 
   base.toBind(DS, validRecords)
+  base.toWire(DS, validRecords)
   base.toTinydns(DS, validRecords)
 
   base.fromBind(DS, validRecords)

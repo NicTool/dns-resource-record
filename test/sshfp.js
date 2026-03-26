@@ -73,9 +73,12 @@ describe('SSHFP record', function () {
   base.getDescription(SSHFP)
   base.getRFCs(SSHFP, validRecords[0])
   base.getFields(SSHFP, ['algorithm', 'fptype', 'fingerprint'])
+  base.getCanonical(SSHFP)
   base.getTypeId(SSHFP, 44)
+  base.getTags(SSHFP)
 
   base.toBind(SSHFP, validRecords)
+  base.toWire(SSHFP, validRecords)
   base.toTinydns(SSHFP, validRecords)
 
   base.fromBind(SSHFP, validRecords)

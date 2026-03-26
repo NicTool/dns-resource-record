@@ -32,6 +32,10 @@ export default class HTTPS extends RR {
     return 'HTTP Semantics'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['priority', 'target name', 'params']
   }
@@ -42,6 +46,18 @@ export default class HTTPS extends RR {
 
   getTypeId() {
     return 65
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'HTTPS',
+      priority: 1,
+      'target name': 'example.com.',
+      params: 'alpn="h2,h3"',
+    }
   }
 
   /******  IMPORTERS   *******/

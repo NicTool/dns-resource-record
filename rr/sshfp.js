@@ -46,6 +46,10 @@ export default class SSHFP extends RR {
     return 'Secure Shell Key Fingerprints'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields() {
     return ['algorithm', 'fptype', 'fingerprint']
   }
@@ -56,6 +60,18 @@ export default class SSHFP extends RR {
 
   getTypeId() {
     return 44
+  }
+
+  getCanonical() {
+    return {
+      owner: 'mail.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SSHFP',
+      algorithm: 2,
+      fptype: 1,
+      fingerprint: '123456789abcdef6789abcdf6789abdf6789abcd',
+    }
   }
 
   /******  IMPORTERS   *******/

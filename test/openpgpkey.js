@@ -77,9 +77,12 @@ describe('OPENPGPKEY record', function () {
   base.getDescription(OPENPGPKEY)
   base.getRFCs(OPENPGPKEY)
   base.getFields(OPENPGPKEY, ['public key'])
+  base.getCanonical(OPENPGPKEY)
   base.getTypeId(OPENPGPKEY, 61)
+  base.getTags(OPENPGPKEY)
 
   base.toBind(OPENPGPKEY, validRecords)
+  base.toWire(OPENPGPKEY, validRecords)
   base.toTinydns(OPENPGPKEY, validRecords)
 
   base.fromBind(OPENPGPKEY, validRecords)

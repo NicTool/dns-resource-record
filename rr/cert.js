@@ -97,6 +97,19 @@ export default class CERT extends RR {
     return 37
   }
 
+  getCanonical() {
+    return {
+      owner: 'mail.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'CERT',
+      'cert type': 'PGP',
+      'key tag': 0,
+      algorithm: 0,
+      certificate: 'hexidecimalkeystring1',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromTinydns({ tinyline }) {

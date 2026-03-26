@@ -16,16 +16,30 @@ export default class TXT extends RR {
     return 'Text'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['data']
   }
 
   getRFCs() {
-    return [1035]
+    return [1035, 4408, 7208, 6376]
   }
 
   getTypeId() {
     return 16
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'TXT',
+      data: 'v=spf1 mx -all',
+    }
   }
 
   /******  IMPORTERS   *******/
@@ -98,6 +112,12 @@ export default class TXT extends RR {
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
+  getWireRdata() {
+    let data = this.get('data')
+    if (Array.isArray(data)) data = data.join('')
+    return packStringWire(data)
+  }
+
   toTinydns() {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')
@@ -126,4 +146,19 @@ function asQuotedStrings(data) {
   }
 
   return data
+}
+
+function packStringWire(str) {
+  const parts = str.match(/(.{1,255})/g)
+  let len = 0
+  for (const part of parts) len += part.length + 1
+
+  const buf = Buffer.allocUnsafe(len)
+  let offset = 0
+  for (const part of parts) {
+    buf.writeUInt8(part.length, offset++)
+    buf.write(part, offset, 'ascii')
+    offset += part.length
+  }
+  return buf
 }

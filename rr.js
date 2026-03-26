@@ -1,3 +1,5 @@
+import * as TINYDNS from './lib/tinydns.js'
+
 export default class RR extends Map {
   constructor(opts) {
     super()
@@ -184,6 +186,10 @@ export default class RR extends Map {
     return []
   }
 
+  getTags() {
+    return []
+  }
+
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)
@@ -352,6 +358,35 @@ export default class RR extends Map {
     return `${head}::${tail}`
   }
 
+  octalToBuffer(octalStr) {
+    return Buffer.from(TINYDNS.octalToChar(octalStr), 'binary')
+  }
+
+  wirePackDomain(fqdn) {
+    return packDomainNameWire(fqdn)
+  }
+
+  getWireRdata() {
+    const line = this.toTinydns()
+    if (!line.startsWith(':'))
+      throw new Error(`${this.get('type')}: override getWireRdata() — non-generic tinydns format`)
+    // line: :fqdn:typeId:rdata:ttl:ts:loc\n
+    const rdata = line.split(':')[3]
+    return this.octalToBuffer(rdata ?? '')
+  }
+
+  toWire() {
+    const rdata = this.getWireRdata()
+    const owner = this.wirePackDomain(this.get('owner'))
+    const classMap = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
+    const meta = Buffer.alloc(10)
+    meta.writeUInt16BE(this.getTypeId(), 0)
+    meta.writeUInt16BE(classMap[this.get('class')] ?? 1, 2)
+    meta.writeUInt32BE(this.get('ttl'), 4)
+    meta.writeUInt16BE(rdata.length, 8)
+    return Buffer.concat([owner, meta, rdata])
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getRdataFields()
       .map((f) => this.getQuoted(f))
@@ -375,4 +410,26 @@ export default class RR extends Map {
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`
   }
+}
+
+function packDomainNameWire(fqdn) {
+  if (fqdn === '.') return Buffer.from([0])
+  const parts = fqdn.split('.')
+  let len = 0
+  for (const part of parts) {
+    if (part.length > 0) len += part.length + 1
+  }
+  len += 1 // for the final \0
+
+  const buf = Buffer.allocUnsafe(len)
+  let offset = 0
+  for (const part of parts) {
+    if (part.length > 0) {
+      buf.writeUInt8(part.length, offset++)
+      buf.write(part, offset, 'ascii')
+      offset += part.length
+    }
+  }
+  buf.writeUInt8(0, offset)
+  return buf
 }

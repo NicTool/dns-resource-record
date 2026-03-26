@@ -64,6 +64,10 @@ export default class NSEC3 extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
   }
@@ -74,6 +78,21 @@ export default class NSEC3 extends RR {
 
   getTypeId() {
     return 50
+  }
+
+  getCanonical() {
+    return {
+      owner: 'test.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NSEC3',
+      'hash algorithm': 1,
+      flags: 1,
+      iterations: 12,
+      salt: 'aabbccdd',
+      'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
+      'type bit maps': 'A RRSIG',
+    }
   }
 
   /******  IMPORTERS   *******/

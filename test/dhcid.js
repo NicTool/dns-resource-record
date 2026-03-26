@@ -34,9 +34,12 @@ describe('DHCID record', function () {
   base.getDescription(DHCID)
   base.getRFCs(DHCID, validRecords[0])
   base.getFields(DHCID, ['data'])
+  base.getCanonical(DHCID)
   base.getTypeId(DHCID, 49)
+  base.getTags(DHCID)
 
   base.toBind(DHCID, validRecords)
+  base.toWire(DHCID, validRecords)
   base.toTinydns(DHCID, validRecords)
 
   base.fromBind(DHCID, validRecords)

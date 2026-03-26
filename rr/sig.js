@@ -68,6 +68,10 @@ export default class SIG extends RR {
     return 'Signature'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return [
       'type covered',
@@ -83,11 +87,29 @@ export default class SIG extends RR {
   }
 
   getRFCs() {
-    return [2535]
+    return [2535, 3755]
   }
 
   getTypeId() {
     return 24
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SIG',
+      'type covered': 1,
+      algorithm: 5,
+      labels: 3,
+      'original ttl': 3600,
+      'signature expiration': 1045053120,
+      'signature inception': 1042461120,
+      'key tag': 12345,
+      'signers name': 'example.com.',
+      signature: 'ABCDEF...',
+    }
   }
 
   /******  IMPORTERS   *******/

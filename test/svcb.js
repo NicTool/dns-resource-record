@@ -49,9 +49,12 @@ describe('SVCB record', function () {
   base.getDescription(SVCB)
   base.getRFCs(SVCB, validRecords[0])
   base.getFields(SVCB, ['priority', 'target name', 'params'])
+  base.getCanonical(SVCB)
   base.getTypeId(SVCB, 64)
+  base.getTags(SVCB)
 
   base.toBind(SVCB, validRecords)
+  base.toWire(SVCB, validRecords)
   base.toTinydns(SVCB, validRecords)
 
   base.fromBind(SVCB, validRecords)

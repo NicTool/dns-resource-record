@@ -15,6 +15,10 @@ export default class OPENPGPKEY extends RR {
     return 'OpenPGP Public Key'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields() {
     return ['public key']
   }
@@ -25,6 +29,16 @@ export default class OPENPGPKEY extends RR {
 
   getTypeId() {
     return 61
+  }
+
+  getCanonical() {
+    return {
+      owner: 'matt.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'OPENPGPKEY',
+      'public key': 'mQINBFY...',
+    }
   }
 
   /******  IMPORTERS   *******/

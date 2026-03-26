@@ -58,6 +58,10 @@ export default class SMIMEA extends RR {
     return 'S/MIME cert association'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields(arg) {
     return ['certificate usage', 'selector', 'matching type', 'certificate association data']
   }
@@ -68,6 +72,19 @@ export default class SMIMEA extends RR {
 
   getTypeId() {
     return 53
+  }
+
+  getCanonical() {
+    return {
+      owner: '_443._tcp.www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SMIMEA',
+      'certificate usage': 0,
+      selector: 0,
+      'matching type': 1,
+      'certificate association data': 'ABCDEF...',
+    }
   }
 
   getQuotedFields() {

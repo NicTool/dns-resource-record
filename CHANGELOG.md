@@ -4,6 +4,18 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.6.0] - 2026-03-26
+
+#### Changed
+
+- feat(getCanonical): added to RRs where missing
+- feat(toWire): added wire format export
+- feat: add getTags() to all RR types
+  - values: common, obsolete, security, dnssec
+- doc(README): categorize RR types.
+- added RFCs to: AAAA 5952, NAPTR 4848, SIG 3755, TLSA 7671
+  - TXT: 4408, 6376, 7208
+
 ### [1.5.0] - 2026-03-22
 
 - feat(RRSIG, SIG, TSIG): added toBind, toTinydns, fromTinydns
@@ -366,3 +378,4 @@ Notable changes to this project are documented in this file.
 [1.3.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.3.1
 [1.4.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.4.0
 [1.5.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.5.0
+[1.6.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.0

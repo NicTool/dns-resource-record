@@ -57,9 +57,12 @@ describe('SOA record', function () {
   base.getDescription(SOA)
   base.getRFCs(SOA, validRecords[0])
   base.getFields(SOA, ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'])
+  base.getCanonical(SOA)
   base.getTypeId(SOA, 6)
+  base.getTags(SOA)
 
   base.toBind(SOA, validRecords)
+  base.toWire(SOA, validRecords)
   base.toTinydns(SOA, validRecords)
 
   base.fromBind(SOA, validRecords)

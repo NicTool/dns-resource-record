@@ -60,9 +60,12 @@ describe('SIG record', function () {
     'signers name',
     'signature',
   ])
+  base.getCanonical(SIG)
   base.getTypeId(SIG, 24)
+  base.getTags(SIG)
 
   base.toBind(SIG, validRecords)
+  base.toWire(SIG, validRecords)
   base.toTinydns(SIG, validRecords)
 
   base.fromBind(SIG, validRecords)

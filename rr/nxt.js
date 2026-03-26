@@ -29,6 +29,10 @@ export default class NXT extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['deprecated']
+  }
+
   getRdataFields(arg) {
     return ['next domain', 'type bit map']
   }
@@ -39,6 +43,17 @@ export default class NXT extends RR {
 
   getTypeId() {
     return 30
+  }
+
+  getCanonical() {
+    return {
+      owner: 'big.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NXT',
+      'next domain': 'host.example.com.',
+      'type bit map': 'A MX NXT',
+    }
   }
 
   /******  IMPORTERS   *******/

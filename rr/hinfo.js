@@ -22,6 +22,10 @@ export default class HINFO extends RR {
     return 'Host Info'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['cpu', 'os']
   }
@@ -32,6 +36,17 @@ export default class HINFO extends RR {
 
   getTypeId() {
     return 13
+  }
+
+  getCanonical() {
+    return {
+      owner: 'test.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'HINFO',
+      cpu: 'DEC-2060',
+      os: 'TOPS20',
+    }
   }
 
   getQuotedFields() {

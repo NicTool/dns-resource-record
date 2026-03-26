@@ -62,6 +62,10 @@ export default class CAA extends RR {
     return 'Certification Authority Authorization'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getQuotedFields() {
     return ['value']
   }

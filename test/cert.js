@@ -78,9 +78,12 @@ describe('CERT record', function () {
   base.getDescription(CERT)
   base.getRFCs(CERT, validRecords[0])
   base.getFields(CERT, ['cert type', 'key tag', 'algorithm', 'certificate'])
+  base.getCanonical(CERT)
   base.getTypeId(CERT, 37)
+  base.getTags(CERT)
 
   base.toBind(CERT, validRecords)
+  base.toWire(CERT, validRecords)
   base.toTinydns(CERT, validRecords)
 
   base.fromBind(CERT, validRecords)

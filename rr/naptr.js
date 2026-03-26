@@ -21,11 +21,26 @@ export default class NAPTR extends RR {
   }
 
   getRFCs() {
-    return [2915, 3403]
+    return [2915, 3403, 4848]
   }
 
   getTypeId() {
     return 35
+  }
+
+  getCanonical() {
+    return {
+      owner: 'cid.urn.arpa.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NAPTR',
+      order: 100,
+      preference: 10,
+      flags: 'S',
+      service: 'z3950+N2L+N2R',
+      regexp: '',
+      replacement: 'gatekeeper.example.com.',
+    }
   }
 
   /****** Resource record specific setters   *******/

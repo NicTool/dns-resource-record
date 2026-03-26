@@ -36,9 +36,12 @@ describe('DNSKEY record', function () {
   base.getDescription(DNSKEY)
   base.getRFCs(DNSKEY, validRecords[0])
   base.getFields(DNSKEY, ['flags', 'protocol', 'algorithm', 'publickey'])
+  base.getCanonical(DNSKEY)
   base.getTypeId(DNSKEY, 48)
+  base.getTags(DNSKEY)
 
   base.toBind(DNSKEY, validRecords)
+  base.toWire(DNSKEY, validRecords)
   base.toTinydns(DNSKEY, validRecords)
 
   base.fromBind(DNSKEY, validRecords)

@@ -29,6 +29,10 @@ export default class MX extends RR {
     return 'Mail Exchanger'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['preference', 'exchange']
   }
@@ -47,7 +51,7 @@ export default class MX extends RR {
       ttl: 43200,
       class: 'IN',
       type: 'MX',
-      preference: 0,
+      preference: 10,
       exchange: 'mail.example.com.',
     }
   }
@@ -84,6 +88,12 @@ export default class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    const pref = Buffer.alloc(2)
+    pref.writeUInt16BE(this.get('preference'))
+    return Buffer.concat([pref, this.wirePackDomain(this.get('exchange'))])
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
   }

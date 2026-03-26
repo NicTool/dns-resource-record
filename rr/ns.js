@@ -21,6 +21,10 @@ export default class NS extends RR {
     return 'Name Server'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['dname']
   }
@@ -31,6 +35,16 @@ export default class NS extends RR {
 
   getTypeId() {
     return 2
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NS',
+      dname: 'ns1.example.com.',
+    }
   }
 
   /******  IMPORTERS   *******/
@@ -63,6 +77,10 @@ export default class NS extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('dname'))
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
   }

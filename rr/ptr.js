@@ -18,6 +18,10 @@ export default class PTR extends RR {
     return 'Pointer'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['dname']
   }
@@ -28,6 +32,16 @@ export default class PTR extends RR {
 
   getTypeId() {
     return 12
+  }
+
+  getCanonical() {
+    return {
+      owner: '2.2.0.192.in-addr.arpa.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'PTR',
+      dname: 'host.example.com.',
+    }
   }
 
   /******  IMPORTERS   *******/
@@ -58,6 +72,10 @@ export default class PTR extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('dname'))
+  }
+
   toTinydns() {
     return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }

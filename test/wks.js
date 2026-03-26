@@ -69,9 +69,12 @@ describe('WKS record', function () {
   base.getDescription(WKS)
   base.getRFCs(WKS, validRecords[0])
   base.getFields(WKS, ['address', 'protocol', 'bit map'])
+  base.getCanonical(WKS)
   base.getTypeId(WKS, 11)
+  base.getTags(WKS)
 
   base.toBind(WKS, validRecords)
+  base.toWire(WKS, validRecords)
   base.toTinydns(WKS, validRecords)
 
   base.fromBind(WKS, validRecords)

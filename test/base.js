@@ -135,3 +135,36 @@ export function getTypeId(type, val) {
     })
   })
 }
+
+export function getCanonical(type) {
+  describe('getCanonical', function () {
+    it('returns a valid canonical object', function () {
+      const c = new type(null).getCanonical()
+      assert.ok(c)
+      assert.ok(new type(c))
+    })
+  })
+}
+
+export function toWire(type, validRecords) {
+  describe('toWire', function () {
+    for (const val of validRecords) {
+      it(`exports to wire format: ${val.owner}`, function () {
+        const r = new type(val)
+        const wire = r.toWire()
+        assert.ok(Buffer.isBuffer(wire))
+        assert.ok(wire.length > 10)
+      })
+    }
+  })
+}
+
+export function getTags(type) {
+  describe('getTags', function () {
+    const r = new type(null)
+    const tags = r.getTags()
+    it(`can retrieve tags: ${tags.join(',')}`, function () {
+      assert.ok(Array.isArray(tags))
+    })
+  })
+}

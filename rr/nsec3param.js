@@ -57,6 +57,10 @@ export default class NSEC3PARAM extends RR {
     return 'Next Secure Parameters'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['hash algorithm', 'flags', 'iterations', 'salt']
   }
@@ -67,6 +71,19 @@ export default class NSEC3PARAM extends RR {
 
   getTypeId() {
     return 51
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NSEC3PARAM',
+      'hash algorithm': 1,
+      flags: 1,
+      iterations: 12,
+      salt: 'aabbccdd',
+    }
   }
 
   /******  IMPORTERS   *******/

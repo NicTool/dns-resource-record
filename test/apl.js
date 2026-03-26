@@ -66,9 +66,12 @@ describe('APL record', function () {
   base.getRFCs(APL, validRecords[0])
   base.getRdataFields(APL, ['apl rdata'])
   base.getFields(APL, ['apl rdata'])
+  base.getCanonical(APL)
   base.getTypeId(APL, 42)
+  base.getTags(APL)
 
   base.toBind(APL, validRecords)
+  base.toWire(APL, validRecords)
   base.toTinydns(APL, validRecords)
 
   base.fromBind(APL, validRecords)

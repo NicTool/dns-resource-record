@@ -75,6 +75,18 @@ export default class URI extends RR {
     return 256
   }
 
+  getCanonical() {
+    return {
+      owner: 'www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'URI',
+      priority: 10,
+      weight: 10,
+      target: 'http://www.example.com/',
+    }
+  }
+
   getQuotedFields() {
     return ['target']
   }

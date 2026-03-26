@@ -117,9 +117,12 @@ describe('IPSECKEY record', function () {
   base.getRFCs(IPSECKEY, validRecords[0])
   base.getRdataFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
   base.getFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
+  base.getCanonical(IPSECKEY)
   base.getTypeId(IPSECKEY, 45)
+  base.getTags(IPSECKEY)
 
   base.toBind(IPSECKEY, validRecords)
+  base.toWire(IPSECKEY, validRecords)
   base.toTinydns(IPSECKEY, validRecords)
 
   base.fromBind(IPSECKEY, validRecords)

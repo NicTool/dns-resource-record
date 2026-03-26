@@ -29,6 +29,10 @@ export default class WKS extends RR {
     return 'Well Known Service'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['address', 'protocol', 'bit map']
   }
@@ -39,6 +43,18 @@ export default class WKS extends RR {
 
   getTypeId() {
     return 11
+  }
+
+  getCanonical() {
+    return {
+      owner: 'host.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'WKS',
+      address: '192.0.2.1',
+      protocol: 'TCP',
+      'bit map': 'ftp smtp',
+    }
   }
 
   /******  IMPORTERS   *******/

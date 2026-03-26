@@ -18,6 +18,10 @@ export default class SPF extends TXT {
     return 'Sender Policy Framework'
   }
 
+  getTags() {
+    return ['deprecated']
+  }
+
   getRdataFields(arg) {
     return ['data']
   }
@@ -28,6 +32,16 @@ export default class SPF extends TXT {
 
   getTypeId() {
     return 99
+  }
+
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SPF',
+      data: 'v=spf1 mx -all',
+    }
   }
 
   /******  IMPORTERS   *******/

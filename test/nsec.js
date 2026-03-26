@@ -28,9 +28,12 @@ describe('NSEC record', function () {
   base.getDescription(NSEC)
   base.getRFCs(NSEC, validRecords[0])
   base.getFields(NSEC, ['next domain', 'type bit maps'])
+  base.getCanonical(NSEC)
   base.getTypeId(NSEC, 47)
+  base.getTags(NSEC)
 
   base.toBind(NSEC, validRecords)
+  base.toWire(NSEC, validRecords)
   base.toTinydns(NSEC, validRecords)
 
   base.fromBind(NSEC, validRecords)
