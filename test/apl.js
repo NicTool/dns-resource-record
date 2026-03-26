@@ -68,6 +68,7 @@ describe('APL record', function () {
   base.getFields(APL, ['apl rdata'])
   base.getCanonical(APL)
   base.getTypeId(APL, 42)
+  base.getTags(APL)
 
   base.toBind(APL, validRecords)
   base.toWire(APL, validRecords)

@@ -75,6 +75,7 @@ describe('RRSIG record', function () {
   ])
   base.getCanonical(RRSIG)
   base.getTypeId(RRSIG, 46)
+  base.getTags(RRSIG)
 
   base.toBind(RRSIG, validRecords)
   base.toWire(RRSIG, validRecords)

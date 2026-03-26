@@ -51,6 +51,7 @@ describe('HTTPS record', function () {
   base.getFields(HTTPS, ['priority', 'target name', 'params'])
   base.getCanonical(HTTPS)
   base.getTypeId(HTTPS, 65)
+  base.getTags(HTTPS)
 
   base.toBind(HTTPS, validRecords)
   base.toWire(HTTPS, validRecords)

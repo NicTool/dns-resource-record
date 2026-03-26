@@ -40,6 +40,7 @@ describe('CNAME record', function () {
   base.getFields(CNAME, ['cname'])
   base.getCanonical(CNAME)
   base.getTypeId(CNAME, 5)
+  base.getTags(CNAME)
 
   base.toBind(CNAME, validRecords)
   base.toWire(CNAME, validRecords)

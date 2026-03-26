@@ -57,6 +57,7 @@ describe('MX record', function () {
   base.getFields(MX, ['preference', 'exchange'])
   base.getCanonical(MX)
   base.getTypeId(MX, 15)
+  base.getTags(MX)
 
   base.toBind(MX, validRecords)
   base.toWire(MX, validRecords)

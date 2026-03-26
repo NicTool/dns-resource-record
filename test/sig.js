@@ -62,6 +62,7 @@ describe('SIG record', function () {
   ])
   base.getCanonical(SIG)
   base.getTypeId(SIG, 24)
+  base.getTags(SIG)
 
   base.toBind(SIG, validRecords)
   base.toWire(SIG, validRecords)

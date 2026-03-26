@@ -66,6 +66,7 @@ describe('A record', function () {
   base.getFields(A, ['address'])
   base.getCanonical(A)
   base.getTypeId(A, 1)
+  base.getTags(A)
 
   base.toBind(A, validRecords)
   base.toWire(A, validRecords)

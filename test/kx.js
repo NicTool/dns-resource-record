@@ -65,6 +65,7 @@ describe('KX record', function () {
   base.getFields(KX, ['preference', 'exchanger'])
   base.getCanonical(KX)
   base.getTypeId(KX, 36)
+  base.getTags(KX)
 
   base.toBind(KX, validRecords)
   base.toWire(KX, validRecords)

@@ -36,6 +36,7 @@ describe('DHCID record', function () {
   base.getFields(DHCID, ['data'])
   base.getCanonical(DHCID)
   base.getTypeId(DHCID, 49)
+  base.getTags(DHCID)
 
   base.toBind(DHCID, validRecords)
   base.toWire(DHCID, validRecords)

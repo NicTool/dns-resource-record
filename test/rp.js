@@ -65,6 +65,7 @@ describe('RP record', function () {
   base.getFields(RP, ['mbox', 'txt'])
   base.getCanonical(RP)
   base.getTypeId(RP, 17)
+  base.getTags(RP)
 
   base.toBind(RP, validRecords)
   base.toWire(RP, validRecords)

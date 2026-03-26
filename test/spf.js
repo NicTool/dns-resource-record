@@ -28,6 +28,7 @@ describe('SPF record', function () {
   base.getFields(SPF, ['data'])
   base.getCanonical(SPF)
   base.getTypeId(SPF, 99)
+  base.getTags(SPF)
 
   base.toBind(SPF, validRecords)
   base.toWire(SPF, validRecords)

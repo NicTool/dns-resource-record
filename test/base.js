@@ -158,3 +158,13 @@ export function toWire(type, validRecords) {
     }
   })
 }
+
+export function getTags(type) {
+  describe('getTags', function () {
+    const r = new type(null)
+    const tags = r.getTags()
+    it(`can retrieve tags: ${tags.join(',')}`, function () {
+      assert.ok(Array.isArray(tags))
+    })
+  })
+}

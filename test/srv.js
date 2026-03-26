@@ -56,6 +56,7 @@ describe('SRV record', function () {
   base.getFields(SRV, ['priority', 'weight', 'port', 'target'])
   base.getCanonical(SRV)
   base.getTypeId(SRV, 33)
+  base.getTags(SRV)
 
   base.toBind(SRV, validRecords)
   base.toWire(SRV, validRecords)

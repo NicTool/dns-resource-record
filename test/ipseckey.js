@@ -119,6 +119,7 @@ describe('IPSECKEY record', function () {
   base.getFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
   base.getCanonical(IPSECKEY)
   base.getTypeId(IPSECKEY, 45)
+  base.getTags(IPSECKEY)
 
   base.toBind(IPSECKEY, validRecords)
   base.toWire(IPSECKEY, validRecords)

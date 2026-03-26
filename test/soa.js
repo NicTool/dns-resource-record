@@ -59,6 +59,7 @@ describe('SOA record', function () {
   base.getFields(SOA, ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'])
   base.getCanonical(SOA)
   base.getTypeId(SOA, 6)
+  base.getTags(SOA)
 
   base.toBind(SOA, validRecords)
   base.toWire(SOA, validRecords)

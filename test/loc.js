@@ -52,6 +52,7 @@ describe('LOC record', function () {
   base.getFields(LOC, ['address'])
   base.getCanonical(LOC)
   base.getTypeId(LOC, 29)
+  base.getTags(LOC)
 
   base.toBind(LOC, validRecords)
   base.toWire(LOC, validRecords)

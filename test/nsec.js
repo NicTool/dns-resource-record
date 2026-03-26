@@ -30,6 +30,7 @@ describe('NSEC record', function () {
   base.getFields(NSEC, ['next domain', 'type bit maps'])
   base.getCanonical(NSEC)
   base.getTypeId(NSEC, 47)
+  base.getTags(NSEC)
 
   base.toBind(NSEC, validRecords)
   base.toWire(NSEC, validRecords)

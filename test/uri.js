@@ -51,6 +51,7 @@ describe('URI record', function () {
   base.getFields(URI, ['priority', 'weight', 'target'])
   base.getCanonical(URI)
   base.getTypeId(URI, 256)
+  base.getTags(URI)
 
   base.toBind(URI, validRecords)
   base.toWire(URI, validRecords)

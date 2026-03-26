@@ -84,6 +84,7 @@ describe('HIP record', function () {
   base.getFields(HIP, ['pk algorithm', 'hit', 'public key', 'rendezvous servers'])
   base.getCanonical(HIP)
   base.getTypeId(HIP, 55)
+  base.getTags(HIP)
 
   base.toBind(HIP, validRecords)
   base.toWire(HIP, validRecords)

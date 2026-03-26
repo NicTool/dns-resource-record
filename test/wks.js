@@ -71,6 +71,7 @@ describe('WKS record', function () {
   base.getFields(WKS, ['address', 'protocol', 'bit map'])
   base.getCanonical(WKS)
   base.getTypeId(WKS, 11)
+  base.getTags(WKS)
 
   base.toBind(WKS, validRecords)
   base.toWire(WKS, validRecords)

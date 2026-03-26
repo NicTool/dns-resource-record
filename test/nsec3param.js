@@ -69,6 +69,7 @@ describe('NSEC3PARAM record', function () {
   base.getFields(NSEC3PARAM, ['hash algorithm', 'flags', 'iterations', 'salt'])
   base.getCanonical(NSEC3PARAM)
   base.getTypeId(NSEC3PARAM, 51)
+  base.getTags(NSEC3PARAM)
 
   base.toBind(NSEC3PARAM, validRecords)
   base.toWire(NSEC3PARAM, validRecords)

@@ -85,6 +85,7 @@ describe('CAA record', function () {
   base.getFields(CAA, ['flags', 'tag', 'value'])
   base.getCanonical(CAA)
   base.getTypeId(CAA, 257)
+  base.getTags(CAA)
 
   base.toBind(CAA, validRecords)
   base.toWire(CAA, validRecords)

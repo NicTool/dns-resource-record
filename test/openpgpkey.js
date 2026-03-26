@@ -79,6 +79,7 @@ describe('OPENPGPKEY record', function () {
   base.getFields(OPENPGPKEY, ['public key'])
   base.getCanonical(OPENPGPKEY)
   base.getTypeId(OPENPGPKEY, 61)
+  base.getTags(OPENPGPKEY)
 
   base.toBind(OPENPGPKEY, validRecords)
   base.toWire(OPENPGPKEY, validRecords)

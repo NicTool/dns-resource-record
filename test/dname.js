@@ -35,6 +35,7 @@ describe('DNAME record', function () {
   base.getFields(DNAME, ['target'])
   base.getCanonical(DNAME)
   base.getTypeId(DNAME, 39)
+  base.getTags(DNAME)
 
   base.toBind(DNAME, validRecords)
   base.toWire(DNAME, validRecords)

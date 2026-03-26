@@ -35,6 +35,7 @@ describe('PTR record', function () {
   base.getFields(PTR, ['dname'])
   base.getCanonical(PTR)
   base.getTypeId(PTR, 12)
+  base.getTags(PTR)
 
   base.toBind(PTR, validRecords)
   base.toWire(PTR, validRecords)

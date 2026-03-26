@@ -44,6 +44,7 @@ describe('HINFO record', function () {
   base.getFields(HINFO, ['cpu', 'os'])
   base.getCanonical(HINFO)
   base.getTypeId(HINFO, 13)
+  base.getTags(HINFO)
 
   base.toBind(HINFO, validRecords)
   base.toWire(HINFO, validRecords)

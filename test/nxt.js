@@ -30,6 +30,7 @@ describe('NXT record', function () {
   base.getFields(NXT, ['next domain', 'type bit map'])
   base.getCanonical(NXT)
   base.getTypeId(NXT, 30)
+  base.getTags(NXT)
 
   base.toBind(NXT, validRecords)
   base.toWire(NXT, validRecords)

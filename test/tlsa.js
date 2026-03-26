@@ -50,6 +50,7 @@ describe('TLSA record', function () {
   base.getFields(TLSA, ['certificate usage', 'selector', 'matching type', 'certificate association data'])
   base.getCanonical(TLSA)
   base.getTypeId(TLSA, 52)
+  base.getTags(TLSA)
 
   base.toBind(TLSA, validRecords)
   base.toWire(TLSA, validRecords)

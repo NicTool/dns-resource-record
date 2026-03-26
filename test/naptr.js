@@ -46,6 +46,7 @@ describe('NAPTR record', function () {
   base.getFields(NAPTR, ['order', 'preference', 'flags', 'service', 'regexp', 'replacement'])
   base.getCanonical(NAPTR)
   base.getTypeId(NAPTR, 35)
+  base.getTags(NAPTR)
 
   base.toBind(NAPTR, validRecords)
   base.toWire(NAPTR, validRecords)

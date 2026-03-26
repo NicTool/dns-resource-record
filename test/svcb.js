@@ -51,6 +51,7 @@ describe('SVCB record', function () {
   base.getFields(SVCB, ['priority', 'target name', 'params'])
   base.getCanonical(SVCB)
   base.getTypeId(SVCB, 64)
+  base.getTags(SVCB)
 
   base.toBind(SVCB, validRecords)
   base.toWire(SVCB, validRecords)

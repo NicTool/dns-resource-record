@@ -81,6 +81,7 @@ describe('NSEC3 record', function () {
   ])
   base.getCanonical(NSEC3)
   base.getTypeId(NSEC3, 50)
+  base.getTags(NSEC3)
 
   base.toBind(NSEC3, validRecords)
   base.toWire(NSEC3, validRecords)
