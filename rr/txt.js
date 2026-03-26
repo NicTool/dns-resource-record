@@ -105,7 +105,7 @@ export default class TXT extends RR {
   getWireRdata() {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')
-    return Buffer.from(TINYDNS.octalToChar(TINYDNS.packString(data)), 'binary')
+    return packStringWire(data)
   }
 
   toTinydns() {
@@ -136,4 +136,19 @@ function asQuotedStrings(data) {
   }
 
   return data
+}
+
+function packStringWire(str) {
+  const parts = str.match(/(.{1,255})/g)
+  let len = 0
+  for (const part of parts) len += part.length + 1
+
+  const buf = Buffer.allocUnsafe(len)
+  let offset = 0
+  for (const part of parts) {
+    buf.writeUInt8(part.length, offset++)
+    buf.write(part, offset, 'ascii')
+    offset += part.length
+  }
+  return buf
 }

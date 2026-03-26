@@ -363,7 +363,7 @@ export default class RR extends Map {
   }
 
   wirePackDomain(fqdn) {
-    return this.octalToBuffer(TINYDNS.packDomainName(fqdn))
+    return packDomainNameWire(fqdn)
   }
 
   getWireRdata() {
@@ -410,4 +410,26 @@ export default class RR extends Map {
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`
   }
+}
+
+function packDomainNameWire(fqdn) {
+  if (fqdn === '.') return Buffer.from([0])
+  const parts = fqdn.split('.')
+  let len = 0
+  for (const part of parts) {
+    if (part.length > 0) len += part.length + 1
+  }
+  len += 1 // for the final \0
+
+  const buf = Buffer.allocUnsafe(len)
+  let offset = 0
+  for (const part of parts) {
+    if (part.length > 0) {
+      buf.writeUInt8(part.length, offset++)
+      buf.write(part, offset, 'ascii')
+      offset += part.length
+    }
+  }
+  buf.writeUInt8(0, offset)
+  return buf
 }

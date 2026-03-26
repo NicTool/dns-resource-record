@@ -142,6 +142,10 @@ export default class AAAA extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return Buffer.from(this.expand(this.get('address'), ''), 'hex')
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getCompressed()}\n`
   }

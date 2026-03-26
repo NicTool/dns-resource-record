@@ -143,7 +143,11 @@ export default class SOA extends RR {
     nums.writeUInt32BE(this.get('retry'), 8)
     nums.writeUInt32BE(this.get('expire'), 12)
     nums.writeUInt32BE(this.get('minimum'), 16)
-    return Buffer.concat([this.wirePackDomain(this.get('mname')), this.wirePackDomain(this.get('rname')), nums])
+    return Buffer.concat([
+      this.wirePackDomain(this.get('mname')),
+      this.wirePackDomain(this.get('rname')),
+      nums,
+    ])
   }
 
   toTinydns() {

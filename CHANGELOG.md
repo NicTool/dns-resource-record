@@ -8,8 +8,9 @@ Notable changes to this project are documented in this file.
 
 #### Changed
 
+- feat(toWire): added wire format export
 - feat: add getTags() to all RR types
-  - values: common, obsolete, security, dnssec, 
+  - values: common, obsolete, security, dnssec
 - doc(README): categorize RR types.
 - added RFCs to: AAAA 5952, NAPTR 4848, SIG 3755, TLSA 7671
   - TXT: 4408, 6376, 7208
