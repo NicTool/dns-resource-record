@@ -83,6 +83,22 @@ export default class SOA extends RR {
     return 6
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SOA',
+      mname: 'ns1.example.com.',
+      rname: 'admin.example.com.',
+      serial: 2023051001,
+      refresh: 7200,
+      retry: 3600,
+      expire: 1209600,
+      minimum: 3600,
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromBind({ bindline }) {
     // example.com TTL IN  SOA mname rname serial refresh retry expire minimum

@@ -62,6 +62,18 @@ export default class SSHFP extends RR {
     return 44
   }
 
+  getCanonical() {
+    return {
+      owner: 'mail.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SSHFP',
+      algorithm: 2,
+      fptype: 1,
+      fingerprint: '123456789abcdef6789abcdf6789abdf6789abcd',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo

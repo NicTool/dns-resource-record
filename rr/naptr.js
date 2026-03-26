@@ -28,6 +28,21 @@ export default class NAPTR extends RR {
     return 35
   }
 
+  getCanonical() {
+    return {
+      owner: 'cid.urn.arpa.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NAPTR',
+      order: 100,
+      preference: 10,
+      flags: 'S',
+      service: 'z3950+N2L+N2R',
+      regexp: '',
+      replacement: 'gatekeeper.example.com.',
+    }
+  }
+
   /****** Resource record specific setters   *******/
   setOrder(val) {
     this.is16bitInt('NAPTR', 'order', val)

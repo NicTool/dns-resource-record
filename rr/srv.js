@@ -57,6 +57,19 @@ export default class SRV extends RR {
     return 33
   }
 
+  getCanonical() {
+    return {
+      owner: '_imaps._tcp.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SRV',
+      priority: 10,
+      weight: 10,
+      port: 993,
+      target: 'mail.example.com.',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     const str = tinyline

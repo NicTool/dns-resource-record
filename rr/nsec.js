@@ -45,6 +45,17 @@ export default class NSEC extends RR {
     return 47
   }
 
+  getCanonical() {
+    return {
+      owner: 'alfa.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NSEC',
+      'next domain': 'host.example.com.',
+      'type bit maps': 'A MX RRSIG NSEC TYPE1234',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromTinydns({ tinyline }) {

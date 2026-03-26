@@ -31,6 +31,16 @@ export default class OPENPGPKEY extends RR {
     return 61
   }
 
+  getCanonical() {
+    return {
+      owner: 'matt.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'OPENPGPKEY',
+      'public key': 'mQINBFY...',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromBind({ bindline: bindline }) {
     // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>

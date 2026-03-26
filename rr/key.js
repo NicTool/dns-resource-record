@@ -63,6 +63,19 @@ export default class KEY extends RR {
     return 25
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'KEY',
+      flags: 256,
+      protocol: 3,
+      algorithm: 5,
+      publickey: 'AQPSKAsj8...',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

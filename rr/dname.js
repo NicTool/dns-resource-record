@@ -35,6 +35,16 @@ export default class DNAME extends RR {
     return 39
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'DNAME',
+      target: 'example.net.',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // DNAME via generic, :fqdn:n:rdata:ttl:timestamp:lo

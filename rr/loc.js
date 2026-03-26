@@ -48,6 +48,16 @@ export default class LOC extends RR {
     return 29
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'LOC',
+      address: '52 22 23.000 N 4 53 32.000 E 10m 100m 10m 2m',
+    }
+  }
+
   parseLoc(string) {
     // d1 [m1 [s1]]
     const dms = '(\\d+)\\s+(?:(\\d+)\\s+)?(?:([\\d.]+)\\s+)?'

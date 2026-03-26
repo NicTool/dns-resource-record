@@ -34,6 +34,16 @@ export default class PTR extends RR {
     return 12
   }
 
+  getCanonical() {
+    return {
+      owner: '2.2.0.192.in-addr.arpa.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'PTR',
+      dname: 'host.example.com.',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // ^fqdn:p:ttl:timestamp:lo

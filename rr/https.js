@@ -48,6 +48,18 @@ export default class HTTPS extends RR {
     return 65
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'HTTPS',
+      priority: 1,
+      'target name': 'example.com.',
+      params: 'alpn="h2,h3"',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

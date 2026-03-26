@@ -104,6 +104,24 @@ export default class RRSIG extends RR {
     return 46
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'RRSIG',
+      'type covered': 1,
+      algorithm: 5,
+      labels: 3,
+      'original ttl': 3600,
+      'signature expiration': 1045053120,
+      'signature inception': 1042461120,
+      'key tag': 12345,
+      'signers name': 'example.com.',
+      signature: 'ABCDEF...',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

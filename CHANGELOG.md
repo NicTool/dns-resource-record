@@ -8,6 +8,7 @@ Notable changes to this project are documented in this file.
 
 #### Changed
 
+- feat(getCanonical): added to RRs where missing
 - feat(toWire): added wire format export
 - feat: add getTags() to all RR types
   - values: common, obsolete, security, dnssec

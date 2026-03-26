@@ -34,6 +34,16 @@ export default class SPF extends TXT {
     return 99
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SPF',
+      data: 'v=spf1 mx -all',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // SPF via generic, :fqdn:n:rdata:ttl:timestamp:lo

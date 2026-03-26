@@ -25,6 +25,22 @@ export default class TSIG extends RR {
     return 250
   }
 
+  getCanonical() {
+    return {
+      owner: 'test.example.',
+      ttl: 0,
+      class: 'ANY',
+      type: 'TSIG',
+      'algorithm name': 'hmac-sha256.',
+      'time signed': 1620650000,
+      fudge: 300,
+      mac: 'ABCDEF...',
+      'original id': 12345,
+      error: 0,
+      other: '',
+    }
+  }
+
   setClass(t) {
     if (t !== 'ANY') this.throwHelp('TSIG: Class is required to be ANY')
     this.set('class', t)

@@ -41,6 +41,16 @@ export default class CNAME extends RR {
     return 5
   }
 
+  getCanonical() {
+    return {
+      owner: 'www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'CNAME',
+      cname: 'web.example.com.',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // Cfqdn:p:ttl:timestamp:lo

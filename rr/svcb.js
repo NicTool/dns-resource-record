@@ -44,6 +44,18 @@ export default class SVCB extends RR {
     return 64
   }
 
+  getCanonical() {
+    return {
+      owner: '_8443._foo.api.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SVCB',
+      priority: 1,
+      'target name': 'svc4.example.net.',
+      params: 'alpn="h2,h3"',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

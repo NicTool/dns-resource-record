@@ -74,6 +74,19 @@ export default class SMIMEA extends RR {
     return 53
   }
 
+  getCanonical() {
+    return {
+      owner: '_443._tcp.www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'SMIMEA',
+      'certificate usage': 0,
+      selector: 0,
+      'matching type': 1,
+      'certificate association data': 'ABCDEF...',
+    }
+  }
+
   getQuotedFields() {
     return []
   }

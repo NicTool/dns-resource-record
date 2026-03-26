@@ -37,6 +37,16 @@ export default class NS extends RR {
     return 2
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NS',
+      dname: 'ns1.example.com.',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // &fqdn:ip:x:ttl:timestamp:lo

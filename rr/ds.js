@@ -66,6 +66,19 @@ export default class DS extends RR {
     return 43
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'DS',
+      'key tag': 12345,
+      algorithm: 5,
+      'digest type': 1,
+      digest: 'ABCDEF123...',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

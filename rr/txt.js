@@ -32,6 +32,16 @@ export default class TXT extends RR {
     return 16
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'TXT',
+      data: 'v=spf1 mx -all',
+    }
+  }
+
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     const str = tinyline

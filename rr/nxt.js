@@ -45,6 +45,17 @@ export default class NXT extends RR {
     return 30
   }
 
+  getCanonical() {
+    return {
+      owner: 'big.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'NXT',
+      'next domain': 'host.example.com.',
+      'type bit map': 'A MX NXT',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromTinydns({ tinyline }) {

@@ -95,6 +95,19 @@ export default class DNSKEY extends RR {
     return 48
   }
 
+  getCanonical() {
+    return {
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'DNSKEY',
+      flags: 256,
+      protocol: 3,
+      algorithm: 5,
+      publickey: 'AQPSKAsj8...',
+    }
+  }
+
   /******  IMPORTERS   *******/
 
   fromBind({ bindline }) {

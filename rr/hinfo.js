@@ -38,6 +38,17 @@ export default class HINFO extends RR {
     return 13
   }
 
+  getCanonical() {
+    return {
+      owner: 'test.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'HINFO',
+      cpu: 'DEC-2060',
+      os: 'TOPS20',
+    }
+  }
+
   getQuotedFields() {
     return ['cpu', 'os']
   }

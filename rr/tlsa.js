@@ -74,6 +74,19 @@ export default class TLSA extends RR {
     return 52
   }
 
+  getCanonical() {
+    return {
+      owner: '_443._tcp.www.example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'TLSA',
+      'certificate usage': 3,
+      selector: 1,
+      'matching type': 1,
+      'certificate association data': 'ABCDEF...',
+    }
+  }
+
   getQuotedFields() {
     return []
   }
