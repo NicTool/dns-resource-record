@@ -51,7 +51,7 @@ export default class MX extends RR {
       ttl: 43200,
       class: 'IN',
       type: 'MX',
-      preference: 0,
+      preference: 10,
       exchange: 'mail.example.com.',
     }
   }
