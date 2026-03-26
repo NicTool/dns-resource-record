@@ -50,6 +50,10 @@ export default class DS extends RR {
     return 'Delegation Signer'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['key tag', 'algorithm', 'digest type', 'digest']
   }

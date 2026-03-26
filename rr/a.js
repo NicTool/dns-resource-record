@@ -16,6 +16,10 @@ export default class A extends RR {
     return 'Address'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['address']
   }

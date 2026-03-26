@@ -18,6 +18,10 @@ export default class PTR extends RR {
     return 'Pointer'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['dname']
   }

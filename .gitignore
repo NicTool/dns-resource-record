@@ -107,5 +107,6 @@ package-lock.json
 ignore/
 out
 config.yml
+CLAUDE.md
 GEMINI.md
 .release/

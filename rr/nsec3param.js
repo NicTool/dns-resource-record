@@ -57,6 +57,10 @@ export default class NSEC3PARAM extends RR {
     return 'Next Secure Parameters'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['hash algorithm', 'flags', 'iterations', 'salt']
   }

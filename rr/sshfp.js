@@ -46,6 +46,10 @@ export default class SSHFP extends RR {
     return 'Secure Shell Key Fingerprints'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields() {
     return ['algorithm', 'fptype', 'fingerprint']
   }

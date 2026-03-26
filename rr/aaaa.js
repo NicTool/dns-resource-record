@@ -22,12 +22,16 @@ export default class AAAA extends RR {
     return 'Address IPv6'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['address']
   }
 
   getRFCs() {
-    return [3596]
+    return [3596, 5952]
   }
 
   getTypeId() {
@@ -40,7 +44,7 @@ export default class AAAA extends RR {
       address: '2001:0db8:0020:000a:0000:0000:0000:0004',
       class: 'IN',
       ttl: 3600,
-      type: 'A',
+      type: 'AAAA',
     }
   }
 

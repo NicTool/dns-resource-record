@@ -68,6 +68,10 @@ export default class SIG extends RR {
     return 'Signature'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return [
       'type covered',
@@ -83,7 +87,7 @@ export default class SIG extends RR {
   }
 
   getRFCs() {
-    return [2535]
+    return [2535, 3755]
   }
 
   getTypeId() {

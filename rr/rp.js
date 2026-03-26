@@ -28,6 +28,10 @@ export default class RP extends RR {
     return 'Responsible Person'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['mbox', 'txt']
   }

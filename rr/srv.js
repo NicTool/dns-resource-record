@@ -41,6 +41,10 @@ export default class SRV extends RR {
     return 'Service'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['priority', 'weight', 'port', 'target']
   }

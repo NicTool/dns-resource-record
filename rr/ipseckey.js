@@ -71,6 +71,10 @@ export default class IPSECKEY extends RR {
     return 'IPsec Keying'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields(arg) {
     return ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
   }

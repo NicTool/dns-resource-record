@@ -29,6 +29,10 @@ export default class NSEC extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['next domain', 'type bit maps']
   }

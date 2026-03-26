@@ -21,6 +21,10 @@ export default class NS extends RR {
     return 'Name Server'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['dname']
   }

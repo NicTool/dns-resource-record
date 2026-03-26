@@ -184,6 +184,10 @@ export default class RR extends Map {
     return []
   }
 
+  getTags() {
+    return []
+  }
+
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)

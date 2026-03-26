@@ -21,7 +21,7 @@ export default class NAPTR extends RR {
   }
 
   getRFCs() {
-    return [2915, 3403]
+    return [2915, 3403, 4848]
   }
 
   getTypeId() {

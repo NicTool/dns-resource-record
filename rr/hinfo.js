@@ -22,6 +22,10 @@ export default class HINFO extends RR {
     return 'Host Info'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['cpu', 'os']
   }

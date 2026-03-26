@@ -58,12 +58,16 @@ export default class TLSA extends RR {
     return 'TLSA certificate association'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields(arg) {
     return ['certificate usage', 'selector', 'matching type', 'certificate association data']
   }
 
   getRFCs() {
-    return [6698]
+    return [6698, 7671]
   }
 
   getTypeId() {

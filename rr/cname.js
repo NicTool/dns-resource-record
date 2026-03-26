@@ -25,6 +25,10 @@ export default class CNAME extends RR {
     return 'Canonical Name'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['cname']
   }

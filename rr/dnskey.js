@@ -79,6 +79,10 @@ export default class DNSKEY extends RR {
     return 'DNS Public Key'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['flags', 'protocol', 'algorithm', 'publickey']
   }

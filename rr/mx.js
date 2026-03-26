@@ -29,6 +29,10 @@ export default class MX extends RR {
     return 'Mail Exchanger'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['preference', 'exchange']
   }

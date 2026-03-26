@@ -64,6 +64,10 @@ export default class NSEC3 extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
   }

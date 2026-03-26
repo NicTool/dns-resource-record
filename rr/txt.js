@@ -16,12 +16,16 @@ export default class TXT extends RR {
     return 'Text'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['data']
   }
 
   getRFCs() {
-    return [1035]
+    return [1035, 4408, 7208, 6376]
   }
 
   getTypeId() {

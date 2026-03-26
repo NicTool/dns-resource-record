@@ -18,6 +18,10 @@ export default class SPF extends TXT {
     return 'Sender Policy Framework'
   }
 
+  getTags() {
+    return ['deprecated']
+  }
+
   getRdataFields(arg) {
     return ['data']
   }

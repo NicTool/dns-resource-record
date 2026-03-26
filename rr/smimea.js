@@ -58,6 +58,10 @@ export default class SMIMEA extends RR {
     return 'S/MIME cert association'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields(arg) {
     return ['certificate usage', 'selector', 'matching type', 'certificate association data']
   }

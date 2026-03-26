@@ -29,6 +29,10 @@ export default class WKS extends RR {
     return 'Well Known Service'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['address', 'protocol', 'bit map']
   }

@@ -29,6 +29,10 @@ export default class NXT extends RR {
     return 'Next Secure'
   }
 
+  getTags() {
+    return ['deprecated']
+  }
+
   getRdataFields(arg) {
     return ['next domain', 'type bit map']
   }

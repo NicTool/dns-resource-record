@@ -15,6 +15,10 @@ export default class OPENPGPKEY extends RR {
     return 'OpenPGP Public Key'
   }
 
+  getTags() {
+    return ['security']
+  }
+
   getRdataFields() {
     return ['public key']
   }

@@ -78,6 +78,10 @@ export default class RRSIG extends RR {
     return 'Resource Record Signature'
   }
 
+  getTags() {
+    return ['dnssec']
+  }
+
   getRdataFields(arg) {
     return [
       'type covered',

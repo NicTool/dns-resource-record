@@ -32,6 +32,10 @@ export default class HTTPS extends RR {
     return 'HTTP Semantics'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['priority', 'target name', 'params']
   }
