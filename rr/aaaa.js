@@ -41,7 +41,7 @@ export default class AAAA extends RR {
   getCanonical() {
     return {
       owner: 'host.example.com.',
-      address: '2001:db8:20:a::4',
+      address: '2001:0db8:0020:000a:0000:0000:0000:0004',
       class: 'IN',
       ttl: 3600,
       type: 'AAAA',
