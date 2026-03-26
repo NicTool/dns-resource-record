@@ -36,7 +36,7 @@ describe('DS record', function () {
   base.getFields(DS, ['key tag', 'algorithm', 'digest type', 'digest'])
   base.getCanonical(DS)
   base.getTypeId(DS, 43)
-  base.getTags()
+  base.getTags(DS)
 
   base.toBind(DS, validRecords)
   base.toWire(DS, validRecords)

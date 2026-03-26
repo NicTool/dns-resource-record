@@ -38,7 +38,7 @@ describe('DNSKEY record', function () {
   base.getFields(DNSKEY, ['flags', 'protocol', 'algorithm', 'publickey'])
   base.getCanonical(DNSKEY)
   base.getTypeId(DNSKEY, 48)
-  base.getTags()
+  base.getTags(DNSKEY)
 
   base.toBind(DNSKEY, validRecords)
   base.toWire(DNSKEY, validRecords)
