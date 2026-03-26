@@ -69,6 +69,9 @@ export default class CNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('cname'))
+  }
 
   toTinydns() {
     return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`

@@ -70,6 +70,10 @@ export default class A extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return Buffer.from(this.get('address').split('.').map(Number))
+  }
+
   toTinydns() {
     return `+${this.getTinyFQDN('owner')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
   }

@@ -102,6 +102,12 @@ export default class TXT extends RR {
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
+  getWireRdata() {
+    let data = this.get('data')
+    if (Array.isArray(data)) data = data.join('')
+    return Buffer.from(TINYDNS.octalToChar(TINYDNS.packString(data)), 'binary')
+  }
+
   toTinydns() {
     let data = this.get('data')
     if (Array.isArray(data)) data = data.join('')

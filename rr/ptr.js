@@ -62,6 +62,10 @@ export default class PTR extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('dname'))
+  }
+
   toTinydns() {
     return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }

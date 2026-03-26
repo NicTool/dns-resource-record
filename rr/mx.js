@@ -88,6 +88,12 @@ export default class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    const pref = Buffer.alloc(2)
+    pref.writeUInt16BE(this.get('preference'))
+    return Buffer.concat([pref, this.wirePackDomain(this.get('exchange'))])
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
   }

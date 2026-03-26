@@ -136,6 +136,16 @@ export default class SOA extends RR {
       .join('\t')} ~\n`
   }
 
+  getWireRdata() {
+    const nums = Buffer.alloc(20)
+    nums.writeUInt32BE(this.get('serial'), 0)
+    nums.writeUInt32BE(this.get('refresh'), 4)
+    nums.writeUInt32BE(this.get('retry'), 8)
+    nums.writeUInt32BE(this.get('expire'), 12)
+    nums.writeUInt32BE(this.get('minimum'), 16)
+    return Buffer.concat([this.wirePackDomain(this.get('mname')), this.wirePackDomain(this.get('rname')), nums])
+  }
+
   toTinydns() {
     return `Z${this.getTinyFQDN('owner')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
   }

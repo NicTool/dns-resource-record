@@ -11,6 +11,7 @@
   ],
   "type": "module",
   "scripts": {
+    "build": "node lib/readme.js",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
     "lint": "npx eslint **/*.js",

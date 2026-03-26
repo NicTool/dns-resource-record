@@ -67,6 +67,10 @@ export default class NS extends RR {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return this.wirePackDomain(this.get('dname'))
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
   }

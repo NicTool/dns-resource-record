@@ -1,3 +1,5 @@
+import * as TINYDNS from './lib/tinydns.js'
+
 export default class RR extends Map {
   constructor(opts) {
     super()
@@ -354,6 +356,35 @@ export default class RR extends Map {
     const tail = segments.slice(bestStart + bestLen).join(':')
 
     return `${head}::${tail}`
+  }
+
+  octalToBuffer(octalStr) {
+    return Buffer.from(TINYDNS.octalToChar(octalStr), 'binary')
+  }
+
+  wirePackDomain(fqdn) {
+    return this.octalToBuffer(TINYDNS.packDomainName(fqdn))
+  }
+
+  getWireRdata() {
+    const line = this.toTinydns()
+    if (!line.startsWith(':'))
+      throw new Error(`${this.get('type')}: override getWireRdata() — non-generic tinydns format`)
+    // line: :fqdn:typeId:rdata:ttl:ts:loc\n
+    const rdata = line.split(':')[3]
+    return this.octalToBuffer(rdata ?? '')
+  }
+
+  toWire() {
+    const rdata = this.getWireRdata()
+    const owner = this.wirePackDomain(this.get('owner'))
+    const classMap = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
+    const meta = Buffer.alloc(10)
+    meta.writeUInt16BE(this.getTypeId(), 0)
+    meta.writeUInt16BE(classMap[this.get('class')] ?? 1, 2)
+    meta.writeUInt32BE(this.get('ttl'), 4)
+    meta.writeUInt16BE(rdata.length, 8)
+    return Buffer.concat([owner, meta, rdata])
   }
 
   toBind(zone_opts) {
