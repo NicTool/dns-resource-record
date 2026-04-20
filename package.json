@@ -12,6 +12,7 @@
   "type": "module",
   "scripts": {
     "build": "node lib/readme.js",
+    "clean": "rm -rf coverage node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
     "lint": "npx eslint **/*.js",
