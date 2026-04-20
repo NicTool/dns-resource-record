@@ -18,11 +18,12 @@
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --ignore-path .gitignore --check .",
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
-    "test": "node --test test/*.js",
-    "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
     "versions": "npx npm-dep-mgr check",
     "versions:fix": "npx npm-dep-mgr update",
-    "watch": "node --test --watch test/*.js"
+    "watch": "node --test --watch"
   },
   "repository": {
     "type": "git",
