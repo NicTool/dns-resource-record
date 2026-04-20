@@ -6,6 +6,8 @@ Notable changes to this project are documented in this file.
 
 ### [1.6.1] - 2026-04-20
 
+- doc(README): add wire export format
+- ci: split coverage to new GHA file, trigger on push to main
 
 ### [1.6.0] - 2026-03-26
 

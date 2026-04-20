@@ -15,11 +15,12 @@ This module is used to:
 |                      **RR format**                       |     **import**     |     **export**     |
 | :------------------------------------------------------: | :----------------: | :----------------: |
 |                         **JSON**                         | :white_check_mark: | :white_check_mark: |
-|          **[BIND](https://www.isc.org/bind/)**           | :white_check_mark: | :white_check_mark: |
+|     **[BIND](https://www.isc.org/bind/) / RFC 1035**     | :white_check_mark: | :white_check_mark: |
 | **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)** | :white_check_mark: | :white_check_mark: |
 |                       **MaraDNS**                        |                    | :white_check_mark: |
 |                          **JS**                          | :white_check_mark: | :white_check_mark: |
 |                       **PowerDNS**                       |                    |                    |
+|                         **Wire**                         |                    | :white_check_mark: |
 
 This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if a valid resource record fails to pass or an invalid resource record passes.
 
@@ -104,31 +105,41 @@ The setters are named: `set` + `Field`, where field is the resource record field
 
 ## FUNCTIONS
 
-Get the field names for each RR type with `getFields()`:
+### getCanonical
+
+```js
+> console.log(new RR.AAAA(null).getCanonical())
+{
+  owner: 'host.example.com.',
+  address: '2001:0db8:0020:000a:0000:0000:0000:0004',
+  class: 'IN',
+  ttl: 3600,
+  type: 'AAAA'
+}
+```
+
+### getFields
+
+Get the field names for each RR type
 
 ```js
 > import * as RR from 'dns-resource-record'
-> new RR.A(null).getFields()
-[ 'owner', 'ttl', 'class', 'type', 'address' ]
+> new RR.A(null).getFields()   // [ 'owner', 'ttl', 'class', 'type', 'address' ]
 
-> new RR.PTR(null).getFields()
-[ 'owner', 'ttl', 'class', 'type', 'dname' ]
+> new RR.PTR(null).getFields() // [ 'owner', 'ttl', 'class', 'type', 'dname' ]
 
 > new RR.SSHFP(null).getFields()
-[ 'owner', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
+// [ 'owner', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
 ```
 
-Get a list of RFCs for references about each RR type:
+### getRFCs
+
+Get a list of RFCs references for each RR type
 
 ```js
-> new RR.A(null).getRFCs()
-[ 1035 ]
-
-> new RR.SRV(null).getRFCs()
-[ 2782 ]
-
-> new RR.MX(null).getRFCs()
-[ 1035, 2181, 7505 ]
+> new RR.A(null).getRFCs()    // [ 1035 ]
+> new RR.SRV(null).getRFCs()  // [ 2782 ]
+> new RR.MX(null).getRFCs()   // [ 1035, 2181, 7505 ]
 ```
 
 ### toBind
@@ -137,10 +148,10 @@ Validate a record and export to BIND format.
 
 ```js
 console.log(new RR.A(exampleRRs.A).toBind())
-test.example.com    3600    IN  A   192.0.2.127
+// test.example.com    3600    IN  A   192.0.2.127
 
 console.log(new RR.AAAA(exampleRRs.AAAA).toBind())
-test.example.com    3600    IN  AAAA    2605:7900:20:a::4
+// test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 ```
 
 ### toTinydns
@@ -148,19 +159,7 @@ test.example.com    3600    IN  AAAA    2605:7900:20:a::4
 Validate a record and export to tinydns format:
 
 ```js
-console.log(new RR.A(exampleRRs.A).toTinydns())
-+test.example.com:192.0.2.127:3600::
-```
-
-### fromTinydns toBind
-
-Convert a tinydns line to BIND:
-
-```js
-console.log(new RR.CAA({
-  tinyline: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n'
-}).toBind())
-ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
+console.log(new RR.A(exampleRRs.A).toTinydns()) // +test.example.com:192.0.2.127:3600::
 ```
 
 ### set
@@ -179,6 +178,17 @@ A(5) [Map] {
 ```
 
 Consider this a "running with scissors" mode.
+
+### fromTinydns toBind
+
+Convert a tinydns line to BIND:
+
+```js
+console.log(new RR.CAA({
+  tinyline: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n'
+}).toBind())
+ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
+```
 
 ## Supported Records
 
@@ -254,13 +264,9 @@ PRs are welcome, especially PRs with tests.
 - @nictool/[dns-zone](https://www.npmjs.com/package/@nictool/dns-zone)
 - @nictool/[dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver)
 
-## TODO
-
-- [ ] export a web page for each RR type
-
 ## DEVELOP
 
 - There are no dependencies. That's no accident.
-- ES modules for use by node.js and browser
+- ESM browsers and node.js
 - Platform independence is a goal
-  - [x] CI tests are on linux, windows, and macos
+  - [x] CI tests are on linux, windows, and macOS
