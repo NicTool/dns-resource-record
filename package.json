@@ -1,6 +1,6 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "DNS Resource Records",
   "main": "index.js",
   "files": [
@@ -12,17 +12,19 @@
   "type": "module",
   "scripts": {
     "build": "node lib/readme.js",
+    "clean": "rm -rf coverage node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
     "lint": "npx eslint **/*.js",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --ignore-path .gitignore --check .",
     "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
-    "test": "node --test test/*.js",
-    "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
     "versions": "npx npm-dep-mgr check",
     "versions:fix": "npx npm-dep-mgr update",
-    "watch": "node --test --watch test/*.js"
+    "watch": "node --test --watch"
   },
   "repository": {
     "type": "git",
@@ -49,8 +51,8 @@
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.1.0",
-    "globals": "^17.4.0"
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0"
   },
   "prettier": {
     "printWidth": 110,

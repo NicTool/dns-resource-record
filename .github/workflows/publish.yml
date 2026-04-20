@@ -11,3 +11,7 @@ jobs:
   publish:
     uses: NicTool/.github/.github/workflows/publish.yml@main
     secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
