@@ -5,6 +5,7 @@ import TXT from './txt.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SPF extends TXT {
+  static typeName = 'SPF'
   constructor(opts) {
     super(opts)
   }

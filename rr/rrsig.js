@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class RRSIG extends RR {
+  static typeName = 'RRSIG'
   constructor(opts) {
     super(opts)
   }

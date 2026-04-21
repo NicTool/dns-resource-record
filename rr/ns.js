@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class NS extends RR {
+  static typeName = 'NS'
   constructor(opts) {
     super(opts)
     if (opts === null) return

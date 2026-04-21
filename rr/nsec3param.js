@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NSEC3PARAM extends RR {
+  static typeName = 'NSEC3PARAM'
   constructor(opts) {
     super(opts)
     if (opts === null) return

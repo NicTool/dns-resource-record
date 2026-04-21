@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class WKS extends RR {
+  static typeName = 'WKS'
   constructor(opts) {
     super(opts)
   }

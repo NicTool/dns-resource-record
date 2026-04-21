@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class SOA extends RR {
+  static typeName = 'SOA'
   constructor(opts) {
     super(opts)
   }
@@ -153,17 +154,21 @@ export default class SOA extends RR {
   }
 
   getWireRdata() {
-    const nums = Buffer.alloc(20)
-    nums.writeUInt32BE(this.get('serial'), 0)
-    nums.writeUInt32BE(this.get('refresh'), 4)
-    nums.writeUInt32BE(this.get('retry'), 8)
-    nums.writeUInt32BE(this.get('expire'), 12)
-    nums.writeUInt32BE(this.get('minimum'), 16)
-    return Buffer.concat([
-      this.wirePackDomain(this.get('mname')),
-      this.wirePackDomain(this.get('rname')),
-      nums,
-    ])
+    const mname = this.wirePackDomain(this.get('mname'))
+    const rname = this.wirePackDomain(this.get('rname'))
+    const result = new Uint8Array(mname.length + rname.length + 20)
+    let offset = 0
+    result.set(mname, offset)
+    offset += mname.length
+    result.set(rname, offset)
+    offset += rname.length
+    const view = new DataView(result.buffer, offset)
+    view.setUint32(0, this.get('serial'))
+    view.setUint32(4, this.get('refresh'))
+    view.setUint32(8, this.get('retry'))
+    view.setUint32(12, this.get('expire'))
+    view.setUint32(16, this.get('minimum'))
+    return result
   }
 
   toTinydns() {

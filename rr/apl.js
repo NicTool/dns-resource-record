@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class APL extends RR {
+  static typeName = 'APL'
   constructor(opts) {
     super(opts)
   }

@@ -14,6 +14,7 @@ const CONV = {
 }
 
 export default class LOC extends RR {
+  static typeName = 'LOC'
   constructor(opts) {
     super(opts)
   }

@@ -4,6 +4,7 @@ import * as TINYDNS from '../lib/tinydns.js'
 const rdataRe = /[\r\n\t:\\/]/
 
 export default class NAPTR extends RR {
+  static typeName = 'NAPTR'
   constructor(opts) {
     super(opts)
   }

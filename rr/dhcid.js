@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DHCID extends RR {
+  static typeName = 'DHCID'
   constructor(opts) {
     super(opts)
   }

@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class OPENPGPKEY extends RR {
+  static typeName = 'OPENPGPKEY'
   constructor(opts) {
     super(opts)
   }

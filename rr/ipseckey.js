@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class IPSECKEY extends RR {
+  static typeName = 'IPSECKEY'
   constructor(opts) {
     super(opts)
   }

@@ -80,7 +80,7 @@ export default class RR extends Map {
     if (n.length < 1 || n.length > 255)
       this.throwHelp('Domain names must have 1-255 octets (characters): RFC 2181')
 
-    this.isFullyQualified(this.constructor.name, 'owner', n)
+    this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
@@ -114,18 +114,19 @@ export default class RR extends Map {
         this.throwHelp(`type is required`)
     }
 
-    if (t.toUpperCase() !== this.constructor.name)
-      this.throwHelp(`type ${t} doesn't match ${this.constructor.name}`)
+    if (t.toUpperCase() !== this.constructor.typeName)
+      this.throwHelp(`type ${t} doesn't match ${this.constructor.typeName}`)
 
     this.set('type', t.toUpperCase())
   }
 
   throwHelp(e) {
-    if (this.constructor.name === 'RR') throw new Error(e)
+    if (!this.constructor.typeName) throw new Error(e)
 
+    const typeName = this.constructor.typeName
     const example = this.getCanonical
-      ? `Example ${this.constructor.name}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
-      : `${this.constructor.name} records have the fields: ${this.getFields().join(', ')}\n\n`
+      ? `Example ${typeName}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
+      : `${typeName} records have the fields: ${this.getFields().join(', ')}\n\n`
 
     throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)
   }
@@ -359,7 +360,8 @@ export default class RR extends Map {
   }
 
   octalToBuffer(octalStr) {
-    return Buffer.from(TINYDNS.octalToChar(octalStr), 'binary')
+    const str = TINYDNS.octalToChar(octalStr)
+    return Uint8Array.from(str, (c) => c.charCodeAt(0))
   }
 
   wirePackDomain(fqdn) {
@@ -379,12 +381,15 @@ export default class RR extends Map {
     const rdata = this.getWireRdata()
     const owner = this.wirePackDomain(this.get('owner'))
     const classMap = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
-    const meta = Buffer.alloc(10)
-    meta.writeUInt16BE(this.getTypeId(), 0)
-    meta.writeUInt16BE(classMap[this.get('class')] ?? 1, 2)
-    meta.writeUInt32BE(this.get('ttl'), 4)
-    meta.writeUInt16BE(rdata.length, 8)
-    return Buffer.concat([owner, meta, rdata])
+    const result = new Uint8Array(owner.length + 10 + rdata.length)
+    result.set(owner, 0)
+    const meta = new DataView(result.buffer, owner.length, 10)
+    meta.setUint16(0, this.getTypeId())
+    meta.setUint16(2, classMap[this.get('class')] ?? 1)
+    meta.setUint32(4, this.get('ttl'))
+    meta.setUint16(8, rdata.length)
+    result.set(rdata, owner.length + 10)
+    return result
   }
 
   toBind(zone_opts) {
@@ -413,7 +418,8 @@ export default class RR extends Map {
 }
 
 function packDomainNameWire(fqdn) {
-  if (fqdn === '.') return Buffer.from([0])
+  if (fqdn === '.') return new Uint8Array([0])
+  const enc = new TextEncoder()
   const parts = fqdn.split('.')
   let len = 0
   for (const part of parts) {
@@ -421,15 +427,15 @@ function packDomainNameWire(fqdn) {
   }
   len += 1 // for the final \0
 
-  const buf = Buffer.allocUnsafe(len)
+  const buf = new Uint8Array(len)
   let offset = 0
   for (const part of parts) {
     if (part.length > 0) {
-      buf.writeUInt8(part.length, offset++)
-      buf.write(part, offset, 'ascii')
+      buf[offset++] = part.length
+      buf.set(enc.encode(part), offset)
       offset += part.length
     }
   }
-  buf.writeUInt8(0, offset)
+  buf[offset] = 0
   return buf
 }

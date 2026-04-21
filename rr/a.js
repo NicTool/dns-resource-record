@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class A extends RR {
+  static typeName = 'A'
   constructor(opts) {
     super(opts)
   }
@@ -71,7 +72,7 @@ export default class A extends RR {
 
   /******  EXPORTERS   *******/
   getWireRdata() {
-    return Buffer.from(this.get('address').split('.').map(Number))
+    return new Uint8Array(this.get('address').split('.').map(Number))
   }
 
   toTinydns() {

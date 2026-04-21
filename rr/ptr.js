@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class PTR extends RR {
+  static typeName = 'PTR'
   constructor(opts) {
     super(opts)
   }

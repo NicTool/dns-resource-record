@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class AAAA extends RR {
+  static typeName = 'AAAA'
   constructor(opts) {
     super(opts)
   }
@@ -143,7 +144,10 @@ export default class AAAA extends RR {
 
   /******  EXPORTERS   *******/
   getWireRdata() {
-    return Buffer.from(this.expand(this.get('address'), ''), 'hex')
+    const hex = this.expand(this.get('address'), '')
+    const arr = new Uint8Array(hex.length / 2)
+    for (let i = 0; i < arr.length; i++) arr[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+    return arr
   }
 
   toBind(zone_opts) {

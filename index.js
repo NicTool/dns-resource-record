@@ -131,6 +131,6 @@ for (const c of [
   WKS,
 ]) {
   const id = new c(null).getTypeId()
-  typeMap[id] = c.name
-  typeMap[c.name] = id
+  typeMap[id] = c.typeName
+  typeMap[c.typeName] = id
 }

@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SMIMEA extends RR {
+  static typeName = 'SMIMEA'
   constructor(opts) {
     super(opts)
   }

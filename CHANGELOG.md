@@ -4,6 +4,12 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.7.0] - 2026-04-20
+
+- feat: rollup a browser build
+- change: replace `Buffer` with Uint8Array, dataview, and math
+- change: add `static typeName`, since this.constructor.name doesn't survive minification)
+
 ### [1.6.1] - 2026-04-20
 
 - doc(README): add wire export format
@@ -385,3 +391,4 @@ Notable changes to this project are documented in this file.
 [1.5.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.5.0
 [1.6.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.0
 [1.6.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.1
+[1.7.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.7.0

@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class KX extends RR {
+  static typeName = 'KX'
   constructor(opts) {
     super(opts)
   }

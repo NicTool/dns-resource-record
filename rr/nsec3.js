@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NSEC3 extends RR {
+  static typeName = 'NSEC3'
   constructor(opts) {
     super(opts)
     if (opts === null) return

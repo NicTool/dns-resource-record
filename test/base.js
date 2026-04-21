@@ -152,7 +152,7 @@ export function toWire(type, validRecords) {
       it(`exports to wire format: ${val.owner}`, function () {
         const r = new type(val)
         const wire = r.toWire()
-        assert.ok(Buffer.isBuffer(wire))
+        assert.ok(wire instanceof Uint8Array)
         assert.ok(wire.length > 10)
       })
     }

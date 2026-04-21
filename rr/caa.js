@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
+  static typeName = 'CAA'
   constructor(opts) {
     super(opts)
   }

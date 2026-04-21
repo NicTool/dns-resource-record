@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SSHFP extends RR {
+  static typeName = 'SSHFP'
   constructor(opts) {
     super(opts)
   }

@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class CNAME extends RR {
+  static typeName = 'CNAME'
   constructor(opts) {
     super(opts)
   }

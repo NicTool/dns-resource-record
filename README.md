@@ -1,5 +1,5 @@
-[![Module Tests](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg)](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-resource-record?branch=master)
+[![Module Tests][ci-img]][ci-url]
+[![Test Coverage][cov-img]][cov-url]
 
 # dns-resource-record
 
@@ -12,15 +12,14 @@ This module is used to:
 - validate well formedness and RFC compliance of DNS resource records
 - import RRs to and from the following formats:
 
-|                      **RR format**                       |     **import**     |     **export**     |
-| :------------------------------------------------------: | :----------------: | :----------------: |
-|                         **JSON**                         | :white_check_mark: | :white_check_mark: |
-|     **[BIND](https://www.isc.org/bind/) / RFC 1035**     | :white_check_mark: | :white_check_mark: |
-| **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)** | :white_check_mark: | :white_check_mark: |
-|                       **MaraDNS**                        |                    | :white_check_mark: |
-|                          **JS**                          | :white_check_mark: | :white_check_mark: |
-|                       **PowerDNS**                       |                    |                    |
-|                         **Wire**                         |                    | :white_check_mark: |
+|                                      **RR format**                                       |     **import**     |     **export**     |
+| :--------------------------------------------------------------------------------------: | :----------------: | :----------------: |
+| **RFC 1035**<br>[BIND][bind-url], [Knot][knot-url], [NSD][nsd-url], [PowerDNS][pdns-url] | :white_check_mark: | :white_check_mark: |
+|                 **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)**                 | :white_check_mark: | :white_check_mark: |
+|                                       **MaraDNS**                                        |                    | :white_check_mark: |
+|                                          **JS**                                          | :white_check_mark: | :white_check_mark: |
+|                                        **NDJSON**                                        | :white_check_mark: | :white_check_mark: |
+|                                         **Wire**                                         |                    | :white_check_mark: |
 
 This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if a valid resource record fails to pass or an invalid resource record passes.
 
@@ -270,3 +269,12 @@ PRs are welcome, especially PRs with tests.
 - ESM browsers and node.js
 - Platform independence is a goal
   - [x] CI tests are on linux, windows, and macOS
+
+[ci-img]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml
+[cov-img]: https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg
+[cov-url]: https://coveralls.io/github/NicTool/dns-resource-record
+[bind-url]: https://www.isc.org/bind/
+[knot-url]: https://www.knot-dns.cz
+[nsd-url]: https://www.nlnetlabs.nl/projects/nsd/about/
+[pdns-url]: https://www.powerdns.com/powerdns-authoritative-server

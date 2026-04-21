@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DNAME extends RR {
+  static typeName = 'DNAME'
   constructor(opts) {
     super(opts)
   }

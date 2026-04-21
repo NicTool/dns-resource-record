@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 export default class MX extends RR {
+  static typeName = 'MX'
   constructor(opts) {
     super(opts)
   }
@@ -89,9 +90,11 @@ export default class MX extends RR {
 
   /******  EXPORTERS   *******/
   getWireRdata() {
-    const pref = Buffer.alloc(2)
-    pref.writeUInt16BE(this.get('preference'))
-    return Buffer.concat([pref, this.wirePackDomain(this.get('exchange'))])
+    const domain = this.wirePackDomain(this.get('exchange'))
+    const result = new Uint8Array(2 + domain.length)
+    new DataView(result.buffer).setUint16(0, this.get('preference'))
+    result.set(domain, 2)
+    return result
   }
 
   toBind(zone_opts) {

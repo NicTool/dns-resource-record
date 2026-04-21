@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DS extends RR {
+  static typeName = 'DS'
   constructor(opts) {
     super(opts)
   }

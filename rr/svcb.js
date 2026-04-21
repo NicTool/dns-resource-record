@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SVCB extends RR {
+  static typeName = 'SVCB'
   constructor(opts) {
     super(opts)
   }

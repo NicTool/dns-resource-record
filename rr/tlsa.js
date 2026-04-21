@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class TLSA extends RR {
+  static typeName = 'TLSA'
   constructor(opts) {
     super(opts)
   }

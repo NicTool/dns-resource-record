@@ -1,9 +1,16 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "DNS Resource Records",
   "main": "index.js",
+  "exports": {
+    ".": {
+      "browser": "./dist/dns-resource-record.browser.mjs",
+      "default": "./index.js"
+    }
+  },
   "files": [
+    "dist",
     "lib",
     "rr",
     "CHANGELOG.md",
@@ -11,7 +18,9 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "node lib/readme.js",
+    "build": "npm run build:readme && npm run build:browser",
+    "build:readme": "node lib/readme.js && npm run format",
+    "build:browser": "npx rollup -i index.js -o dist/dns-resource-record.browser.mjs -f es",
     "clean": "rm -rf coverage node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",

@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NXT extends RR {
+  static typeName = 'NXT'
   constructor(opts) {
     super(opts)
     if (opts === null) return

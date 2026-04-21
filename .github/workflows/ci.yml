@@ -13,12 +13,6 @@ jobs:
     permissions:
       contents: read
 
-  coverage:
-    uses: NicTool/.github/.github/workflows/coverage.yml@main
-    secrets: inherit
-    permissions:
-      contents: read
-
   test:
     uses: NicTool/.github/.github/workflows/test.yml@main
     secrets: inherit

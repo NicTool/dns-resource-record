@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DNSKEY extends RR {
+  static typeName = 'DNSKEY'
   constructor(opts) {
     super(opts)
   }

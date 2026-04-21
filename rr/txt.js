@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class TXT extends RR {
+  static typeName = 'TXT'
   constructor(opts) {
     super(opts)
   }
@@ -149,15 +150,16 @@ function asQuotedStrings(data) {
 }
 
 function packStringWire(str) {
+  const enc = new TextEncoder()
   const parts = str.match(/(.{1,255})/g)
   let len = 0
   for (const part of parts) len += part.length + 1
 
-  const buf = Buffer.allocUnsafe(len)
+  const buf = new Uint8Array(len)
   let offset = 0
   for (const part of parts) {
-    buf.writeUInt8(part.length, offset++)
-    buf.write(part, offset, 'ascii')
+    buf[offset++] = part.length
+    buf.set(enc.encode(part), offset)
     offset += part.length
   }
   return buf

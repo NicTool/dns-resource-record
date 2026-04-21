@@ -3,6 +3,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class HTTPS extends RR {
+  static typeName = 'HTTPS'
   constructor(opts) {
     super(opts)
   }
