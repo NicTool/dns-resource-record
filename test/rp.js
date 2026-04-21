@@ -32,7 +32,8 @@ const validRecords = [
     mbox: 'hostmaster.tnpi.net.',
     txt: 'contact.nictool.tnpi.net.',
     testB: 'nictool.tnpi.net.\t3600\tIN\tRP\thostmaster.tnpi.net.\tcontact.nictool.tnpi.net.\n',
-    testT: ':nictool.tnpi.net:17:\\012hostmaster\\004tnpi\\003net\\000\\007contact\\007nictool\\004tnpi\\003net\\000:3600::\n',
+    testT:
+      ':nictool.tnpi.net:17:\\012hostmaster\\004tnpi\\003net\\000\\007contact\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e6574000011000100000e10002f0a686f73746d617374657204746e7069036e65740007636f6e74616374076e6963746f6f6c04746e7069036e657400',
   },

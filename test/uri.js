@@ -37,7 +37,8 @@ const validRecords = [
     weight: 10,
     target: 'https://nictool.tnpi.net/',
     testB: '_http._tcp.nictool.tnpi.net.\t3600\tIN\tURI\t1\t10\t"https://nictool.tnpi.net/"\n',
-    testT: ':_http._tcp.nictool.tnpi.net:256:\\000\\001\\000\\012https\\072\\057\\057nictool.tnpi.net\\057:3600::\n',
+    testT:
+      ':_http._tcp.nictool.tnpi.net:256:\\000\\001\\000\\012https\\072\\057\\057nictool.tnpi.net\\057:3600::\n',
     testW:
       '055f68747470045f746370076e6963746f6f6c04746e7069036e6574000100000100000e10001d0001000a68747470733a2f2f6e6963746f6f6c2e746e70692e6e65742f',
   },
@@ -50,7 +51,8 @@ const validRecords = [
     weight: 10,
     target: 'ftp://ftp.nictool.tnpi.net/',
     testB: '_ftp._tcp.nictool.tnpi.net.\t3600\tIN\tURI\t1\t10\t"ftp://ftp.nictool.tnpi.net/"\n',
-    testT: ':_ftp._tcp.nictool.tnpi.net:256:\\000\\001\\000\\012ftp\\072\\057\\057ftp.nictool.tnpi.net\\057:3600::\n',
+    testT:
+      ':_ftp._tcp.nictool.tnpi.net:256:\\000\\001\\000\\012ftp\\072\\057\\057ftp.nictool.tnpi.net\\057:3600::\n',
     testW:
       '045f667470045f746370076e6963746f6f6c04746e7069036e6574000100000100000e10001f0001000a6674703a2f2f6674702e6e6963746f6f6c2e746e70692e6e65742f',
   },

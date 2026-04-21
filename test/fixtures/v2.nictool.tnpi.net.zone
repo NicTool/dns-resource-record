@@ -1,0 +1,47 @@
+$TTL    86400;
+$ORIGIN nictool.tnpi.net.
+nictool.tnpi.net.		IN	SOA	ns1.cadillac.net.    hostmaster.nictool.tnpi.net. (
+					2026042140    ; serial
+					16384   ; refresh
+					900     ; retry
+					1048576    ; expiry
+					2560   ; minimum
+					)
+
+nictool.tnpi.net.	14400	IN	NS	ns1.cadillac.net.
+nictool.tnpi.net.	14400	IN	NS	ns2.cadillac.net.
+nictool.tnpi.net.	14400	IN	NS	ns3.cadillac.net.
+nictool.tnpi.net.	3600	IN  A	192.0.2.1
+www	3600	IN  A	192.0.2.2
+mail	3600	IN  A	192.0.2.3
+nictool.tnpi.net.	3600	IN  AAAA	2001:0db8:0000:0000:0000:0000:0000:0001
+www	3600	IN  AAAA	2001:0db8:0000:0000:0000:0000:0000:0002
+ftp	3600	IN  CNAME	www.nictool.tnpi.net.
+webmail	3600	IN  CNAME	mail.nictool.tnpi.net.
+nictool.tnpi.net.	3600	IN  MX	10	mail.nictool.tnpi.net.
+nictool.tnpi.net.	3600	IN  MX	20	mail.tnpi.net.
+nictool.tnpi.net.	3600	IN  TXT	"v=spf1 mx include:tnpi.net -all"
+dkim._domainkey	3600	IN  TXT	"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27Fr" "iHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"
+nictool.tnpi.net.	3600	IN  CAA 0 issue "letsencrypt.org"
+nictool.tnpi.net.	3600	IN  CAA 0 issuewild "letsencrypt.org"
+nictool.tnpi.net.	3600	IN  CAA 0 iodef "mailto:hostmaster@tnpi.net"
+_imaps._tcp	3600	IN  SRV	0	1	993	mail.nictool.tnpi.net.
+_https._tcp	3600	IN  SRV	0	1	443	www.nictool.tnpi.net.
+_sip._udp	3600	IN  SRV	1	10	5060	sip.nictool.tnpi.net.
+loc	86400	IN  LOC	37 46 39 N 122 25 9 W 16m 1m 10000m 10m
+ssh 3600     IN  SSHFP   1 1 546f3801f4159f81643666d97a9f73587000d60d
+ssh 3600     IN  SSHFP   3 2 b0e5a9735d49246603d646b97607755e13583688b58a18357a700f7223644f77
+ssh 3600     IN  SSHFP   4 2 11e9a933f7608246f4142646f903745213583688b58a18357a700f7223644f77
+nictool.tnpi.net.	3600	IN  DS	12345 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+nictool.tnpi.net.	3600	IN  DNSKEY	256 3 5 AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10hWqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1UaNvv4w==
+nictool.tnpi.net.	3600	IN  DNSKEY	257 3 5 AwEAAc06+6X2fM6Y5I7Cj8K7Z4vL0F6yL8v4f5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+w==
+nictool.tnpi.net.	3600	IN  NSEC3PARAM -
+nictool.tnpi.net.	86400	IN  NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
+nictool.tnpi.net.	3600	IN  NSEC www.nictool.tnpi.net. (  )
+nictool.tnpi.net.	86400	IN  RRSIG A 5 3 3600 (20261231000000 20260101000000 12345 nictool.tnpi.net. oXv8vP9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X 7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A 8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4A== )
+sip 3600   IN  NAPTR   100  10   "S"  "SIP+D2U"    "" _sip._udp.nictool.tnpi.net.
+naptr 3600   IN  NAPTR   100  10   "U"  "E2U+email"    "!^.*$!mailto:info@nictool.tnpi.net!" .
+old	3600	IN  DNAME	new.tnpi.net.
+_http._tcp	3600	IN  URI	1	10	"https://nictool.tnpi.net/"
+_ftp._tcp	3600	IN  URI	1	10	"ftp://ftp.nictool.tnpi.net/"
+ipsec	3600	IN  IPSECKEY	( 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )

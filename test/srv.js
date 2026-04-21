@@ -40,7 +40,8 @@ const validRecords = [
     port: 993,
     target: 'mail.nictool.tnpi.net.',
     testB: '_imaps._tcp.nictool.tnpi.net.\t3600\tIN\tSRV\t1\t0\t993\tmail.nictool.tnpi.net.\n',
-    testT: ':_imaps._tcp.nictool.tnpi.net:33:\\000\\001\\000\\000\\003\\341\\004mail\\007nictool\\004tnpi\\003net\\000:3600::\n',
+    testT:
+      ':_imaps._tcp.nictool.tnpi.net:33:\\000\\001\\000\\000\\003\\341\\004mail\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '065f696d617073045f746370076e6963746f6f6c04746e7069036e6574000021000100000e10001d0001000003e1046d61696c076e6963746f6f6c04746e7069036e657400',
   },
@@ -54,7 +55,8 @@ const validRecords = [
     port: 443,
     target: 'www.nictool.tnpi.net.',
     testB: '_https._tcp.nictool.tnpi.net.\t3600\tIN\tSRV\t1\t0\t443\twww.nictool.tnpi.net.\n',
-    testT: ':_https._tcp.nictool.tnpi.net:33:\\000\\001\\000\\000\\001\\273\\003www\\007nictool\\004tnpi\\003net\\000:3600::\n',
+    testT:
+      ':_https._tcp.nictool.tnpi.net:33:\\000\\001\\000\\000\\001\\273\\003www\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '065f6874747073045f746370076e6963746f6f6c04746e7069036e6574000021000100000e10001c0001000001bb03777777076e6963746f6f6c04746e7069036e657400',
   },
@@ -68,7 +70,8 @@ const validRecords = [
     port: 5060,
     target: 'sip.nictool.tnpi.net.',
     testB: '_sip._udp.nictool.tnpi.net.\t3600\tIN\tSRV\t10\t0\t5060\tsip.nictool.tnpi.net.\n',
-    testT: ':_sip._udp.nictool.tnpi.net:33:\\000\\012\\000\\000\\023\\304\\003sip\\007nictool\\004tnpi\\003net\\000:3600::\n',
+    testT:
+      ':_sip._udp.nictool.tnpi.net:33:\\000\\012\\000\\000\\023\\304\\003sip\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '045f736970045f756470076e6963746f6f6c04746e7069036e6574000021000100000e10001c000a000013c403736970076e6963746f6f6c04746e7069036e657400',
   },

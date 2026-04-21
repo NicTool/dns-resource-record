@@ -97,7 +97,7 @@ old.nictool.tnpi.net.	3600	IN	DNAME	new.tnpi.net.
 _http._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"https://nictool.tnpi.net/"
 _ftp._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"ftp://ftp.nictool.tnpi.net/"
 
-apl.nictool.tnpi.net.	3600	IN	APL	1:192.0.2.0/24 !1:192.0.2.64/28 2:2001:db8::/32
+apl.nictool.tnpi.net.	3600	IN	APL	1:192.0.2.1/32 !1:192.0.2.64/28 2:2001:db8::1/128
 
 wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	TCP	ftp smtp
 wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	UDP	domain
