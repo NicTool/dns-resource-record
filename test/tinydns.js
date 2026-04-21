@@ -150,4 +150,28 @@ describe('TINYDNS', function () {
       assert.throws(() => TINYDNS.UInt8toOctal('é'.charCodeAt(0) + 1000), /exceeds 255/i)
     })
   })
+
+  describe('unescapeOctal', function () {
+    it('converts octal-escaped string to characters', function () {
+      assert.equal(TINYDNS.unescapeOctal('\\110\\145\\154\\154\\157'), 'Hello')
+    })
+  })
+
+  describe('octalToIPv6', function () {
+    it('converts octal-escaped bytes to IPv6 address string', function () {
+      assert.equal(
+        TINYDNS.octalToIPv6(
+          '\\040\\001\\015\\270\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001',
+        ),
+        '2001:0db8:0000:0000:0000:0000:0000:0001',
+      )
+    })
+  })
+
+  describe('base64toOctal error handling', function () {
+    it('returns undefined for invalid base64 input', function () {
+      const result = TINYDNS.base64toOctal('not valid!!!')
+      assert.equal(result, undefined)
+    })
+  })
 })

@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import HTTPS from '../rr/https.js'
@@ -47,6 +48,43 @@ const validRecords = [
     testW:
       '03777777076e6963746f6f6c04746e7069036e6574000041000100000e1000140000076e6963746f6f6c04746e7069036e657400',
   },
+  {
+    ...defaults,
+    owner: 'nodefaultalpn.example.com.',
+    priority: 1,
+    'target name': 'example.com.',
+    params: 'no-default-alpn',
+    testB: 'nodefaultalpn.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tno-default-alpn\n',
+    testT: ':nodefaultalpn.example.com:65:\\000\\001\\007example\\003com\\000no-default-alpn:3600::\n',
+  },
+  {
+    ...defaults,
+    owner: 'echparam.example.com.',
+    priority: 1,
+    'target name': 'example.com.',
+    params: 'ech=AQIDBA==',
+    testB: 'echparam.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tech=AQIDBA==\n',
+    testT: ':echparam.example.com:65:\\000\\001\\007example\\003com\\000ech=AQIDBA==:3600::\n',
+  },
+  {
+    ...defaults,
+    owner: 'ipv6hint.example.com.',
+    priority: 1,
+    'target name': 'example.com.',
+    params: 'ipv6hint=2001:db8::1',
+    testB: 'ipv6hint.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tipv6hint=2001:db8::1\n',
+    testT:
+      ':ipv6hint.example.com:65:\\000\\001\\007example\\003com\\000ipv6hint=2001\\072db8\\072\\0721:3600::\n',
+  },
+  {
+    ...defaults,
+    owner: 'unknownkey.example.com.',
+    priority: 1,
+    'target name': 'example.com.',
+    params: 'key1234=test',
+    testB: 'unknownkey.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tkey1234=test\n',
+    testT: ':unknownkey.example.com:65:\\000\\001\\007example\\003com\\000key1234=test:3600::\n',
+  },
 ]
 
 const invalidRecords = [
@@ -75,4 +113,8 @@ describe('HTTPS record', function () {
 
   base.fromBind(HTTPS, validRecords)
   base.fromTinydns(HTTPS, validRecords)
+
+  it('throws when fromTinydns RDATA is too short', function () {
+    assert.throws(() => new HTTPS({ tinyline: ':example.com:65:AB:3600::\n' }), /RDATA too short/)
+  })
 })

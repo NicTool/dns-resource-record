@@ -39,6 +39,14 @@ const validRecords = [
     testB: 'a.\t4294967295\tIN\tAPL\t1:203.0.113.0/24\n',
     testT: ':a:42:\\000\\001\\030\\003\\313\\000\\161:4294967295::\n',
   },
+  {
+    ...defaults,
+    owner: 'example.com.',
+    'apl rdata': '2:2001:db8:1::1/128',
+    testB: 'example.com.\t3600\tIN\tAPL\t2:2001:db8:1::1/128\n',
+    testT:
+      ':example.com:42:\\000\\002\\200\\020\\040\\001\\015\\270\\000\\001\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001:3600::\n',
+  },
 ]
 
 const invalidRecords = [

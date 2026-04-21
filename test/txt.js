@@ -112,4 +112,9 @@ describe('TXT record', function () {
       assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
     }
   })
+
+  it('exports TXT record in MaraDNS format', function () {
+    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data: 'v=spf1 mx -all' })
+    assert.equal(r.toMaraDNS(), "example.com.\t+3600\tTXT\t'v=spf1 mx -all' ~\n")
+  })
 })

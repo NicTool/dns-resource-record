@@ -122,6 +122,10 @@ const invalidRecords = [
     value: 'http://letsencrypt.org',
     msg: /not recognized/,
   },
+  {
+    bindline: 'this is not valid caa',
+    msg: /unable to parse CAA/,
+  },
 ]
 
 describe('CAA record', function () {
@@ -141,6 +145,19 @@ describe('CAA record', function () {
 
   base.fromBind(CAA, validRecords)
   base.fromTinydns(CAA, validRecords)
+
+  it('strips quotes from CAA value when quoted', function () {
+    const r = new CAA({
+      owner: 'example.com.',
+      ttl: 3600,
+      class: 'IN',
+      type: 'CAA',
+      flags: 0,
+      tag: 'issue',
+      value: '"letsencrypt.org"',
+    })
+    assert.equal(r.get('value'), 'letsencrypt.org')
+  })
 
   it('defaults type to CAA when omitted from constructor', function () {
     const r = new CAA({

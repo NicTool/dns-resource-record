@@ -46,6 +46,16 @@ const invalidRecords = [
     flags: 65536,
     msg: /flags must be a 16-bit integer/,
   },
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    flags: 1, // valid 16-bit int but not in set {0,256,257}
+    msg: /flags must be in the set/,
+  },
+  {
+    bindline: 'invalid dnskey line',
+    msg: /unable to parse DNSKEY/,
+  },
 ]
 
 describe('DNSKEY record', function () {

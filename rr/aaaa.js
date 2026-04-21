@@ -12,7 +12,7 @@ export default class AAAA extends RR {
     if (!val) this.throwHelp('AAAA: address is required')
     if (!this.isIPv6(val)) this.throwHelp(`AAAA: address must be IPv6 (${val})`)
 
-    this.set('address', this.expand(val.toLowerCase())) // lower case: RFC 5952
+    this.set('address', this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
   }
 
   getCompressed(val) {
@@ -90,30 +90,13 @@ export default class AAAA extends RR {
       ttl: parseInt(ttl, 10),
       class: c,
       type,
-      address: this.expand(ip),
+      address: this.expandIPv6(ip),
     })
-  }
-
-  expand(val, delimiter) {
-    if (delimiter === undefined) delimiter = ':'
-
-    const colons = val.match(/:/g)
-    if (colons?.length < 7) {
-      // console.log(`AAAA: restoring compressed colons`)
-      val = val.replace(/::/, ':'.repeat(9 - colons.length))
-    }
-
-    // restore compressed leading zeros
-    return val
-      .split(':')
-      .map((s) => s.padStart(4, 0))
-      .join(delimiter)
-      .toLowerCase()
   }
 
   /******  EXPORTERS   *******/
   getWireRdata() {
-    const hex = this.expand(this.get('address'), '')
+    const hex = this.expandIPv6(this.get('address'), '')
     const arr = new Uint8Array(hex.length / 2)
     for (let i = 0; i < arr.length; i++) arr[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
     return arr
@@ -125,7 +108,7 @@ export default class AAAA extends RR {
 
   toTinydns() {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
-    const rdata = TINYDNS.packHex(this.expand(this.get('address'), ''))
+    const rdata = TINYDNS.packHex(this.expandIPv6(this.get('address'), ''))
     return this.getTinydnsGeneric(rdata)
   }
 }

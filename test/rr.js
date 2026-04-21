@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import RR from '../rr.js'
 import A from '../rr/a.js'
+import KEY from '../rr/key.js'
 
 const cases = [
   // { name: 'RR class', obj: RR, expect: [ 'owner', 'ttl', 'class', 'type' ] },
@@ -215,5 +216,83 @@ describe('RR', function () {
         assert.equal(r.compressIPv6(t.e), t.c)
       })
     }
+  })
+
+  describe('expandIPv6', function () {
+    const r = new RR(null)
+    for (const t of tests) {
+      it(`expands IPv6 address (${t.c})`, function () {
+        assert.equal(r.expandIPv6(t.c), t.e)
+      })
+    }
+  })
+
+  describe('getComment', function () {
+    it('returns empty string when no comment is set', function () {
+      const rr = new RR(null)
+      assert.equal(rr.getComment('owner'), '')
+    })
+
+    it('returns the comment value for a given property', function () {
+      const rr = new RR(null)
+      rr.set('comment', { owner: 'test comment value' })
+      assert.equal(rr.getComment('owner'), 'test comment value')
+      assert.equal(rr.getComment('nonexistent'), '')
+    })
+  })
+
+  describe('getPrefix with sameOwner', function () {
+    it('returns empty owner when sameOwner is hidden', function () {
+      const rr = new A({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'A', address: '1.2.3.4' })
+      const prefix = rr.getPrefix({ hide: { sameOwner: true }, previousOwner: 'example.com.' })
+      assert.equal(prefix, '\t3600\tIN\tA')
+    })
+  })
+
+  describe('getTinyFQDN edge cases', function () {
+    it('returns empty string for empty value', function () {
+      const rr = new RR(null)
+      rr.set('target', '')
+      assert.equal(rr.getTinyFQDN('target'), '')
+    })
+
+    it("returns '.' for null MX target", function () {
+      const rr = new RR(null)
+      rr.set('target', '.')
+      assert.equal(rr.getTinyFQDN('target'), '.')
+    })
+  })
+
+  describe('isValidHostname error path', function () {
+    it('throws on invalid hostname character', function () {
+      const rr = new RR(null)
+      assert.throws(
+        () => rr.isValidHostname('TEST', 'hostname', 'host@example.com'),
+        /invalid hostname character/,
+      )
+    })
+  })
+
+  describe('toMaraDNS', function () {
+    it('exports supported types in MaraDNS format', function () {
+      const a = new A({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'A', address: '1.2.3.4' })
+      assert.equal(a.toMaraDNS(), 'example.com.\t+3600\tA\t1.2.3.4 ~\n')
+    })
+
+    it('exports unsupported types via toMaraGeneric', function () {
+      const key = new KEY({
+        owner: 'example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'KEY',
+        flags: 256,
+        protocol: 3,
+        algorithm: 5,
+        publickey: 'AQIDBA==',
+      })
+      const out = key.toMaraDNS()
+      assert.ok(out.startsWith('example.com.\t+3600\tRAW 25\t'))
+      assert.ok(out.includes('AQIDBA=='))
+    })
   })
 })

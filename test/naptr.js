@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import NAPTR from '../rr/naptr.js'
@@ -56,4 +57,8 @@ describe('NAPTR record', function () {
 
   base.fromBind(NAPTR, validRecords)
   base.fromTinydns(NAPTR, validRecords)
+
+  it('throws on invalid NAPTR BIND line', function () {
+    assert.throws(() => new NAPTR({ bindline: 'this is not valid naptr\n' }), /Invalid NAPTR BIND line/)
+  })
 })

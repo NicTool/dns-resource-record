@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import SVCB from '../rr/svcb.js'
@@ -75,4 +76,8 @@ describe('SVCB record', function () {
 
   base.fromBind(SVCB, validRecords)
   base.fromTinydns(SVCB, validRecords)
+
+  it('throws when fromTinydns RDATA is too short', function () {
+    assert.throws(() => new SVCB({ tinyline: ':example.com:64:AB:3600::\n' }), /RDATA too short/)
+  })
 })

@@ -64,10 +64,12 @@ const validRecords = [
     precedence: 10,
     'gateway type': 2,
     algorithm: 2,
-    gateway: '2001:0db8:0:8002::2000:1',
+    gateway: '2001:0db8:0000:8002:0000:0000:2000:0001',
     publickey: 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
     testB:
-      '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.\t7200\tIN\tIPSECKEY\t10\t2\t2\t2001:0db8:0:8002::2000:1\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+      '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.\t7200\tIN\tIPSECKEY\t10\t2\t2\t2001:0db8:0000:8002:0000:0000:2000:0001\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT:
+      ':0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa:45:\\012\\002\\002\\040\\001\\015\\270\\000\\000\\200\\002\\000\\000\\000\\000\\040\\000\\000\\001\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:7200::\n',
   },
   {
     ...common,

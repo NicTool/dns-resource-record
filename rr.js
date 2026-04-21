@@ -306,6 +306,10 @@ export default class RR extends Map {
     )
   }
 
+  expandIPv6(val, delimiter) {
+    return TINYDNS.expandIPv6(val, delimiter)
+  }
+
   compressIPv6(val) {
     //  * RFC 5952
     //  * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.

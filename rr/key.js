@@ -95,9 +95,9 @@ export default class KEY extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    // RDATA format: Flags (6 octal chars) + Protocol (3 octal chars) + Algorithm (3 octal chars) + Public Key (escaped data)
+    // RDATA format: Flags (8 octal chars) + Protocol (4 octal chars) + Algorithm (4 octal chars) + Public Key (escaped data)
     const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (rd.length < 12) {
+    if (rd.length < 16) {
       this.throwHelp(`KEY: RDATA too short: ${rd}`)
     }
 
@@ -105,10 +105,10 @@ export default class KEY extends RR {
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
       type: 'KEY',
-      flags: TINYDNS.octalToUInt16(rd.slice(0, 6)),
-      protocol: TINYDNS.octalToUInt8(rd.slice(6, 9)),
-      algorithm: TINYDNS.octalToUInt8(rd.slice(9, 12)),
-      publickey: TINYDNS.unescapeOctal(rd.slice(12)),
+      flags: TINYDNS.octalToUInt16(rd.slice(0, 8)),
+      protocol: TINYDNS.octalToUInt8(rd.slice(8, 12)),
+      algorithm: TINYDNS.octalToUInt8(rd.slice(12, 16)),
+      publickey: TINYDNS.octalToBase64(rd.slice(16)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

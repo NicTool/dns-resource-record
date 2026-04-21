@@ -115,24 +115,10 @@ describe('AAAA record', function () {
     })
   }
 
-  const tests = [
-    { e: '2001:0db8:0020:000a:0000:0000:0000:0004', c: '2001:db8:20:a::4' },
-    { e: '0000:0000:0000:0000:0000:0000:0000:0000', c: '::' },
-    { e: '0000:0000:0000:0000:0000:0000:0000:0001', c: '::1' },
-    { e: '2001:0db8:0000:0000:0000:0000:0002:0001', c: '2001:db8::2:1' },
-    { e: '2001:0db8:0000:0001:0001:0001:0001:0001', c: '2001:db8:0:1:1:1:1:1' },
-    {
-      e: '2001:0db8:0000:0000:0008:0800:200c:417a',
-      c: '2001:db8::8:800:200c:417a',
-    },
-  ]
-
-  describe('expand', function () {
-    const r = new AAAA(null)
-    for (const t of tests) {
-      it(`expands IPv6 address (${t.c})`, function () {
-        assert.equal(r.expand(t.c), t.e)
-      })
-    }
+  it('imports tinydns AAAA native (3-prefix) record', function () {
+    const r = new AAAA({ tinyline: '3test.example.com:20010db80020000a0000000000000004:3600::\n' })
+    assert.equal(r.get('owner'), 'test.example.com.')
+    assert.equal(r.get('address'), '2001:0db8:0020:000a:0000:0000:0000:0004')
+    assert.equal(r.get('ttl'), 3600)
   })
 })

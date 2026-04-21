@@ -85,4 +85,9 @@ describe('LOC record', function () {
 
   base.fromTinydns(LOC, validRecords)
   base.fromBind(LOC, validRecords)
+
+  it('arcSecToDMS throws on invalid hemisphere argument', function () {
+    const loc = new LOC(validRecords[0])
+    assert.throws(() => loc.arcSecToDMS(1000000, 'neither'), /unknown or missing hemisphere/)
+  })
 })

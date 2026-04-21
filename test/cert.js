@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import CERT from '../rr/cert.js'
@@ -32,9 +33,29 @@ const validRecords = [
     testT: ':smith.example.com:37:\\000\\003\\000\\000\\000\\004\\004\\010\\010:86400::\n',
     testW: '05736d697468076578616d706c6503636f6d0000250001000151800009000300000004040808',
   },
+  {
+    owner: 'numeric.example.com.',
+    ttl: 86400,
+    class: 'IN',
+    type: 'CERT',
+    'cert type': 1,
+    'key tag': 0,
+    algorithm: 0,
+    certificate: 'AQIDBA==',
+    testB: 'numeric.example.com.\t86400\tIN\tCERT\t1\t0\t0\tAQIDBA==\n',
+  },
 ]
 
 const invalidRecords = [
+  {
+    ...defaults,
+    owner: 'mail.example.com.',
+    'cert type': undefined,
+    'key tag': 0,
+    algorithm: 0,
+    certificate: 'AQIDBA==',
+    msg: /cert type is required/i,
+  },
   {
     ...defaults,
     owner: 'mail.example.com.',
@@ -90,4 +111,8 @@ describe('CERT record', function () {
 
   base.fromBind(CERT, validRecords)
   base.fromTinydns(CERT, validRecords)
+
+  it('getCertTypeValue throws for unknown mnemonic', function () {
+    assert.throws(() => new CERT(null).getCertTypeValue('DOESNOTEXIST'), /unknown cert type mnemonic/i)
+  })
 })

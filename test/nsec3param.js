@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import NSEC3PARAM from '../rr/nsec3param.js'
@@ -60,6 +61,15 @@ const invalidRecords = [
     salt: '-',
     msg: /iterations/i,
   },
+  {
+    ...defaults,
+    owner: 'bad4.example.',
+    'hash algorithm': 1,
+    flags: 0,
+    iterations: 0,
+    salt: 'XYZ', // not valid hex or dash
+    msg: /must be hex or/i,
+  },
 ]
 
 describe('NSEC3PARAM record', function () {
@@ -79,4 +89,8 @@ describe('NSEC3PARAM record', function () {
 
   base.fromBind(NSEC3PARAM, validRecords)
   base.fromTinydns(NSEC3PARAM, validRecords)
+
+  it('throws when fromTinydns RDATA is too short', function () {
+    assert.throws(() => new NSEC3PARAM({ tinyline: ':example.com:51:AB:3600::\n' }), /RDATA too short/)
+  })
 })

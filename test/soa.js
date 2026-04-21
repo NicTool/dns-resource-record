@@ -72,6 +72,14 @@ describe('SOA record', function () {
   base.fromBind(SOA, validRecords)
   base.fromTinydns(SOA, validRecords)
 
+  it('exports SOA record in MaraDNS format', function () {
+    const soa = new SOA(validRecords[0])
+    const out = soa.toMaraDNS()
+    assert.ok(out.includes('SOA'))
+    assert.ok(out.endsWith('~\n'))
+    assert.ok(out.includes(validRecords[0].mname))
+  })
+
   for (const val of validRecords) {
     it(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
       const r = new SOA({ tinyline: val.testT })

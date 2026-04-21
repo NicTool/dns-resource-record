@@ -14,7 +14,8 @@ const validRecords = [
     data: 'v=spf1 mx a include:mx.example.com -all',
     testB: 'example.com.\t86400\tIN\tSPF\t"v=spf1 mx a include:mx.example.com -all"\n',
     testT: ':example.com:99:v=spf1 mx a include\\072mx.example.com -all:86400::\n',
-    testW: '076578616d706c6503636f6d000063000100015180002827763d73706631206d78206120696e636c7564653a6d782e6578616d706c652e636f6d202d616c6c',
+    testW:
+      '076578616d706c6503636f6d000063000100015180002827763d73706631206d78206120696e636c7564653a6d782e6578616d706c652e636f6d202d616c6c',
   },
 ]
 

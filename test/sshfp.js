@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import SSHFP from '../rr/sshfp.js'
@@ -113,6 +114,20 @@ const invalidRecords = [
 describe('SSHFP record', function () {
   base.valid(SSHFP, validRecords)
   base.invalid(SSHFP, invalidRecords)
+
+  it('getAlgorithmOptions returns a Map of algorithm options', function () {
+    const opts = new SSHFP(null).getAlgorithmOptions()
+    assert.ok(opts instanceof Map)
+    assert.equal(opts.get(1), 'RSA')
+    assert.equal(opts.get(4), 'Ed25519')
+  })
+
+  it('getFptypeOptions returns a Map of fingerprint type options', function () {
+    const opts = new SSHFP(null).getFptypeOptions()
+    assert.ok(opts instanceof Map)
+    assert.equal(opts.get(1), 'SHA-1')
+    assert.equal(opts.get(2), 'SHA-256')
+  })
 
   base.getDescription(SSHFP)
   base.getRFCs(SSHFP, validRecords[0])
