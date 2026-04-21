@@ -24,6 +24,16 @@ const validRecords = [
     testB: 'host.example.com.\t86400\tIN\tRP\thostmaster.example.com.\t.\n',
     testT: ':host.example.com:17:\\012hostmaster\\007example\\003com\\000\\000:86400::\n',
   },
+  {
+    owner: 'nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'RP',
+    mbox: 'hostmaster.tnpi.net.',
+    txt: 'contact.nictool.tnpi.net.',
+    testW:
+      '076e6963746f6f6c04746e7069036e6574000011000100000e10002f0a686f73746d617374657204746e7069036e65740007636f6e74616374076e6963746f6f6c04746e7069036e657400',
+  },
 ]
 
 const invalidRecords = [

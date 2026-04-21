@@ -24,6 +24,16 @@ const validRecords = [
     testB: 'sri-nic.arpa.\t86400\tIN\tHINFO\t"DEC-2060"\t"TOPS20"\n',
     testT: ':sri-nic.arpa:13:\\010DEC-2060\\006TOPS20:86400::\n',
   },
+  {
+    owner: 'hinfo.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'HINFO',
+    cpu: 'Intel-Xeon',
+    os: 'Linux',
+    testW:
+      '0568696e666f076e6963746f6f6c04746e7069036e657400000d000100000e1000110a496e74656c2d58656f6e054c696e7578',
+  },
 ]
 
 const invalidRecords = [
@@ -54,6 +64,7 @@ describe('HINFO record', function () {
   base.fromTinydns(HINFO, validRecords)
 
   for (const val of validRecords) {
+    if (!val.testT) continue
     it(`imports tinydns HINFO (generic) record (${val.owner})`, async function () {
       const r = new HINFO({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

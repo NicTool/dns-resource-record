@@ -166,4 +166,32 @@ export default class NAPTR extends RR {
 
     return this.getTinydnsGeneric(rdata)
   }
+
+  getWireRdata() {
+    const enc = new TextEncoder()
+    const flags = enc.encode(this.get('flags'))
+    const service = enc.encode(this.get('service'))
+    const regexp = enc.encode(this.get('regexp'))
+    const replacementBytes = this.wirePackDomain(this.get('replacement'))
+
+    const len = 4 + 1 + flags.length + 1 + service.length + 1 + regexp.length + replacementBytes.length
+    const buf = new Uint8Array(len)
+    const view = new DataView(buf.buffer)
+    let pos = 0
+    view.setUint16(pos, this.get('order'))
+    pos += 2
+    view.setUint16(pos, this.get('preference'))
+    pos += 2
+    buf[pos++] = flags.length
+    buf.set(flags, pos)
+    pos += flags.length
+    buf[pos++] = service.length
+    buf.set(service, pos)
+    pos += service.length
+    buf[pos++] = regexp.length
+    buf.set(regexp, pos)
+    pos += regexp.length
+    buf.set(replacementBytes, pos)
+    return buf
+  }
 }

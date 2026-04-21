@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NSEC extends RR {
   static typeName = 'NSEC'
@@ -98,6 +99,51 @@ export default class NSEC extends RR {
         TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
   }
+
+  getWireRdata() {
+    const nameBytes = this.wirePackDomain(this.get('next domain'))
+    const bitmapBytes = typesToNsecBitmap(this.get('type bit maps'))
+    const result = new Uint8Array(nameBytes.length + bitmapBytes.length)
+    result.set(nameBytes)
+    result.set(bitmapBytes, nameBytes.length)
+    return result
+  }
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
+
+function typesToNsecBitmap(typeNamesStr) {
+  const typeIds = typeNamesStr
+    .trim()
+    .split(/\s+/)
+    .map((t) => {
+      if (/^TYPE\d+$/i.test(t)) return parseInt(t.slice(4), 10)
+      return DNS_TYPE_IDS[t.toUpperCase()]
+    })
+    .filter((id) => id !== undefined && id >= 0)
+
+  const windows = new Map()
+  for (const id of typeIds) {
+    const w = Math.floor(id / 256)
+    if (!windows.has(w)) windows.set(w, [])
+    windows.get(w).push(id % 256)
+  }
+
+  const blocks = []
+  for (const [wNum, bits] of [...windows.entries()].sort((a, b) => a[0] - b[0])) {
+    const maxBit = Math.max(...bits)
+    const bitmapLen = Math.floor(maxBit / 8) + 1
+    const bitmap = new Uint8Array(bitmapLen)
+    for (const b of bits) bitmap[Math.floor(b / 8)] |= 0x80 >> (b % 8)
+    blocks.push(new Uint8Array([wNum, bitmapLen, ...bitmap]))
+  }
+
+  const total = blocks.reduce((s, b) => s + b.length, 0)
+  const result = new Uint8Array(total)
+  let pos = 0
+  for (const b of blocks) {
+    result.set(b, pos)
+    pos += b.length
+  }
+  return result
+}

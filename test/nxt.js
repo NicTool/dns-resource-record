@@ -13,6 +13,8 @@ const validRecords = [
     'type bit map': 'A SIG NXT',
     testB: `big.example.com.\t86400\tIN\tNXT\tmedium.example.com.\tA SIG NXT\n`,
     testT: ':big.example.com:30:\\006medium\\007example\\003com\\000A SIG NXT:86400::\n',
+    testW:
+      '03626967076578616d706c6503636f6d00001e0001000151800018066d656469756d076578616d706c6503636f6d0040000082',
   },
 ]
 

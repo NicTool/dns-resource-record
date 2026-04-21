@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class TLSA extends RR {
   static typeName = 'TLSA'
@@ -127,7 +128,7 @@ export default class TLSA extends RR {
       'certificate usage': bytes[0],
       selector: bytes[1],
       'matching type': bytes[2],
-      'certificate association data': new TextDecoder().decode(bytes.subarray(3)),
+      'certificate association data': BINARY.bytesToHex(bytes.subarray(3)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -141,7 +142,7 @@ export default class TLSA extends RR {
       TINYDNS.UInt8toOctal(this.get('certificate usage')) +
         TINYDNS.UInt8toOctal(this.get('selector')) +
         TINYDNS.UInt8toOctal(this.get('matching type')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate association data')),
+        TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
     )
   }
 }

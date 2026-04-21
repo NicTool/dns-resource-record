@@ -12,11 +12,12 @@ const validRecords = [
     ttl: 7200,
     priority: 0,
     'target name': 'svc4.example.net.',
-    params: 'alpn="bar" port="8004" ech="..."',
-    testB:
-      '_8443._foo.api.example.com.\t7200\tIN\tHTTPS\t0\tsvc4.example.net.\talpn="bar" port="8004" ech="..."\n',
+    params: 'alpn="bar" port="8004"',
+    testB: '_8443._foo.api.example.com.\t7200\tIN\tHTTPS\t0\tsvc4.example.net.\talpn="bar" port="8004"\n',
     testT:
-      ':_8443._foo.api.example.com:65:\\000\\000\\004svc4\\007example\\003net\\000alpn="bar" port="8004" ech="...":7200::\n',
+      ':_8443._foo.api.example.com:65:\\000\\000\\004svc4\\007example\\003net\\000alpn="bar" port="8004":7200::\n',
+    testW:
+      '055f38343433045f666f6f03617069076578616d706c6503636f6d000041000100001c20002200000473766334076578616d706c65036e6574000001000403626172000300021f44',
   },
   {
     ...defaults,
@@ -26,11 +27,24 @@ const validRecords = [
     params: '',
     testB: '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\t\n',
     testT: ':_8080._foo.example.com:65:\\000\\000\\006foosvc\\007example\\003net\\000:3600::\n',
+    testW:
+      '055f38303830045f666f6f076578616d706c6503636f6d000041000100000e100016000006666f6f737663076578616d706c65036e657400',
   },
   /*
   _1234._bar.example.com. 300 IN HTTPS 1 svc1.example.net. ( ech="111..." ipv6hint=2001:db8::1 port=1234 )
                                  HTTPS 2 svc2.example.net. ( ech="222..." ipv6hint=2001:db8::2 port=1234 )
 */
+  {
+    owner: 'www.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'HTTPS',
+    priority: 0,
+    'target name': 'nictool.tnpi.net.',
+    params: '',
+    testW:
+      '03777777076e6963746f6f6c04746e7069036e6574000041000100000e1000140000076e6963746f6f6c04746e7069036e657400',
+  },
 ]
 
 const invalidRecords = [

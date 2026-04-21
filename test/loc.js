@@ -32,6 +32,14 @@ const validRecords = [
     testT:
       ':rwy04l.logan-airport.boston:29:\\000\\045\\000\\000\\211\\026\\313\\074\\160\\303\\020\\337\\000\\230\\205\\120:3600::\n',
   },
+  {
+    owner: 'loc.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'LOC',
+    address: '37 46 39 N 122 25 9 W 16m 1m 10000m 10m',
+    testW: '036c6f63076e6963746f6f6c04746e7069036e657400001d000100000e10001000121613881b2e1865bb507800989cc0',
+  },
 ]
 
 const invalidRecords = [

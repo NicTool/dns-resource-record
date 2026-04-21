@@ -28,6 +28,28 @@ const validRecords = [
     testB: '_http.github.dog.\t3600\tIN\tURI\t2\t100\t"http://github.com/dog"\n',
     testT: ':_http.github.dog:256:\\000\\002\\000\\144http\\072\\057\\057github.com\\057dog:3600::\n',
   },
+  {
+    owner: '_http._tcp.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'URI',
+    priority: 1,
+    weight: 10,
+    target: 'https://nictool.tnpi.net/',
+    testW:
+      '055f68747470045f746370076e6963746f6f6c04746e7069036e6574000100000100000e10001d0001000a68747470733a2f2f6e6963746f6f6c2e746e70692e6e65742f',
+  },
+  {
+    owner: '_ftp._tcp.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'URI',
+    priority: 1,
+    weight: 10,
+    target: 'ftp://ftp.nictool.tnpi.net/',
+    testW:
+      '045f667470045f746370076e6963746f6f6c04746e7069036e6574000100000100000e10001f0001000a6674703a2f2f6674702e6e6963746f6f6c2e746e70692e6e65742f',
+  },
 ]
 
 const invalidRecords = [
@@ -61,6 +83,7 @@ describe('URI record', function () {
   base.fromTinydns(URI, validRecords)
 
   for (const val of validRecords) {
+    if (!val.testT) continue
     it(`imports tinydns (generic) record`, async function () {
       const r = new URI({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

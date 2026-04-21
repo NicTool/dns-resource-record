@@ -1,5 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as WIRE from '../lib/binary.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
@@ -128,12 +129,17 @@ export default class RRSIG extends RR {
   fromBind({ bindline }) {
     // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
     const parts = bindline.trim().split(/\s+/)
+    const typeCoveredStr = parts[4]
+    // type covered may be a type name ('A', 'MX') or a numeric ID
+    const typeCovered = /^\d+$/.test(typeCoveredStr)
+      ? parseInt(typeCoveredStr, 10)
+      : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
     return new RRSIG({
       owner: parts[0],
       ttl: parseInt(parts[1], 10),
       class: parts[2],
       type: 'RRSIG',
-      'type covered': parseInt(parts[4], 10),
+      'type covered': typeCovered,
       algorithm: parseInt(parts[5], 10),
       labels: parseInt(parts[6], 10),
       'original ttl': parseInt(parts[7], 10),

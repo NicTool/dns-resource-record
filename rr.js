@@ -108,11 +108,9 @@ export default class RR extends Map {
   }
 
   setType(t) {
-    switch (t) {
-      case '':
-      case undefined:
-        this.throwHelp(`type is required`)
-    }
+    if ([undefined, ''].includes(t)) t = this.constructor.typeName
+
+    if (t === undefined) this.throwHelp(`type is required`)
 
     if (t.toUpperCase() !== this.constructor.typeName)
       this.throwHelp(`type ${t} doesn't match ${this.constructor.typeName}`)
@@ -274,15 +272,16 @@ export default class RR extends Map {
   }
 
   is32bitInt(type, field, value) {
-    if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
-      value >= 0 &&
-      value <= 2147483647
-    )
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
+
+    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
+  }
+
+  is48bitInt(type, field, value) {
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 281474976710655)
       return true
 
-    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
+    this.throwHelp(`${type} ${field} must be a 48-bit integer (in the range 0-281474976710655)`)
   }
 
   isQuoted(val) {

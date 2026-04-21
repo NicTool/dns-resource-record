@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as WIRE from '../lib/binary.js'
 
 export default class SVCB extends RR {
   static typeName = 'SVCB'
@@ -123,5 +124,15 @@ export default class SVCB extends RR {
         TINYDNS.packDomainName(this.get('target name')) +
         TINYDNS.escapeOctal(dataRe, this.get('params')),
     )
+  }
+
+  getWireRdata() {
+    const targetBytes = this.wirePackDomain(this.get('target name'))
+    const paramsBytes = WIRE.svcParamsToWire(this.get('params'))
+    const result = new Uint8Array(2 + targetBytes.length + paramsBytes.length)
+    new DataView(result.buffer).setUint16(0, this.get('priority'))
+    result.set(targetBytes, 2)
+    result.set(paramsBytes, 2 + targetBytes.length)
+    return result
   }
 }

@@ -14,6 +14,15 @@ const validRecords = [
     testT:
       ':host.example.com:49:\\000\\002\\001co\\300\\270\\047\\034\\202\\202\\133\\261\\254\\134A\\317SQ\\252i\\264\\376\\275\\224\\350\\361\\174\\333\\225\\000\\015\\244\\214\\100:3600::\n',
   },
+  {
+    owner: 'dhcid.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'DHCID',
+    data: 'AAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA',
+    testW:
+      '056468636964076e6963746f6f6c04746e7069036e6574000031000100000e100018000201c7093118ed09a2eecd32c181000000000000000000',
+  },
 ]
 
 const invalidRecords = [

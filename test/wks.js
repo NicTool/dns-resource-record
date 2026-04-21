@@ -14,6 +14,7 @@ const validRecords = [
     'bit map': 'ftp smtp',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.1\tTCP\tftp smtp\n',
     testT: ':host.example.com:11:\\300\\000\\002\\001\\006ftp smtp:3600::\n',
+    testW: '04686f7374076578616d706c6503636f6d00000b000100000e100009c00002010600000440',
   },
   {
     ...defaults,
@@ -23,6 +24,7 @@ const validRecords = [
     'bit map': 'domain',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.2\tUDP\tdomain\n',
     testT: ':host.example.com:11:\\300\\000\\002\\002\\021domain:3600::\n',
+    testW: '04686f7374076578616d706c6503636f6d00000b000100000e10000cc00002021100000000000004',
   },
   {
     ...defaults,
@@ -32,6 +34,7 @@ const validRecords = [
     'bit map': '',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.3\tTCP\t\n',
     testT: ':host.example.com:11:\\300\\000\\002\\003\\006:3600::\n',
+    testW: '04686f7374076578616d706c6503636f6d00000b000100000e100005c000020306',
   },
 ]
 

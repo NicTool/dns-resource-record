@@ -24,6 +24,16 @@ const validRecords = [
     testB: 'host.example.com.\t86400\tIN\tKX\t0\tkx2.example.com.\n',
     testT: ':host.example.com:36:\\000\\000\\003kx2\\007example\\003com\\000:86400::\n',
   },
+  {
+    owner: 'nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'KX',
+    preference: 10,
+    exchanger: 'kx.nictool.tnpi.net.',
+    testW:
+      '076e6963746f6f6c04746e7069036e6574000024000100000e100017000a026b78076e6963746f6f6c04746e7069036e657400',
+  },
 ]
 
 const invalidRecords = [

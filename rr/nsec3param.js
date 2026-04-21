@@ -1,5 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class NSEC3PARAM extends RR {
   static typeName = 'NSEC3PARAM'
@@ -123,7 +124,7 @@ export default class NSEC3PARAM extends RR {
       'hash algorithm': bytes[0],
       flags: bytes[1],
       iterations: (bytes[2] << 8) | bytes[3],
-      salt: new TextDecoder().decode(bytes.subarray(4)),
+      salt: bytes[4] === 0 ? '-' : BINARY.bytesToHex(bytes.subarray(5, 5 + bytes[4])),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -138,13 +139,15 @@ export default class NSEC3PARAM extends RR {
   }
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+    const salt = this.get('salt')
+    const saltOctal =
+      salt === '-' ? TINYDNS.UInt8toOctal(0) : TINYDNS.UInt8toOctal(salt.length / 2) + TINYDNS.packHex(salt)
 
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('hash algorithm')) +
         TINYDNS.UInt8toOctal(this.get('flags')) +
         TINYDNS.UInt16toOctal(this.get('iterations')) +
-        TINYDNS.escapeOctal(dataRe, this.get('salt')),
+        saltOctal,
     )
   }
 }

@@ -76,7 +76,7 @@ export default class CAA extends RR {
   }
 
   getRFCs() {
-    return [6844, 8659]
+    return [6844, 8659, 9619]
   }
 
   getTypeId() {
@@ -151,7 +151,7 @@ export default class CAA extends RR {
       TINYDNS.UInt8toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('tag').length) +
         TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value')),
+        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value')),
     )
   }
 }

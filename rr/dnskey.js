@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class DNSKEY extends RR {
   static typeName = 'DNSKEY'
@@ -89,7 +90,7 @@ export default class DNSKEY extends RR {
   }
 
   getRFCs() {
-    return [4034, 6014, 8624]
+    return [4034, 6014, 8624, 9619, 9905]
   }
 
   getTypeId() {
@@ -149,7 +150,7 @@ export default class DNSKEY extends RR {
       flags: (bytes[0] << 8) | bytes[1],
       protocol: bytes[2],
       algorithm: bytes[3],
-      publickey: new TextDecoder().decode(bytes.subarray(4)),
+      publickey: BINARY.bytesToBase64(bytes.subarray(4)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -158,13 +159,11 @@ export default class DNSKEY extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('protocol')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('publickey')),
+        TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
     )
   }
 }

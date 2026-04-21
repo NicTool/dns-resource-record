@@ -14,9 +14,10 @@ const validRecords = [
     'cert type': 'PGP',
     'key tag': 0,
     algorithm: 0,
-    certificate: 'hexidecimalkeystring1',
-    testB: 'mail.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring1\n',
-    testT: ':mail.example.com:37:\\000\\003\\000\\000\\000hexidecimalkeystring1:86400::\n',
+    certificate: 'AQIDBA==',
+    testB: 'mail.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\tAQIDBA==\n',
+    testT: ':mail.example.com:37:\\000\\003\\000\\000\\000\\001\\002\\003\\004:86400::\n',
+    testW: '046d61696c076578616d706c6503636f6d0000250001000151800009000300000001020304',
   },
   {
     owner: 'smith.example.com.',
@@ -26,9 +27,10 @@ const validRecords = [
     'cert type': 'PGP',
     'key tag': 0,
     algorithm: 0,
-    certificate: 'hexidecimalkeystring2',
-    testB: 'smith.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\thexidecimalkeystring2\n',
-    testT: ':smith.example.com:37:\\000\\003\\000\\000\\000hexidecimalkeystring2:86400::\n',
+    certificate: 'BAQICA==',
+    testB: 'smith.example.com.\t86400\tIN\tCERT\tPGP\t0\t0\tBAQICA==\n',
+    testT: ':smith.example.com:37:\\000\\003\\000\\000\\000\\004\\004\\010\\010:86400::\n',
+    testW: '05736d697468076578616d706c6503636f6d0000250001000151800009000300000004040808',
   },
 ]
 

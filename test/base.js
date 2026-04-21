@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import { bytesToHex } from '../lib/binary.js'
+
 export function valid(type, validRecords) {
   describe('valid', function () {
     for (const val of validRecords) {
@@ -19,17 +21,21 @@ export function valid(type, validRecords) {
 }
 
 export function invalid(type, invalidRecords) {
+  const callerErr = new Error() // captured at call site (e.g. test/soa.js)
   describe('invalid', function () {
     for (const inv of invalidRecords) {
       it(`throws on record (${inv.owner})`, function () {
-        assert.throws(
-          () => {
-            new type(inv)
-          },
-          {
-            message: inv.msg,
-          },
-        )
+        try {
+          assert.throws(
+            () => {
+              new type(inv)
+            },
+            { message: inv.msg },
+          )
+        } catch (e) {
+          e.stack = `${e.message}\n${callerErr.stack.split('\n').slice(1).join('\n')}`
+          throw e
+        }
       })
     }
   })
@@ -38,6 +44,7 @@ export function invalid(type, invalidRecords) {
 export function toBind(type, validRecords) {
   describe('toBind', function () {
     for (const val of validRecords) {
+      if (val.testB === undefined) continue
       it(`exports to BIND: ${val.owner}`, function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
@@ -154,6 +161,10 @@ export function toWire(type, validRecords) {
         const wire = r.toWire()
         assert.ok(wire instanceof Uint8Array)
         assert.ok(wire.length > 10)
+
+        if (val.testW) {
+          assert.equal(bytesToHex(wire), val.testW)
+        }
       })
     }
   })

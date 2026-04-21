@@ -7,6 +7,9 @@ Notable changes to this project are documented in this file.
 ### [1.7.0] - 2026-04-20
 
 - feat: rollup a minified browser build
+- fix(rr/txt): chunk by UTF-8 bytes (vs ASCII)
+- change(openpgpkey): reject keys with non-ASCII
+- change(tinydns): name any out-of-range chars in error msg
 - change: replace `Buffer` with Uint8Array, DataView, and math
 - change: add `static typeName`, since this.constructor.name doesn't survive minification
 

@@ -32,10 +32,10 @@ const validRecords = [
   {
     ...defaults,
     owner: 'a.',
-    ttl: 2147483647,
+    ttl: 4294967295,
     'apl rdata': '1:203.0.113.0/24',
-    testB: 'a.\t2147483647\tIN\tAPL\t1:203.0.113.0/24\n',
-    testT: ':a:42:\\000\\001\\030\\003\\313\\000\\161:2147483647::\n',
+    testB: 'a.\t4294967295\tIN\tAPL\t1:203.0.113.0/24\n',
+    testT: ':a:42:\\000\\001\\030\\003\\313\\000\\161:4294967295::\n',
   },
 ]
 
@@ -47,11 +47,9 @@ const invalidRecords = [
   { ...defaults, owner: 'something.*', msg: /fully/ },
   { ...defaults, 'apl rdata': '', msg: /apl rdata is required/ },
   { ...defaults, 'apl rdata': undefined, msg: /apl rdata is required/ },
-  { ...defaults, type: '', msg: /type is required/ },
-  { ...defaults, type: undefined, msg: /type is required/ },
   { ...defaults, ttl: '', msg: /TTL must be numeric/ },
   { ...defaults, ttl: -299, msg: /TTL must be a 32-bit integer/ },
-  { ...defaults, ttl: 2147483648, msg: /TTL must be a 32-bit integer/ },
+  { ...defaults, ttl: 4294967296, msg: /TTL must be a 32-bit integer/ },
 ]
 
 for (let i = 0; i < invalidRecords.length; i++) {

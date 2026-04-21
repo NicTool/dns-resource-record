@@ -30,6 +30,42 @@ const validRecords = [
     testT:
       ':_sip._tls.example.com:33:\\000\\144\\000\\001\\001\\273\\006sipdir\\006online\\004lync\\003com\\000:3600::\n',
   },
+  {
+    owner: '_imaps._tcp.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SRV',
+    priority: 1,
+    weight: 0,
+    port: 993,
+    target: 'mail.nictool.tnpi.net.',
+    testW:
+      '065f696d617073045f746370076e6963746f6f6c04746e7069036e6574000021000100000e10001d0001000003e1046d61696c076e6963746f6f6c04746e7069036e657400',
+  },
+  {
+    owner: '_https._tcp.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SRV',
+    priority: 1,
+    weight: 0,
+    port: 443,
+    target: 'www.nictool.tnpi.net.',
+    testW:
+      '065f6874747073045f746370076e6963746f6f6c04746e7069036e6574000021000100000e10001c0001000001bb03777777076e6963746f6f6c04746e7069036e657400',
+  },
+  {
+    owner: '_sip._udp.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SRV',
+    priority: 10,
+    weight: 0,
+    port: 5060,
+    target: 'sip.nictool.tnpi.net.',
+    testW:
+      '045f736970045f756470076e6963746f6f6c04746e7069036e6574000021000100000e10001c000a000013c403736970076e6963746f6f6c04746e7069036e657400',
+  },
 ]
 
 const invalidRecords = [
@@ -66,6 +102,7 @@ describe('SRV record', function () {
   base.fromTinydns(SRV, validRecords)
 
   for (const val of validRecords) {
+    if (!val.testT) continue
     it(`imports tinydns SRV (generic) record (${val.owner})`, async function () {
       const r = new SRV({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

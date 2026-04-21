@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NXT extends RR {
   static typeName = 'NXT'
@@ -99,6 +100,26 @@ export default class NXT extends RR {
       TINYDNS.packDomainName(this.get('next domain')) + TINYDNS.escapeOctal(dataRe, this.get('type bit map')),
     )
   }
+
+  getWireRdata() {
+    const nameBytes = this.wirePackDomain(this.get('next domain'))
+    const bitmapBytes = typesToNxtBitmap(this.get('type bit map'))
+    const result = new Uint8Array(nameBytes.length + bitmapBytes.length)
+    result.set(nameBytes)
+    result.set(bitmapBytes, nameBytes.length)
+    return result
+  }
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
+
+function typesToNxtBitmap(typeNamesStr) {
+  const bitmap = new Uint8Array(16)
+  for (const name of typeNamesStr.trim().split(/\s+/)) {
+    const id = /^TYPE\d+$/i.test(name) ? parseInt(name.slice(4), 10) : DNS_TYPE_IDS[name.toUpperCase()]
+    if (id !== undefined && id < 128) bitmap[Math.floor(id / 8)] |= 0x80 >> (id % 8)
+  }
+  let len = bitmap.length
+  while (len > 0 && bitmap[len - 1] === 0) len--
+  return bitmap.slice(0, len)
+}

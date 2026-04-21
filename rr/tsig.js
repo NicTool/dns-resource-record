@@ -1,5 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class TSIG extends RR {
   static typeName = 'TSIG'
@@ -125,7 +126,7 @@ export default class TSIG extends RR {
     bpos += 2
     const macSize = dv.getUint16(bpos)
     bpos += 2
-    const mac = macSize > 0 ? TINYDNS.bytesToHex(bytes.subarray(bpos, bpos + macSize)) : ''
+    const mac = macSize > 0 ? BINARY.bytesToHex(bytes.subarray(bpos, bpos + macSize)) : ''
     bpos += macSize
     const originalId = dv.getUint16(bpos)
     bpos += 2

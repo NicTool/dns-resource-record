@@ -122,7 +122,7 @@ export default class KEY extends RR {
       TINYDNS.UInt16toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('protocol')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('publickey')),
+        TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
     )
   }
 }

@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class HIP extends RR {
   static typeName = 'HIP'
@@ -70,8 +71,8 @@ export default class HIP extends RR {
     const pkAlgorithm = bytes[1]
     const pkLen = (bytes[2] << 8) | bytes[3]
 
-    const hit = TINYDNS.bytesToHex(bytes.subarray(4, 4 + hitLen)).toUpperCase()
-    const publicKey = TINYDNS.bytesToBase64(bytes.subarray(4 + hitLen, 4 + hitLen + pkLen))
+    const hit = BINARY.bytesToHex(bytes.subarray(4, 4 + hitLen)).toUpperCase()
+    const publicKey = BINARY.bytesToBase64(bytes.subarray(4 + hitLen, 4 + hitLen + pkLen))
 
     const rvsNames = []
     let pos = 4 + hitLen + pkLen
@@ -123,8 +124,8 @@ export default class HIP extends RR {
 
   toTinydns() {
     const hitHex = this.get('hit')
-    const hitBytes = TINYDNS.hexToBytes(hitHex)
-    const pkBytes = TINYDNS.base64ToBytes(this.get('public key'))
+    const hitBytes = BINARY.hexToBytes(hitHex)
+    const pkBytes = BINARY.base64ToBytes(this.get('public key'))
     const rs = this.get('rendezvous servers')
 
     let rdata = ''

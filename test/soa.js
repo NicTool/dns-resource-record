@@ -20,6 +20,8 @@ const validRecords = [
     minimum: 3600,
     testB: `example.com.\t3600\tIN\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
     testT: 'Zexample.com:ns1.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+    testW:
+      '076578616d706c6503636f6d000006000100000e100037036e7331076578616d706c6503636f6d00046d617474076578616d706c6503636f6d000000000100001c2000000e100012750000000e10',
   },
   {
     ...defaults,
@@ -33,6 +35,8 @@ const validRecords = [
     minimum: 3600,
     testB: `2.example.com.\t3600\tIN\tSOA\tns2.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600\n`,
     testT: 'Z2.example.com:ns2.example.com:matt.example.com:1:7200:3600:1209600:3600:3600::\n',
+    testW:
+      '0132076578616d706c6503636f6d000006000100000e100037036e7332076578616d706c6503636f6d00046d617474076578616d706c6503636f6d000000000100001c2000000e100012750000000e10',
   },
 ]
 

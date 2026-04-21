@@ -14,7 +14,8 @@ const validRecords = [
     iterations: 12,
     salt: 'aabbccdd',
     testB: 'test.example.com.\t3600\tIN\tNSEC3PARAM\t1\t1\t12\taabbccdd\n',
-    testT: ':test.example.com:51:\\001\\001\\000\\014aabbccdd:3600::\n',
+    testT: ':test.example.com:51:\\001\\001\\000\\014\\004\\252\\273\\314\\335:3600::\n',
+    testW: '0474657374076578616d706c6503636f6d000033000100000e1000090101000c04aabbccdd',
   },
   {
     ...defaults,
@@ -24,7 +25,8 @@ const validRecords = [
     iterations: 0,
     salt: '-',
     testB: 'example.com.\t3600\tIN\tNSEC3PARAM\t1\t0\t0\t-\n',
-    testT: ':example.com:51:\\001\\000\\000\\000-:3600::\n',
+    testT: ':example.com:51:\\001\\000\\000\\000\\000:3600::\n',
+    testW: '076578616d706c6503636f6d000033000100000e1000050100000000',
   },
 ]
 

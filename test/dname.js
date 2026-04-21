@@ -15,6 +15,14 @@ const validRecords = [
     testB: '_tcp.example.com.\t86400\tIN\tDNAME\t_tcp.example.net.\n',
     testT: ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
   },
+  {
+    owner: 'old.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'DNAME',
+    target: 'new.tnpi.net.',
+    testW: '036f6c64076e6963746f6f6c04746e7069036e6574000027000100000e10000e036e657704746e7069036e657400',
+  },
 ]
 
 const invalidRecords = [
@@ -45,6 +53,7 @@ describe('DNAME record', function () {
   base.fromTinydns(DNAME, validRecords)
 
   for (const val of validRecords) {
+    if (!val.testT) continue
     it(`imports tinydns DNAME (generic) record (${val.owner})`, async function () {
       const r = new DNAME({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

@@ -45,6 +45,39 @@ const validRecords = [
     testB:
       'jails.example.com.\t86400\tIN\tSSHFP\t1\t2\ted8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26\n',
   },
+  {
+    owner: 'ssh.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SSHFP',
+    algorithm: 1,
+    fptype: 1,
+    fingerprint: '546f3801f4159f81643666d97a9f73587000d60d',
+    testW:
+      '03737368076e6963746f6f6c04746e7069036e657400002c000100000e1000160101546f3801f4159f81643666d97a9f73587000d60d',
+  },
+  {
+    owner: 'ssh.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SSHFP',
+    algorithm: 3,
+    fptype: 2,
+    fingerprint: 'b0e5a9735d49246603d646b97607755e13583688b58a18357a700f7223644f77',
+    testW:
+      '03737368076e6963746f6f6c04746e7069036e657400002c000100000e1000220302b0e5a9735d49246603d646b97607755e13583688b58a18357a700f7223644f77',
+  },
+  {
+    owner: 'ssh.nictool.tnpi.net.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'SSHFP',
+    algorithm: 4,
+    fptype: 2,
+    fingerprint: '11e9a933f7608246f4142646f903745213583688b58a18357a700f7223644f77',
+    testW:
+      '03737368076e6963746f6f6c04746e7069036e657400002c000100000e100022040211e9a933f7608246f4142646f903745213583688b58a18357a700f7223644f77',
+  },
 ]
 
 const invalidRecords = [

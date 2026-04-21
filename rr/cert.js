@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class CERT extends RR {
   static typeName = 'CERT'
@@ -142,7 +143,7 @@ export default class CERT extends RR {
       'cert type': certType,
       'key tag': (bytes[2] << 8) | bytes[3],
       algorithm: bytes[4],
-      certificate: new TextDecoder().decode(bytes.subarray(5)),
+      certificate: BINARY.bytesToBase64(bytes.subarray(5)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -172,7 +173,7 @@ export default class CERT extends RR {
       TINYDNS.UInt16toOctal(this.getCertTypeValue(this.get('cert type'))) +
         TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate')),
+        TINYDNS.base64toOctal(this.get('certificate').replace(/[\s()]/g, '')),
     )
   }
 }

@@ -101,7 +101,10 @@ export default class NSEC3 extends RR {
   fromBind({ bindline }) {
     // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
     const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
-    const rdata = bindline.split(/\(|\)/)[1]
+    // rdata may be parenthesized or inline
+    const rdataStr = bindline.includes('(')
+      ? bindline.split(/\(|\)/)[1]
+      : bindline.split(/\s+/).slice(8).join(' ')
 
     return new NSEC3({
       owner,
@@ -112,8 +115,8 @@ export default class NSEC3 extends RR {
       flags: parseInt(flags, 10),
       iterations: parseInt(iterations, 10),
       salt,
-      'next hashed owner name': rdata.split(/\s+/)[0],
-      'type bit maps': rdata.split(/\s+/).slice(1).join('	'),
+      'next hashed owner name': rdataStr.trim().split(/\s+/)[0],
+      'type bit maps': rdataStr.trim().split(/\s+/).slice(1).join('\t'),
     })
   }
 

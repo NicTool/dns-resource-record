@@ -145,8 +145,8 @@ describe('RR', function () {
   })
 
   describe('is32bitInt', function () {
-    const valid = [1, 2, 55555, 2147483647]
-    const invalid = ['a', new Date(), undefined, 2147483648]
+    const valid = [1, 2, 55555, 4294967295]
+    const invalid = ['a', new Date(), undefined, 4294967296]
 
     for (const i of valid) {
       it(`returns true for valid int: ${i}`, async function () {
@@ -159,7 +159,7 @@ describe('RR', function () {
         try {
           assert.equal(r.is32bitInt('test', 'field', i), false)
         } catch (e) {
-          assert.equal(e.message, 'test field must be a 32-bit integer (in the range 0-2147483647)')
+          assert.equal(e.message, 'test field must be a 32-bit integer (in the range 0-4294967295)')
         }
       })
     }

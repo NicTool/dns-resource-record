@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class SMIMEA extends RR {
   static typeName = 'SMIMEA'
@@ -120,7 +121,7 @@ export default class SMIMEA extends RR {
       'certificate usage': binaryRdata[0],
       selector: binaryRdata[1],
       'matching type': binaryRdata[2],
-      'certificate association data': new TextDecoder().decode(binaryRdata.subarray(3)),
+      'certificate association data': BINARY.bytesToHex(binaryRdata.subarray(3)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -134,7 +135,7 @@ export default class SMIMEA extends RR {
       TINYDNS.UInt8toOctal(this.get('certificate usage')) +
         TINYDNS.UInt8toOctal(this.get('selector')) +
         TINYDNS.UInt8toOctal(this.get('matching type')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate association data')),
+        TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
     )
   }
 }

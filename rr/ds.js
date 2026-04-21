@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class DS extends RR {
   static typeName = 'DS'
@@ -10,10 +11,8 @@ export default class DS extends RR {
 
   /****** Resource record specific setters   *******/
   setKeyTag(val) {
-    // a 2 octet Key Tag field...in network byte order
-    if (!val) this.throwHelp(`DS: key tag is required`)
-    if (val.length > 2) this.throwHelp(`DS: key tag is too long`)
-
+    // a 2 octet Key Tag field
+    this.is16bitInt('DS', 'key tag', val)
     this.set('key tag', val)
   }
 
@@ -60,7 +59,7 @@ export default class DS extends RR {
   }
 
   getRFCs() {
-    return [4034, 4509]
+    return [4034, 4509, 9619]
   }
 
   getTypeId() {
@@ -97,7 +96,8 @@ export default class DS extends RR {
     })
   }
 
-  fromTinydns({ tinyline }) {
+  fromTinydns(opts) {
+    const { tinyline } = opts
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
 
@@ -110,7 +110,7 @@ export default class DS extends RR {
       'key tag': (binRdata[0] << 8) | binRdata[1],
       algorithm: binRdata[2],
       'digest type': binRdata[3],
-      digest: new TextDecoder().decode(binRdata.subarray(4)),
+      digest: BINARY.bytesToHex(binRdata.subarray(4)).toUpperCase(),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -119,13 +119,11 @@ export default class DS extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
         TINYDNS.UInt8toOctal(this.get('digest type')) +
-        TINYDNS.escapeOctal(rdataRe, this.get('digest')),
+        TINYDNS.packHex(this.get('digest').replace(/\s+/g, '')),
     )
   }
 }

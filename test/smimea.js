@@ -12,11 +12,13 @@ const validRecords = [
     'certificate usage': 0,
     selector: 0,
     'matching type': 1,
-    'certificate association data': '( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )',
+    'certificate association data': 'd2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
     testB:
-      '_443._tcp.www.example.com.	3600	IN	SMIMEA	0	0	1	( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 )\n',
+      '_443._tcp.www.example.com.\t3600\tIN\tSMIMEA\t0\t0\t1\td2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971\n',
     testT:
-      ':_443._tcp.www.example.com:53:\\000\\000\\001( d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971 ):3600::\n',
+      ':_443._tcp.www.example.com:53:\\000\\000\\001\\322\\253\\336\\044\\015\\174\\323\\356\\153\\113\\050\\305\\115\\360\\064\\271\\171\\203\\241\\321\\156\\212\\101\\016\\105\\141\\313\\020\\146\\030\\351\\161:3600::\n',
+    testW:
+      '045f343433045f74637003777777076578616d706c6503636f6d000035000100000e100023000001d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
   },
 ]
 
