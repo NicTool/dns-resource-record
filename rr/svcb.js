@@ -83,23 +83,23 @@ export default class SVCB extends RR {
     }
 
     // Convert escaped octal RDATA into a binary buffer for reliable parsing
-    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
+    const binary = Uint8Array.from(TINYDNS.octalToChar(rd), (c) => c.charCodeAt(0))
 
-    const priority = binary.readUInt16BE(0)
+    const priority = (binary[0] << 8) | binary[1]
 
     // parse domain name from binary starting at offset 2
     let pos = 2
     const labels = []
     while (true) {
-      const len = binary.readUInt8(pos)
+      const len = binary[pos]
       pos += 1
       if (len === 0) break
-      labels.push(binary.slice(pos, pos + len).toString())
+      labels.push(new TextDecoder().decode(binary.subarray(pos, pos + len)))
       pos += len
     }
     const targetName = `${labels.join('.')}.`
     // remaining params are ASCII text after the domain
-    const params = binary.slice(pos).toString()
+    const params = new TextDecoder().decode(binary.subarray(pos))
 
     return new SVCB({
       owner: this.fullyQualify(owner),

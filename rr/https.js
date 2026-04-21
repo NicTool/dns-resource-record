@@ -84,20 +84,20 @@ export default class HTTPS extends RR {
       this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
     }
 
-    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
-    const priority = binary.readUInt16BE(0)
+    const binary = Uint8Array.from(TINYDNS.octalToChar(rd), (c) => c.charCodeAt(0))
+    const priority = (binary[0] << 8) | binary[1]
 
     let pos = 2
     const labels = []
     while (true) {
-      const len = binary.readUInt8(pos)
+      const len = binary[pos]
       pos += 1
       if (len === 0) break
-      labels.push(binary.slice(pos, pos + len).toString())
+      labels.push(new TextDecoder().decode(binary.subarray(pos, pos + len)))
       pos += len
     }
     const targetName = `${labels.join('.')}.`
-    const params = binary.slice(pos).toString()
+    const params = new TextDecoder().decode(binary.subarray(pos))
 
     return new HTTPS({
       owner: this.fullyQualify(owner),

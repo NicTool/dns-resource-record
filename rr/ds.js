@@ -101,16 +101,16 @@ export default class DS extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
 
-    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const binRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
 
     return new DS({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'DS',
-      'key tag': binRdata.readUInt16BE(0),
-      algorithm: binRdata.readUInt8(2),
-      'digest type': binRdata.readUInt8(3),
-      digest: binRdata.slice(4).toString(),
+      'key tag': (binRdata[0] << 8) | binRdata[1],
+      algorithm: binRdata[2],
+      'digest type': binRdata[3],
+      digest: new TextDecoder().decode(binRdata.subarray(4)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

@@ -121,11 +121,12 @@ export default class NSEC3 extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-    const hashAlgorithm = bytes.readUInt8(0)
-    const flags = bytes.readUInt8(1)
-    const iterations = bytes.readUInt16BE(2)
+    const hashAlgorithm = bytes[0]
+    const flags = bytes[1]
+    const iterations = dv.getUint16(2)
 
     // The remaining bytes in the buffer contain:
     // Salt Length (1 octet)
@@ -177,12 +178,12 @@ export default class NSEC3 extends RR {
 }
 
 function parseNSEC3Buffer(bytes) {
-  // bytes is a Buffer containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
+  // bytes is a Uint8Array containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
   // Start after the first 4 bytes (hash alg, flags, iterations)
-  const rest = bytes.slice(4).toString('utf8')
+  const rest = new TextDecoder().decode(bytes.subarray(4))
 
   // determine expected next hashed owner name length from hash algorithm
-  const hashAlgorithm = bytes.readUInt8(0)
+  const hashAlgorithm = bytes[0]
   // common mapping: algorithm 1 => SHA-1 => 20 bytes => base32 length 32
   const expectedLen = hashAlgorithm === 1 ? 32 : hashAlgorithm === 2 ? 52 : 32
 

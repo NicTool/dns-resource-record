@@ -117,8 +117,8 @@ export default class CERT extends RR {
     const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const typeNum = bytes.readUInt16BE(0)
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const typeNum = (bytes[0] << 8) | bytes[1]
     let certType = typeNum
 
     const types = {
@@ -140,9 +140,9 @@ export default class CERT extends RR {
       ttl: parseInt(ttl, 10),
       type: 'CERT',
       'cert type': certType,
-      'key tag': bytes.readUInt16BE(2),
-      algorithm: bytes.readUInt8(4),
-      certificate: bytes.slice(5).toString(),
+      'key tag': (bytes[2] << 8) | bytes[3],
+      algorithm: bytes[4],
+      certificate: new TextDecoder().decode(bytes.subarray(5)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

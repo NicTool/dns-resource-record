@@ -140,16 +140,16 @@ export default class DNSKEY extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
     if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
 
     return new DNSKEY({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'DNSKEY',
-      flags: bytes.readUInt16BE(0),
-      protocol: bytes.readUInt8(2),
-      algorithm: bytes.readUInt8(3),
-      publickey: bytes.slice(4).toString(),
+      flags: (bytes[0] << 8) | bytes[1],
+      protocol: bytes[2],
+      algorithm: bytes[3],
+      publickey: new TextDecoder().decode(bytes.subarray(4)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

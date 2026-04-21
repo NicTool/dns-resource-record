@@ -113,17 +113,17 @@ export default class NSEC3PARAM extends RR {
     }
 
     // rd may contain actual binary characters (from JS string '\\001' -> char 0x01),
-    // so convert via octalToChar and read bytes from a Buffer for robust parsing.
-    const bytes = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
+    // so convert via octalToChar and read bytes from a Uint8Array for robust parsing.
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rd), (c) => c.charCodeAt(0))
 
     return new NSEC3PARAM({
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
       type: 'NSEC3PARAM',
-      'hash algorithm': bytes.readUInt8(0),
-      flags: bytes.readUInt8(1),
-      iterations: bytes.readUInt16BE(2),
-      salt: bytes.slice(4).toString('utf8'),
+      'hash algorithm': bytes[0],
+      flags: bytes[1],
+      iterations: (bytes[2] << 8) | bytes[3],
+      salt: new TextDecoder().decode(bytes.subarray(4)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

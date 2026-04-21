@@ -359,7 +359,7 @@ export default class RR extends Map {
     return `${head}::${tail}`
   }
 
-  octalToBuffer(octalStr) {
+  octalToUint8Array(octalStr) {
     const str = TINYDNS.octalToChar(octalStr)
     return Uint8Array.from(str, (c) => c.charCodeAt(0))
   }
@@ -374,7 +374,7 @@ export default class RR extends Map {
       throw new Error(`${this.get('type')}: override getWireRdata() — non-generic tinydns format`)
     // line: :fqdn:typeId:rdata:ttl:ts:loc\n
     const rdata = line.split(':')[3]
-    return this.octalToBuffer(rdata ?? '')
+    return this.octalToUint8Array(rdata ?? '')
   }
 
   toWire() {

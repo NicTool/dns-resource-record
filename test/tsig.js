@@ -21,6 +21,20 @@ const validRecords = [
     testT:
       ':test.example:250:\\012SAMPLE-ALG\\007EXAMPLE\\000\\062\\344\\007\\000\\001\\054\\000\\000\\000\\000\\000\\000:0::\n',
   },
+  {
+    ...defaults,
+    owner: 'test.example.',
+    'algorithm name': 'HMAC-SHA256.',
+    'time signed': 853804800,
+    fudge: 300,
+    mac: 'deadbeef',
+    'original id': 12345,
+    error: 0,
+    other: '',
+    testB: 'test.example.\t0\tANY\tTSIG\tHMAC-SHA256.\t853804800\t300\t8\tdeadbeef\t12345\t0\t0\n',
+    testT:
+      ':test.example:250:\\013HMAC-SHA256\\000\\062\\344\\007\\000\\001\\054\\000\\004\\336\\255\\276\\357\\060\\071\\000\\000:0::\n',
+  },
 ]
 
 const invalidRecords = [

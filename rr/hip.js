@@ -65,22 +65,19 @@ export default class HIP extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 55) this.throwHelp('HIP fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const hitLen = bytes.readUInt8(0)
-    const pkAlgorithm = bytes.readUInt8(1)
-    const pkLen = bytes.readUInt16BE(2)
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const hitLen = bytes[0]
+    const pkAlgorithm = bytes[1]
+    const pkLen = (bytes[2] << 8) | bytes[3]
 
-    const hit = bytes
-      .slice(4, 4 + hitLen)
-      .toString('hex')
-      .toUpperCase()
-    const publicKey = bytes.slice(4 + hitLen, 4 + hitLen + pkLen).toString('base64')
+    const hit = TINYDNS.bytesToHex(bytes.subarray(4, 4 + hitLen)).toUpperCase()
+    const publicKey = TINYDNS.bytesToBase64(bytes.subarray(4 + hitLen, 4 + hitLen + pkLen))
 
     const rvsNames = []
     let pos = 4 + hitLen + pkLen
     while (pos < bytes.length) {
       const [name, newPos] = TINYDNS.unpackDomainName(
-        [...bytes.slice(pos)]
+        [...bytes.subarray(pos)]
           .map((b) => (b < 32 || b > 126 ? TINYDNS.UInt8toOctal(b) : String.fromCharCode(b)))
           .join(''),
       )
@@ -125,8 +122,9 @@ export default class HIP extends RR {
   }
 
   toTinydns() {
-    const hitBytes = Buffer.from(this.get('hit'), 'hex')
-    const pkBytes = Buffer.from(this.get('public key'), 'base64')
+    const hitHex = this.get('hit')
+    const hitBytes = TINYDNS.hexToBytes(hitHex)
+    const pkBytes = TINYDNS.base64ToBytes(this.get('public key'))
     const rs = this.get('rendezvous servers')
 
     let rdata = ''

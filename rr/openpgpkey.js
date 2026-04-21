@@ -67,7 +67,7 @@ export default class OPENPGPKEY extends RR {
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
       type: 'OPENPGPKEY',
-      'public key': Buffer.from(TINYDNS.unescapeOctal(rd), 'base64').toString('utf-8'),
+      'public key': atob(TINYDNS.octalToChar(rd)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -75,11 +75,8 @@ export default class OPENPGPKEY extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-    const escapedPublicKey = TINYDNS.escapeOctal(
-      dataRe,
-      Buffer.from(this.get('public key'), 'utf-8').toString('base64'),
+    return this.getTinydnsGeneric(
+      TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), btoa(this.get('public key'))),
     )
-    return this.getTinydnsGeneric(escapedPublicKey)
   }
 }

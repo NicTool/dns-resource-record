@@ -161,28 +161,29 @@ export default class SIG extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
     if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('SIG fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-    const typeCovered = bytes.readUInt16BE(0)
-    const algorithm = bytes.readUInt8(2)
-    const labels = bytes.readUInt8(3)
-    const originalTtl = bytes.readUInt32BE(4)
-    const signatureExpiration = bytes.readUInt32BE(8)
-    const signatureInception = bytes.readUInt32BE(12)
-    const keyTag = bytes.readUInt16BE(16)
+    const typeCovered = dv.getUint16(0)
+    const algorithm = bytes[2]
+    const labels = bytes[3]
+    const originalTtl = dv.getUint32(4)
+    const signatureExpiration = dv.getUint32(8)
+    const signatureInception = dv.getUint32(12)
+    const keyTag = dv.getUint16(16)
 
-    // parse signers name from binary buffer starting at offset 18
+    // parse signers name from binary starting at offset 18
     let pos = 18
     const labelsArr = []
     while (pos < bytes.length) {
-      const len = bytes.readUInt8(pos++)
+      const len = bytes[pos++]
       if (len === 0) break
-      labelsArr.push(bytes.slice(pos, pos + len).toString())
+      labelsArr.push(new TextDecoder().decode(bytes.subarray(pos, pos + len)))
       pos += len
     }
     const signersName = `${labelsArr.join('.')}.`
 
-    const signature = bytes.slice(pos).toString()
+    const signature = new TextDecoder().decode(bytes.subarray(pos))
 
     return new SIG({
       owner: this.fullyQualify(fqdn),

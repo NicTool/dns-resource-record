@@ -115,22 +115,23 @@ export default class TSIG extends RR {
     const algUnpacked = TINYDNS.unpackDomainName(rdata)
     const algBinaryLen = algUnpacked[2]
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     let bpos = algBinaryLen
 
-    const timeSigned = bytes.readUInt32BE(bpos)
+    const timeSigned = dv.getUint32(bpos)
     bpos += 4
-    const fudge = bytes.readUInt16BE(bpos)
+    const fudge = dv.getUint16(bpos)
     bpos += 2
-    const macSize = bytes.readUInt16BE(bpos)
+    const macSize = dv.getUint16(bpos)
     bpos += 2
-    const mac = macSize > 0 ? bytes.slice(bpos, bpos + macSize).toString('hex') : ''
+    const mac = macSize > 0 ? TINYDNS.bytesToHex(bytes.subarray(bpos, bpos + macSize)) : ''
     bpos += macSize
-    const originalId = bytes.readUInt16BE(bpos)
+    const originalId = dv.getUint16(bpos)
     bpos += 2
-    const error = bytes.readUInt16BE(bpos)
+    const error = dv.getUint16(bpos)
     bpos += 2
-    const other = bpos < bytes.length ? bytes.slice(bpos).toString() : ''
+    const other = bpos < bytes.length ? new TextDecoder().decode(bytes.subarray(bpos)) : ''
 
     return new TSIG({
       owner: this.fullyQualify(owner),
@@ -174,18 +175,21 @@ export default class TSIG extends RR {
   }
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     const alg = this.get('algorithm name') || ''
+    const mac = this.get('mac') ?? ''
+    const macByteLen = mac.length > 0 ? mac.length / 2 : 0
 
     return this.getTinydnsGeneric(
       TINYDNS.packDomainName(alg) +
         TINYDNS.UInt32toOctal(this.get('time signed') ?? 0) +
         TINYDNS.UInt16toOctal(this.get('fudge')) +
-        TINYDNS.UInt16toOctal(this.get('mac size') ?? 0) +
-        (this.get('mac size') > 0 ? TINYDNS.escapeOctal(dataRe, this.get('mac')) : '') +
+        TINYDNS.UInt16toOctal(macByteLen) +
+        (macByteLen > 0 ? TINYDNS.packHex(mac) : '') +
         TINYDNS.UInt16toOctal(this.get('original id') ?? 0) +
         TINYDNS.UInt16toOctal(this.get('error') ?? 0) +
-        (this.get('other').length > 0 ? TINYDNS.escapeOctal(dataRe, this.get('other')) : ''),
+        (this.get('other').length > 0
+          ? TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('other'))
+          : ''),
     )
   }
 }

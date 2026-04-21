@@ -63,7 +63,7 @@ export default class NXT extends RR {
     const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('NXT fromTinydns, invalid n')
 
-    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const binaryRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
     const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
 
     return new NXT({
@@ -71,7 +71,7 @@ export default class NXT extends RR {
       ttl: parseInt(ttl, 10),
       type: 'NXT',
       'next domain': nextDomain,
-      'type bit map': binaryRdata.slice(binaryLen).toString(),
+      'type bit map': new TextDecoder().decode(binaryRdata.subarray(binaryLen)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

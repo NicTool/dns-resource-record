@@ -48,32 +48,33 @@ export default class APL extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 42) this.throwHelp('APL fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
     const items = []
     let pos = 0
 
     while (pos < bytes.length) {
-      const afi = bytes.readUInt16BE(pos)
+      const afi = (bytes[pos] << 8) | bytes[pos + 1]
       pos += 2
-      const prefix = bytes.readUInt8(pos)
+      const prefix = bytes[pos]
       pos++
-      const adfLenByte = bytes.readUInt8(pos)
+      const adfLenByte = bytes[pos]
       pos++
       const neg = (adfLenByte & 0x80) !== 0
       const addrLen = adfLenByte & 0x7f
-      const addrBytes = bytes.slice(pos, pos + addrLen)
+      const addrBytes = bytes.subarray(pos, pos + addrLen)
       pos += addrLen
 
       let addr
       if (afi === 1) {
-        const padded = Buffer.alloc(4)
-        addrBytes.copy(padded)
+        const padded = new Uint8Array(4)
+        padded.set(addrBytes)
         addr = [...padded].join('.')
       } else {
-        const padded = Buffer.alloc(16)
-        addrBytes.copy(padded)
+        const padded = new Uint8Array(16)
+        padded.set(addrBytes)
+        const paddedDv = new DataView(padded.buffer)
         const groups = []
-        for (let i = 0; i < 16; i += 2) groups.push(padded.readUInt16BE(i).toString(16).padStart(4, '0'))
+        for (let i = 0; i < 16; i += 2) groups.push(paddedDv.getUint16(i).toString(16).padStart(4, '0'))
         addr = this.compressIPv6(groups.join(':'))
       }
 
@@ -120,7 +121,7 @@ export default class APL extends RR {
 
           let addrBytes
           if (afi === 1) {
-            addrBytes = Buffer.from(addr.split('.').map((n) => parseInt(n, 10)))
+            addrBytes = new Uint8Array(addr.split('.').map((n) => parseInt(n, 10)))
           } else {
             const dblIdx = addr.indexOf('::')
             let groups
@@ -137,7 +138,10 @@ export default class APL extends RR {
             } else {
               groups = addr.split(':')
             }
-            addrBytes = Buffer.from(groups.map((g) => g.padStart(4, '0')).join(''), 'hex')
+            const hexStr = groups.map((g) => g.padStart(4, '0')).join('')
+            addrBytes = Uint8Array.from({ length: hexStr.length / 2 }, (_, i) =>
+              parseInt(hexStr.slice(i * 2, i * 2 + 2), 16),
+            )
           }
 
           let len = addrBytes.length

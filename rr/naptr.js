@@ -83,7 +83,8 @@ export default class NAPTR extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
 
-    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const binRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(binRdata.buffer, binRdata.byteOffset, binRdata.byteLength)
 
     const rec = {
       type: 'NAPTR',
@@ -91,29 +92,29 @@ export default class NAPTR extends RR {
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
-      order: binRdata.readUInt16BE(0, 2),
-      preference: binRdata.readUInt16BE(2, 4),
+      order: dv.getUint16(0),
+      preference: dv.getUint16(2),
     }
 
     let idx = 4
-    const flagsLength = binRdata.readUInt8(idx)
+    const flagsLength = binRdata[idx]
     idx++
-    rec.flags = binRdata.slice(idx, idx + flagsLength).toString()
+    rec.flags = new TextDecoder().decode(binRdata.subarray(idx, idx + flagsLength))
     idx += flagsLength
 
-    const serviceLen = binRdata.readUInt8(idx)
+    const serviceLen = binRdata[idx]
     idx++
-    rec.service = binRdata.slice(idx, idx + serviceLen).toString()
+    rec.service = new TextDecoder().decode(binRdata.subarray(idx, idx + serviceLen))
     idx += serviceLen
 
-    const regexpLen = binRdata.readUInt8(idx)
+    const regexpLen = binRdata[idx]
     idx++
-    rec.regexp = binRdata.slice(idx, idx + regexpLen).toString()
+    rec.regexp = new TextDecoder().decode(binRdata.subarray(idx, idx + regexpLen))
     idx += regexpLen
 
-    const replaceLen = binRdata.readUInt8(idx)
+    const replaceLen = binRdata[idx]
     idx++
-    rec.replacement = binRdata.slice(idx, idx + replaceLen).toString()
+    rec.replacement = new TextDecoder().decode(binRdata.subarray(idx, idx + replaceLen))
 
     return new NAPTR(rec)
   }
