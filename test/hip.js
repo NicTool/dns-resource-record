@@ -25,6 +25,8 @@ const validRecords = [
     'rendezvous servers': '',
     testB: `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${publicKey}\n`,
     testT: hipT,
+    testW:
+      '076578616d706c6503636f6d000037000100000e1000631002004f200100107b1a74df365639cc39f1d57803010001b771ca136e4aeb5ce44333c53b3d2c13c22243851fc708bcce29f7e2eb5787b5f56ccad34f8223acc10904ddb56b2ec4a6d6232f3b50ea094f021702a70e4e25bb8879d0b7987054000000',
   },
   {
     owner: 'host.example.com.',

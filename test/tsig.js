@@ -20,6 +20,8 @@ const validRecords = [
     testB: 'test.example.\t0\tANY\tTSIG\tSAMPLE-ALG.EXAMPLE.\t853804800\t300\t\t\t0\t0\t0\n',
     testT:
       ':test.example:250:\\012SAMPLE-ALG\\007EXAMPLE\\000\\062\\344\\007\\000\\001\\054\\000\\000\\000\\000\\000\\000:0::\n',
+    testW:
+      '0474657374076578616d706c650000fa00ff0000000000200a53414d504c452d414c47074558414d504c450032e40700012c000000000000',
   },
   {
     ...defaults,

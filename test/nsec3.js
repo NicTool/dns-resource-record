@@ -19,6 +19,8 @@ const validRecords = [
       'test.example.com.\t3600\tIN\tNSEC3\t1\t1\t12\taabbccdd\t(2vptu5timamqttgl4luu9kg21e0aor3s\tA\tRRSIG)\n',
     testT:
       ':test.example.com:50:\\001\\001\\000\\014aabbccdd2vptu5timamqttgl4luu9kg21e0aor3sA\\011RRSIG:3600::\n',
+    testW:
+      '0474657374076578616d706c6503636f6d000032000100000e1000330101000c616162626363646432767074753574696d616d717474676c346c7575396b6732316530616f72337341095252534947',
   },
 ]
 
