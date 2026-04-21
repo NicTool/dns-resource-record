@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, test } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from './base.js'
 
 import HIP from '../rr/hip.js'
@@ -92,4 +93,16 @@ describe('HIP record', function () {
 
   base.fromBind(HIP, validRecords)
   base.fromTinydns(HIP, validRecords)
+
+  test('fromBind reassembles space-joined multi-chunk base64 key and separates RVS', () => {
+    // Simulates the zone parser joining a parenthesized multi-line HIP record.
+    // The public key is split into 3 space-separated tokens; rvs.example.com. is the RVS.
+    const chunk1 = publicKey.slice(0, 40)
+    const chunk2 = publicKey.slice(40, 80)
+    const chunk3 = publicKey.slice(80)
+    const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${chunk1} ${chunk2} ${chunk3} rvs.example.com.`
+    const r = new HIP({ bindline })
+    assert.equal(r.get('public key'), publicKey)
+    assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
+  })
 })

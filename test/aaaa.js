@@ -106,7 +106,6 @@ describe('AAAA record', function () {
   base.fromTinydns(AAAA, validRecords)
 
   for (const val of validRecords) {
-    if (!val.testT) continue
     it(`imports tinydns AAAA (generic) record (${val.owner})`, async function () {
       const r = new AAAA({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)
@@ -127,15 +126,6 @@ describe('AAAA record', function () {
       c: '2001:db8::8:800:200c:417a',
     },
   ]
-
-  describe('compress', function () {
-    const r = new AAAA(null)
-    for (const t of tests) {
-      it(`compresses IPv6 address (${t.e})`, function () {
-        assert.equal(r.compress(t.e), t.c)
-      })
-    }
-  })
 
   describe('expand', function () {
     const r = new AAAA(null)

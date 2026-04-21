@@ -55,7 +55,6 @@ describe('DNAME record', function () {
   base.fromTinydns(DNAME, validRecords)
 
   for (const val of validRecords) {
-    if (!val.testT) continue
     it(`imports tinydns DNAME (generic) record (${val.owner})`, async function () {
       const r = new DNAME({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

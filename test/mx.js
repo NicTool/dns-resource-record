@@ -92,7 +92,6 @@ describe('MX record', function () {
   base.fromTinydns(MX, validRecords)
 
   for (const val of validRecords) {
-    if (!val.testT) continue
     it(`imports tinydns MX (@) record (${val.owner})`, async function () {
       const r = new MX({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

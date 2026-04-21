@@ -1,4 +1,4 @@
-nictool.tnpi.net.	3600	IN	SOA	ns1.tnpi.net.	hostmaster.tnpi.net.	2026042101	7200	3600	1209600	3600
+nictool.tnpi.net.	3600	IN	SOA	ns1.tnpi.net.	hostmaster.tnpi.net.	2026042104	7200	3600	1209600	3600
 
 nictool.tnpi.net.	3600	IN	NS	ns1.tnpi.net.
 nictool.tnpi.net.	3600	IN	NS	ns2.tnpi.net.
@@ -97,7 +97,7 @@ old.nictool.tnpi.net.	3600	IN	DNAME	new.tnpi.net.
 _http._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"https://nictool.tnpi.net/"
 _ftp._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"ftp://ftp.nictool.tnpi.net/"
 
-apl.nictool.tnpi.net.	3600	IN	APL	1:192.0.2.1/32 !1:192.0.2.64/28 2:2001:db8::1/128
+apl.nictool.tnpi.net.	3600	IN	APL	1:192.0.2.1/32 !1:192.0.2.64/28 2:2001:db8::80/121
 
 wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	TCP	ftp smtp
 wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	UDP	domain
@@ -106,16 +106,7 @@ dhcid.nictool.tnpi.net.	3600	IN	DHCID	AAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA
 
 ipsec.nictool.tnpi.net.	3600	IN	IPSECKEY	10	1	2	192.0.2.38	AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
 
-hip.nictool.tnpi.net.	3600	IN	HIP	2	(
-                200100107B1A74DF365639CC39F1D578 ; HIT (Hex)
-                MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8Bc
-                p82v77Z0S19vD9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9W
-                Q3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9W
-                Q3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9W
-                Q3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9W
-                Q3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQwIDAQAB ; Public Key
-                rvs.nictool.tnpi.net. ; Rendezvous Server
-                )
+hip.nictool.tnpi.net.	3600	IN	HIP	2	200100107B1A74DF365639CC39F1D578	AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==	rvs.nictool.tnpi.net.
 
 cert.nictool.tnpi.net.  3600    IN      CERT    3 12345 0 (
                 mDMEX2X93RYJKwYBBAHaRw8BAQdA9WQ3A8X7Y4Z5V8P9

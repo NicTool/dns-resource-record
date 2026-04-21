@@ -101,8 +101,20 @@ export default class HIP extends RR {
 
   fromBind({ bindline }) {
     // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
+    // The public key may be split across multiple lines and joined with spaces
+    // by the zone parser. Base64 chars are [A-Za-z0-9+/=]; domain names contain '.'.
     const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type, pkAlgorithm, hit, publicKey] = parts
+    const [owner, ttl, c, type, pkAlgorithm, hit] = parts
+    const rest = parts.slice(6)
+    const keyParts = []
+    const rvsParts = []
+    for (const token of rest) {
+      if (/^[A-Za-z0-9+/=]+$/.test(token)) {
+        keyParts.push(token)
+      } else {
+        rvsParts.push(token)
+      }
+    }
     return new HIP({
       owner,
       ttl: parseInt(ttl, 10),
@@ -110,8 +122,8 @@ export default class HIP extends RR {
       type,
       'pk algorithm': parseInt(pkAlgorithm, 10),
       hit,
-      'public key': publicKey,
-      'rendezvous servers': parts.slice(7).join(' ').trim(),
+      'public key': keyParts.join(''),
+      'rendezvous servers': rvsParts.join(' ').trim(),
     })
   }
 

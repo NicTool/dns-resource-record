@@ -57,13 +57,14 @@ export default class OPENPGPKEY extends RR {
     if (!match) this.throwHelp(`unable to parse OPENPGPKEY: ${bindline}`)
 
     const { owner, ttl, class: c, type, publickey } = match.groups
+    const keyStr = publickey.trim().replace(/\s+/g, '')
 
     return new OPENPGPKEY({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      'public key': publickey.trim(),
+      'public key': keyStr,
     })
   }
 
@@ -73,7 +74,7 @@ export default class OPENPGPKEY extends RR {
       owner: this.fullyQualify(owner),
       ttl: parseInt(ttl, 10),
       type: 'OPENPGPKEY',
-      'public key': atob(TINYDNS.octalToChar(rd)),
+      'public key': TINYDNS.octalToBase64(rd),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -81,8 +82,6 @@ export default class OPENPGPKEY extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), btoa(this.get('public key'))),
-    )
+    return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('public key')))
   }
 }

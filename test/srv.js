@@ -111,7 +111,6 @@ describe('SRV record', function () {
   base.fromTinydns(SRV, validRecords)
 
   for (const val of validRecords) {
-    if (!val.testT) continue
     it(`imports tinydns SRV (generic) record (${val.owner})`, async function () {
       const r = new SRV({ tinyline: val.testT })
       if (process.env.DEBUG) console.dir(r)

@@ -16,7 +16,7 @@ export default class AAAA extends RR {
   }
 
   getCompressed(val) {
-    return this.compress(val ?? this.get('address'))
+    return this.compressIPv6(val ?? this.get('address'))
   }
 
   getDescription() {
@@ -92,37 +92,6 @@ export default class AAAA extends RR {
       type,
       address: this.expand(ip),
     })
-  }
-
-  compress(val) {
-    /*
-     * RFC 5952
-     * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
-     * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
-     * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
-     * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
-     * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
-     */
-    let r = val
-      .replace(/0000/g, '0') // 4.1 0000 -> 0
-      .replace(/:0+([1-9a-fA-F])/g, ':$1') // 4.1 remove leading zeros
-
-    const mostConsecutiveZeros = [
-      new RegExp(/0?(?::0){6,}:0?/),
-      new RegExp(/0?(?::0){5,}:0?/),
-      new RegExp(/0?(?::0){4,}:0?/),
-      new RegExp(/0?(?::0){3,}:0?/),
-      new RegExp(/0?(?::0){2,}:0?/),
-    ]
-
-    for (const re of mostConsecutiveZeros) {
-      if (re.test(r)) {
-        r = r.replace(re, '::') // 4.2
-        break
-      }
-    }
-
-    return r.toLowerCase() // 4.3
   }
 
   expand(val, delimiter) {

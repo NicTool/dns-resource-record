@@ -20,6 +20,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { createSocket } from 'node:dgram'
+import { createConnection } from 'node:net'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -40,19 +41,8 @@ const NS2_TYPES = new Set(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'CAA', 'SRV', 'LOC
 
 // Skip live queries for DNSSEC records with synthetic data, obsolete types,
 // and types where NSD's encoding differs from the library:
-//   APL: NSD pads address fields to the full 4/16 bytes; library truncates.
 //   CERT: zone fixture data does not match NSD's actual zone data.
-//   OPENPGPKEY: key exceeds 4096-byte EDNS0 UDP limit; needs TCP fallback.
-//   HIP: fromBind() misparses chunked base64 key lines as rendezvous servers.
-const SKIP_LIVE = new Set([
-  'RRSIG',
-  'SIG',
-  'NSEC3',
-  'APL',
-  'CERT',
-  'OPENPGPKEY',
-  'HIP',
-])
+const SKIP_LIVE = new Set(['RRSIG', 'SIG', 'NSEC3', 'CERT'])
 
 // DS records live in the parent zone, not the child — NSD won't serve them
 const PARENT_ZONE_ONLY = new Set(['DS'])
@@ -215,7 +205,7 @@ function parseResponse(packet) {
   return { rcode: 0, answers }
 }
 
-function dnsQuery(host, port, queryBuf, timeout = 5000) {
+function dnsQueryUDP(host, port, queryBuf, timeout = 5000) {
   return new Promise((resolve, reject) => {
     const socket = createSocket('udp4')
     const timer = setTimeout(() => {
@@ -240,6 +230,44 @@ function dnsQuery(host, port, queryBuf, timeout = 5000) {
       }
     })
   })
+}
+
+function dnsQueryTCP(host, port, queryBuf, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const conn = createConnection({ host, port })
+    const timer = setTimeout(() => {
+      conn.destroy()
+      reject(new Error(`DNS TCP query timed out (${host}:${port})`))
+    }, timeout)
+    let received = Buffer.alloc(0)
+    conn.on('connect', () => {
+      const len = Buffer.alloc(2)
+      len.writeUInt16BE(queryBuf.length)
+      conn.write(Buffer.concat([len, queryBuf]))
+    })
+    conn.on('data', (chunk) => {
+      received = Buffer.concat([received, chunk])
+      if (received.length >= 2) {
+        const msgLen = received.readUInt16BE(0)
+        if (received.length >= 2 + msgLen) {
+          clearTimeout(timer)
+          conn.destroy()
+          resolve(received.slice(2, 2 + msgLen))
+        }
+      }
+    })
+    conn.on('error', (err) => {
+      clearTimeout(timer)
+      reject(err)
+    })
+  })
+}
+
+async function dnsQuery(host, port, queryBuf, timeout = 5000) {
+  const udpResult = await dnsQueryUDP(host, port, queryBuf, timeout)
+  const tc = (udpResult.readUInt16BE(2) >> 9) & 1
+  if (tc) return dnsQueryTCP(host, port, queryBuf, timeout)
+  return udpResult
 }
 
 // ── Zone File Parsing ─────────────────────────────────────────────────────────

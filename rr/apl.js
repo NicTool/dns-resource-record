@@ -11,8 +11,6 @@ export default class APL extends RR {
   /****** Resource record specific setters   *******/
   setAplRdata(val) {
     if (!val) this.throwHelp('APL: apl rdata is required')
-    // apl rdata is a list of address prefix list items, e.g.:
-    // 1:192.0.2.0/24 !1:192.0.2.64/28 2:2001:db8::/32
     this.set('apl rdata', val)
   }
 
@@ -38,7 +36,7 @@ export default class APL extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'APL',
-      'apl rdata': '1:192.0.2.0/24 !1:192.0.2.64/28 2:2001:db8::/32',
+      'apl rdata': '1:192.0.2.1/24 !1:192.0.2.64/28 2:2001:db8::1/128',
     }
   }
 

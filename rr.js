@@ -277,13 +277,6 @@ export default class RR extends Map {
     this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
   }
 
-  is48bitInt(type, field, value) {
-    if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 281474976710655)
-      return true
-
-    this.throwHelp(`${type} ${field} must be a 48-bit integer (in the range 0-281474976710655)`)
-  }
-
   isQuoted(val) {
     return /^["']/.test(val) && /["']$/.test(val)
   }
@@ -364,7 +357,26 @@ export default class RR extends Map {
   }
 
   wirePackDomain(fqdn) {
-    return packDomainNameWire(fqdn)
+    if (fqdn === '.') return new Uint8Array([0])
+    const enc = new TextEncoder()
+    const labels = fqdn
+      .split('.')
+      .filter((p) => p.length > 0)
+      .map((p) => {
+        const b = enc.encode(p)
+        if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${p}`)
+        return b
+      })
+
+    const buf = new Uint8Array(labels.reduce((n, b) => n + b.length + 1, 1))
+    let offset = 0
+    for (const b of labels) {
+      buf[offset++] = b.length
+      buf.set(b, offset)
+      offset += b.length
+    }
+    buf[offset] = 0
+    return buf
   }
 
   getWireRdata() {
@@ -414,27 +426,4 @@ export default class RR extends Map {
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`
   }
-}
-
-function packDomainNameWire(fqdn) {
-  if (fqdn === '.') return new Uint8Array([0])
-  const enc = new TextEncoder()
-  const labels = fqdn
-    .split('.')
-    .filter((p) => p.length > 0)
-    .map((p) => {
-      const b = enc.encode(p)
-      if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${p}`)
-      return b
-    })
-
-  const buf = new Uint8Array(labels.reduce((n, b) => n + b.length + 1, 1))
-  let offset = 0
-  for (const b of labels) {
-    buf[offset++] = b.length
-    buf.set(b, offset)
-    offset += b.length
-  }
-  buf[offset] = 0
-  return buf
 }
