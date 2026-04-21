@@ -68,7 +68,16 @@ teB/hDypDvvUUBE1/Cc9DlpwRhdzvsoyEgg7auKldzveeYhCNryP3mPRE2BeD5SN
   },
 ]
 
-const invalidRecords = []
+const invalidRecords = [
+  {
+    owner: 'matt.example.com.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'OPENPGPKEY',
+    'public key': 'not-real-key-\u{1F600}',
+    msg: /Latin-1/i,
+  },
+]
 
 describe('OPENPGPKEY record', function () {
   base.valid(OPENPGPKEY, validRecords)

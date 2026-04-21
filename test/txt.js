@@ -59,6 +59,23 @@ describe('TXT record', function () {
   base.fromTinydns(TXT, validRecords)
   base.fromBind(TXT, validRecords)
 
+  it(`toBind chunks non-ASCII TXT data by UTF-8 bytes, not characters`, function () {
+    // 200 × "é" = 200 chars but 400 UTF-8 bytes → must split into multiple
+    // 255-byte character-strings. Char-based chunking would emit a single
+    // 400-byte token, which BIND named rejects.
+    const data = 'é'.repeat(200)
+    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data }).toBind()
+    const quoted = r.match(/"([^"]*)"/g)
+    assert.ok(quoted.length > 1, `expected multiple quoted chunks, got: ${r}`)
+    for (const q of quoted) {
+      const inner = q.slice(1, -1)
+      const bytes = new TextEncoder().encode(inner).length
+      assert.ok(bytes <= 255, `chunk exceeds 255 bytes (${bytes}): ${inner}`)
+    }
+    // Content round-trips: concatenated chunks equal original data
+    assert.equal(quoted.map((q) => q.slice(1, -1)).join(''), data)
+  })
+
   it(`imports tinydns TXT (generic) record`, async function () {
     const val = {
       owner: 'nov2021._domainkey.example.com.',

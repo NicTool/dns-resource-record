@@ -128,25 +128,33 @@ export default class TXT extends RR {
 }
 
 function asQuotedStrings(data) {
-  // BIND croaks when any string in the TXT RR data is longer than 255
+  // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
+  // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
+  const enc = new TextEncoder()
+
   if (Array.isArray(data)) {
-    let hasTooLong = false
-    for (const str of data) {
-      if (str.length > 255) hasTooLong = true
-    }
-    return hasTooLong
-      ? data
-          .join('')
-          .match(/(.{1,255})/g)
-          .join('" "')
-      : data.join('" "')
+    const anyTooLong = data.some((s) => enc.encode(s).length > 255)
+    if (!anyTooLong) return data.join('" "')
+    return chunkByBytes(data.join(''), 255).join('" "')
   }
 
-  if (data.length > 255) {
-    return data.match(/(.{1,255})/g).join('" "')
-  }
+  if (enc.encode(data).length <= 255) return data
+  return chunkByBytes(data, 255).join('" "')
+}
 
-  return data
+function chunkByBytes(str, maxBytes) {
+  const bytes = new TextEncoder().encode(str)
+  const dec = new TextDecoder()
+  const chunks = []
+  let start = 0
+  while (start < bytes.length) {
+    let end = Math.min(start + maxBytes, bytes.length)
+    // back up to a UTF-8 codepoint boundary so decode() returns whole chars
+    while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--
+    chunks.push(dec.decode(bytes.subarray(start, end)))
+    start = end
+  }
+  return chunks
 }
 
 function packStringWire(str) {

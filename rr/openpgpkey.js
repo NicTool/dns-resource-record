@@ -9,6 +9,12 @@ export default class OPENPGPKEY extends RR {
 
   /****** Resource record specific setters   *******/
   setPublicKey(val) {
+    if (typeof val !== 'string') this.throwHelp('OPENPGPKEY: public key must be a string')
+    for (let i = 0; i < val.length; i++) {
+      if (val.charCodeAt(i) > 0xff) {
+        this.throwHelp('OPENPGPKEY: public key must be Latin-1 (code points <= 0xFF)')
+      }
+    }
     this.set('public key', val)
   }
 

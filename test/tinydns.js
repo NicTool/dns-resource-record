@@ -143,4 +143,11 @@ describe('TINYDNS', function () {
       assert.deepEqual(TINYDNS.unpackString('\\015matt wuz here'), ['matt wuz here'])
     })
   })
+
+  describe('UInt8toOctal', function () {
+    it('rejects values above 255 with a clear Latin-1 error', function () {
+      assert.throws(() => TINYDNS.UInt8toOctal(256), /Latin-1.*0xFF/i)
+      assert.throws(() => TINYDNS.UInt8toOctal('é'.charCodeAt(0) + 1000), /exceeds 255/i)
+    })
+  })
 })
