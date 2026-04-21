@@ -420,21 +420,21 @@ export default class RR extends Map {
 function packDomainNameWire(fqdn) {
   if (fqdn === '.') return new Uint8Array([0])
   const enc = new TextEncoder()
-  const parts = fqdn.split('.')
-  let len = 0
-  for (const part of parts) {
-    if (part.length > 0) len += part.length + 1
-  }
-  len += 1 // for the final \0
+  const labels = fqdn
+    .split('.')
+    .filter((p) => p.length > 0)
+    .map((p) => {
+      const b = enc.encode(p)
+      if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${p}`)
+      return b
+    })
 
-  const buf = new Uint8Array(len)
+  const buf = new Uint8Array(labels.reduce((n, b) => n + b.length + 1, 1))
   let offset = 0
-  for (const part of parts) {
-    if (part.length > 0) {
-      buf[offset++] = part.length
-      buf.set(enc.encode(part), offset)
-      offset += part.length
-    }
+  for (const b of labels) {
+    buf[offset++] = b.length
+    buf.set(b, offset)
+    offset += b.length
   }
   buf[offset] = 0
   return buf

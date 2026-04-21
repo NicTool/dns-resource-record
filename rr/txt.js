@@ -150,17 +150,18 @@ function asQuotedStrings(data) {
 }
 
 function packStringWire(str) {
-  const enc = new TextEncoder()
-  const parts = str.match(/(.{1,255})/g)
-  let len = 0
-  for (const part of parts) len += part.length + 1
+  const encoded = new TextEncoder().encode(str)
+  if (encoded.length === 0) return new Uint8Array([0])
 
-  const buf = new Uint8Array(len)
+  const chunks = []
+  for (let i = 0; i < encoded.length; i += 255) chunks.push(encoded.subarray(i, i + 255))
+
+  const buf = new Uint8Array(encoded.length + chunks.length)
   let offset = 0
-  for (const part of parts) {
-    buf[offset++] = part.length
-    buf.set(enc.encode(part), offset)
-    offset += part.length
+  for (const chunk of chunks) {
+    buf[offset++] = chunk.length
+    buf.set(chunk, offset)
+    offset += chunk.length
   }
   return buf
 }

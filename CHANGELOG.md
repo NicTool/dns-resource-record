@@ -6,9 +6,9 @@ Notable changes to this project are documented in this file.
 
 ### [1.7.0] - 2026-04-20
 
-- feat: rollup a browser build
+- feat: rollup a minified browser build
 - change: replace `Buffer` with Uint8Array, DataView, and math
-- change: add `static typeName`, since this.constructor.name doesn't survive minification)
+- change: add `static typeName`, since this.constructor.name doesn't survive minification
 
 ### [1.6.1] - 2026-04-20
 
