@@ -42,6 +42,8 @@ const validRecords = [
     priority: 1,
     'target name': 'nictool.tnpi.net.',
     params: '',
+    testB: '_443._tcp.nictool.tnpi.net.\t3600\tIN\tSVCB\t1\tnictool.tnpi.net.\t\n',
+    testT: ':_443._tcp.nictool.tnpi.net:64:\\000\\001\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '045f343433045f746370076e6963746f6f6c04746e7069036e6574000040000100000e1000140001076e6963746f6f6c04746e7069036e657400',
   },

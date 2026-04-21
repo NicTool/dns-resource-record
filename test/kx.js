@@ -31,6 +31,8 @@ const validRecords = [
     type: 'KX',
     preference: 10,
     exchanger: 'kx.nictool.tnpi.net.',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tKX\t10\tkx.nictool.tnpi.net.\n',
+    testT: ':nictool.tnpi.net:36:\\000\\012\\002kx\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e6574000024000100000e100017000a026b78076e6963746f6f6c04746e7069036e657400',
   },

@@ -22,6 +22,8 @@ const validRecords = [
     class: 'IN',
     type: 'NS',
     dname: 'ns1.tnpi.net.',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tNS\tns1.tnpi.net.\n',
+    testT: '&nictool.tnpi.net::ns1.tnpi.net:3600::\n',
     testW: '076e6963746f6f6c04746e7069036e6574000002000100000e10000e036e733104746e7069036e657400',
   },
   {
@@ -30,6 +32,8 @@ const validRecords = [
     class: 'IN',
     type: 'NS',
     dname: 'ns2.tnpi.net.',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tNS\tns2.tnpi.net.\n',
+    testT: '&nictool.tnpi.net::ns2.tnpi.net:3600::\n',
     testW: '076e6963746f6f6c04746e7069036e6574000002000100000e10000e036e733204746e7069036e657400',
   },
 ]

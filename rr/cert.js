@@ -167,8 +167,6 @@ export default class CERT extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.getCertTypeValue(this.get('cert type'))) +
         TINYDNS.UInt16toOctal(this.get('key tag')) +

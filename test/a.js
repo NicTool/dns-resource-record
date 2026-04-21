@@ -41,6 +41,8 @@ const validRecords = [
     class: 'IN',
     type: 'A',
     address: '192.0.2.1',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tA\t192.0.2.1\n',
+    testT: '+nictool.tnpi.net:192.0.2.1:3600::\n',
     testW: '076e6963746f6f6c04746e7069036e6574000001000100000e100004c0000201',
   },
   {
@@ -49,6 +51,8 @@ const validRecords = [
     class: 'IN',
     type: 'A',
     address: '192.0.2.2',
+    testB: 'www.nictool.tnpi.net.\t3600\tIN\tA\t192.0.2.2\n',
+    testT: '+www.nictool.tnpi.net:192.0.2.2:3600::\n',
     testW: '03777777076e6963746f6f6c04746e7069036e6574000001000100000e100004c0000202',
   },
   {
@@ -57,6 +61,8 @@ const validRecords = [
     class: 'IN',
     type: 'A',
     address: '192.0.2.3',
+    testB: 'mail.nictool.tnpi.net.\t3600\tIN\tA\t192.0.2.3\n',
+    testT: '+mail.nictool.tnpi.net:192.0.2.3:3600::\n',
     testW: '046d61696c076e6963746f6f6c04746e7069036e6574000001000100000e100004c0000203',
   },
 ]

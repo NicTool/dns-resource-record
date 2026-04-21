@@ -49,6 +49,8 @@ const validRecords = [
     class: 'IN',
     type: 'TXT',
     data: ['v=spf1 mx include:tnpi.net -all'],
+    testB: 'nictool.tnpi.net.\t3600\tIN\tTXT\t"v=spf1 mx include:tnpi.net -all"\n',
+    testT: "'nictool.tnpi.net:v=spf1 mx include\\072tnpi.net -all:3600::\n",
     testW:
       '076e6963746f6f6c04746e7069036e6574000010000100000e1000201f763d73706631206d7820696e636c7564653a746e70692e6e6574202d616c6c',
   },

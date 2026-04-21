@@ -94,6 +94,8 @@ const validRecords = [
     algorithm: 2,
     gateway: '192.0.2.38',
     publickey: 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
+    testB: 'ipsec.nictool.tnpi.net.\t3600\tIN\tIPSECKEY\t10\t1\t2\t192.0.2.38\tAQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==\n',
+    testT: ':ipsec.nictool.tnpi.net:45:\\012\\001\\002\\300\\000\\002\\046\\001\\003QSy\\206\\3555S\\073\\140dG\\216\\356\\262\\173\\133\\327M\\256\\024\\233n\\201\\272\\072\\005\\041\\257\\202\\253x\\001:3600::\n',
     testW:
       '056970736563076e6963746f6f6c04746e7069036e657400002d000100000e1000290a0102c0000226010351537986ed35533b6064478eeeb27b5bd74dae149b6e81ba3a0521af82ab7801',
   },

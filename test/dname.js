@@ -21,6 +21,8 @@ const validRecords = [
     class: 'IN',
     type: 'DNAME',
     target: 'new.tnpi.net.',
+    testB: 'old.nictool.tnpi.net.\t3600\tIN\tDNAME\tnew.tnpi.net.\n',
+    testT: ':old.nictool.tnpi.net:39:\\003new\\004tnpi\\003net\\000:3600::\n',
     testW: '036f6c64076e6963746f6f6c04746e7069036e6574000027000100000e10000e036e657704746e7069036e657400',
   },
 ]

@@ -136,8 +136,6 @@ export default class TLSA extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('certificate usage')) +
         TINYDNS.UInt8toOctal(this.get('selector')) +

@@ -34,6 +34,8 @@ const validRecords = [
     type: 'MX',
     preference: 10,
     exchange: 'mail.nictool.tnpi.net.',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tMX\t10\tmail.nictool.tnpi.net.\n',
+    testT: '@nictool.tnpi.net::mail.nictool.tnpi.net:10:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e657400000f000100000e100019000a046d61696c076e6963746f6f6c04746e7069036e657400',
   },
@@ -44,6 +46,8 @@ const validRecords = [
     type: 'MX',
     preference: 20,
     exchange: 'mail.tnpi.net.',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tMX\t20\tmail.tnpi.net.\n',
+    testT: '@nictool.tnpi.net::mail.tnpi.net:20:3600::\n',
     testW: '076e6963746f6f6c04746e7069036e657400000f000100000e1000110014046d61696c04746e7069036e657400',
   },
 ]

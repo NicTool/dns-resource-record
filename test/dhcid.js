@@ -20,6 +20,8 @@ const validRecords = [
     class: 'IN',
     type: 'DHCID',
     data: 'AAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA',
+    testB: 'dhcid.nictool.tnpi.net.\t3600\tIN\tDHCID\tAAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA\n',
+    testT: ':dhcid.nictool.tnpi.net:49:\\000\\002\\001\\307\\0111\\030\\355\\011\\242\\356\\3152\\301\\201\\000\\000\\000\\000\\000\\000\\000\\000\\000:3600::\n',
     testW:
       '056468636964076e6963746f6f6c04746e7069036e6574000031000100000e100018000201c7093118ed09a2eecd32c181000000000000000000',
   },

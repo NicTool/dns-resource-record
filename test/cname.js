@@ -28,6 +28,8 @@ const validRecords = [
     class: 'IN',
     type: 'CNAME',
     cname: 'www.nictool.tnpi.net.',
+    testB: 'ftp.nictool.tnpi.net.\t3600\tIN\tCNAME\twww.nictool.tnpi.net.\n',
+    testT: 'Cftp.nictool.tnpi.net:www.nictool.tnpi.net.:3600::\n',
     testW:
       '03667470076e6963746f6f6c04746e7069036e6574000005000100000e10001603777777076e6963746f6f6c04746e7069036e657400',
   },
@@ -37,6 +39,8 @@ const validRecords = [
     class: 'IN',
     type: 'CNAME',
     cname: 'mail.nictool.tnpi.net.',
+    testB: 'webmail.nictool.tnpi.net.\t3600\tIN\tCNAME\tmail.nictool.tnpi.net.\n',
+    testT: 'Cwebmail.nictool.tnpi.net:mail.nictool.tnpi.net.:3600::\n',
     testW:
       '077765626d61696c076e6963746f6f6c04746e7069036e6574000005000100000e100017046d61696c076e6963746f6f6c04746e7069036e657400',
   },

@@ -31,6 +31,8 @@ const validRecords = [
     type: 'HINFO',
     cpu: 'Intel-Xeon',
     os: 'Linux',
+    testB: 'hinfo.nictool.tnpi.net.\t3600\tIN\tHINFO\t"Intel-Xeon"\t"Linux"\n',
+    testT: ':hinfo.nictool.tnpi.net:13:\\012Intel-Xeon\\005Linux:3600::\n',
     testW:
       '0568696e666f076e6963746f6f6c04746e7069036e657400000d000100000e1000110a496e74656c2d58656f6e054c696e7578',
   },

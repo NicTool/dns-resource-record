@@ -116,8 +116,6 @@ export default class KEY extends RR {
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('protocol')) +

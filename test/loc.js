@@ -38,6 +38,8 @@ const validRecords = [
     class: 'IN',
     type: 'LOC',
     address: '37 46 39 N 122 25 9 W 16m 1m 10000m 10m',
+    testB: 'loc.nictool.tnpi.net.\t3600\tIN\tLOC\t37 46 39 N 122 25 9 W 16m 1m 10000m 10m\n',
+    testT: ':loc.nictool.tnpi.net:29:\\000\\022\\026\\023\\210\\033\\056\\030\\145\\273\\120\\170\\000\\230\\234\\300:3600::\n',
     testW: '036c6f63076e6963746f6f6c04746e7069036e657400001d000100000e10001000121613881b2e1865bb507800989cc0',
   },
 ]

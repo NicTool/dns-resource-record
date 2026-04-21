@@ -64,6 +64,8 @@ const validRecords = [
     flags: 0,
     tag: 'issue',
     value: 'letsencrypt.org',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tCAA\t0\tissue\t"letsencrypt.org"\n',
+    testT: ':nictool.tnpi.net:257:\\000\\005issueletsencrypt.org:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e6574000101000100000e100016000569737375656c657473656e63727970742e6f7267',
   },
@@ -75,6 +77,8 @@ const validRecords = [
     flags: 0,
     tag: 'issuewild',
     value: 'letsencrypt.org',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tCAA\t0\tissuewild\t"letsencrypt.org"\n',
+    testT: ':nictool.tnpi.net:257:\\000\\011issuewildletsencrypt.org:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e6574000101000100000e10001a0009697373756577696c646c657473656e63727970742e6f7267',
   },
@@ -86,6 +90,8 @@ const validRecords = [
     flags: 0,
     tag: 'iodef',
     value: 'mailto:hostmaster@tnpi.net',
+    testB: 'nictool.tnpi.net.\t3600\tIN\tCAA\t0\tiodef\t"mailto:hostmaster@tnpi.net"\n',
+    testT: ':nictool.tnpi.net:257:\\000\\005iodefmailto\\072hostmaster@tnpi.net:3600::\n',
     testW:
       '076e6963746f6f6c04746e7069036e6574000101000100000e1000210005696f6465666d61696c746f3a686f73746d617374657240746e70692e6e6574',
   },

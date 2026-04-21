@@ -42,6 +42,8 @@ const validRecords = [
     priority: 0,
     'target name': 'nictool.tnpi.net.',
     params: '',
+    testB: 'www.nictool.tnpi.net.\t3600\tIN\tHTTPS\t0\tnictool.tnpi.net.\t\n',
+    testT: ':www.nictool.tnpi.net:65:\\000\\000\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '03777777076e6963746f6f6c04746e7069036e6574000041000100000e1000140000076e6963746f6f6c04746e7069036e657400',
   },
