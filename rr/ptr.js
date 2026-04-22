@@ -60,15 +60,14 @@ export default class PTR extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  PTR  dname
-    const [owner, ttl, c, type, dname] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
     return new PTR({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      dname: dname,
+      ttl,
+      class: cls,
+      type: 'PTR',
+      dname: rdata[0],
     })
   }
 

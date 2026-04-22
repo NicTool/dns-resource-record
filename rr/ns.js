@@ -64,16 +64,14 @@ export default class NS extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NS dname
-    const [owner, ttl, c, type, dname] = bindline.split(/\s+/)
-
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
     return new NS({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      dname: dname,
+      ttl,
+      class: cls,
+      type: 'NS',
+      dname: rdata[0],
     })
   }
 

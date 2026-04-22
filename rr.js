@@ -2,6 +2,7 @@ import { inspect } from 'util'
 import * as TINYDNS from './lib/tinydns.js'
 
 export default class RR {
+  static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
   constructor(opts) {
     if (opts === null) return
 
@@ -28,7 +29,60 @@ export default class RR {
   static fromBind(line, opts = {}) {
     const instance = new this(null)
     if (opts.default !== undefined) instance.default = opts.default
-    return instance.fromBind({ ...opts, bindline: line })
+    return instance.fromBind({ ...opts, ...this.parseBindLine(line), bindline: line })
+  }
+
+  static parseBindLine(line) {
+    const res = {
+      class: 'IN',
+      type: '',
+      rdata: [],
+    }
+
+    // 1. Strip comments (not inside quotes)
+    let cleanLine = ''
+    let inQuote = false
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i]
+      if (c === '"') inQuote = !inQuote
+      if (c === ';' && !inQuote) break
+      cleanLine += c
+    }
+    cleanLine = cleanLine.trim()
+    if (!cleanLine) return null
+
+    // 2. Tokenize, respecting quoted strings
+    const tokens = cleanLine.match(/(".*?"|\S+)/g) || []
+    if (tokens.length < 1) return null
+
+    // 3. Owner handling
+    if (!/^\s/.test(line)) {
+      res.owner = tokens.shift()
+    }
+
+    // 4. Extract TTL, Class, and Type
+    while (tokens.length > 0) {
+      const token = tokens[0].toUpperCase()
+
+      if (RR.CLASSES[token]) {
+        res.class = tokens.shift().toUpperCase()
+        continue
+      }
+
+      if (/^\d+$/.test(token)) {
+        res.ttl = parseInt(tokens.shift(), 10)
+        continue
+      }
+
+      // If it's not a Class or TTL, it must be the RR Type (A, MX, etc.)
+      res.type = tokens.shift().toUpperCase()
+      break
+    }
+
+    // 5. Remaining tokens are RDATA
+    res.rdata = tokens
+
+    return res
   }
 
   static fromTinydns(line, opts = {}) {
@@ -73,23 +127,15 @@ export default class RR {
   }
 
   setClass(c) {
-    switch (c) {
-      case 'IN': // 1
-      case undefined:
-      case null:
-      case '':
-        this.set('class', 'IN')
-        break
-      case 'CS': // 2
-      case 'CH': // 3
-      case 'HS': // 4
-      case 'NONE': // 254
-      case 'ANY': // 255
-        this.set('class', c)
-        break
-      default:
-        this.throwHelp(`invalid class ${c}`)
+    if ([undefined, null, ''].includes(c)) {
+      this.set('class', 'IN')
+      return
     }
+    if (RR.CLASSES[c.toUpperCase()]) {
+      this.set('class', c.toUpperCase())
+      return
+    }
+    this.throwHelp(`invalid class ${c}`)
   }
 
   setLocation(l) {
@@ -419,12 +465,11 @@ export default class RR {
   toWire() {
     const rdata = this.getWireRdata()
     const owner = this.wirePackDomain(this.get('owner'))
-    const classMap = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
     const result = new Uint8Array(owner.length + 10 + rdata.length)
     result.set(owner, 0)
     const meta = new DataView(result.buffer, owner.length, 10)
     meta.setUint16(0, this.getTypeId())
-    meta.setUint16(2, classMap[this.get('class')] ?? 1)
+    meta.setUint16(2, RR.CLASSES[this.get('class')] ?? 1)
     meta.setUint32(4, this.get('ttl'))
     meta.setUint16(8, rdata.length)
     result.set(rdata, owner.length + 10)

@@ -58,15 +58,14 @@ export default class A extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  A  192.0.2.127
-    const [owner, ttl, c, type, address] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
     return new A({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address,
+      ttl,
+      class: cls,
+      type: 'A',
+      address: rdata[0],
     })
   }
 

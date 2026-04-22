@@ -101,16 +101,15 @@ export default class SOA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline }) {
-    // example.com TTL IN  SOA mname rname serial refresh retry expire minimum
-    const [owner, ttl, c, type, mname, rname, serial, refresh, retry, expire, minimum] =
-      bindline.split(/[\s+]/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
+    const [mname, rname, serial, refresh, retry, expire, minimum] = rdata
 
     return new SOA({
       owner,
-      ttl: parseInt(ttl) || parseInt(minimum),
-      class: c,
-      type,
+      ttl: ttl || parseInt(minimum, 10),
+      class: cls,
+      type: 'SOA',
       mname,
       rname,
       serial: parseInt(serial, 10),

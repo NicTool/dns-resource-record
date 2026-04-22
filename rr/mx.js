@@ -74,16 +74,16 @@ export default class MX extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  MX  preference exchange
-    const [owner, ttl, c, type, preference, exchange] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
+    const [preference, exchange] = rdata
 
     return new MX({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      preference: parseInt(preference),
+      ttl,
+      class: cls,
+      type: 'MX',
+      preference: parseInt(preference, 10),
       exchange,
     })
   }

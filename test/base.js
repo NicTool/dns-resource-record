@@ -32,7 +32,9 @@ export function invalid(type, invalidRecords) {
           } else if (inv.tinyline !== undefined) {
             thrower = () => type.fromTinydns(inv.tinyline)
           } else {
-            thrower = () => { new type(inv) }
+            thrower = () => {
+              new type(inv)
+            }
           }
           assert.throws(thrower, { message: inv.msg })
         } catch (e) {

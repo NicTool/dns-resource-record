@@ -82,15 +82,14 @@ export default class AAAA extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  AAAA  ...
-    const [owner, ttl, c, type, ip] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
     return new AAAA({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address: this.expandIPv6(ip),
+      ttl,
+      class: cls,
+      type: 'AAAA',
+      address: this.expandIPv6(rdata[0]),
     })
   }
 

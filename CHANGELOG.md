@@ -10,6 +10,7 @@ Notable changes to this project are documented in this file.
   - add `static typeName` as constructor.name doesn't survive minification
 - feat(lib/binary): add shared binary functions
   - change: replace `Buffer` with Uint8Array, DataView, and math
+- feat(fromBind): use a parser (vs regexes)
 - fix(rr/txt): chunk by UTF-8 bytes (vs ASCII)
 - fix(rr/rrsig): validate "type covered" correctly
 - doc(CAA, DS): added RFC 9619

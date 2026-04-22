@@ -103,14 +103,14 @@ export default class SRV extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [owner, ttl, c, type, pri, weight, port, target] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
+    const [pri, weight, port, target] = rdata
     return new SRV({
-      owner: owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
+      owner,
+      ttl,
+      class: cls,
+      type: 'SRV',
       priority: parseInt(pri, 10),
       weight: parseInt(weight, 10),
       port: parseInt(port, 10),

@@ -67,15 +67,14 @@ export default class CNAME extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  CNAME  ...
-    const [owner, ttl, c, type, cname] = bindline.split(/\s+/)
+  fromBind(opts) {
+    const { owner, ttl, cls, rdata } = opts
     return new CNAME({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      cname,
+      ttl,
+      class: cls,
+      type: 'CNAME',
+      cname: rdata[0],
     })
   }
 
