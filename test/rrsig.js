@@ -1,24 +1,25 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 
 import * as base from './base.js'
 
 import RRSIG from '../rr/rrsig.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'RRSIG' }
+const defaults = { class: 'IN', ttl: 3600, type: 'RRSIG', owner: 'example.com.',
+  algorithm: 5,
+  'key tag': 12345,
+  labels: 1,
+  'original ttl': 3600,
+  'signature expiration': 1678886400,
+  'signature inception': 1678886400,
+  signature: 'dummysignature==',
+  'signers name': 'example.com.',
+}
 
 const validRecords = [
   {
     ...defaults,
-    owner: 'example.com.',
     'type covered': 1,
-    algorithm: 5,
-    labels: 1,
-    'original ttl': 3600,
-    'signature expiration': 1678886400,
-    'signature inception': 1678886400,
-    'key tag': 12345,
-    'signers name': 'example.com.',
-    signature: 'dummysignature==',
     testB:
       'example.com.\t3600\tIN\tRRSIG\t1\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tdummysignature==\n',
     testT:
@@ -31,29 +32,27 @@ const validRecords = [
 const invalidRecords = [
   {
     ...defaults,
-    owner: 'example.com.',
-    algorithm: 5,
-    labels: 1,
-    'original ttl': 3600,
-    'signature expiration': 1678886400,
-    'signature inception': 1678886400,
-    'key tag': 12345,
-    'signers name': 'example.com.',
-    signature: 'dummysignature==',
     msg: /'type covered' is required/i,
   },
   {
     ...defaults,
-    owner: 'example.com.',
+    'type covered': 'NOTATYPE',
+    msg: /not a recognized type name/i,
+  },
+  {
+    ...defaults,
+    'type covered': 99999,
+    msg: /must be a 16-bit integer/i,
+  },
+  {
+    ...defaults,
+    'type covered': -1,
+    msg: /must be a 16-bit integer/i,
+  },
+  {
+    ...defaults,
     'type covered': 1,
     algorithm: 99,
-    labels: 1,
-    'original ttl': 3600,
-    'signature expiration': 1678886400,
-    'signature inception': 1678886400,
-    'key tag': 12345,
-    'signers name': 'example.com.',
-    signature: 'dummysignature==',
     msg: /algorithm invalid/i,
   },
 ]
@@ -85,4 +84,27 @@ describe('RRSIG record', function () {
 
   base.fromBind(RRSIG, validRecords)
   base.fromTinydns(RRSIG, validRecords)
+
+  // test outside of roundtrip tests b/c mnemonic types are stored as ints
+  it('resolves type name string "A" to numeric 1', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 'A' })
+    assert.equal(r.get('type covered'), 1)
+  })
+
+  it('resolves type name string "MX" to numeric 15', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 'MX' })
+    assert.equal(r.get('type covered'), 15)
+  })
+
+  it('resolves TYPEnn string "TYPE28" to numeric 28', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 'TYPE28' })
+    assert.equal(r.get('type covered'), 28)
+  })
+
+  it('fromBind resolves TYPEnn in type covered field', function () {
+    const bindline =
+      'example.com.\t3600\tIN\tRRSIG\tTYPE28\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tsig==\n'
+    const r = new RRSIG({ bindline })
+    assert.equal(r.get('type covered'), 28)
+  })
 })

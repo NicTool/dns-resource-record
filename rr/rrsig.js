@@ -2,6 +2,7 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/binary.js'
 
+
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
   constructor(opts) {
@@ -10,10 +11,19 @@ export default class RRSIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 2 octet Type Covered field
-    if (!val) this.throwHelp(`RRSIG: 'type covered' is required`)
-    if (val.length > 2) this.throwHelp(`RRSIG: 'type covered' is too long`)
-
+    // a 16-bit Type Covered field (RFC 4034 §3.1.1)
+    if (!val && val !== 0) this.throwHelp(`RRSIG: 'type covered' is required`)
+    if (typeof val === 'string') {
+      const typeNN = val.match(/^TYPE(\d+)$/i)
+      if (typeNN) {
+        val = parseInt(typeNN[1], 10)
+      } else {
+        const id = WIRE.DNS_TYPE_IDS[val.toUpperCase()]
+        if (id === undefined) this.throwHelp(`RRSIG: 'type covered' is not a recognized type name`)
+        val = id
+      }
+    }
+    this.is16bitInt('RRSIG', 'type covered', val)
     this.set('type covered', val)
   }
 
@@ -130,10 +140,13 @@ export default class RRSIG extends RR {
     // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
     const parts = bindline.trim().split(/\s+/)
     const typeCoveredStr = parts[4]
-    // type covered may be a type name ('A', 'MX') or a numeric ID
+    // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
+    const typeNN = typeCoveredStr.match(/^TYPE(\d+)$/i)
     const typeCovered = /^\d+$/.test(typeCoveredStr)
       ? parseInt(typeCoveredStr, 10)
-      : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
+      : typeNN
+        ? parseInt(typeNN[1], 10)
+        : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
     return new RRSIG({
       owner: parts[0],
       ttl: parseInt(parts[1], 10),

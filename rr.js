@@ -95,7 +95,7 @@ export default class RR extends Map {
   setTtl(t) {
     t = t ?? this.default?.ttl
     if (t === undefined) {
-      if (['SOA', 'SSHPF'].includes(this.get('type'))) return
+      if (['SOA', 'SSHFP'].includes(this.get('type'))) return
       this.throwHelp('TTL is required, no default available')
     }
 
@@ -249,8 +249,7 @@ export default class RR extends Map {
 
   is8bitInt(type, field, value) {
     if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
+      Number.isInteger(value) &&
       value >= 0 &&
       value <= 255
     )
@@ -261,8 +260,7 @@ export default class RR extends Map {
 
   is16bitInt(type, field, value) {
     if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
+      Number.isInteger(value) &&
       value >= 0 &&
       value <= 65535
     )
@@ -272,7 +270,7 @@ export default class RR extends Map {
   }
 
   is32bitInt(type, field, value) {
-    if (typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
+    if (Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
 
     this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
   }
