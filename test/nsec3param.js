@@ -91,6 +91,6 @@ describe('NSEC3PARAM record', function () {
   base.fromTinydns(NSEC3PARAM, validRecords)
 
   it('throws when fromTinydns RDATA is too short', function () {
-    assert.throws(() => new NSEC3PARAM({ tinyline: ':example.com:51:AB:3600::\n' }), /RDATA too short/)
+    assert.throws(() => NSEC3PARAM.fromTinydns(':example.com:51:AB:3600::\n'), /RDATA too short/)
   })
 })

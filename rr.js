@@ -1,15 +1,11 @@
+import { inspect } from 'util'
 import * as TINYDNS from './lib/tinydns.js'
 
-export default class RR extends Map {
+export default class RR {
   constructor(opts) {
-    super()
-
     if (opts === null) return
 
     if (opts?.default) this.default = opts.default
-
-    if (opts?.bindline) return this.fromBind(opts)
-    if (opts?.tinyline) return this.fromTinydns(opts)
 
     // tinydns specific
     this.setLocation(opts?.location)
@@ -27,6 +23,46 @@ export default class RR extends Map {
     }
 
     if (opts?.comment) this.set('comment', opts.comment)
+  }
+
+  static fromBind(line, opts = {}) {
+    const instance = new this(null)
+    if (opts.default !== undefined) instance.default = opts.default
+    return instance.fromBind({ ...opts, bindline: line })
+  }
+
+  static fromTinydns(line, opts = {}) {
+    const instance = new this(null)
+    if (opts.default !== undefined) instance.default = opts.default
+    return instance.fromTinydns({ ...opts, tinyline: line })
+  }
+
+  static #reserved = ['__proto__', 'constructor', 'prototype']
+
+  get(key) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    return this[key]
+  }
+
+  set(key, value) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    this[key] = value
+    return this
+  }
+
+  toJSON() {
+    const fields = [...this.getFields(), 'location', 'timestamp', 'comment']
+    const obj = {}
+    for (const f of fields) {
+      const v = this.get(f)
+      if (v !== undefined) obj[f] = v
+    }
+    return obj
+  }
+
+  [inspect.custom](depth, options, nextInspect) {
+    // Returns a formatted string that looks like: A { ... }
+    return `${this.type} ${nextInspect(this.toJSON(), options)}`
   }
 
   ucFirst(str) {
@@ -248,23 +284,13 @@ export default class RR extends Map {
   }
 
   is8bitInt(type, field, value) {
-    if (
-      Number.isInteger(value) &&
-      value >= 0 &&
-      value <= 255
-    )
-      return true
+    if (Number.isInteger(value) && value >= 0 && value <= 255) return true
 
     this.throwHelp(`${type} ${field} must be a 8-bit integer (in the range 0-255)`)
   }
 
   is16bitInt(type, field, value) {
-    if (
-      Number.isInteger(value) &&
-      value >= 0 &&
-      value <= 65535
-    )
-      return true
+    if (Number.isInteger(value) && value >= 0 && value <= 65535) return true
 
     this.throwHelp(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`)
   }

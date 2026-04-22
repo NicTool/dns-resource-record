@@ -93,7 +93,7 @@ describe('MX record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns MX (@) record (${val.owner})`, async function () {
-      const r = new MX({ tinyline: val.testT })
+      const r = MX.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'exchange', 'preference', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

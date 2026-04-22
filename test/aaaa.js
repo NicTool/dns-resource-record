@@ -107,7 +107,7 @@ describe('AAAA record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns AAAA (generic) record (${val.owner})`, async function () {
-      const r = new AAAA({ tinyline: val.testT })
+      const r = AAAA.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'address', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
@@ -116,7 +116,7 @@ describe('AAAA record', function () {
   }
 
   it('imports tinydns AAAA native (3-prefix) record', function () {
-    const r = new AAAA({ tinyline: '3test.example.com:20010db80020000a0000000000000004:3600::\n' })
+    const r = AAAA.fromTinydns('3test.example.com:20010db80020000a0000000000000004:3600::\n')
     assert.equal(r.get('owner'), 'test.example.com.')
     assert.equal(r.get('address'), '2001:0db8:0020:000a:0000:0000:0000:0004')
     assert.equal(r.get('ttl'), 3600)

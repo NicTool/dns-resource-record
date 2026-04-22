@@ -56,7 +56,7 @@ describe('DNAME record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns DNAME (generic) record (${val.owner})`, async function () {
-      const r = new DNAME({ tinyline: val.testT })
+      const r = DNAME.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'target', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

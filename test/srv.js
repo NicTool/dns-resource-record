@@ -112,7 +112,7 @@ describe('SRV record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns SRV (generic) record (${val.owner})`, async function () {
-      const r = new SRV({ tinyline: val.testT })
+      const r = SRV.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'target', 'priority', 'weight', 'port', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
@@ -122,9 +122,7 @@ describe('SRV record', function () {
 
   it(`imports tinydns SRV (S) record`, async function () {
     const val = validRecords[0]
-    const r = new SRV({
-      tinyline: 'S_imaps._tcp.example.com:mail.example.com:993:1:0:3600::',
-    })
+    const r = SRV.fromTinydns('S_imaps._tcp.example.com:mail.example.com:993:1:0:3600::')
     if (process.env.DEBUG) console.dir(r)
     for (const f of ['owner', 'target', 'priority', 'weight', 'port', 'ttl']) {
       assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

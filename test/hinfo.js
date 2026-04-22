@@ -68,7 +68,7 @@ describe('HINFO record', function () {
   for (const val of validRecords) {
     if (!val.testT) continue
     it(`imports tinydns HINFO (generic) record (${val.owner})`, async function () {
-      const r = new HINFO({ tinyline: val.testT })
+      const r = HINFO.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'address', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

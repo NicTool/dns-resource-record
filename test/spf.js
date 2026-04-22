@@ -41,7 +41,7 @@ describe('SPF record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns SPF (generic) record`, async function () {
-      const r = new SPF({ tinyline: val.testT })
+      const r = SPF.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'data', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

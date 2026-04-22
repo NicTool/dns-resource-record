@@ -90,7 +90,7 @@ describe('URI record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns (generic) record`, async function () {
-      const r = new URI({ tinyline: val.testT })
+      const r = URI.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'priority', 'weight', 'target', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

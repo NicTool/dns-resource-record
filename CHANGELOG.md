@@ -11,6 +11,7 @@ Notable changes to this project are documented in this file.
 - feat(lib/binary): add shared binary functions
   - change: replace `Buffer` with Uint8Array, DataView, and math
 - fix(rr/txt): chunk by UTF-8 bytes (vs ASCII)
+- fix(rr/rrsig): validate "type covered" correctly
 - doc(CAA, DS): added RFC 9619
 - change(openpgpkey): reject keys with non-ASCII
 - change(tinydns): name any out-of-range chars in error msg

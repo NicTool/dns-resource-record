@@ -5,7 +5,11 @@ import * as base from './base.js'
 
 import RRSIG from '../rr/rrsig.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'RRSIG', owner: 'example.com.',
+const defaults = {
+  class: 'IN',
+  ttl: 3600,
+  type: 'RRSIG',
+  owner: 'example.com.',
   algorithm: 5,
   'key tag': 12345,
   labels: 1,
@@ -104,7 +108,7 @@ describe('RRSIG record', function () {
   it('fromBind resolves TYPEnn in type covered field', function () {
     const bindline =
       'example.com.\t3600\tIN\tRRSIG\tTYPE28\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tsig==\n'
-    const r = new RRSIG({ bindline })
+    const r = RRSIG.fromBind(bindline)
     assert.equal(r.get('type covered'), 28)
   })
 })

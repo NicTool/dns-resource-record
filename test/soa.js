@@ -82,7 +82,7 @@ describe('SOA record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
-      const r = new SOA({ tinyline: val.testT })
+      const r = SOA.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

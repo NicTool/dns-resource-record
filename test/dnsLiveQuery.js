@@ -432,7 +432,7 @@ async function queryAndCompare(server, record, rrClass) {
   assert.ok(typed.length > 0, `No ${record.type} answer for ${record.owner}`)
 
   // Expected wire from library
-  const rr = new rrClass({ bindline: record.bindLine })
+  const rr = rrClass.fromBind(record.bindLine)
   const expectedHex = Buffer.from(rr.toWire()).toString('hex')
 
   // Build actual uncompressed wires for all matching answers
@@ -488,7 +488,7 @@ async function queryAndCompareTxtContent(server, record, rrClass) {
   const typed = answers.filter((a) => a.typeId === typeId)
   assert.ok(typed.length > 0, `No ${record.type} answer for ${record.owner}`)
 
-  const rr = new rrClass({ bindline: record.bindLine })
+  const rr = rrClass.fromBind(record.bindLine)
   const expectedContent = extractTxtContent(rr.getWireRdata())
   const actualContents = typed.map((a) => extractTxtContent(a.rdataBytes))
 
@@ -519,7 +519,7 @@ describe('DNS live query round-trip', () => {
 
         test(`${record.type} ${record.owner}`, async (t) => {
           try {
-            new rrClass({ bindline: record.bindLine })
+            rrClass.fromBind(record.bindLine)
           } catch (e) {
             t.skip(`fromBind failed: ${e.message}`)
             return
@@ -543,7 +543,7 @@ describe('DNS live query round-trip', () => {
 
         test(`${record.type} ${record.owner}`, async (t) => {
           try {
-            new rrClass({ bindline: record.bindLine })
+            rrClass.fromBind(record.bindLine)
           } catch (e) {
             t.skip(`fromBind failed: ${e.message}`)
             return

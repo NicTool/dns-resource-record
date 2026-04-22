@@ -103,7 +103,7 @@ describe('HIP record', function () {
     const chunk2 = publicKey.slice(40, 80)
     const chunk3 = publicKey.slice(80)
     const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${chunk1} ${chunk2} ${chunk3} rvs.example.com.`
-    const r = new HIP({ bindline })
+    const r = HIP.fromBind(bindline)
     assert.equal(r.get('public key'), publicKey)
     assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
   })

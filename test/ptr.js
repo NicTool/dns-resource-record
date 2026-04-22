@@ -48,7 +48,7 @@ describe('PTR record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns PTR (^) record (${val.owner})`, async function () {
-      const r = new PTR({ tinyline: val.testT })
+      const r = PTR.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'dname', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

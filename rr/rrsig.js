@@ -2,7 +2,6 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/binary.js'
 
-
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
   constructor(opts) {

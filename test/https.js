@@ -115,6 +115,6 @@ describe('HTTPS record', function () {
   base.fromTinydns(HTTPS, validRecords)
 
   it('throws when fromTinydns RDATA is too short', function () {
-    assert.throws(() => new HTTPS({ tinyline: ':example.com:65:AB:3600::\n' }), /RDATA too short/)
+    assert.throws(() => HTTPS.fromTinydns(':example.com:65:AB:3600::\n'), /RDATA too short/)
   })
 })

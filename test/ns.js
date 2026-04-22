@@ -67,7 +67,7 @@ describe('NS record', function () {
 
   for (const val of validRecords) {
     it(`imports tinydns NS (&) record (${val.owner})`, function () {
-      const r = new NS({ tinyline: val.testT })
+      const r = NS.fromTinydns(val.testT)
       if (process.env.DEBUG) console.dir(r)
       for (const f of ['owner', 'dname', 'ttl']) {
         assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)

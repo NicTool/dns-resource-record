@@ -64,18 +64,18 @@ const exampleRRs = {
 }
 try {
     console.log(new RR.SOA(exampleRRs.SOA))
-    SOA(11) [Map] {
-        'owner' => 'example.com.',
-        'ttl' => 3600,
-        'class' => 'IN',
-        'type' => 'SOA',
-        'mname' => 'matt.example.com.',
-        'rname' => 'ns1.example.com.',
-        'serial' => 1,
-        'refresh' => 7200,
-        'retry' => 3600,
-        'expire' => 1209600,
-        'minimum' => 3600
+    SOA {
+        owner: 'example.com.',
+        ttl: 3600,
+        class: 'IN',
+        type: 'SOA',
+        mname: 'matt.example.com.',
+        rname: 'ns1.example.com.',
+        serial: 1,
+        refresh: 7200,
+        retry: 3600,
+        expire: 1209600,
+        minimum: 3600
     }
 }
 catch (e) {
@@ -163,29 +163,54 @@ console.log(new RR.A(exampleRRs.A).toTinydns()) // +test.example.com:192.0.2.127
 
 ### set
 
-The DNS validation checks can be bypassed entirely by using 'set':
+The DNS validation checks can be bypassed entirely by using `set`:
 
 ```js
 > validatedA.set('address', 'oops')
-A(5) [Map] {
-  'owner' => 'test.example.com',
-  'ttl' => 3600,
-  'class' => 'IN',
-  'type' => 'A',
-  'address' => 'oops'
+A {
+  owner: 'test.example.com.',
+  ttl: 3600,
+  class: 'IN',
+  type: 'A',
+  address: 'oops'
 }
 ```
 
 Consider this a "running with scissors" mode.
+
+### fromBind
+
+Parse a BIND zone file line into an RR object:
+
+```js
+const r = RR.A.fromBind('test.example.com.\t3600\tIN\tA\t192.0.2.127\n')
+console.log(r.get('address')) // 192.0.2.127
+```
+
+### fromTinydns
+
+Parse a tinydns data line into an RR object:
+
+```js
+const r = RR.A.fromTinydns('+test.example.com:192.0.2.127:3600::\n')
+console.log(r.get('address')) // 192.0.2.127
+```
+
+### toJSON
+
+Serialize a record to a plain object (also enables `JSON.stringify`):
+
+```js
+console.log(JSON.stringify(new RR.A(exampleRRs.A)))
+// {"owner":"test.example.com.","ttl":3600,"class":"IN","type":"A","address":"192.0.2.127"}
+```
 
 ### fromTinydns toBind
 
 Convert a tinydns line to BIND:
 
 ```js
-console.log(new RR.CAA({
-  tinyline: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n'
-}).toBind())
+console.log(RR.CAA.fromTinydns(':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n').toBind())
 ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
 ```
 
@@ -258,7 +283,7 @@ PRs are welcome, especially PRs with tests.
 
 ## SEE ALSO
 
-- [Dictionary of DNS terms](https://nictool.github.io/web/Dictionary)
+- [Dictionary of DNS terms](https://nictool.github.io/Dictionary)
 - [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
 - @nictool/[dns-zone](https://www.npmjs.com/package/@nictool/dns-zone)
 - @nictool/[dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver)
@@ -267,8 +292,7 @@ PRs are welcome, especially PRs with tests.
 
 - There are no dependencies. That's no accident.
 - ESM browsers and node.js
-- Platform independence is a goal
-  - [x] CI tests are on linux, windows, and macOS
+- Continuously tested on linux, windows, and macOS
 
 [ci-img]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml

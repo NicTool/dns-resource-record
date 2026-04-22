@@ -59,6 +59,6 @@ describe('NAPTR record', function () {
   base.fromTinydns(NAPTR, validRecords)
 
   it('throws on invalid NAPTR BIND line', function () {
-    assert.throws(() => new NAPTR({ bindline: 'this is not valid naptr\n' }), /Invalid NAPTR BIND line/)
+    assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /Invalid NAPTR BIND line/)
   })
 })

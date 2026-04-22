@@ -53,7 +53,7 @@ describe('KEY record', function () {
   base.invalid(KEY, invalidRecords, { ttl: 3600 })
 
   it('throws on short RDATA in fromTinydns', function () {
-    assert.throws(() => new KEY({ tinyline: ':example.com:25:AB:3600::\n' }), /RDATA too short/)
+    assert.throws(() => KEY.fromTinydns(':example.com:25:AB:3600::\n'), /RDATA too short/)
   })
 
   base.getDescription(KEY)

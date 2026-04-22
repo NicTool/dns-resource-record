@@ -24,14 +24,17 @@ export function invalid(type, invalidRecords) {
   const callerErr = new Error() // captured at call site (e.g. test/soa.js)
   describe('invalid', function () {
     for (const inv of invalidRecords) {
-      it(`throws on record (${inv.owner})`, function () {
+      it(`throws on record (${inv.owner ?? inv.bindline ?? inv.tinyline})`, function () {
         try {
-          assert.throws(
-            () => {
-              new type(inv)
-            },
-            { message: inv.msg },
-          )
+          let thrower
+          if (inv.bindline !== undefined) {
+            thrower = () => type.fromBind(inv.bindline)
+          } else if (inv.tinyline !== undefined) {
+            thrower = () => type.fromTinydns(inv.tinyline)
+          } else {
+            thrower = () => { new type(inv) }
+          }
+          assert.throws(thrower, { message: inv.msg })
         } catch (e) {
           e.stack = `${e.message}\n${callerErr.stack.split('\n').slice(1).join('\n')}`
           throw e
@@ -91,7 +94,7 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
     const testLine = nsLineName === 'bindline' ? val.testB : val.testT
     if (testLine == undefined) continue
     it(`imports ${nsName} record: ${val.owner}`, function () {
-      const r = new type({ [nsLineName]: testLine })
+      const r = nsLineName === 'bindline' ? type.fromBind(testLine) : type.fromTinydns(testLine)
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
         if (f === 'class') continue
