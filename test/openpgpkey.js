@@ -27,8 +27,16 @@ const invalidRecords = [
     ttl: 3600,
     class: 'IN',
     type: 'OPENPGPKEY',
+    'public key': 'not valid base64!',
+    msg: /must be a valid base64 string/i,
+  },
+  {
+    owner: 'matt.example.com.',
+    ttl: 3600,
+    class: 'IN',
+    type: 'OPENPGPKEY',
     'public key': 'not-real-key-\u{1F600}',
-    msg: /Latin-1/i,
+    msg: /must be a valid base64 string/i,
   },
 ]
 

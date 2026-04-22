@@ -3,7 +3,7 @@
 
 # dns-resource-record
 
-DNS resource record parser, validator, importer, and exporter for node.js & browsers.
+DNS resource record parser, validator, importer, and exporter for node.js & browsers
 
 ## SYNOPSIS
 

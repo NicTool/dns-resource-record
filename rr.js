@@ -347,6 +347,18 @@ export default class RR {
     this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
   }
 
+  isBase64(type, field, value) {
+    if (
+      typeof value === 'string' &&
+      value.length > 0 &&
+      value.length % 4 === 0 &&
+      /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+    )
+      return true
+
+    this.throwHelp(`${type} ${field} must be a valid base64 string`)
+  }
+
   isQuoted(val) {
     return /^["']/.test(val) && /["']$/.test(val)
   }

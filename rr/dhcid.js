@@ -11,6 +11,7 @@ export default class DHCID extends RR {
   /****** Resource record specific setters   *******/
   setData(val) {
     if (!val) this.throwHelp('DHCID: data is required')
+    this.isBase64('DHCID', 'data', val)
     this.set('data', val)
   }
 

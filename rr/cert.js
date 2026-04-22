@@ -80,6 +80,7 @@ export default class CERT extends RR {
     if (val === undefined || val === null || val === '') {
       this.throwHelp('certificate is required and cannot be empty')
     }
+    this.isBase64('CERT', 'certificate', val.replace(/[\s()]/g, ''))
     this.set('certificate', val)
   }
 
@@ -108,7 +109,7 @@ export default class CERT extends RR {
       'cert type': 'PGP',
       'key tag': 0,
       algorithm: 0,
-      certificate: 'hexidecimalkeystring1',
+      certificate: 'AQIDBA==',
     }
   }
 

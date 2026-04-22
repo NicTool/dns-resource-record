@@ -9,12 +9,7 @@ export default class OPENPGPKEY extends RR {
 
   /****** Resource record specific setters   *******/
   setPublicKey(val) {
-    if (typeof val !== 'string') this.throwHelp('OPENPGPKEY: public key must be a string')
-    for (let i = 0; i < val.length; i++) {
-      if (val.charCodeAt(i) > 0xff) {
-        this.throwHelp('OPENPGPKEY: public key must be Latin-1 (code points <= 0xFF)')
-      }
-    }
+    this.isBase64('OPENPGPKEY', 'public key', val)
     this.set('public key', val)
   }
 
@@ -44,7 +39,8 @@ export default class OPENPGPKEY extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'OPENPGPKEY',
-      'public key': 'mQINBFY...',
+      'public key':
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
     }
   }
 

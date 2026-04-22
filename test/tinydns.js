@@ -169,9 +169,8 @@ describe('TINYDNS', function () {
   })
 
   describe('base64toOctal error handling', function () {
-    it('returns undefined for invalid base64 input', function () {
-      const result = TINYDNS.base64toOctal('not valid!!!')
-      assert.equal(result, undefined)
+    it('throws for invalid base64 input', function () {
+      assert.throws(() => TINYDNS.base64toOctal('not valid!!!'), /Invalid character/)
     })
   })
 })

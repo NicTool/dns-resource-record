@@ -63,8 +63,7 @@ export default class IPSECKEY extends RR {
   }
 
   setPublickey(val) {
-    // if (val) this.throwHelp(`IPSECKEY: publickey is optional`)
-
+    if (val) this.isBase64('IPSECKEY', 'publickey', val)
     this.set('publickey', val)
   }
 

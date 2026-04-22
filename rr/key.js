@@ -44,7 +44,7 @@ export default class KEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`KEY: publickey is required`)
-
+    this.isBase64('KEY', 'publickey', val.replace(/[\s()]/g, ''))
     this.set('publickey', val)
   }
 
@@ -73,7 +73,8 @@ export default class KEY extends RR {
       flags: 256,
       protocol: 3,
       algorithm: 5,
-      publickey: 'AQPSKAsj8...',
+      publickey:
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
     }
   }
 

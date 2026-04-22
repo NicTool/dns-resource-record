@@ -65,6 +65,8 @@ const validRecords = [
     params: 'ech=AQIDBA==',
     testB: 'echparam.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tech=AQIDBA==\n',
     testT: ':echparam.example.com:65:\\000\\001\\007example\\003com\\000ech=AQIDBA==:3600::\n',
+    testW:
+      '08656368706172616d076578616d706c6503636f6d000041000100000e1000170001076578616d706c6503636f6d000005000401020304',
   },
   {
     ...defaults,
@@ -75,6 +77,8 @@ const validRecords = [
     testB: 'ipv6hint.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tipv6hint=2001:db8::1\n',
     testT:
       ':ipv6hint.example.com:65:\\000\\001\\007example\\003com\\000ipv6hint=2001\\072db8\\072\\0721:3600::\n',
+    testW:
+      '086970763668696e74076578616d706c6503636f6d000041000100000e1000230001076578616d706c6503636f6d000006001020010db8000000000000000000000001',
   },
   {
     ...defaults,

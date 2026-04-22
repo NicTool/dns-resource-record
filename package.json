@@ -58,6 +58,15 @@
     "url": "https://github.com/NicTool/dns-resource-record/issues"
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "browserslist": [
+    "chrome >= 74",
+    "firefox >= 90",
+    "safari >= 14.1",
+    "edge >= 79"
+  ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.2.1",
