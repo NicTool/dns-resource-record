@@ -15,7 +15,10 @@ const CONV = {
 
 export default class LOC extends RR {
   static typeName = 'LOC'
+  static typeId = 29
+  static RFCs = [1876]
   static rdataFields = ['address']
+
   constructor(opts) {
     super(opts)
   }
@@ -36,14 +39,6 @@ export default class LOC extends RR {
 
   getDescription() {
     return 'Location'
-  }
-
-  getRFCs() {
-    return [1876]
-  }
-
-  getTypeId() {
-    return 29
   }
 
   getCanonical() {

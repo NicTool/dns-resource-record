@@ -171,4 +171,4 @@ describe('CAA record', function () {
   })
 })
 
-  base.fromWire(CAA, validRecords)
+base.fromWire(CAA, validRecords)

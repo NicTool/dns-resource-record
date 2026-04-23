@@ -4,8 +4,10 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class RP extends RR {
   static typeName = 'RP'
-  static rdataFields = ['mbox', 'txt']
-  static fqdnFields = ['mbox', 'txt']
+  static rdataFields = [
+    ['mbox', 'fqdn'],
+    ['txt', 'fqdn'],
+  ]
 
   constructor(opts) {
     super(opts)
@@ -31,19 +33,9 @@ export default class RP extends RR {
   getDescription() {
     return 'Responsible Person'
   }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [1183]
-  }
-
-  getTypeId() {
-    return 17
-  }
-
+  static tags = ['obsolete']
+  static RFCs = [1183]
+  static typeId = 17
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -71,12 +63,6 @@ export default class RP extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn: mbox, end } = this.wireUnpackDomain(rdata, 0)
-    const { fqdn: txt } = this.wireUnpackDomain(rdata, end)
-    return new RP({ owner, ttl, class: cls, type: 'RP', mbox, txt })
   }
 
   /******  EXPORTERS   *******/

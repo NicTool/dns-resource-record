@@ -6,7 +6,17 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class SIG extends RR {
   static typeName = 'SIG'
-  static rdataFields = ['type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration', 'signature inception', 'key tag', 'signers name', 'signature']
+  static rdataFields = [
+    ['type covered', 'u16'],
+    ['algorithm', 'u8'],
+    ['labels', 'u8'],
+    ['original ttl', 'u32'],
+    ['signature expiration', 'u32'],
+    ['signature inception', 'u32'],
+    ['key tag', 'u16'],
+    ['signers name', 'fqdn'],
+    ['signature', 'str'],
+  ]
   constructor(opts) {
     super(opts)
   }
@@ -71,19 +81,9 @@ export default class SIG extends RR {
   getDescription() {
     return 'Signature'
   }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [2535, 3755]
-  }
-
-  getTypeId() {
-    return 24
-  }
-
+  static tags = ['obsolete']
+  static RFCs = [2535, 3755]
+  static typeId = 24
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -130,34 +130,6 @@ export default class SIG extends RR {
         .filter((a) => a !== '(' && a !== ')')
         .join(' ')
         .trim(),
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const typeCovered = dv.getUint16(0)
-    const algorithm = rdata[2]
-    const labels = rdata[3]
-    const originalTtl = dv.getUint32(4)
-    const signatureExpiration = dv.getUint32(8)
-    const signatureInception = dv.getUint32(12)
-    const keyTag = dv.getUint16(16)
-    const { fqdn: signersName, end } = this.wireUnpackDomain(rdata, 18)
-    const signature = new TextDecoder().decode(rdata.subarray(end))
-    return new SIG({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SIG',
-      'type covered': typeCovered,
-      algorithm,
-      labels,
-      'original ttl': originalTtl,
-      'signature expiration': signatureExpiration,
-      'signature inception': signatureInception,
-      'key tag': keyTag,
-      'signers name': signersName,
-      signature,
     })
   }
 

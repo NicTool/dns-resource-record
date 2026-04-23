@@ -4,8 +4,12 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class KX extends RR {
   static typeName = 'KX'
-  static rdataFields = ['preference', 'exchanger']
-  static fqdnFields = ['exchanger']
+  static typeId = 36
+  static RFCs = [2230]
+  static rdataFields = [
+    ['preference', 'u16'],
+    ['exchanger', 'fqdn'],
+  ]
 
   constructor(opts) {
     super(opts)
@@ -29,14 +33,6 @@ export default class KX extends RR {
 
   getDescription() {
     return 'Key Exchanger'
-  }
-
-  getRFCs() {
-    return [2230]
-  }
-
-  getTypeId() {
-    return 36
   }
 
   getCanonical() {
@@ -65,13 +61,6 @@ export default class KX extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const preference = dv.getUint16(0)
-    const { fqdn: exchanger } = this.wireUnpackDomain(rdata, 2)
-    return new KX({ owner, ttl, class: cls, type: 'KX', preference, exchanger })
   }
 
   /******  EXPORTERS   *******/

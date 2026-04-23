@@ -5,7 +5,16 @@ import * as BINARY from '../lib/binary.js'
 
 export default class SMIMEA extends RR {
   static typeName = 'SMIMEA'
-  static rdataFields = ['certificate usage', 'selector', 'matching type', 'certificate association data']
+  static typeId = 53
+  static RFCs = [8162]
+  static rdataFields = [
+    ['certificate usage', 'u8'],
+    ['selector', 'u8'],
+    ['matching type', 'u8'],
+    ['certificate association data', 'hex'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -61,18 +70,6 @@ export default class SMIMEA extends RR {
     return 'S/MIME cert association'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [8162]
-  }
-
-  getTypeId() {
-    return 53
-  }
-
   getCanonical() {
     return {
       owner: '_443._tcp.www.example.com.',
@@ -117,19 +114,6 @@ export default class SMIMEA extends RR {
       'certificate association data': BINARY.bytesToHex(binaryRdata.subarray(3)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new SMIMEA({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SMIMEA',
-      'certificate usage': rdata[0],
-      selector: rdata[1],
-      'matching type': rdata[2],
-      'certificate association data': BINARY.bytesToHex(rdata.subarray(3)).toUpperCase(),
     })
   }
 

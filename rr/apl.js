@@ -4,7 +4,10 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class APL extends RR {
   static typeName = 'APL'
+  static typeId = 42
+  static RFCs = [3123]
   static rdataFields = ['apl rdata']
+
   constructor(opts) {
     super(opts)
   }
@@ -17,14 +20,6 @@ export default class APL extends RR {
 
   getDescription() {
     return 'Address Prefix List'
-  }
-
-  getRFCs() {
-    return [3123]
-  }
-
-  getTypeId() {
-    return 42
   }
 
   getCanonical() {

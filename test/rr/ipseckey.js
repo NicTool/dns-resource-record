@@ -148,4 +148,4 @@ describe('IPSECKEY record', function () {
   base.fromTinydns(IPSECKEY, validRecords)
 })
 
-  base.fromWire(IPSECKEY, validRecords)
+base.fromWire(IPSECKEY, validRecords)

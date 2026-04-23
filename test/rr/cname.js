@@ -74,4 +74,4 @@ describe('CNAME record', function () {
   base.fromBind(CNAME, validRecords)
 })
 
-  base.fromWire(CNAME, validRecords)
+base.fromWire(CNAME, validRecords)

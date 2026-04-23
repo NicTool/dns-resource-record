@@ -3,47 +3,22 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SRV extends RR {
   static typeName = 'SRV'
-  static rdataFields = ['priority', 'weight', 'port', 'target']
-  static fqdnFields = ['target']
+  static typeId = 33
+  static RFCs = [2782]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['weight', 'u16'],
+    ['port', 'u16'],
+    ['target', 'fqdn'],
+  ]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
   }
 
-  /****** Resource record specific setters   *******/
-  setPriority(val) {
-    this.is16bitInt('SRV', 'priority', val)
-    this.set('priority', val)
-  }
-
-  setPort(val) {
-    this.is16bitInt('SRV', 'port', val)
-    this.set('port', val)
-  }
-
-  setWeight(val) {
-    this.is16bitInt('SRV', 'weight', val)
-    this.set('weight', val)
-  }
-
-  setTarget(val) {
-    this.setFqdnValue('SRV', 'target', val)
-  }
-
   getDescription() {
     return 'Service'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [2782]
-  }
-
-  getTypeId() {
-    return 33
   }
 
   getCanonical() {
@@ -89,15 +64,6 @@ export default class SRV extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const priority = dv.getUint16(0)
-    const weight = dv.getUint16(2)
-    const port = dv.getUint16(4)
-    const { fqdn: target } = this.wireUnpackDomain(rdata, 6)
-    return new SRV({ owner, ttl, class: cls, type: 'SRV', priority, weight, port, target })
   }
 
   /******  EXPORTERS   *******/

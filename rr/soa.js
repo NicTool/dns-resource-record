@@ -2,9 +2,19 @@ import RR from '../rr.js'
 
 export default class SOA extends RR {
   static typeName = 'SOA'
+  static typeId = 6
+  static RFCs = [1035, 2308]
   static tinydnsType = 'Z'
-  static rdataFields = ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum']
-  static fqdnFields = ['mname', 'rname']
+  static rdataFields = [
+    ['mname', 'fqdn'],
+    ['rname', 'fqdn'],
+    ['serial', 'u32'],
+    ['refresh', 'u32'],
+    ['retry', 'u32'],
+    ['expire', 'u32'],
+    ['minimum', 'u32'],
+  ]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -76,18 +86,6 @@ export default class SOA extends RR {
     return 'Start Of Authority'
   }
 
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035, 2308]
-  }
-
-  getTypeId() {
-    return 6
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -122,25 +120,6 @@ export default class SOA extends RR {
       minimum: parseInt(min, 10) || 2560,
       timestamp: parseInt(ts) || '',
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn: mname, end: e1 } = this.wireUnpackDomain(rdata, 0)
-    const { fqdn: rname, end: e2 } = this.wireUnpackDomain(rdata, e1)
-    const dv = new DataView(rdata.buffer, rdata.byteOffset + e2)
-    return new SOA({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SOA',
-      mname,
-      rname,
-      serial: dv.getUint32(0),
-      refresh: dv.getUint32(4),
-      retry: dv.getUint32(8),
-      expire: dv.getUint32(12),
-      minimum: dv.getUint32(16),
     })
   }
 

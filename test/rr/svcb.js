@@ -82,4 +82,4 @@ describe('SVCB record', function () {
   })
 })
 
-  base.fromWire(SVCB, validRecords)
+base.fromWire(SVCB, validRecords)

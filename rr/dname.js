@@ -3,28 +3,16 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DNAME extends RR {
   static typeName = 'DNAME'
-  static rdataFields = ['target']
-  static fqdnFields = ['target']
+  static typeId = 39
+  static RFCs = [2672, 6672]
+  static rdataFields = [['target', 'fqdn']]
 
   constructor(opts) {
     super(opts)
   }
 
-  /****** Resource record specific setters   *******/
-  setTarget(val) {
-    this.setFqdnValue('DNAME', 'target', val)
-  }
-
   getDescription() {
     return 'Delegation Name'
-  }
-
-  getRFCs() {
-    return [2672, 6672]
-  }
-
-  getTypeId() {
-    return 39
   }
 
   getCanonical() {
@@ -51,11 +39,6 @@ export default class DNAME extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn } = this.wireUnpackDomain(rdata, 0)
-    return new DNAME({ owner, ttl, class: cls, type: 'DNAME', target: fqdn })
   }
 
   /******  EXPORTERS   *******/

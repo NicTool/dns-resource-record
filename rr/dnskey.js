@@ -5,7 +5,16 @@ import * as BINARY from '../lib/binary.js'
 
 export default class DNSKEY extends RR {
   static typeName = 'DNSKEY'
-  static rdataFields = ['flags', 'protocol', 'algorithm', 'publickey']
+  static typeId = 48
+  static RFCs = [4034, 6014, 8624, 9619, 9905]
+  static rdataFields = [
+    ['flags', 'u16'],
+    ['protocol', 'u8'],
+    ['algorithm', 'u8'],
+    ['publickey', 'base64'],
+  ]
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
   }
@@ -82,18 +91,6 @@ export default class DNSKEY extends RR {
     return 'DNS Public Key'
   }
 
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRFCs() {
-    return [4034, 6014, 8624, 9619, 9905]
-  }
-
-  getTypeId() {
-    return 48
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -151,20 +148,6 @@ export default class DNSKEY extends RR {
       publickey: BINARY.bytesToBase64(bytes.subarray(4)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    return new DNSKEY({
-      owner,
-      ttl,
-      class: cls,
-      type: 'DNSKEY',
-      flags: dv.getUint16(0),
-      protocol: rdata[2],
-      algorithm: rdata[3],
-      publickey: BINARY.bytesToBase64(rdata.subarray(4)),
     })
   }
 

@@ -5,7 +5,30 @@ import * as BINARY from '../lib/binary.js'
 
 export default class CERT extends RR {
   static typeName = 'CERT'
-  static rdataFields = ['cert type', 'key tag', 'algorithm', 'certificate']
+  static typeId = 37
+  static RFCs = [2538, 4398]
+  static rdataFields = [
+    ['cert type', 'certtype'],
+    ['key tag', 'u16'],
+    ['algorithm', 'u8'],
+    ['certificate', 'base64'],
+  ]
+
+  static CERT_TYPES = {
+    PKIX: 1,
+    SPKI: 2,
+    PGP: 3,
+    IPKIX: 4,
+    ISPKI: 5,
+    IPGP: 6,
+    ACPKIX: 7,
+    IACPKIX: 8,
+    URI: 253,
+    OID: 254,
+  }
+
+  static CERT_TYPES_REVERSE = Object.fromEntries(Object.entries(CERT.CERT_TYPES).map(([k, v]) => [v, k]))
+
   constructor(opts) {
     super(opts)
   }
@@ -18,20 +41,8 @@ export default class CERT extends RR {
       this.throwHelp('cert type is required')
     }
     // Accept both mnemonic and numeric, but validate mnemonic
-    if (typeof val === 'string') {
-      const types = {
-        PKIX: 1,
-        SPKI: 2,
-        PGP: 3,
-        IPKIX: 4,
-        ISPKI: 5,
-        IPGP: 6,
-        ACPKIX: 7,
-        IACPKIX: 8,
-        URI: 253,
-        OID: 254,
-      }
-      if (!Object.hasOwn(types, val)) {
+    if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
+      if (!Object.hasOwn(CERT.CERT_TYPES, val)) {
         this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
       }
     } else {
@@ -42,37 +53,9 @@ export default class CERT extends RR {
 
   getCertTypeValue(val) {
     if (typeof val === 'number') return val
-    const types = {
-      PKIX: 1,
-      SPKI: 2,
-      PGP: 3,
-      IPKIX: 4,
-      ISPKI: 5,
-      IPGP: 6,
-      ACPKIX: 7,
-      IACPKIX: 8,
-      URI: 253,
-      OID: 254,
-    }
-    if (Object.hasOwn(types, val)) return types[val]
+    if (/^[0-9]+$/.test(val)) return parseInt(val, 10)
+    if (Object.hasOwn(CERT.CERT_TYPES, val)) return CERT.CERT_TYPES[val]
     this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
-  }
-
-  setKeyTag(val) {
-    // The key tag field is the 16-bit value
-    // The key tag field is represented as an unsigned decimal integer.
-
-    this.is16bitInt('CERT', 'key tag', val)
-
-    this.set('key tag', val)
-  }
-
-  setAlgorithm(val) {
-    // The algorithm field has the same meaning as the algorithm field in DNSKEY
-    // The algorithm field is represented as an unsigned decimal integer
-    this.is8bitInt('CERT', 'algorithm', val)
-
-    this.set('algorithm', val)
   }
 
   setCertificate(val) {
@@ -87,14 +70,6 @@ export default class CERT extends RR {
 
   getDescription() {
     return 'Certificate'
-  }
-
-  getRFCs() {
-    return [2538, 4398]
-  }
-
-  getTypeId() {
-    return 37
   }
 
   getCanonical() {
@@ -118,21 +93,8 @@ export default class CERT extends RR {
 
     const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
     const typeNum = (bytes[0] << 8) | bytes[1]
-    let certType = typeNum
 
-    const types = {
-      1: 'PKIX',
-      2: 'SPKI',
-      3: 'PGP',
-      4: 'IPKIX',
-      5: 'ISPKI',
-      6: 'IPGP',
-      7: 'ACPKIX',
-      8: 'IACPKIX',
-      253: 'URI',
-      254: 'OID',
-    }
-    if (types[typeNum]) certType = types[typeNum]
+    const certType = CERT.CERT_TYPES_REVERSE[typeNum] ?? typeNum
 
     return new CERT({
       owner: this.fullyQualify(owner),
@@ -159,34 +121,6 @@ export default class CERT extends RR {
       'key tag': parseInt(keytag, 10),
       algorithm: parseInt(algo, 10),
       certificate,
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const typeNum = dv.getUint16(0)
-    const types = {
-      1: 'PKIX',
-      2: 'SPKI',
-      3: 'PGP',
-      4: 'IPKIX',
-      5: 'ISPKI',
-      6: 'IPGP',
-      7: 'ACPKIX',
-      8: 'IACPKIX',
-      253: 'URI',
-      254: 'OID',
-    }
-    const certType = types[typeNum] ?? typeNum
-    return new CERT({
-      owner,
-      ttl,
-      class: cls,
-      type: 'CERT',
-      'cert type': certType,
-      'key tag': dv.getUint16(2),
-      algorithm: rdata[4],
-      certificate: BINARY.bytesToBase64(rdata.subarray(5)),
     })
   }
 

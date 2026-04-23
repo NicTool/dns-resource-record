@@ -65,4 +65,4 @@ describe('DNAME record', function () {
   }
 })
 
-  base.fromWire(DNAME, validRecords)
+base.fromWire(DNAME, validRecords)

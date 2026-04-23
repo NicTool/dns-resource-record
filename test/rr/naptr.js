@@ -63,4 +63,4 @@ describe('NAPTR record', function () {
   })
 })
 
-  base.fromWire(NAPTR, validRecords)
+base.fromWire(NAPTR, validRecords)

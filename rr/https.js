@@ -5,7 +5,15 @@ import * as WIRE from '../lib/wire.js'
 
 export default class HTTPS extends RR {
   static typeName = 'HTTPS'
-  static rdataFields = ['priority', 'target name', 'params']
+  static typeId = 65
+  static RFCs = [9460]
+  static tags = ['common']
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['target name', 'fqdn'],
+    ['params', 'svcparams'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -33,18 +41,6 @@ export default class HTTPS extends RR {
 
   getDescription() {
     return 'HTTP Semantics'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [9460]
-  }
-
-  getTypeId() {
-    return 65
   }
 
   getCanonical() {
@@ -106,22 +102,6 @@ export default class HTTPS extends RR {
       params,
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const priority = dv.getUint16(0)
-    const { fqdn: targetName, end } = this.wireUnpackDomain(rdata, 2)
-    const params = WIRE.svcParamsFromWire(rdata.subarray(end))
-    return new HTTPS({
-      owner,
-      ttl,
-      class: cls,
-      type: 'HTTPS',
-      priority,
-      'target name': targetName,
-      params,
     })
   }
 

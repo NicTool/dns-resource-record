@@ -117,4 +117,4 @@ describe('CERT record', function () {
   })
 })
 
-  base.fromWire(CERT, validRecords)
+base.fromWire(CERT, validRecords)

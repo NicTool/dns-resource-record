@@ -130,4 +130,4 @@ describe('SRV record', function () {
   })
 })
 
-  base.fromWire(SRV, validRecords)
+base.fromWire(SRV, validRecords)

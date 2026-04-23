@@ -6,7 +6,10 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SPF extends TXT {
   static typeName = 'SPF'
-  static rdataFields = ['data']
+  static typeId = 99
+  static RFCs = [4408, 7208]
+  static rdataFields = [['data', 'charstrs']]
+  static tags = ['obsolete']
 
   constructor(opts) {
     super(opts)
@@ -20,19 +23,6 @@ export default class SPF extends TXT {
   getDescription() {
     return 'Sender Policy Framework'
   }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [4408, 7208]
-  }
-
-  getTypeId() {
-    return 99
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',

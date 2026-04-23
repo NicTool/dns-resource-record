@@ -95,4 +95,4 @@ describe('NSEC3PARAM record', function () {
   })
 })
 
-  base.fromWire(NSEC3PARAM, validRecords)
+base.fromWire(NSEC3PARAM, validRecords)

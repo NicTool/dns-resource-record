@@ -5,19 +5,16 @@ import * as BINARY from '../lib/binary.js'
 
 export default class DS extends RR {
   static typeName = 'DS'
-  static rdataFields = ['key tag', 'algorithm', 'digest type', 'digest']
+  static typeId = 43
+  static RFCs = [4034, 4509, 9619]
+  static rdataFields = [['key tag', 'u16'], 'algorithm', 'digest type', ['digest', 'str']]
+  static tags = ['dnssec']
 
   constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setKeyTag(val) {
-    // a 2 octet Key Tag field
-    this.is16bitInt('DS', 'key tag', val)
-    this.set('key tag', val)
-  }
-
   setAlgorithm(val) {
     if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`DS: algorithm invalid`)
 
@@ -42,26 +39,8 @@ export default class DS extends RR {
     this.set('digest type', val)
   }
 
-  setDigest(val) {
-    if (!val) this.throwHelp(`DS: digest is required`)
-
-    this.set('digest', val)
-  }
-
   getDescription() {
     return 'Delegation Signer'
-  }
-
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRFCs() {
-    return [4034, 4509, 9619]
-  }
-
-  getTypeId() {
-    return 43
   }
 
   getCanonical() {

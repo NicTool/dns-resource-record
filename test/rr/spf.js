@@ -50,4 +50,4 @@ describe('SPF record', function () {
   }
 })
 
-  base.fromWire(SPF, validRecords)
+base.fromWire(SPF, validRecords)

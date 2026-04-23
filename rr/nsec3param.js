@@ -4,7 +4,11 @@ import * as BINARY from '../lib/binary.js'
 
 export default class NSEC3PARAM extends RR {
   static typeName = 'NSEC3PARAM'
+  static typeId = 51
+  static RFCs = [5155]
   static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt']
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -58,18 +62,6 @@ export default class NSEC3PARAM extends RR {
 
   getDescription() {
     return 'Next Secure Parameters'
-  }
-
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRFCs() {
-    return [5155]
-  }
-
-  getTypeId() {
-    return 51
   }
 
   getCanonical() {

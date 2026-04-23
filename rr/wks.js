@@ -93,7 +93,11 @@ const WELL_KNOWN_PORTS = {
 
 export default class WKS extends RR {
   static typeName = 'WKS'
+  static typeId = 11
+  static RFCs = [883, 1035]
   static rdataFields = ['address', 'protocol', 'bit map']
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -118,18 +122,6 @@ export default class WKS extends RR {
 
   getDescription() {
     return 'Well Known Service'
-  }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [883, 1035]
-  }
-
-  getTypeId() {
-    return 11
   }
 
   getCanonical() {

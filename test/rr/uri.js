@@ -99,4 +99,4 @@ describe('URI record', function () {
   }
 })
 
-  base.fromWire(URI, validRecords)
+base.fromWire(URI, validRecords)

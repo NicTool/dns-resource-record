@@ -123,4 +123,4 @@ describe('HTTPS record', function () {
   })
 })
 
-  base.fromWire(HTTPS, validRecords)
+base.fromWire(HTTPS, validRecords)

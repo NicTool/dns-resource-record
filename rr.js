@@ -6,6 +6,7 @@ import {
   getWireRdata as wireGetRdata,
   toWire as wireToWire,
   fromWireBytes,
+  fromWireGeneric,
 } from './lib/wire.js'
 import {
   parseBindLine as bindParseLine,
@@ -15,6 +16,9 @@ import {
 
 export default class RR {
   static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
+  static typeId
+  static RFCs = []
+  static tags = []
   constructor(opts) {
     if (opts === null) return
 
@@ -29,11 +33,14 @@ export default class RR {
     this.setTtl(opts?.ttl)
     this.setClass(opts?.class)
 
-    const rdataFields = this.getFields('rdata')
-    for (const f of rdataFields) {
+    for (const entry of this.constructor.rdataFields ?? []) {
+      const f = RR.fieldName(entry)
+      const fieldType = Array.isArray(entry) ? entry[1] : null
       const fnName = `set${this.ucFirst(f)}`
-      if (this[fnName]) {
+      if (typeof this[fnName] === 'function') {
         this[fnName](opts?.[f])
+      } else if (fieldType) {
+        this.setTypedValue(fieldType, f, opts?.[f])
       } else {
         this.set(f, opts?.[f])
       }
@@ -97,8 +104,8 @@ export default class RR {
     return fromWireBytes(this, wireBytes, wireUnpackDomain)
   }
 
-  fromWire({ owner, cls, ttl, rdata }) {
-    throw new Error(`fromWire() not implemented for ${this.constructor.typeName}`)
+  fromWire(opts) {
+    return fromWireGeneric(this, opts)
   }
 
   static #reserved = ['__proto__', 'constructor', 'prototype']
@@ -261,8 +268,8 @@ export default class RR {
   }
 
   getQuoted(prop) {
-    // if prop is not in quoted list, return bare
-    if (!this.getQuotedFields().includes(prop)) return this.get(prop)
+    // if prop is not a quoted string field, return bare
+    if (!this.isQuotedField(prop)) return this.get(prop)
 
     // if it's already quoted, return as-is
     if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
@@ -270,20 +277,34 @@ export default class RR {
     return `"${this.get(prop)}"` // add double quotes
   }
 
-  getQuotedFields() {
-    return this.constructor.quotedFields || []
+  static fieldName(entry) {
+    return Array.isArray(entry) ? entry[0] : entry
+  }
+
+  static fieldType(entry) {
+    return Array.isArray(entry) ? entry[1] : null
   }
 
   getRdataFields() {
-    return this.constructor.rdataFields || []
+    return (this.constructor.rdataFields ?? []).map((e) => RR.fieldName(e))
   }
 
   getTags() {
-    return []
+    return this.constructor.tags ?? []
+  }
+
+  getRFCs() {
+    return this.constructor.RFCs ?? []
+  }
+
+  getTypeId() {
+    const typeId = this.constructor.typeId
+    if (typeId === undefined) this.throwHelp(`${this.constructor.typeName}: missing static typeId`)
+    return typeId
   }
 
   static getTypeId() {
-    return new this(null).getTypeId()
+    return this.typeId
   }
 
   getFields(arg) {
@@ -387,6 +408,90 @@ export default class RR {
     this.isFullyQualified(typeName, fieldName, val)
     this.isValidHostname(typeName, fieldName, val)
     this.set(fieldName, val.toLowerCase())
+  }
+
+  setTypedValue(type, fieldName, val) {
+    const typeName = this.constructor.typeName
+    switch (type) {
+      case 'u8':
+        this.is8bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'u16':
+        this.is16bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'certtype': {
+        if (val === undefined || val === null || val === '')
+          this.throwHelp(`${typeName}: ${fieldName} is required`)
+        if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
+          const certTypes = this.constructor.CERT_TYPES
+          if (!certTypes || !Object.hasOwn(certTypes, val)) {
+            this.throwHelp(`${typeName}: unknown cert type mnemonic: ${val}`)
+          }
+          this.set(fieldName, val)
+          break
+        }
+        this.is16bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      }
+      case 'u32':
+        this.is32bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'fqdn':
+        this.setFqdnValue(typeName, fieldName, val)
+        break
+      case 'base64':
+        this.isBase64(typeName, fieldName, val)
+        this.set(fieldName, val)
+        break
+      case 'hex':
+        if (!/^[0-9a-fA-F]*$/.test(val)) this.throwHelp(`${typeName}: ${fieldName} must be hexadecimal`)
+        this.set(fieldName, val)
+        break
+      case 'str':
+        if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'qstr':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'charstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        const value = String(val)
+        const byteLen = new TextEncoder().encode(value).length
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`)
+        this.set(fieldName, value)
+        break
+      }
+      case 'qcharstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        const value = String(val)
+        const byteLen = new TextEncoder().encode(value).length
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`)
+        this.set(fieldName, value)
+        break
+      }
+      case 'charstrs':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'svcparams':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'ipv4':
+        if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`)
+        this.set(fieldName, val)
+        break
+      case 'ipv6':
+        if (!this.isIPv6(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv6 address`)
+        this.set(fieldName, this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
+        break
+    }
   }
 
   isFullyQualified(type, field, hostname) {
@@ -501,15 +606,24 @@ export default class RR {
         .join(':')
       return `${this.constructor.tinydnsType}${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
     }
-    return this.getTinydnsGeneric(this.getWireRdata())
+    return this.getTinydnsGeneric(TINYDNS.bytesToOctalString(this.getWireRdata()))
   }
 
   isFqdnField(field) {
-    return this.constructor.fqdnFields?.includes(field) || false
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && RR.fieldType(entry) === 'fqdn',
+      ) || false
+    )
   }
 
   isQuotedField(field) {
-    return this.constructor.quotedFields?.includes(field) || false
+    const quotedTypes = new Set(['qstr', 'qcharstr', 'charstrs'])
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && quotedTypes.has(RR.fieldType(entry)),
+      ) || false
+    )
   }
 
   toMaraDNS() {

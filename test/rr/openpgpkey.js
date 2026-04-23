@@ -59,4 +59,4 @@ describe('OPENPGPKEY record', function () {
   base.fromTinydns(OPENPGPKEY, validRecords)
 })
 
-  base.fromWire(OPENPGPKEY, validRecords)
+base.fromWire(OPENPGPKEY, validRecords)

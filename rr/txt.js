@@ -4,9 +4,11 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class TXT extends RR {
   static typeName = 'TXT'
+  static typeId = 16
+  static RFCs = [1035, 4408, 7208, 6376]
   static tinydnsType = "'"
-  static rdataFields = ['data']
-  static quotedFields = ['data']
+  static rdataFields = [['data', 'charstrs']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -19,18 +21,6 @@ export default class TXT extends RR {
 
   getDescription() {
     return 'Text'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035, 4408, 7208, 6376]
-  }
-
-  getTypeId() {
-    return 16
   }
 
   getCanonical() {
@@ -81,23 +71,6 @@ export default class TXT extends RR {
       len = rdata.charCodeAt(pos + 1)
     }
     return [fqdn, s, ttl, ts, loc]
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    let pos = 0
-    const parts = []
-    while (pos < rdata.length) {
-      const len = rdata[pos++]
-      parts.push(new TextDecoder().decode(rdata.subarray(pos, pos + len)))
-      pos += len
-    }
-    return new this.constructor({
-      owner,
-      ttl,
-      class: cls,
-      type: this.constructor.typeName,
-      data: parts.join(''),
-    })
   }
 
   /******  EXPORTERS   *******/

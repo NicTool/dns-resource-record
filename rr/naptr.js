@@ -5,8 +5,16 @@ const rdataRe = /[\r\n\t:\\/]/
 
 export default class NAPTR extends RR {
   static typeName = 'NAPTR'
-  static rdataFields = ['order', 'preference', 'flags', 'service', 'regexp', 'replacement']
-  static quotedFields = ['flags', 'service', 'regexp']
+  static typeId = 35
+  static RFCs = [2915, 3403, 4848]
+  static rdataFields = [
+    ['order', 'u16'],
+    ['preference', 'u16'],
+    ['flags', 'qcharstr'],
+    ['service', 'qcharstr'],
+    ['regexp', 'qcharstr'],
+    ['replacement', 'fqdn'],
+  ]
 
   constructor(opts) {
     super(opts)
@@ -14,14 +22,6 @@ export default class NAPTR extends RR {
 
   getDescription() {
     return 'Naming Authority Pointer'
-  }
-
-  getRFCs() {
-    return [2915, 3403, 4848]
-  }
-
-  getTypeId() {
-    return 35
   }
 
   getCanonical() {
@@ -133,35 +133,6 @@ export default class NAPTR extends RR {
       type,
       order: parseInt(order, 10),
       preference: parseInt(preference, 10),
-      flags,
-      service,
-      regexp,
-      replacement,
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const order = dv.getUint16(0)
-    const preference = dv.getUint16(2)
-    let pos = 4
-    const readStr = () => {
-      const len = rdata[pos++]
-      const s = new TextDecoder().decode(rdata.subarray(pos, pos + len))
-      pos += len
-      return s
-    }
-    const flags = readStr()
-    const service = readStr()
-    const regexp = readStr()
-    const { fqdn: replacement } = this.wireUnpackDomain(rdata, pos)
-    return new NAPTR({
-      owner,
-      ttl,
-      class: cls,
-      type: 'NAPTR',
-      order,
-      preference,
       flags,
       service,
       regexp,

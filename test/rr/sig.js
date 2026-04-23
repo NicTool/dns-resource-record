@@ -74,4 +74,4 @@ describe('SIG record', function () {
   base.fromTinydns(SIG, validRecords)
 })
 
-  base.fromWire(SIG, validRecords)
+base.fromWire(SIG, validRecords)

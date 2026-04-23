@@ -123,4 +123,4 @@ describe('AAAA record', function () {
   })
 })
 
-  base.fromWire(AAAA, validRecords)
+base.fromWire(AAAA, validRecords)

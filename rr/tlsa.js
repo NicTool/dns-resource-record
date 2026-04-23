@@ -5,7 +5,16 @@ import * as BINARY from '../lib/binary.js'
 
 export default class TLSA extends RR {
   static typeName = 'TLSA'
-  static rdataFields = ['certificate usage', 'selector', 'matching type', 'certificate association data']
+  static typeId = 52
+  static RFCs = [6698, 7671]
+  static rdataFields = [
+    ['certificate usage', 'u8'],
+    ['selector', 'u8'],
+    ['matching type', 'u8'],
+    ['certificate association data', 'hex'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -61,18 +70,6 @@ export default class TLSA extends RR {
     return 'TLSA certificate association'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [6698, 7671]
-  }
-
-  getTypeId() {
-    return 52
-  }
-
   getCanonical() {
     return {
       owner: '_443._tcp.www.example.com.',
@@ -124,19 +121,6 @@ export default class TLSA extends RR {
       'certificate association data': BINARY.bytesToHex(bytes.subarray(3)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new TLSA({
-      owner,
-      ttl,
-      class: cls,
-      type: 'TLSA',
-      'certificate usage': rdata[0],
-      selector: rdata[1],
-      'matching type': rdata[2],
-      'certificate association data': BINARY.bytesToHex(rdata.subarray(3)).toUpperCase(),
     })
   }
 

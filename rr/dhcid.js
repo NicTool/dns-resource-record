@@ -4,7 +4,9 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DHCID extends RR {
   static typeName = 'DHCID'
-  static rdataFields = ['data']
+  static typeId = 49
+  static RFCs = [4701]
+  static rdataFields = [['data', 'base64']]
 
   constructor(opts) {
     super(opts)
@@ -19,14 +21,6 @@ export default class DHCID extends RR {
 
   getDescription() {
     return 'DHCP Identifier'
-  }
-
-  getRFCs() {
-    return [4701]
-  }
-
-  getTypeId() {
-    return 49
   }
 
   getCanonical() {
@@ -52,16 +46,6 @@ export default class DHCID extends RR {
       data: TINYDNS.octalToBase64(rdata),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new DHCID({
-      owner,
-      ttl,
-      class: cls,
-      type: 'DHCID',
-      data: btoa([...rdata].map((b) => String.fromCharCode(b)).join('')),
     })
   }
 

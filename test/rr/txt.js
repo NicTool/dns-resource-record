@@ -119,4 +119,4 @@ describe('TXT record', function () {
   })
 })
 
-  base.fromWire(TXT, validRecords)
+base.fromWire(TXT, validRecords)

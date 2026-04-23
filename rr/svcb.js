@@ -5,7 +5,14 @@ import * as WIRE from '../lib/wire.js'
 
 export default class SVCB extends RR {
   static typeName = 'SVCB'
-  static rdataFields = ['priority', 'target name', 'params']
+  static typeId = 64
+  static RFCs = [9460]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['target name', 'fqdn'],
+    ['params', 'svcparams'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -33,14 +40,6 @@ export default class SVCB extends RR {
 
   getDescription() {
     return 'Service Binding'
-  }
-
-  getRFCs() {
-    return [9460]
-  }
-
-  getTypeId() {
-    return 64
   }
 
   getCanonical() {
@@ -108,22 +107,6 @@ export default class SVCB extends RR {
       params: params,
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const priority = dv.getUint16(0)
-    const { fqdn: targetName, end } = this.wireUnpackDomain(rdata, 2)
-    const params = WIRE.svcParamsFromWire(rdata.subarray(end))
-    return new SVCB({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SVCB',
-      priority,
-      'target name': targetName,
-      params,
     })
   }
 

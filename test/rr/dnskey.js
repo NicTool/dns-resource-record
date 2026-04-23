@@ -77,4 +77,4 @@ describe('DNSKEY record', function () {
   base.fromTinydns(DNSKEY, validRecords)
 })
 
-  base.fromWire(DNSKEY, validRecords)
+base.fromWire(DNSKEY, validRecords)

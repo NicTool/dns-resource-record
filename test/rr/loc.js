@@ -92,4 +92,4 @@ describe('LOC record', function () {
   })
 })
 
-  base.fromWire(LOC, validRecords)
+base.fromWire(LOC, validRecords)

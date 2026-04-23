@@ -102,4 +102,4 @@ describe('MX record', function () {
   }
 })
 
-  base.fromWire(MX, validRecords)
+base.fromWire(MX, validRecords)

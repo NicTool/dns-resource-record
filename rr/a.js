@@ -2,8 +2,11 @@ import RR from '../rr.js'
 
 export default class A extends RR {
   static typeName = 'A'
+  static typeId = 1
+  static RFCs = [1035]
   static tinydnsType = '+'
-  static rdataFields = ['address']
+  static rdataFields = [['address', 'ipv4']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -20,18 +23,6 @@ export default class A extends RR {
     return 'Address'
   }
 
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 1
-  }
-
   getCanonical() {
     return {
       owner: 'host.example.com.',
@@ -40,11 +31,6 @@ export default class A extends RR {
       type: 'A',
       address: '192.0.2.127',
     }
-  }
-
-  /******  IMPORTERS   *******/
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new A({ owner, ttl, class: cls, type: 'A', address: [...rdata].join('.') })
   }
 
   /******  EXPORTERS   *******/

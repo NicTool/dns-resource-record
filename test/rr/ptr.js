@@ -57,4 +57,4 @@ describe('PTR record', function () {
   }
 })
 
-  base.fromWire(PTR, validRecords)
+base.fromWire(PTR, validRecords)

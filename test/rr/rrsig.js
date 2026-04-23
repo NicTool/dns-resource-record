@@ -113,4 +113,4 @@ describe('RRSIG record', function () {
   })
 })
 
-  base.fromWire(RRSIG, validRecords)
+base.fromWire(RRSIG, validRecords)

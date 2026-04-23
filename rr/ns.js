@@ -2,9 +2,11 @@ import RR from '../rr.js'
 
 export default class NS extends RR {
   static typeName = 'NS'
+  static typeId = 2
+  static RFCs = [1035]
   static tinydnsType = '&'
-  static rdataFields = ['dname']
-  static fqdnFields = ['dname']
+  static rdataFields = [['dname', 'fqdn']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -23,18 +25,6 @@ export default class NS extends RR {
 
   getDescription() {
     return 'Name Server'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 2
   }
 
   getCanonical() {
@@ -60,11 +50,6 @@ export default class NS extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn } = this.wireUnpackDomain(rdata, 0)
-    return new NS({ owner, ttl, class: cls, type: 'NS', dname: fqdn })
   }
 
   /******  EXPORTERS   *******/

@@ -53,4 +53,4 @@ describe('SMIMEA record', function () {
   base.fromTinydns(SMIMEA, validRecords)
 })
 
-  base.fromWire(SMIMEA, validRecords)
+base.fromWire(SMIMEA, validRecords)

@@ -4,8 +4,14 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class URI extends RR {
   static typeName = 'URI'
-  static rdataFields = ['priority', 'weight', 'target']
-  static quotedFields = ['target']
+  static typeId = 256
+  static RFCs = [7553]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['weight', 'u16'],
+    ['target', 'qstr'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -52,14 +58,6 @@ export default class URI extends RR {
     return 'URI'
   }
 
-  getRFCs() {
-    return [7553]
-  }
-
-  getTypeId() {
-    return 256
-  }
-
   getCanonical() {
     return {
       owner: 'www.example.com.',
@@ -70,19 +68,6 @@ export default class URI extends RR {
       weight: 10,
       target: 'http://www.example.com/',
     }
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    return new URI({
-      owner,
-      ttl,
-      class: cls,
-      type: 'URI',
-      priority: dv.getUint16(0),
-      weight: dv.getUint16(2),
-      target: new TextDecoder().decode(rdata.subarray(4)),
-    })
   }
 
   /******  EXPORTERS   *******/

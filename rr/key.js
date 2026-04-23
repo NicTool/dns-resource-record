@@ -4,7 +4,16 @@ import * as BINARY from '../lib/binary.js'
 
 export default class KEY extends RR {
   static typeName = 'KEY'
-  static rdataFields = ['flags', 'protocol', 'algorithm', 'publickey']
+  static typeId = 25
+  static RFCs = [2535, 3445, 4034, 6840]
+  static rdataFields = [
+    ['flags', 'u16'],
+    ['protocol', 'u8'],
+    ['algorithm', 'u8'],
+    ['publickey', 'base64'],
+  ]
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -52,18 +61,6 @@ export default class KEY extends RR {
 
   getDescription() {
     return 'DNS Public Key'
-  }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [2535, 3445, 4034, 6840]
-  }
-
-  getTypeId() {
-    return 25
   }
 
   getCanonical() {
@@ -114,20 +111,6 @@ export default class KEY extends RR {
       publickey: TINYDNS.octalToBase64(rd.slice(16)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    return new KEY({
-      owner,
-      ttl,
-      class: cls,
-      type: 'KEY',
-      flags: dv.getUint16(0),
-      protocol: rdata[2],
-      algorithm: rdata[3],
-      publickey: BINARY.bytesToBase64(rdata.subarray(4)),
     })
   }
 

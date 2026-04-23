@@ -87,4 +87,4 @@ describe('KX record', function () {
   base.fromTinydns(KX, validRecords)
 })
 
-  base.fromWire(KX, validRecords)
+base.fromWire(KX, validRecords)

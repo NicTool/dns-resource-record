@@ -90,4 +90,4 @@ describe('HINFO record', function () {
   }
 })
 
-  base.fromWire(HINFO, validRecords)
+base.fromWire(HINFO, validRecords)

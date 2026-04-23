@@ -4,7 +4,11 @@ import * as BINARY from '../lib/binary.js'
 
 export default class OPENPGPKEY extends RR {
   static typeName = 'OPENPGPKEY'
-  static rdataFields = ['public key']
+  static typeId = 61
+  static RFCs = [4880, 7929]
+  static rdataFields = [['public key', 'base64']]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -17,18 +21,6 @@ export default class OPENPGPKEY extends RR {
 
   getDescription() {
     return 'OpenPGP Public Key'
-  }
-
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [4880, 7929]
-  }
-
-  getTypeId() {
-    return 61
   }
 
   getCanonical() {
@@ -71,16 +63,6 @@ export default class OPENPGPKEY extends RR {
       'public key': TINYDNS.octalToBase64(rd),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new OPENPGPKEY({
-      owner,
-      ttl,
-      class: cls,
-      type: 'OPENPGPKEY',
-      'public key': btoa([...rdata].map((b) => String.fromCharCode(b)).join('')),
     })
   }
 

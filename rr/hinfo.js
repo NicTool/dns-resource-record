@@ -4,8 +4,13 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class HINFO extends RR {
   static typeName = 'HINFO'
-  static rdataFields = ['cpu', 'os']
-  static quotedFields = ['cpu', 'os']
+  static typeId = 13
+  static RFCs = [1034, 1035, 8482]
+  static rdataFields = [
+    ['cpu', 'qcharstr'],
+    ['os', 'qcharstr'],
+  ]
+  static tags = ['obsolete']
 
   constructor(opts) {
     super(opts)
@@ -24,18 +29,6 @@ export default class HINFO extends RR {
 
   getDescription() {
     return 'Host Info'
-  }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRFCs() {
-    return [1034, 1035, 8482]
-  }
-
-  getTypeId() {
-    return 13
   }
 
   getCanonical() {
@@ -64,14 +57,6 @@ export default class HINFO extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const cpuLen = rdata[0]
-    const cpu = new TextDecoder().decode(rdata.subarray(1, 1 + cpuLen))
-    const osLen = rdata[1 + cpuLen]
-    const os = new TextDecoder().decode(rdata.subarray(2 + cpuLen, 2 + cpuLen + osLen))
-    return new HINFO({ owner, ttl, class: cls, type: 'HINFO', cpu, os })
   }
 
   /******  EXPORTERS   *******/

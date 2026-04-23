@@ -3,7 +3,10 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class AAAA extends RR {
   static typeName = 'AAAA'
-  static rdataFields = ['address']
+  static typeId = 28
+  static RFCs = [3596, 5952]
+  static rdataFields = [['address', 'ipv6']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -23,18 +26,6 @@ export default class AAAA extends RR {
 
   getDescription() {
     return 'Address IPv6'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [3596, 5952]
-  }
-
-  getTypeId() {
-    return 28
   }
 
   getCanonical() {
@@ -78,13 +69,6 @@ export default class AAAA extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const groups = []
-    for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
-    return new AAAA({ owner, ttl, class: cls, type: 'AAAA', address: groups.join(':') })
   }
 
   /******  EXPORTERS   *******/

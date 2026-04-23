@@ -3,8 +3,15 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
   static typeName = 'CAA'
-  static rdataFields = ['flags', 'tag', 'value']
-  static quotedFields = ['value']
+  static typeId = 257
+  static RFCs = [6844, 8659, 9619]
+  static rdataFields = [
+    ['flags', 'u8'],
+    ['tag', 'charstr'],
+    ['value', 'qstr'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -65,18 +72,6 @@ export default class CAA extends RR {
     return 'Certification Authority Authorization'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [6844, 8659, 9619]
-  }
-
-  getTypeId() {
-    return 257
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -112,14 +107,6 @@ export default class CAA extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const flags = rdata[0]
-    const tagLen = rdata[1]
-    const tag = new TextDecoder().decode(rdata.subarray(2, 2 + tagLen))
-    const value = new TextDecoder().decode(rdata.subarray(2 + tagLen))
-    return new CAA({ owner, ttl, class: cls, type: 'CAA', flags, tag, value })
   }
 
   /******  EXPORTERS   *******/

@@ -2,33 +2,18 @@ import RR from '../rr.js'
 
 export default class CNAME extends RR {
   static typeName = 'CNAME'
+  static typeId = 5
+  static RFCs = [1035, 2181]
   static tinydnsType = 'C'
-  static rdataFields = ['cname']
-  static fqdnFields = ['cname']
+  static rdataFields = [['cname', 'fqdn']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
   }
 
-  /****** Resource record specific setters   *******/
-  setCname(val) {
-    this.setFqdnValue('CNAME', 'cname', val)
-  }
-
   getDescription() {
     return 'Canonical Name'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035, 2181]
-  }
-
-  getTypeId() {
-    return 5
   }
 
   getCanonical() {
@@ -39,12 +24,6 @@ export default class CNAME extends RR {
       type: 'CNAME',
       cname: 'web.example.com.',
     }
-  }
-
-  /******  IMPORTERS   *******/
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn } = this.wireUnpackDomain(rdata, 0)
-    return new CNAME({ owner, ttl, class: cls, type: 'CNAME', cname: fqdn })
   }
 
   /******  EXPORTERS   *******/

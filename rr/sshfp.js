@@ -4,17 +4,17 @@ import * as BINARY from '../lib/binary.js'
 
 export default class SSHFP extends RR {
   static typeName = 'SSHFP'
-  static rdataFields = ['algorithm', 'fptype', 'fingerprint']
+  static typeId = 44
+  static RFCs = [4255, 7479, 8709]
+  static rdataFields = [
+    ['algorithm', 'u8'],
+    ['fptype', 'u8'],
+    ['fingerprint', 'hex'],
+  ]
+  static tags = ['security']
 
   constructor(opts) {
     super(opts)
-  }
-
-  /****** Resource record specific setters   *******/
-  setAlgorithm(val) {
-    this.is8bitInt('SSHFP', 'algorithm', val)
-
-    this.set('algorithm', val)
   }
 
   getAlgorithmOptions() {
@@ -28,12 +28,6 @@ export default class SSHFP extends RR {
     ])
   }
 
-  setFptype(val) {
-    this.is8bitInt('SSHFP', 'fptype', val)
-
-    this.set('fptype', val)
-  }
-
   getFptypeOptions() {
     return new Map([
       [0, 'reserved'],
@@ -42,24 +36,8 @@ export default class SSHFP extends RR {
     ])
   }
 
-  setFingerprint(val) {
-    this.set('fingerprint', val)
-  }
-
   getDescription() {
     return 'Secure Shell Key Fingerprints'
-  }
-
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [4255, 7479, 8709]
-  }
-
-  getTypeId() {
-    return 44
   }
 
   getCanonical() {
@@ -89,18 +67,6 @@ export default class SSHFP extends RR {
       fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    return new SSHFP({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SSHFP',
-      algorithm: rdata[0],
-      fptype: rdata[1],
-      fingerprint: BINARY.bytesToHex(rdata.subarray(2)).toUpperCase(),
     })
   }
 

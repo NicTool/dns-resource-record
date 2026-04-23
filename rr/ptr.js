@@ -3,8 +3,7 @@ import RR from '../rr.js'
 export default class PTR extends RR {
   static typeName = 'PTR'
   static tinydnsType = '^'
-  static rdataFields = ['dname']
-  static fqdnFields = ['dname']
+  static rdataFields = [['dname', 'fqdn']]
 
   constructor(opts) {
     super(opts)
@@ -22,19 +21,9 @@ export default class PTR extends RR {
   getDescription() {
     return 'Pointer'
   }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 12
-  }
-
+  static tags = ['common']
+  static RFCs = [1035]
+  static typeId = 12
   getCanonical() {
     return {
       owner: '2.2.0.192.in-addr.arpa.',
@@ -43,12 +32,6 @@ export default class PTR extends RR {
       type: 'PTR',
       dname: 'host.example.com.',
     }
-  }
-
-  /******  IMPORTERS   *******/
-  fromWire({ owner, cls, ttl, rdata }) {
-    const { fqdn } = this.wireUnpackDomain(rdata, 0)
-    return new PTR({ owner, ttl, class: cls, type: 'PTR', dname: fqdn })
   }
 
   /******  EXPORTERS   *******/

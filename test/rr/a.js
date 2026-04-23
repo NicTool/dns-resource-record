@@ -108,4 +108,4 @@ describe('A record', function () {
   base.fromTinydns(A, validRecords)
 })
 
-  base.fromWire(A, validRecords)
+base.fromWire(A, validRecords)

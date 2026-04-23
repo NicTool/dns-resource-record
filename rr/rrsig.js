@@ -5,8 +5,17 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
-  static rdataFields = ['type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration', 'signature inception', 'key tag', 'signers name', 'signature']
-  static fqdnFields = ['signers name']
+  static rdataFields = [
+    ['type covered', 'u16'],
+    ['algorithm', 'u8'],
+    ['labels', 'u8'],
+    ['original ttl', 'u32'],
+    ['signature expiration', 'u32'],
+    ['signature inception', 'u32'],
+    ['key tag', 'u16'],
+    ['signers name', 'fqdn'],
+    ['signature', 'str'],
+  ]
   constructor(opts) {
     super(opts)
   }
@@ -48,62 +57,12 @@ export default class RRSIG extends RR {
     ])
   }
 
-  setLabels(val) {
-    // a 1 octet Labels field
-    this.is8bitInt('RRSIG', 'labels', val)
-
-    this.set('labels', val)
-  }
-
-  setOriginalTtl(val) {
-    // a 4 octet Original TTL field
-    this.is32bitInt('RRSIG', 'original ttl', val)
-
-    this.set('original ttl', val)
-  }
-
-  setSignatureExpiration(val) {
-    // a 4 octet Signature Expiration field
-    this.set('signature expiration', val)
-  }
-
-  setSignatureInception(val) {
-    // a 4 octet Signature Inception field
-    this.set('signature inception', val)
-  }
-
-  setKeyTag(val) {
-    // a 2 octet Key tag
-    this.set('key tag', val)
-  }
-
-  setSignersName(val) {
-    // the Signer's Name field
-    this.set('signers name', val)
-  }
-
-  setSignature(val) {
-    // the Signature field.
-
-    this.set('signature', val)
-  }
-
   getDescription() {
     return 'Resource Record Signature'
   }
-
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRFCs() {
-    return [4034]
-  }
-
-  getTypeId() {
-    return 46
-  }
-
+  static tags = ['dnssec']
+  static RFCs = [4034]
+  static typeId = 46
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -196,34 +155,6 @@ export default class RRSIG extends RR {
       signature,
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const typeCovered = dv.getUint16(0)
-    const algorithm = rdata[2]
-    const labels = rdata[3]
-    const originalTtl = dv.getUint32(4)
-    const signatureExpiration = dv.getUint32(8)
-    const signatureInception = dv.getUint32(12)
-    const keyTag = dv.getUint16(16)
-    const { fqdn: signersName, end } = this.wireUnpackDomain(rdata, 18)
-    const signature = new TextDecoder().decode(rdata.subarray(end))
-    return new RRSIG({
-      owner,
-      ttl,
-      class: cls,
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm,
-      labels,
-      'original ttl': originalTtl,
-      'signature expiration': signatureExpiration,
-      'signature inception': signatureInception,
-      'key tag': keyTag,
-      'signers name': signersName,
-      signature,
     })
   }
 

@@ -6,7 +6,11 @@ import * as WIRE from '../lib/wire.js'
 
 export default class IPSECKEY extends RR {
   static typeName = 'IPSECKEY'
+  static typeId = 45
+  static RFCs = [4025]
   static rdataFields = ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -72,18 +76,6 @@ export default class IPSECKEY extends RR {
 
   getDescription() {
     return 'IPsec Keying'
-  }
-
-  getTags() {
-    return ['security']
-  }
-
-  getRFCs() {
-    return [4025]
-  }
-
-  getTypeId() {
-    return 45
   }
 
   getCanonical() {

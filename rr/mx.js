@@ -2,9 +2,14 @@ import RR from '../rr.js'
 
 export default class MX extends RR {
   static typeName = 'MX'
+  static typeId = 15
+  static RFCs = [1035, 2181, 7505]
   static tinydnsType = '@'
-  static rdataFields = ['preference', 'exchange']
-  static fqdnFields = ['exchange']
+  static rdataFields = [
+    ['preference', 'u16'],
+    ['exchange', 'fqdn'],
+  ]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -18,24 +23,8 @@ export default class MX extends RR {
     this.set('preference', val)
   }
 
-  setExchange(val) {
-    this.setFqdnValue('MX', 'exchange', val)
-  }
-
   getDescription() {
     return 'Mail Exchanger'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRFCs() {
-    return [1035, 2181, 7505]
-  }
-
-  getTypeId() {
-    return 15
   }
 
   getCanonical() {
@@ -63,13 +52,6 @@ export default class MX extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    const preference = dv.getUint16(0)
-    const { fqdn: exchange } = this.wireUnpackDomain(rdata, 2)
-    return new MX({ owner, ttl, class: cls, type: 'MX', preference, exchange })
   }
 
   /******  EXPORTERS   *******/

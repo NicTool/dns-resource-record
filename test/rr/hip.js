@@ -109,4 +109,4 @@ describe('HIP record', function () {
   })
 })
 
-  base.fromWire(HIP, validRecords)
+base.fromWire(HIP, validRecords)

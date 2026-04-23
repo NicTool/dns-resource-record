@@ -58,4 +58,4 @@ describe('DHCID record', function () {
   base.fromTinydns(DHCID, validRecords)
 })
 
-  base.fromWire(DHCID, validRecords)
+base.fromWire(DHCID, validRecords)
