@@ -62,3 +62,5 @@ describe('NAPTR record', function () {
     assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /Invalid NAPTR BIND line/)
   })
 })
+
+  base.fromWire(NAPTR, validRecords)

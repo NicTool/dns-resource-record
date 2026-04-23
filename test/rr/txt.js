@@ -118,3 +118,5 @@ describe('TXT record', function () {
     assert.equal(r.toMaraDNS(), "example.com.\t+3600\tTXT\t'v=spf1 mx -all' ~\n")
   })
 })
+
+  base.fromWire(TXT, validRecords)

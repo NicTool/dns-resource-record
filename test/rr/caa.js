@@ -170,3 +170,5 @@ describe('CAA record', function () {
     assert.equal(r.get('type'), 'CAA')
   })
 })
+
+  base.fromWire(CAA, validRecords)

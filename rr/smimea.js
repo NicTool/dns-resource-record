@@ -127,6 +127,19 @@ export default class SMIMEA extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    return new SMIMEA({
+      owner,
+      ttl,
+      class: cls,
+      type: 'SMIMEA',
+      'certificate usage': rdata[0],
+      selector: rdata[1],
+      'matching type': rdata[2],
+      'certificate association data': BINARY.bytesToHex(rdata.subarray(3)).toUpperCase(),
+    })
+  }
+
   /******  EXPORTERS   *******/
   toTinydns() {
     return this.getTinydnsGeneric(
@@ -135,5 +148,15 @@ export default class SMIMEA extends RR {
         TINYDNS.UInt8toOctal(this.get('matching type')) +
         TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const cadBytes = BINARY.hexToBytes(this.get('certificate association data').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(3 + cadBytes.length)
+    bytes[0] = this.get('certificate usage')
+    bytes[1] = this.get('selector')
+    bytes[2] = this.get('matching type')
+    bytes.set(cadBytes, 3)
+    return bytes
   }
 }

@@ -122,3 +122,5 @@ describe('HTTPS record', function () {
     assert.throws(() => HTTPS.fromTinydns(':example.com:65:AB:3600::\n'), /RDATA too short/)
   })
 })
+
+  base.fromWire(HTTPS, validRecords)

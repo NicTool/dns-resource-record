@@ -93,6 +93,13 @@ export default class AAAA extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const groups = []
+    for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
+    return new AAAA({ owner, ttl, class: cls, type: 'AAAA', address: groups.join(':') })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     const hex = this.expandIPv6(this.get('address'), '')

@@ -92,3 +92,5 @@ describe('NSEC3 record', function () {
   base.fromBind(NSEC3, validRecords)
   base.fromTinydns(NSEC3, validRecords)
 })
+
+  base.fromWire(NSEC3, validRecords)

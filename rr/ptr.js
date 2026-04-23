@@ -71,6 +71,11 @@ export default class PTR extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn } = this.wireUnpackDomain(rdata, 0)
+    return new PTR({ owner, ttl, class: cls, type: 'PTR', dname: fqdn })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))

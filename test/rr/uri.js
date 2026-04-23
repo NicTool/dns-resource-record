@@ -98,3 +98,5 @@ describe('URI record', function () {
     })
   }
 })
+
+  base.fromWire(URI, validRecords)

@@ -74,7 +74,17 @@ export default class DNAME extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn } = this.wireUnpackDomain(rdata, 0)
+    return new DNAME({ owner, ttl, class: cls, type: 'DNAME', target: fqdn })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    return this.wirePackDomain(this.get('target'))
+  }
+
   toTinydns() {
     const rdata = TINYDNS.packDomainName(this.get('target'))
     return this.getTinydnsGeneric(rdata)

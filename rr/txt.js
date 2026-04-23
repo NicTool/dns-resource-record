@@ -94,6 +94,23 @@ export default class TXT extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    let pos = 0
+    const parts = []
+    while (pos < rdata.length) {
+      const len = rdata[pos++]
+      parts.push(new TextDecoder().decode(rdata.subarray(pos, pos + len)))
+      pos += len
+    }
+    return new this.constructor({
+      owner,
+      ttl,
+      class: cls,
+      type: this.constructor.typeName,
+      data: parts.join(''),
+    })
+  }
+
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t"${asQuotedStrings(this.get('data'))}"\n`

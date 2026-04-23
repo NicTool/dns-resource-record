@@ -20,7 +20,7 @@ export default class SPF extends TXT {
   }
 
   getTags() {
-    return ['deprecated']
+    return ['obsolete']
   }
 
   getRdataFields(arg) {
@@ -62,6 +62,10 @@ export default class SPF extends TXT {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return super.getWireRdata()
+  }
+
   toTinydns() {
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return this.getTinydnsGeneric(rdata)

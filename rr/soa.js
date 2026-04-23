@@ -72,6 +72,10 @@ export default class SOA extends RR {
     return 'Start Of Authority'
   }
 
+  getTags() {
+    return ['common']
+  }
+
   getRdataFields(arg) {
     return ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum']
   }
@@ -137,6 +141,25 @@ export default class SOA extends RR {
       minimum: parseInt(min, 10) || 2560,
       timestamp: parseInt(ts) || '',
       location: loc?.trim() ?? '',
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: mname, end: e1 } = this.wireUnpackDomain(rdata, 0)
+    const { fqdn: rname, end: e2 } = this.wireUnpackDomain(rdata, e1)
+    const dv = new DataView(rdata.buffer, rdata.byteOffset + e2)
+    return new SOA({
+      owner,
+      ttl,
+      class: cls,
+      type: 'SOA',
+      mname,
+      rname,
+      serial: dv.getUint32(0),
+      refresh: dv.getUint32(4),
+      retry: dv.getUint32(8),
+      expire: dv.getUint32(12),
+      minimum: dv.getUint32(16),
     })
   }
 

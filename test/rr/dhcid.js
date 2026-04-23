@@ -57,3 +57,5 @@ describe('DHCID record', function () {
   base.fromBind(DHCID, validRecords)
   base.fromTinydns(DHCID, validRecords)
 })
+
+  base.fromWire(DHCID, validRecords)

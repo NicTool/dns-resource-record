@@ -87,7 +87,23 @@ export default class RP extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: mbox, end } = this.wireUnpackDomain(rdata, 0)
+    const { fqdn: txt } = this.wireUnpackDomain(rdata, end)
+    return new RP({ owner, ttl, class: cls, type: 'RP', mbox, txt })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const mbox = this.wirePackDomain(this.get('mbox'))
+    const txt = this.wirePackDomain(this.get('txt'))
+    const result = new Uint8Array(mbox.length + txt.length)
+    result.set(mbox, 0)
+    result.set(txt, mbox.length)
+    return result
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getFQDN('mbox', zone_opts)}\t${this.getFQDN('txt', zone_opts)}\n`
   }

@@ -91,7 +91,27 @@ export default class HINFO extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const cpuLen = rdata[0]
+    const cpu = new TextDecoder().decode(rdata.subarray(1, 1 + cpuLen))
+    const osLen = rdata[1 + cpuLen]
+    const os = new TextDecoder().decode(rdata.subarray(2 + cpuLen, 2 + cpuLen + osLen))
+    return new HINFO({ owner, ttl, class: cls, type: 'HINFO', cpu, os })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const cpu = new TextEncoder().encode(this.get('cpu'))
+    const os = new TextEncoder().encode(this.get('os'))
+    const result = new Uint8Array(2 + cpu.length + os.length)
+    result[0] = cpu.length
+    result.set(cpu, 1)
+    result[1 + cpu.length] = os.length
+    result.set(os, 2 + cpu.length)
+    return result
+  }
+
   toTinydns() {
     return this.getTinydnsGeneric(
       [TINYDNS.packString(this.get('cpu')), TINYDNS.packString(this.get('os'))].join(''),

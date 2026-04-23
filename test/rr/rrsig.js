@@ -112,3 +112,5 @@ describe('RRSIG record', function () {
     assert.equal(r.get('type covered'), 28)
   })
 })
+
+  base.fromWire(RRSIG, validRecords)

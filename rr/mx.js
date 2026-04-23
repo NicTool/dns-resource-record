@@ -88,6 +88,13 @@ export default class MX extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const preference = dv.getUint16(0)
+    const { fqdn: exchange } = this.wireUnpackDomain(rdata, 2)
+    return new MX({ owner, ttl, class: cls, type: 'MX', preference, exchange })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     const domain = this.wirePackDomain(this.get('exchange'))

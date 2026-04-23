@@ -1,6 +1,8 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class IPSECKEY extends RR {
   static typeName = 'IPSECKEY'
@@ -161,6 +163,49 @@ export default class IPSECKEY extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const precedence = rdata[0]
+    const gwType = rdata[1]
+    const algorithm = rdata[2]
+    let gateway, keyStart
+    switch (gwType) {
+      case 0:
+        gateway = '.'
+        keyStart = 3
+        break
+      case 1:
+        gateway = [...rdata.subarray(3, 7)].join('.')
+        keyStart = 7
+        break
+      case 2: {
+        const dv = new DataView(rdata.buffer, rdata.byteOffset + 3)
+        const groups = []
+        for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
+        gateway = groups.join(':')
+        keyStart = 19
+        break
+      }
+      case 3: {
+        const { fqdn, end } = this.wireUnpackDomain(rdata, 3)
+        gateway = fqdn
+        keyStart = end
+        break
+      }
+    }
+    const publickey = BINARY.bytesToBase64(rdata.subarray(keyStart))
+    return new IPSECKEY({
+      owner,
+      ttl,
+      class: cls,
+      type: 'IPSECKEY',
+      precedence,
+      'gateway type': gwType,
+      algorithm,
+      gateway,
+      publickey,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -189,5 +234,50 @@ export default class IPSECKEY extends RR {
     rdata += TINYDNS.base64toOctal(this.get('publickey'))
 
     return this.getTinydnsGeneric(rdata)
+  }
+
+  getWireRdata() {
+    const pubkeyBytes = BINARY.base64ToBytes(this.get('publickey'))
+    const gwType = this.get('gateway type')
+
+    let gwBytes
+    switch (gwType) {
+      case 0:
+        gwBytes = new Uint8Array(0)
+        break
+      case 1:
+        gwBytes = new Uint8Array(4)
+        this.get('gateway')
+          .split('.')
+          .forEach((part, i) => {
+            gwBytes[i] = parseInt(part, 10)
+          })
+        break
+      case 2:
+        gwBytes = new Uint8Array(16)
+        {
+          const parts = this.get('gateway').split(':')
+          let pos = 0
+          for (const part of parts) {
+            if (part === '') continue
+            const val = parseInt(part, 16)
+            gwBytes[pos++] = (val >>> 8) & 0xff
+            gwBytes[pos++] = val & 0xff
+          }
+        }
+        break
+      case 3:
+        gwBytes = WIRE.wirePackDomain(this.get('gateway'))
+        break
+    }
+
+    const bytes = new Uint8Array(3 + gwBytes.length + pubkeyBytes.length)
+    bytes[0] = this.get('precedence')
+    bytes[1] = gwType
+    bytes[2] = this.get('algorithm')
+    bytes.set(gwBytes, 3)
+    bytes.set(pubkeyBytes, 3 + gwBytes.length)
+
+    return bytes
   }
 }

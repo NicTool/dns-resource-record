@@ -102,6 +102,43 @@ export default class APL extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const items = []
+    let pos = 0
+    while (pos < rdata.length) {
+      const afi = (rdata[pos] << 8) | rdata[pos + 1]
+      pos += 2
+      const prefix = rdata[pos++]
+      const adfLenByte = rdata[pos++]
+      const neg = (adfLenByte & 0x80) !== 0
+      const addrLen = adfLenByte & 0x7f
+      const addrBytes = rdata.subarray(pos, pos + addrLen)
+      pos += addrLen
+
+      let addr
+      if (afi === 1) {
+        const padded = new Uint8Array(4)
+        padded.set(addrBytes)
+        addr = [...padded].join('.')
+      } else {
+        const padded = new Uint8Array(16)
+        padded.set(addrBytes)
+        const dv = new DataView(padded.buffer)
+        const groups = []
+        for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
+        addr = this.compressIPv6(groups.join(':'))
+      }
+      items.push(`${neg ? '!' : ''}${afi}:${addr}/${prefix}`)
+    }
+    return new APL({
+      owner,
+      ttl,
+      class: cls,
+      type: 'APL',
+      'apl rdata': items.join(' '),
+    })
+  }
+
   /******  EXPORTERS   *******/
   toTinydns() {
     return this.getTinydnsGeneric(
@@ -154,5 +191,69 @@ export default class APL extends RR {
         })
         .join(''),
     )
+  }
+
+  getWireRdata() {
+    const items = this.get('apl rdata').split(/\s+/)
+    const rdata = []
+
+    for (const item of items) {
+      const neg = item.startsWith('!')
+      const bare = neg ? item.slice(1) : item
+      const colonIdx = bare.indexOf(':')
+      const afi = parseInt(bare.slice(0, colonIdx), 10)
+      const rest = bare.slice(colonIdx + 1)
+      const slashIdx = rest.lastIndexOf('/')
+      const addr = rest.slice(0, slashIdx)
+      const prefix = parseInt(rest.slice(slashIdx + 1), 10)
+
+      let addrBytes
+      if (afi === 1) {
+        addrBytes = new Uint8Array(addr.split('.').map((n) => parseInt(n, 10)))
+      } else {
+        const dblIdx = addr.indexOf('::')
+        let groups
+        if (dblIdx !== -1) {
+          const left = addr
+            .slice(0, dblIdx)
+            .split(':')
+            .filter((s) => s !== '')
+          const right = addr
+            .slice(dblIdx + 2)
+            .split(':')
+            .filter((s) => s !== '')
+          groups = [...left, ...Array(8 - left.length - right.length).fill('0000'), ...right]
+        } else {
+          groups = addr.split(':')
+        }
+        const hexStr = groups.map((g) => g.padStart(4, '0')).join('')
+        addrBytes = Uint8Array.from({ length: hexStr.length / 2 }, (_, i) =>
+          parseInt(hexStr.slice(i * 2, i * 2 + 2), 16),
+        )
+      }
+
+      let len = addrBytes.length
+      while (len > 0 && addrBytes[len - 1] === 0) len--
+      const afdPart = addrBytes.slice(0, len)
+
+      const itemBytes = new Uint8Array(4 + afdPart.length)
+      const dv = new DataView(itemBytes.buffer, itemBytes.byteOffset)
+      dv.setUint16(0, afi)
+      itemBytes[2] = prefix
+      itemBytes[3] = (neg ? 0x80 : 0) | afdPart.length
+      itemBytes.set(afdPart, 4)
+
+      rdata.push(itemBytes)
+    }
+
+    const totalLen = rdata.reduce((sum, r) => sum + r.length, 0)
+    const bytes = new Uint8Array(totalLen)
+    let pos = 0
+    for (const r of rdata) {
+      bytes.set(r, pos)
+      pos += r.length
+    }
+
+    return bytes
   }
 }

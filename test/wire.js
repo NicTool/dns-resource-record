@@ -21,10 +21,7 @@ describe('encodeName', () => {
 
   test('multi-label FQDN', () => {
     const buf = encodeName('www.example.com.')
-    assert.deepEqual(
-      [...buf],
-      [3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0],
-    )
+    assert.deepEqual([...buf], [3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0])
   })
 
   test('root label produces empty-label + root terminator', () => {
@@ -175,10 +172,7 @@ describe('buildQuery', () => {
     const q = buildQuery('example.com', 1)
     const expectedName = encodeName('example.com')
     const questionStart = 12
-    assert.deepEqual(
-      [...q.slice(questionStart, questionStart + expectedName.length)],
-      [...expectedName],
-    )
+    assert.deepEqual([...q.slice(questionStart, questionStart + expectedName.length)], [...expectedName])
   })
 
   test('OPT record type is 41', () => {
@@ -216,11 +210,20 @@ describe('parseResponse', () => {
     // Owner: root (\x00), type=1(A), class=1(IN), ttl=300, rdlen=4, rdata=1.2.3.4
     const answer = Buffer.from([
       0x00, // owner = root
-      0x00, 0x01, // type = A
-      0x00, 0x01, // class = IN
-      0x00, 0x00, 0x01, 0x2c, // ttl = 300
-      0x00, 0x04, // rdlen = 4
-      1, 2, 3, 4, // rdata
+      0x00,
+      0x01, // type = A
+      0x00,
+      0x01, // class = IN
+      0x00,
+      0x00,
+      0x01,
+      0x2c, // ttl = 300
+      0x00,
+      0x04, // rdlen = 4
+      1,
+      2,
+      3,
+      4, // rdata
     ])
 
     const packet = Buffer.concat([header, answer])

@@ -112,6 +112,22 @@ export default class HTTPS extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const priority = dv.getUint16(0)
+    const { fqdn: targetName, end } = this.wireUnpackDomain(rdata, 2)
+    const params = WIRE.svcParamsFromWire(rdata.subarray(end))
+    return new HTTPS({
+      owner,
+      ttl,
+      class: cls,
+      type: 'HTTPS',
+      priority,
+      'target name': targetName,
+      params,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {

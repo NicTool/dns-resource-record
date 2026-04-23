@@ -87,3 +87,5 @@ describe('RP record', function () {
   base.fromBind(RP, validRecords)
   base.fromTinydns(RP, validRecords)
 })
+
+  base.fromWire(RP, validRecords)

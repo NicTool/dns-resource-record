@@ -206,6 +206,27 @@ export default class LOC extends RR {
     return r
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const l = {
+      size: this.fromExponent(rdata[1]),
+      precision: {
+        horizontal: this.fromExponent(rdata[2]),
+        vertical: this.fromExponent(rdata[3]),
+      },
+      latitude: this.arcSecToDMS(dv.getUint32(4), 'lat'),
+      longitude: this.arcSecToDMS(dv.getUint32(8), 'lon'),
+      altitude: dv.getUint32(12) - REF.ALTITUDE,
+    }
+    return new LOC({
+      owner,
+      ttl,
+      class: cls,
+      type: 'LOC',
+      address: this.toHuman(l),
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -222,5 +243,21 @@ export default class LOC extends RR {
     rdata += TINYDNS.UInt32toOctal(loc.altitude + REF.ALTITUDE)
 
     return this.getTinydnsGeneric(rdata)
+  }
+
+  getWireRdata() {
+    const loc = this.parseLoc(this.get('address'))
+    const bytes = new Uint8Array(16)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    bytes[0] = 0 // version
+    bytes[1] = this.toExponent(loc.size)
+    bytes[2] = this.toExponent(loc.precision.horizontal)
+    bytes[3] = this.toExponent(loc.precision.vertical)
+    dv.setUint32(4, this.dmsToArcSec(loc.latitude))
+    dv.setUint32(8, this.dmsToArcSec(loc.longitude))
+    dv.setUint32(12, loc.altitude + REF.ALTITUDE)
+
+    return bytes
   }
 }

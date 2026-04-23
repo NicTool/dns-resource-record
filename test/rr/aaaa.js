@@ -122,3 +122,5 @@ describe('AAAA record', function () {
     assert.equal(r.get('ttl'), 3600)
   })
 })
+
+  base.fromWire(AAAA, validRecords)

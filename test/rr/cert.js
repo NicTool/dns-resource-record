@@ -116,3 +116,5 @@ describe('CERT record', function () {
     assert.throws(() => new CERT(null).getCertTypeValue('DOESNOTEXIST'), /unknown cert type mnemonic/i)
   })
 })
+
+  base.fromWire(CERT, validRecords)

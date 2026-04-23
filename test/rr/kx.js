@@ -86,3 +86,5 @@ describe('KX record', function () {
   base.fromBind(KX, validRecords)
   base.fromTinydns(KX, validRecords)
 })
+
+  base.fromWire(KX, validRecords)

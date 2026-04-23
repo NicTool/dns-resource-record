@@ -145,6 +145,35 @@ export default class NAPTR extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const order = dv.getUint16(0)
+    const preference = dv.getUint16(2)
+    let pos = 4
+    const readStr = () => {
+      const len = rdata[pos++]
+      const s = new TextDecoder().decode(rdata.subarray(pos, pos + len))
+      pos += len
+      return s
+    }
+    const flags = readStr()
+    const service = readStr()
+    const regexp = readStr()
+    const { fqdn: replacement } = this.wireUnpackDomain(rdata, pos)
+    return new NAPTR({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NAPTR',
+      order,
+      preference,
+      flags,
+      service,
+      regexp,
+      replacement,
+    })
+  }
+
   /******  EXPORTERS   *******/
   toTinydns() {
     let rdata =

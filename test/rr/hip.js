@@ -108,3 +108,5 @@ describe('HIP record', function () {
     assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
   })
 })
+
+  base.fromWire(HIP, validRecords)

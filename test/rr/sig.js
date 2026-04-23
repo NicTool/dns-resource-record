@@ -73,3 +73,5 @@ describe('SIG record', function () {
   base.fromBind(SIG, validRecords)
   base.fromTinydns(SIG, validRecords)
 })
+
+  base.fromWire(SIG, validRecords)

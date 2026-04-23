@@ -70,7 +70,26 @@ export default class DHCID extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    return new DHCID({
+      owner,
+      ttl,
+      class: cls,
+      type: 'DHCID',
+      data: btoa([...rdata].map((b) => String.fromCharCode(b)).join('')),
+    })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    return new Uint8Array(
+      atob(this.get('data'))
+        .split('')
+        .map((c) => c.charCodeAt(0)),
+    )
+  }
+
   toTinydns() {
     return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('data')))
   }

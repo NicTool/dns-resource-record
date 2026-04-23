@@ -89,6 +89,19 @@ export default class NSEC extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
+    const typeBitMaps = nsecBitmapToTypes(rdata.subarray(end))
+    return new NSEC({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC',
+      'next domain': nextDomain,
+      'type bit maps': typeBitMaps,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -111,6 +124,28 @@ export default class NSEC extends RR {
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
+
+function nsecBitmapToTypes(bitmap) {
+  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))
+  const types = []
+  let pos = 0
+  while (pos + 2 <= bitmap.length) {
+    const windowNum = bitmap[pos]
+    const bitmapLen = bitmap[pos + 1]
+    pos += 2
+    for (let i = 0; i < bitmapLen; i++) {
+      const byte = bitmap[pos + i]
+      for (let bit = 0; bit < 8; bit++) {
+        if (byte & (0x80 >> bit)) {
+          const typeId = windowNum * 256 + i * 8 + bit
+          types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`)
+        }
+      }
+    }
+    pos += bitmapLen
+  }
+  return types.join(' ')
+}
 
 function typesToNsecBitmap(typeNamesStr) {
   const typeIds = typeNamesStr

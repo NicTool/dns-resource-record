@@ -186,6 +186,33 @@ export default class WKS extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const address = [...rdata.subarray(0, 4)].join('.')
+    const protoNum = rdata[4]
+    const protoMap = { 6: 'TCP', 17: 'UDP' }
+    const protocol = protoMap[protoNum] ?? String(protoNum)
+    const PORT_NAMES = Object.fromEntries(Object.entries(WELL_KNOWN_PORTS).map(([k, v]) => [v, k]))
+    const bitmap = rdata.subarray(5)
+    const ports = []
+    for (let i = 0; i < bitmap.length; i++) {
+      for (let bit = 0; bit < 8; bit++) {
+        if (bitmap[i] & (0x80 >> bit)) {
+          const port = i * 8 + bit
+          ports.push(PORT_NAMES[port] ?? String(port))
+        }
+      }
+    }
+    return new WKS({
+      owner,
+      ttl,
+      class: cls,
+      type: 'WKS',
+      address,
+      protocol,
+      'bit map': ports.join(' '),
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {

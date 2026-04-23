@@ -130,6 +130,22 @@ export default class NSEC3PARAM extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const saltLen = rdata[4]
+    const salt = saltLen === 0 ? '-' : BINARY.bytesToHex(rdata.subarray(5, 5 + saltLen))
+    return new NSEC3PARAM({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC3PARAM',
+      'hash algorithm': rdata[0],
+      flags: rdata[1],
+      iterations: dv.getUint16(2),
+      salt,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toBind(zone_opts) {
@@ -149,5 +165,20 @@ export default class NSEC3PARAM extends RR {
         TINYDNS.UInt16toOctal(this.get('iterations')) +
         saltOctal,
     )
+  }
+
+  getWireRdata() {
+    const salt = this.get('salt')
+    const saltBytes = salt === '-' ? new Uint8Array(0) : BINARY.hexToBytes(salt)
+    const bytes = new Uint8Array(4 + 1 + saltBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    bytes[0] = this.get('hash algorithm')
+    bytes[1] = this.get('flags')
+    dv.setUint16(2, this.get('iterations'))
+    bytes[4] = saltBytes.length
+    bytes.set(saltBytes, 5)
+
+    return bytes
   }
 }

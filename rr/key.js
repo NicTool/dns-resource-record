@@ -1,5 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class KEY extends RR {
   static typeName = 'KEY'
@@ -52,12 +53,16 @@ export default class KEY extends RR {
     return 'DNS Public Key'
   }
 
+  getTags() {
+    return ['obsolete']
+  }
+
   getRdataFields(arg) {
     return ['flags', 'protocol', 'algorithm', 'publickey']
   }
 
   getRFCs() {
-    return [2535, 3445]
+    return [2535, 3445, 4034, 6840]
   }
 
   getTypeId() {
@@ -115,6 +120,20 @@ export default class KEY extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    return new KEY({
+      owner,
+      ttl,
+      class: cls,
+      type: 'KEY',
+      flags: dv.getUint16(0),
+      protocol: rdata[2],
+      algorithm: rdata[3],
+      publickey: BINARY.bytesToBase64(rdata.subarray(4)),
+    })
+  }
+
   /******  EXPORTERS   *******/
   toTinydns() {
     return this.getTinydnsGeneric(
@@ -123,5 +142,16 @@ export default class KEY extends RR {
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
         TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const keyBytes = BINARY.base64ToBytes(this.get('publickey').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(4 + keyBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.get('flags'))
+    bytes[2] = this.get('protocol')
+    bytes[3] = this.get('algorithm')
+    bytes.set(keyBytes, 4)
+    return bytes
   }
 }

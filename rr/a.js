@@ -69,6 +69,10 @@ export default class A extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    return new A({ owner, ttl, class: cls, type: 'A', address: [...rdata].join('.') })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     return new Uint8Array(this.get('address').split('.').map(Number))

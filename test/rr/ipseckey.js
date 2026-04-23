@@ -147,3 +147,5 @@ describe('IPSECKEY record', function () {
   base.fromBind(IPSECKEY, validRecords)
   base.fromTinydns(IPSECKEY, validRecords)
 })
+
+  base.fromWire(IPSECKEY, validRecords)

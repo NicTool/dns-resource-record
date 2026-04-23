@@ -75,6 +75,11 @@ export default class NS extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn } = this.wireUnpackDomain(rdata, 0)
+    return new NS({ owner, ttl, class: cls, type: 'NS', dname: fqdn })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))

@@ -184,3 +184,16 @@ export function getTags(type) {
     })
   })
 }
+
+export function fromWire(type, validRecords) {
+  describe('fromWire', function () {
+    for (const val of validRecords) {
+      it(`round-trips wire: ${val.owner}`, function () {
+        const r = new type(val)
+        const wire = r.toWire()
+        const r2 = type.fromWire(wire)
+        assert.deepEqual(r2.toWire(), wire)
+      })
+    }
+  })
+}

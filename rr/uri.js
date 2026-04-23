@@ -92,7 +92,31 @@ export default class URI extends RR {
     return ['target']
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    return new URI({
+      owner,
+      ttl,
+      class: cls,
+      type: 'URI',
+      priority: dv.getUint16(0),
+      weight: dv.getUint16(2),
+      target: new TextDecoder().decode(rdata.subarray(4)),
+    })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const target = new TextEncoder().encode(this.get('target'))
+    const result = new Uint8Array(4 + target.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('priority'))
+    dv.setUint16(2, this.get('weight'))
+    result.set(target, 4)
+    return result
+  }
+
   toTinydns() {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     let rdata = ''

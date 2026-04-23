@@ -75,3 +75,5 @@ describe('NS record', function () {
     })
   }
 })
+
+  base.fromWire(NS, validRecords)

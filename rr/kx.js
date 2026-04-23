@@ -81,7 +81,24 @@ export default class KX extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const preference = dv.getUint16(0)
+    const { fqdn: exchanger } = this.wireUnpackDomain(rdata, 2)
+    return new KX({ owner, ttl, class: cls, type: 'KX', preference, exchanger })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const exchanger = this.wirePackDomain(this.get('exchanger'))
+    const result = new Uint8Array(2 + exchanger.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('preference'))
+    result.set(exchanger, 2)
+    return result
+  }
+
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchanger', zone_opts)}\n`
   }

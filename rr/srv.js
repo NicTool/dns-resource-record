@@ -118,7 +118,27 @@ export default class SRV extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const priority = dv.getUint16(0)
+    const weight = dv.getUint16(2)
+    const port = dv.getUint16(4)
+    const { fqdn: target } = this.wireUnpackDomain(rdata, 6)
+    return new SRV({ owner, ttl, class: cls, type: 'SRV', priority, weight, port, target })
+  }
+
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const target = this.wirePackDomain(this.get('target'))
+    const result = new Uint8Array(6 + target.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('priority'))
+    dv.setUint16(2, this.get('weight'))
+    dv.setUint16(4, this.get('port'))
+    result.set(target, 6)
+    return result
+  }
 
   toTinydns() {
     let rdata = ''

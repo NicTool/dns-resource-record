@@ -165,6 +165,34 @@ export default class CERT extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const typeNum = dv.getUint16(0)
+    const types = {
+      1: 'PKIX',
+      2: 'SPKI',
+      3: 'PGP',
+      4: 'IPKIX',
+      5: 'ISPKI',
+      6: 'IPGP',
+      7: 'ACPKIX',
+      8: 'IACPKIX',
+      253: 'URI',
+      254: 'OID',
+    }
+    const certType = types[typeNum] ?? typeNum
+    return new CERT({
+      owner,
+      ttl,
+      class: cls,
+      type: 'CERT',
+      'cert type': certType,
+      'key tag': dv.getUint16(2),
+      algorithm: rdata[4],
+      certificate: BINARY.bytesToBase64(rdata.subarray(5)),
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -174,5 +202,16 @@ export default class CERT extends RR {
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
         TINYDNS.base64toOctal(this.get('certificate').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const certBytes = BINARY.base64ToBytes(this.get('certificate').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(5 + certBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.getCertTypeValue(this.get('cert type')))
+    dv.setUint16(2, this.get('key tag'))
+    bytes[4] = this.get('algorithm')
+    bytes.set(certBytes, 5)
+    return bytes
   }
 }

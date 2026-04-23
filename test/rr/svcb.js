@@ -81,3 +81,5 @@ describe('SVCB record', function () {
     assert.throws(() => SVCB.fromTinydns(':example.com:64:AB:3600::\n'), /RDATA too short/)
   })
 })
+
+  base.fromWire(SVCB, validRecords)

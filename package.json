@@ -18,8 +18,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run build:readme && npm run build:browser",
-    "build:readme": "node lib/readme.js && npm run format",
+    "build": "npm run build:browser",
     "build:browser": "npx rollup -i index.js -o dist/dns-rr.js -f es && esbuild dist/dns-rr.js --minify --sourcemap --outfile=dist/dns-rr.min.js && rm dist/dns-rr.js",
     "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",

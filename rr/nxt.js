@@ -32,7 +32,7 @@ export default class NXT extends RR {
   }
 
   getTags() {
-    return ['deprecated']
+    return ['obsolete']
   }
 
   getRdataFields(arg) {
@@ -91,6 +91,19 @@ export default class NXT extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
+    const typeBitMap = nxtBitmapToTypes(rdata.subarray(end))
+    return new NXT({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NXT',
+      'next domain': nextDomain,
+      'type bit map': typeBitMap,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -112,6 +125,21 @@ export default class NXT extends RR {
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
+
+function nxtBitmapToTypes(bitmap) {
+  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))
+  const types = []
+  for (let i = 0; i < bitmap.length; i++) {
+    const byte = bitmap[i]
+    for (let bit = 0; bit < 8; bit++) {
+      if (byte & (0x80 >> bit)) {
+        const typeId = i * 8 + bit
+        types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`)
+      }
+    }
+  }
+  return types.join(' ')
+}
 
 function typesToNxtBitmap(typeNamesStr) {
   const bitmap = new Uint8Array(16)

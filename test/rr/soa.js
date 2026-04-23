@@ -90,3 +90,5 @@ describe('SOA record', function () {
     })
   }
 })
+
+  base.fromWire(SOA, validRecords)

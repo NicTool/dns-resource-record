@@ -91,3 +91,5 @@ describe('LOC record', function () {
     assert.throws(() => loc.arcSecToDMS(1000000, 'neither'), /unknown or missing hemisphere/)
   })
 })
+
+  base.fromWire(LOC, validRecords)

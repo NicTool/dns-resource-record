@@ -2,6 +2,7 @@ import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class HIP extends RR {
   static typeName = 'HIP'
@@ -127,6 +128,32 @@ export default class HIP extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const hitLen = rdata[0]
+    const pkAlgorithm = rdata[1]
+    const pkLen = dv.getUint16(2)
+    const hit = BINARY.bytesToHex(rdata.subarray(4, 4 + hitLen)).toUpperCase()
+    const publicKey = BINARY.bytesToBase64(rdata.subarray(4 + hitLen, 4 + hitLen + pkLen))
+    const rvsNames = []
+    let pos = 4 + hitLen + pkLen
+    while (pos < rdata.length) {
+      const { fqdn, end } = this.wireUnpackDomain(rdata, pos)
+      rvsNames.push(fqdn)
+      pos = end
+    }
+    return new HIP({
+      owner,
+      ttl,
+      class: cls,
+      type: 'HIP',
+      'pk algorithm': pkAlgorithm,
+      hit,
+      'public key': publicKey,
+      'rendezvous servers': rvsNames.join(' '),
+    })
+  }
+
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     const rs = this.get('rendezvous servers')
@@ -151,5 +178,36 @@ export default class HIP extends RR {
     }
 
     return this.getTinydnsGeneric(rdata)
+  }
+
+  getWireRdata() {
+    const hitHex = this.get('hit')
+    const hitBytes = BINARY.hexToBytes(hitHex)
+    const pkBytes = BINARY.base64ToBytes(this.get('public key'))
+    const rs = this.get('rendezvous servers')
+
+    const rsNames = rs ? rs.split(/\s+/) : []
+    const rsDomains = rsNames.map((name) => WIRE.wirePackDomain(name))
+    const rsTotalLen = rsDomains.reduce((sum, b) => sum + b.length, 0)
+
+    const totalLen = 1 + 1 + 2 + hitBytes.length + pkBytes.length + rsTotalLen
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    bytes[pos++] = hitBytes.length
+    bytes[pos++] = this.get('pk algorithm')
+    dv.setUint16(pos, pkBytes.length)
+    pos += 2
+    bytes.set(hitBytes, pos)
+    pos += hitBytes.length
+    bytes.set(pkBytes, pos)
+    pos += pkBytes.length
+    for (const rdomain of rsDomains) {
+      bytes.set(rdomain, pos)
+      pos += rdomain.length
+    }
+
+    return bytes
   }
 }

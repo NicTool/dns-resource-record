@@ -1,5 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class SSHFP extends RR {
   static typeName = 'SSHFP'
@@ -107,6 +108,18 @@ export default class SSHFP extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    return new SSHFP({
+      owner,
+      ttl,
+      class: cls,
+      type: 'SSHFP',
+      algorithm: rdata[0],
+      fptype: rdata[1],
+      fingerprint: BINARY.bytesToHex(rdata.subarray(2)).toUpperCase(),
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -115,5 +128,13 @@ export default class SSHFP extends RR {
         TINYDNS.UInt8toOctal(this.get('fptype')) +
         TINYDNS.packHex(this.get('fingerprint')),
     )
+  }
+
+  getWireRdata() {
+    const bytes = new Uint8Array(2 + BINARY.hexToBytes(this.get('fingerprint')).length)
+    bytes[0] = this.get('algorithm')
+    bytes[1] = this.get('fptype')
+    bytes.set(BINARY.hexToBytes(this.get('fingerprint')), 2)
+    return bytes
   }
 }

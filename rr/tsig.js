@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class TSIG extends RR {
   static typeName = 'TSIG'
@@ -151,6 +152,38 @@ export default class TSIG extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: algorithmName, end } = this.wireUnpackDomain(rdata, 0)
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    let pos = end
+    const timeSigned = dv.getUint32(pos)
+    pos += 4
+    const fudge = dv.getUint16(pos)
+    pos += 2
+    const macSize = dv.getUint16(pos)
+    pos += 2
+    const mac = macSize > 0 ? BINARY.bytesToHex(rdata.subarray(pos, pos + macSize)) : ''
+    pos += macSize
+    const originalId = dv.getUint16(pos)
+    pos += 2
+    const error = dv.getUint16(pos)
+    pos += 2
+    const other = pos < rdata.length ? new TextDecoder().decode(rdata.subarray(pos)) : ''
+    return new TSIG({
+      owner,
+      ttl: 0,
+      class: 'ANY',
+      type: 'TSIG',
+      'algorithm name': algorithmName,
+      'time signed': timeSigned,
+      fudge,
+      mac,
+      'original id': originalId,
+      error,
+      other,
+    })
+  }
+
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     const mac = this.get('mac') ?? ''
@@ -173,6 +206,38 @@ export default class TSIG extends RR {
         otherLen,
       ].join('\t') + '\n'
     )
+  }
+
+  getWireRdata() {
+    const algWire = WIRE.wirePackDomain(this.get('algorithm name') || '')
+    const mac = this.get('mac') ?? ''
+    const macBytes = mac.length > 0 ? BINARY.hexToBytes(mac) : new Uint8Array()
+    const other = this.get('other') ?? ''
+    const otherBytes = other.length > 0 ? new TextEncoder().encode(other) : new Uint8Array()
+
+    const bytes = new Uint8Array(algWire.length + 4 + 2 + 2 + macBytes.length + 2 + 2 + otherBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    let pos = 0
+
+    bytes.set(algWire, pos)
+    pos += algWire.length
+    dv.setUint32(pos, this.get('time signed') ?? 0)
+    pos += 4
+    dv.setUint16(pos, this.get('fudge') ?? 0)
+    pos += 2
+    dv.setUint16(pos, macBytes.length)
+    pos += 2
+    if (macBytes.length > 0) {
+      bytes.set(macBytes, pos)
+      pos += macBytes.length
+    }
+    dv.setUint16(pos, this.get('original id') ?? 0)
+    pos += 2
+    dv.setUint16(pos, this.get('error') ?? 0)
+    pos += 2
+    if (otherBytes.length > 0) bytes.set(otherBytes, pos)
+
+    return bytes
   }
 
   toTinydns() {

@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/binary.js'
+import * as WIRELIB from '../lib/wire.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
@@ -210,6 +211,34 @@ export default class RRSIG extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const typeCovered = dv.getUint16(0)
+    const algorithm = rdata[2]
+    const labels = rdata[3]
+    const originalTtl = dv.getUint32(4)
+    const signatureExpiration = dv.getUint32(8)
+    const signatureInception = dv.getUint32(12)
+    const keyTag = dv.getUint16(16)
+    const { fqdn: signersName, end } = this.wireUnpackDomain(rdata, 18)
+    const signature = new TextDecoder().decode(rdata.subarray(end))
+    return new RRSIG({
+      owner,
+      ttl,
+      class: cls,
+      type: 'RRSIG',
+      'type covered': typeCovered,
+      algorithm,
+      labels,
+      'original ttl': originalTtl,
+      'signature expiration': signatureExpiration,
+      'signature inception': signatureInception,
+      'key tag': keyTag,
+      'signers name': signersName,
+      signature,
+    })
+  }
+
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.get('type covered')}\t${this.get('algorithm')}\t${this.get('labels')}\t${this.get('original ttl')}\t${this.get('signature expiration')}\t${this.get('signature inception')}\t${this.get('key tag')}\t${this.getFQDN('signers name', zone_opts)}\t${this.get('signature')}\n`
@@ -228,5 +257,33 @@ export default class RRSIG extends RR {
         TINYDNS.packDomainName(this.get('signers name')) +
         TINYDNS.escapeOctal(dataRe, this.get('signature')),
     )
+  }
+
+  getWireRdata() {
+    const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
+    const sigBytes = new TextEncoder().encode(this.get('signature'))
+
+    const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    dv.setUint16(pos, this.get('type covered'))
+    pos += 2
+    bytes[pos++] = this.get('algorithm')
+    bytes[pos++] = this.get('labels')
+    dv.setUint32(pos, this.get('original ttl'))
+    pos += 4
+    dv.setUint32(pos, this.get('signature expiration'))
+    pos += 4
+    dv.setUint32(pos, this.get('signature inception'))
+    pos += 4
+    dv.setUint16(pos, this.get('key tag'))
+    pos += 2
+    bytes.set(signerBytes, pos)
+    pos += signerBytes.length
+    bytes.set(sigBytes, pos)
+
+    return bytes
   }
 }

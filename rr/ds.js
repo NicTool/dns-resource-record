@@ -116,6 +116,20 @@ export default class DS extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    return new DS({
+      owner,
+      ttl,
+      class: cls,
+      type: 'DS',
+      'key tag': dv.getUint16(0),
+      algorithm: rdata[2],
+      'digest type': rdata[3],
+      digest: BINARY.bytesToHex(rdata.subarray(4)).toUpperCase(),
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -125,5 +139,16 @@ export default class DS extends RR {
         TINYDNS.UInt8toOctal(this.get('digest type')) +
         TINYDNS.packHex(this.get('digest').replace(/\s+/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const digestBytes = BINARY.hexToBytes(this.get('digest').replace(/\s+/g, ''))
+    const bytes = new Uint8Array(4 + digestBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.get('key tag'))
+    bytes[2] = this.get('algorithm')
+    bytes[3] = this.get('digest type')
+    bytes.set(digestBytes, 4)
+    return bytes
   }
 }

@@ -78,6 +78,11 @@ export default class CNAME extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn } = this.wireUnpackDomain(rdata, 0)
+    return new CNAME({ owner, ttl, class: cls, type: 'CNAME', cname: fqdn })
+  }
+
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('cname'))

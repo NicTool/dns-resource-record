@@ -1,5 +1,12 @@
 import { inspect } from 'util'
 import * as TINYDNS from './lib/tinydns.js'
+import {
+  wireUnpackDomain,
+  wirePackDomain,
+  getWireRdata as wireGetRdata,
+  toWire as wireToWire,
+  fromWireBytes,
+} from './lib/wire.js'
 
 export default class RR {
   static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
@@ -89,6 +96,14 @@ export default class RR {
     const instance = new this(null)
     if (opts.default !== undefined) instance.default = opts.default
     return instance.fromTinydns({ ...opts, tinyline: line })
+  }
+
+  static fromWire(wireBytes) {
+    return fromWireBytes(this, wireBytes, wireUnpackDomain)
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    throw new Error(`fromWire() not implemented for ${this.constructor.typeName}`)
   }
 
   static #reserved = ['__proto__', 'constructor', 'prototype']
@@ -442,50 +457,20 @@ export default class RR {
     return Uint8Array.from(str, (c) => c.charCodeAt(0))
   }
 
-  wirePackDomain(fqdn) {
-    if (fqdn === '.') return new Uint8Array([0])
-    const enc = new TextEncoder()
-    const labels = fqdn
-      .split('.')
-      .filter((p) => p.length > 0)
-      .map((p) => {
-        const b = enc.encode(p)
-        if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${p}`)
-        return b
-      })
+  wireUnpackDomain(bytes, offset = 0) {
+    return wireUnpackDomain(bytes, offset)
+  }
 
-    const buf = new Uint8Array(labels.reduce((n, b) => n + b.length + 1, 1))
-    let offset = 0
-    for (const b of labels) {
-      buf[offset++] = b.length
-      buf.set(b, offset)
-      offset += b.length
-    }
-    buf[offset] = 0
-    return buf
+  wirePackDomain(fqdn) {
+    return wirePackDomain(fqdn)
   }
 
   getWireRdata() {
-    const line = this.toTinydns()
-    if (!line.startsWith(':'))
-      throw new Error(`${this.get('type')}: override getWireRdata() — non-generic tinydns format`)
-    // line: :fqdn:typeId:rdata:ttl:ts:loc\n
-    const rdata = line.split(':')[3]
-    return this.octalToUint8Array(rdata ?? '')
+    return wireGetRdata(this)
   }
 
   toWire() {
-    const rdata = this.getWireRdata()
-    const owner = this.wirePackDomain(this.get('owner'))
-    const result = new Uint8Array(owner.length + 10 + rdata.length)
-    result.set(owner, 0)
-    const meta = new DataView(result.buffer, owner.length, 10)
-    meta.setUint16(0, this.getTypeId())
-    meta.setUint16(2, RR.CLASSES[this.get('class')] ?? 1)
-    meta.setUint32(4, this.get('ttl'))
-    meta.setUint16(8, rdata.length)
-    result.set(rdata, owner.length + 10)
-    return result
+    return wireToWire(this, RR.CLASSES)
   }
 
   toBind(zone_opts) {

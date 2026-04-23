@@ -153,6 +153,23 @@ export default class NSEC3 extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const { salt, nextHashedOwnerName, typeBitMaps } = parseNSEC3Buffer(rdata)
+    return new NSEC3({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC3',
+      'hash algorithm': rdata[0],
+      flags: rdata[1],
+      iterations: dv.getUint16(2),
+      salt,
+      'next hashed owner name': nextHashedOwnerName,
+      'type bit maps': typeBitMaps,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toBind(zone_opts) {
@@ -177,6 +194,24 @@ export default class NSEC3 extends RR {
         TINYDNS.escapeOctal(dataRe, this.get('next hashed owner name')) +
         TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
+  }
+
+  getWireRdata() {
+    const tail = `${this.get('salt')}${this.get('next hashed owner name')}${this.get('type bit maps')}`
+    const tailBytes = new TextEncoder().encode(tail)
+
+    const totalLen = 4 + tailBytes.length
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    bytes[pos++] = this.get('hash algorithm')
+    bytes[pos++] = this.get('flags')
+    dv.setUint16(pos, this.get('iterations'))
+    pos += 2
+    bytes.set(tailBytes, pos)
+
+    return bytes
   }
 }
 
