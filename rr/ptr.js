@@ -2,6 +2,10 @@ import RR from '../rr.js'
 
 export default class PTR extends RR {
   static typeName = 'PTR'
+  static tinydnsType = '^'
+  static rdataFields = ['dname']
+  static fqdnFields = ['dname']
+
   constructor(opts) {
     super(opts)
   }
@@ -23,10 +27,6 @@ export default class PTR extends RR {
     return ['common']
   }
 
-  getRdataFields(arg) {
-    return ['dname']
-  }
-
   getRFCs() {
     return [1035]
   }
@@ -46,31 +46,6 @@ export default class PTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // ^fqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    return new PTR({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'PTR',
-      dname: this.fullyQualify(p),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    return new PTR({
-      owner,
-      ttl,
-      class: cls,
-      type: 'PTR',
-      dname: rdata[0],
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn } = this.wireUnpackDomain(rdata, 0)
     return new PTR({ owner, ttl, class: cls, type: 'PTR', dname: fqdn })
@@ -79,9 +54,5 @@ export default class PTR extends RR {
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))
-  }
-
-  toTinydns() {
-    return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }

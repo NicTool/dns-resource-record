@@ -5,20 +5,15 @@ const rdataRe = /[\r\n\t:\\/]/
 
 export default class NAPTR extends RR {
   static typeName = 'NAPTR'
+  static rdataFields = ['order', 'preference', 'flags', 'service', 'regexp', 'replacement']
+  static quotedFields = ['flags', 'service', 'regexp']
+
   constructor(opts) {
     super(opts)
   }
 
   getDescription() {
     return 'Naming Authority Pointer'
-  }
-
-  getQuotedFields() {
-    return ['flags', 'service', 'regexp']
-  }
-
-  getRdataFields(arg) {
-    return ['order', 'preference', 'flags', 'service', 'regexp', 'replacement']
   }
 
   getRFCs() {

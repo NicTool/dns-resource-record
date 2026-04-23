@@ -3,6 +3,8 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class AAAA extends RR {
   static typeName = 'AAAA'
+  static rdataFields = ['address']
+
   constructor(opts) {
     super(opts)
   }
@@ -25,10 +27,6 @@ export default class AAAA extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['address']
   }
 
   getRFCs() {
@@ -79,17 +77,6 @@ export default class AAAA extends RR {
       address: ip,
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    return new AAAA({
-      owner,
-      ttl,
-      class: cls,
-      type: 'AAAA',
-      address: this.expandIPv6(rdata[0]),
     })
   }
 

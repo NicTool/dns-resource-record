@@ -2,24 +2,17 @@ import RR from '../rr.js'
 
 export default class CNAME extends RR {
   static typeName = 'CNAME'
+  static tinydnsType = 'C'
+  static rdataFields = ['cname']
+  static fqdnFields = ['cname']
+
   constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
   setCname(val) {
-    // A <domain-name> which specifies the canonical or primary
-    // name for the owner.  The owner name is an alias.
-
-    if (!val) this.throwHelp('CNAME: cname is required')
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`CNAME: cname must be a FQDN: RFC 2181`)
-
-    if (!this.isFullyQualified('CNAME', 'cname', val)) return
-    if (!this.isValidHostname('CNAME', 'cname', val)) return
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('cname', val.toLowerCase())
+    this.setFqdnValue('CNAME', 'cname', val)
   }
 
   getDescription() {
@@ -28,10 +21,6 @@ export default class CNAME extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['cname']
   }
 
   getRFCs() {
@@ -53,31 +42,6 @@ export default class CNAME extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // Cfqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    return new CNAME({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'CNAME',
-      cname: this.fullyQualify(p),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    return new CNAME({
-      owner,
-      ttl,
-      class: cls,
-      type: 'CNAME',
-      cname: rdata[0],
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn } = this.wireUnpackDomain(rdata, 0)
     return new CNAME({ owner, ttl, class: cls, type: 'CNAME', cname: fqdn })
@@ -86,9 +50,5 @@ export default class CNAME extends RR {
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('cname'))
-  }
-
-  toTinydns() {
-    return `C${this.getTinyFQDN('owner')}:${this.get('cname')}:${this.getTinydnsPostamble()}\n`
   }
 }

@@ -4,6 +4,8 @@ import * as BINARY from '../lib/binary.js'
 
 export default class SSHFP extends RR {
   static typeName = 'SSHFP'
+  static rdataFields = ['algorithm', 'fptype', 'fingerprint']
+
   constructor(opts) {
     super(opts)
   }
@@ -52,10 +54,6 @@ export default class SSHFP extends RR {
     return ['security']
   }
 
-  getRdataFields() {
-    return ['algorithm', 'fptype', 'fingerprint']
-  }
-
   getRFCs() {
     return [4255, 7479, 8709]
   }
@@ -91,20 +89,6 @@ export default class SSHFP extends RR {
       fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SSHFP  algo fptype fp
-    const [owner, ttl, c, type, algo, fptype, fp] = bindline.split(/\s+/)
-    return new SSHFP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      algorithm: parseInt(algo, 10),
-      fptype: parseInt(fptype, 10),
-      fingerprint: fp,
     })
   }
 

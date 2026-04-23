@@ -5,6 +5,8 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
+  static rdataFields = ['type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration', 'signature inception', 'key tag', 'signers name', 'signature']
+  static fqdnFields = ['signers name']
   constructor(opts) {
     super(opts)
   }
@@ -92,20 +94,6 @@ export default class RRSIG extends RR {
 
   getTags() {
     return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return [
-      'type covered',
-      'algorithm',
-      'labels',
-      'original ttl',
-      'signature expiration',
-      'signature inception',
-      'key tag',
-      'signers name',
-      'signature',
-    ]
   }
 
   getRFCs() {
@@ -240,9 +228,6 @@ export default class RRSIG extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.get('type covered')}\t${this.get('algorithm')}\t${this.get('labels')}\t${this.get('original ttl')}\t${this.get('signature expiration')}\t${this.get('signature inception')}\t${this.get('key tag')}\t${this.getFQDN('signers name', zone_opts)}\t${this.get('signature')}\n`
-  }
 
   toTinydns() {
     const dataRe = new RegExp(/[\r\n\t:]/, 'g')

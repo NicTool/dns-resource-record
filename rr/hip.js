@@ -6,6 +6,7 @@ import * as WIRE from '../lib/wire.js'
 
 export default class HIP extends RR {
   static typeName = 'HIP'
+  static rdataFields = ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
   constructor(opts) {
     super(opts)
   }
@@ -33,10 +34,6 @@ export default class HIP extends RR {
 
   getDescription() {
     return 'Host Identity Protocol'
-  }
-
-  getRdataFields(arg) {
-    return ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
   }
 
   getRFCs() {

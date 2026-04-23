@@ -3,6 +3,8 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
   static typeName = 'CAA'
+  static rdataFields = ['flags', 'tag', 'value']
+  static quotedFields = ['value']
   constructor(opts) {
     super(opts)
   }
@@ -67,14 +69,6 @@ export default class CAA extends RR {
     return ['security']
   }
 
-  getQuotedFields() {
-    return ['value']
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'tag', 'value']
-  }
-
   getRFCs() {
     return [6844, 8659, 9619]
   }
@@ -117,30 +111,6 @@ export default class CAA extends RR {
       value: fingerprint,
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  CAA flags, tags, value
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>CAA)\s+(?<flags>\d+)\s+(?<tag>\w+)\s+(?:"(?<quotedValue>[^"]+)"|(?<unquotedValue>\S+))$/i
-
-    const match = bindline.trim().match(regex)
-
-    if (!match) {
-      this.throwHelp(`unable to parse CAA: ${bindline}`)
-    }
-
-    const { owner, ttl, class: c, type, flags, tag, quotedValue, unquotedValue } = match.groups
-
-    return new CAA({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      flags: parseInt(flags, 10),
-      tag,
-      value: quotedValue ?? unquotedValue,
     })
   }
 

@@ -5,6 +5,8 @@ import * as BINARY from '../lib/binary.js'
 
 export default class DS extends RR {
   static typeName = 'DS'
+  static rdataFields = ['key tag', 'algorithm', 'digest type', 'digest']
+
   constructor(opts) {
     super(opts)
   }
@@ -54,10 +56,6 @@ export default class DS extends RR {
     return ['dnssec']
   }
 
-  getRdataFields(arg) {
-    return ['key tag', 'algorithm', 'digest type', 'digest']
-  }
-
   getRFCs() {
     return [4034, 4509, 9619]
   }
@@ -80,21 +78,6 @@ export default class DS extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [owner, ttl, c, type, keytag, algorithm, digesttype] = bindline.split(/\s+/)
-    return new DS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'key tag': parseInt(keytag, 10),
-      algorithm: parseInt(algorithm, 10),
-      'digest type': parseInt(digesttype, 10),
-      digest: bindline.split(/\s+/).slice(7).join(' ').trim(),
-    })
-  }
 
   fromTinydns(opts) {
     const { tinyline } = opts

@@ -5,6 +5,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class CERT extends RR {
   static typeName = 'CERT'
+  static rdataFields = ['cert type', 'key tag', 'algorithm', 'certificate']
   constructor(opts) {
     super(opts)
   }
@@ -86,10 +87,6 @@ export default class CERT extends RR {
 
   getDescription() {
     return 'Certificate'
-  }
-
-  getRdataFields() {
-    return ['cert type', 'key tag', 'algorithm', 'certificate']
   }
 
   getRFCs() {

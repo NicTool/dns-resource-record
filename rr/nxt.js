@@ -5,6 +5,7 @@ import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NXT extends RR {
   static typeName = 'NXT'
+  static rdataFields = ['next domain', 'type bit map']
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -33,10 +34,6 @@ export default class NXT extends RR {
 
   getTags() {
     return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return ['next domain', 'type bit map']
   }
 
   getRFCs() {

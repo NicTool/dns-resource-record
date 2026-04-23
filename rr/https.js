@@ -5,6 +5,7 @@ import * as WIRE from '../lib/wire.js'
 
 export default class HTTPS extends RR {
   static typeName = 'HTTPS'
+  static rdataFields = ['priority', 'target name', 'params']
   constructor(opts) {
     super(opts)
   }
@@ -36,10 +37,6 @@ export default class HTTPS extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'target name', 'params']
   }
 
   getRFCs() {

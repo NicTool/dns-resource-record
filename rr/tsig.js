@@ -5,6 +5,7 @@ import * as WIRE from '../lib/wire.js'
 
 export default class TSIG extends RR {
   static typeName = 'TSIG'
+  static rdataFields = ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -14,10 +15,6 @@ export default class TSIG extends RR {
 
   getDescription() {
     return 'Transaction Signature'
-  }
-
-  getRdataFields(arg) {
-    return ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
   }
 
   getRFCs() {

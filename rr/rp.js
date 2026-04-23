@@ -4,6 +4,9 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class RP extends RR {
   static typeName = 'RP'
+  static rdataFields = ['mbox', 'txt']
+  static fqdnFields = ['mbox', 'txt']
+
   constructor(opts) {
     super(opts)
   }
@@ -33,10 +36,6 @@ export default class RP extends RR {
     return ['obsolete']
   }
 
-  getRdataFields(arg) {
-    return ['mbox', 'txt']
-  }
-
   getRFCs() {
     return [1183]
   }
@@ -57,19 +56,6 @@ export default class RP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  RP  mbox txt
-    const [owner, ttl, c, type, mbox, txt] = bindline.split(/\s+/)
-    return new RP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      mbox,
-      txt,
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
@@ -102,10 +88,6 @@ export default class RP extends RR {
     result.set(mbox, 0)
     result.set(txt, mbox.length)
     return result
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('mbox', zone_opts)}\t${this.getFQDN('txt', zone_opts)}\n`
   }
 
   toTinydns() {

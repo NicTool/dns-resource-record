@@ -2,9 +2,12 @@ import RR from '../rr.js'
 
 export default class NS extends RR {
   static typeName = 'NS'
+  static tinydnsType = '&'
+  static rdataFields = ['dname']
+  static fqdnFields = ['dname']
+
   constructor(opts) {
     super(opts)
-    if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
@@ -24,10 +27,6 @@ export default class NS extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['dname']
   }
 
   getRFCs() {
@@ -51,8 +50,7 @@ export default class NS extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // &fqdn:ip:x:ttl:timestamp:lo
-    // eslint-disable-next-line no-unused-vars
-    const [fqdn, ip, dname, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const [fqdn, _ip, dname, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new NS({
       type: 'NS',
@@ -64,17 +62,6 @@ export default class NS extends RR {
     })
   }
 
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    return new NS({
-      owner,
-      ttl,
-      class: cls,
-      type: 'NS',
-      dname: rdata[0],
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn } = this.wireUnpackDomain(rdata, 0)
     return new NS({ owner, ttl, class: cls, type: 'NS', dname: fqdn })
@@ -83,10 +70,6 @@ export default class NS extends RR {
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
   }
 
   toTinydns() {

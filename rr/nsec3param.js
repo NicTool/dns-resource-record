@@ -4,6 +4,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class NSEC3PARAM extends RR {
   static typeName = 'NSEC3PARAM'
+  static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt']
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -63,10 +64,6 @@ export default class NSEC3PARAM extends RR {
     return ['dnssec']
   }
 
-  getRdataFields(arg) {
-    return ['hash algorithm', 'flags', 'iterations', 'salt']
-  }
-
   getRFCs() {
     return [5155]
   }
@@ -89,22 +86,6 @@ export default class NSEC3PARAM extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NSEC3PARAM  <hash> <flags> <iterations> <salt>
-    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
-    return new NSEC3PARAM({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'hash algorithm': parseInt(ha, 10),
-      flags: parseInt(flags, 10),
-      iterations: parseInt(iterations, 10),
-      salt: salt,
-    })
-  }
 
   fromTinydns({ tinyline }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
@@ -147,12 +128,6 @@ export default class NSEC3PARAM extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toBind(zone_opts) {
-    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
-    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	NSEC3PARAM	${this.get('hash algorithm')}	${this.get('flags')}	${this.get('iterations')}	${this.get('salt')}
-`
-  }
 
   toTinydns() {
     const salt = this.get('salt')

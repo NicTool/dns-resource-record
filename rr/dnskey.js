@@ -5,6 +5,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class DNSKEY extends RR {
   static typeName = 'DNSKEY'
+  static rdataFields = ['flags', 'protocol', 'algorithm', 'publickey']
   constructor(opts) {
     super(opts)
   }
@@ -83,10 +84,6 @@ export default class DNSKEY extends RR {
 
   getTags() {
     return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'protocol', 'algorithm', 'publickey']
   }
 
   getRFCs() {

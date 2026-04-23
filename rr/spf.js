@@ -6,6 +6,8 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SPF extends TXT {
   static typeName = 'SPF'
+  static rdataFields = ['data']
+
   constructor(opts) {
     super(opts)
   }
@@ -21,10 +23,6 @@ export default class SPF extends TXT {
 
   getTags() {
     return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return ['data']
   }
 
   getRFCs() {

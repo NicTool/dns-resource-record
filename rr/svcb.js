@@ -5,6 +5,7 @@ import * as WIRE from '../lib/wire.js'
 
 export default class SVCB extends RR {
   static typeName = 'SVCB'
+  static rdataFields = ['priority', 'target name', 'params']
   constructor(opts) {
     super(opts)
   }
@@ -32,10 +33,6 @@ export default class SVCB extends RR {
 
   getDescription() {
     return 'Service Binding'
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'target name', 'params']
   }
 
   getRFCs() {

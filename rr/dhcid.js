@@ -4,6 +4,8 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DHCID extends RR {
   static typeName = 'DHCID'
+  static rdataFields = ['data']
+
   constructor(opts) {
     super(opts)
   }
@@ -17,10 +19,6 @@ export default class DHCID extends RR {
 
   getDescription() {
     return 'DHCP Identifier'
-  }
-
-  getRdataFields(arg) {
-    return ['data']
   }
 
   getRFCs() {
@@ -54,19 +52,6 @@ export default class DHCID extends RR {
       data: TINYDNS.octalToBase64(rdata),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // host.example.com  3600  IN  DHCID  <base64data>
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type] = parts
-    return new DHCID({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      data: parts.slice(4).join(''),
     })
   }
 

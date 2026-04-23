@@ -63,7 +63,7 @@ const invalidRecords = [
     ...defaults,
     owner: 'test.example.com.',
     exchange: '192.0.2.1',
-    msg: /exchange must be a FQDN/,
+    msg: /exchange must be a domain name/,
   },
   {
     ...defaults,

@@ -2,6 +2,9 @@ import RR from '../rr.js'
 
 export default class A extends RR {
   static typeName = 'A'
+  static tinydnsType = '+'
+  static rdataFields = ['address']
+
   constructor(opts) {
     super(opts)
   }
@@ -19,10 +22,6 @@ export default class A extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['address']
   }
 
   getRFCs() {
@@ -44,31 +43,6 @@ export default class A extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // +fqdn:ip:ttl:timestamp:lo
-    const [owner, ip, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    return new A({
-      owner: this.fullyQualify(owner),
-      type: 'A',
-      address: ip,
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    return new A({
-      owner,
-      ttl,
-      class: cls,
-      type: 'A',
-      address: rdata[0],
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     return new A({ owner, ttl, class: cls, type: 'A', address: [...rdata].join('.') })
   }
@@ -76,9 +50,5 @@ export default class A extends RR {
   /******  EXPORTERS   *******/
   getWireRdata() {
     return new Uint8Array(this.get('address').split('.').map(Number))
-  }
-
-  toTinydns() {
-    return `+${this.getTinyFQDN('owner')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
   }
 }

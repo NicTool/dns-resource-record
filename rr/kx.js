@@ -4,6 +4,9 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class KX extends RR {
   static typeName = 'KX'
+  static rdataFields = ['preference', 'exchanger']
+  static fqdnFields = ['exchanger']
+
   constructor(opts) {
     super(opts)
   }
@@ -26,10 +29,6 @@ export default class KX extends RR {
 
   getDescription() {
     return 'Key Exchanger'
-  }
-
-  getRdataFields(arg) {
-    return ['preference', 'exchanger']
   }
 
   getRFCs() {
@@ -68,19 +67,6 @@ export default class KX extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  KX  preference exchanger
-    const [owner, ttl, c, type, preference, exchanger] = bindline.split(/\s+/)
-    return new KX({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      preference: parseInt(preference, 10),
-      exchanger,
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const dv = new DataView(rdata.buffer, rdata.byteOffset)
     const preference = dv.getUint16(0)
@@ -97,10 +83,6 @@ export default class KX extends RR {
     dv.setUint16(0, this.get('preference'))
     result.set(exchanger, 2)
     return result
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchanger', zone_opts)}\n`
   }
 
   toTinydns() {

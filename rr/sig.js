@@ -6,6 +6,7 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class SIG extends RR {
   static typeName = 'SIG'
+  static rdataFields = ['type covered', 'algorithm', 'labels', 'original ttl', 'signature expiration', 'signature inception', 'key tag', 'signers name', 'signature']
   constructor(opts) {
     super(opts)
   }
@@ -73,20 +74,6 @@ export default class SIG extends RR {
 
   getTags() {
     return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return [
-      'type covered',
-      'algorithm',
-      'labels',
-      'original ttl',
-      'signature expiration',
-      'signature inception',
-      'key tag',
-      'signers name',
-      'signature',
-    ]
   }
 
   getRFCs() {

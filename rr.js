@@ -7,6 +7,11 @@ import {
   toWire as wireToWire,
   fromWireBytes,
 } from './lib/wire.js'
+import {
+  parseBindLine as bindParseLine,
+  fromBind as bindFromGeneric,
+  toBind as bindToGeneric,
+} from './lib/bind.js'
 
 export default class RR {
   static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
@@ -24,10 +29,14 @@ export default class RR {
     this.setTtl(opts?.ttl)
     this.setClass(opts?.class)
 
-    for (const f of this.getFields('rdata')) {
+    const rdataFields = this.getFields('rdata')
+    for (const f of rdataFields) {
       const fnName = `set${this.ucFirst(f)}`
-      if (this[fnName] === undefined) this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
-      this[fnName](opts?.[f])
+      if (this[fnName]) {
+        this[fnName](opts?.[f])
+      } else {
+        this.set(f, opts?.[f])
+      }
     }
 
     if (opts?.comment) this.set('comment', opts.comment)
@@ -36,66 +45,52 @@ export default class RR {
   static fromBind(line, opts = {}) {
     const instance = new this(null)
     if (opts.default !== undefined) instance.default = opts.default
-    return instance.fromBind({ ...opts, ...this.parseBindLine(line), bindline: line })
+    const parsed = this.parseBindLine(line)
+    if (!parsed) return null
+    return instance.fromBind({ ...opts, ...parsed, bindline: line })
+  }
+
+  fromBind(opts) {
+    return bindFromGeneric(this, opts)
   }
 
   static parseBindLine(line) {
-    const res = {
-      class: 'IN',
-      type: '',
-      rdata: [],
-    }
-
-    // 1. Strip comments (not inside quotes)
-    let cleanLine = ''
-    let inQuote = false
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i]
-      if (c === '"') inQuote = !inQuote
-      if (c === ';' && !inQuote) break
-      cleanLine += c
-    }
-    cleanLine = cleanLine.trim()
-    if (!cleanLine) return null
-
-    // 2. Tokenize, respecting quoted strings
-    const tokens = cleanLine.match(/(".*?"|\S+)/g) || []
-    if (tokens.length < 1) return null
-
-    // 3. Owner handling
-    if (!/^\s/.test(line)) {
-      res.owner = tokens.shift()
-    }
-
-    // 4. Extract TTL, Class, and Type
-    while (tokens.length > 0) {
-      const token = tokens[0].toUpperCase()
-
-      if (RR.CLASSES[token]) {
-        res.class = tokens.shift().toUpperCase()
-        continue
-      }
-
-      if (/^\d+$/.test(token)) {
-        res.ttl = parseInt(tokens.shift(), 10)
-        continue
-      }
-
-      // If it's not a Class or TTL, it must be the RR Type (A, MX, etc.)
-      res.type = tokens.shift().toUpperCase()
-      break
-    }
-
-    // 5. Remaining tokens are RDATA
-    res.rdata = tokens
-
-    return res
+    return bindParseLine(line, RR.CLASSES)
   }
 
   static fromTinydns(line, opts = {}) {
     const instance = new this(null)
     if (opts.default !== undefined) instance.default = opts.default
     return instance.fromTinydns({ ...opts, tinyline: line })
+  }
+
+  fromTinydns(opts) {
+    const { tinyline } = opts
+    const fields = this.getFields('rdata')
+    const parts = tinyline.slice(1).split(':')
+
+    // Standard tinydns: [owner, ...rdata, ttl, timestamp, location]
+    // But some records have different counts.
+    // This generic version assumes: [owner, ...fields, ttl, timestamp, location]
+    const rdataCount = fields.length
+    const owner = parts[0]
+    const rdata = parts.slice(1, 1 + rdataCount)
+    const [ttl, ts, loc] = parts.slice(1 + rdataCount)
+
+    const result = {
+      owner: this.fullyQualify(owner),
+      type: this.constructor.typeName,
+      ttl: parseInt(ttl, 10),
+      timestamp: ts,
+      location: loc?.trim() ?? '',
+    }
+
+    for (let i = 0; i < fields.length; i++) {
+      const val = rdata[i]
+      result[fields[i]] = this.isFqdnField(fields[i]) ? this.fullyQualify(val) : val
+    }
+
+    return new this.constructor(result)
   }
 
   static fromWire(wireBytes) {
@@ -135,6 +130,7 @@ export default class RR {
   }
 
   ucFirst(str) {
+    if (!str) return str
     return str
       .split(/\s/)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -192,7 +188,7 @@ export default class RR {
   setTtl(t) {
     t = t ?? this.default?.ttl
     if (t === undefined) {
-      if (['SOA', 'SSHFP'].includes(this.get('type'))) return
+      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
       this.throwHelp('TTL is required, no default available')
     }
 
@@ -275,28 +271,34 @@ export default class RR {
   }
 
   getQuotedFields() {
-    return []
+    return this.constructor.quotedFields || []
   }
 
   getRdataFields() {
-    return []
+    return this.constructor.rdataFields || []
   }
 
   getTags() {
     return []
   }
 
+  static getTypeId() {
+    return new this(null).getTypeId()
+  }
+
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)
+
+    const rdataFields = this.getRdataFields()
 
     switch (arg) {
       case 'common':
         return commonFields
       case 'rdata':
-        return this.getRdataFields()
+        return rdataFields
       default:
-        return commonFields.concat(this.getRdataFields())
+        return commonFields.concat(rdataFields)
     }
   }
 
@@ -376,6 +378,15 @@ export default class RR {
 
   isQuoted(val) {
     return /^["']/.test(val) && /["']$/.test(val)
+  }
+
+  setFqdnValue(typeName, fieldName, val) {
+    if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
+    if (this.isIPv4(val) || this.isIPv6(val))
+      this.throwHelp(`${typeName}: ${fieldName} must be a domain name`)
+    this.isFullyQualified(typeName, fieldName, val)
+    this.isValidHostname(typeName, fieldName, val)
+    this.set(fieldName, val.toLowerCase())
   }
 
   isFullyQualified(type, field, hostname) {
@@ -474,9 +485,31 @@ export default class RR {
   }
 
   toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getRdataFields()
-      .map((f) => this.getQuoted(f))
-      .join('\t')}\n`
+    return bindToGeneric(this, zone_opts)
+  }
+
+  toTinydns() {
+    if (this.constructor.tinydnsType) {
+      const fields = this.getFields('rdata')
+      const rdata = fields
+        .map((f) => {
+          if (this.isFqdnField(f)) {
+            return this.getTinyFQDN(f)
+          }
+          return this.get(f)
+        })
+        .join(':')
+      return `${this.constructor.tinydnsType}${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
+    }
+    return this.getTinydnsGeneric(this.getWireRdata())
+  }
+
+  isFqdnField(field) {
+    return this.constructor.fqdnFields?.includes(field) || false
+  }
+
+  isQuotedField(field) {
+    return this.constructor.quotedFields?.includes(field) || false
   }
 
   toMaraDNS() {
@@ -485,14 +518,14 @@ export default class RR {
       /\s+/g,
     )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields()
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
   }
 
   toMaraGeneric() {
     // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields()
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`
   }

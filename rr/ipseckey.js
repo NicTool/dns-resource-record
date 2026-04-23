@@ -6,6 +6,7 @@ import * as WIRE from '../lib/wire.js'
 
 export default class IPSECKEY extends RR {
   static typeName = 'IPSECKEY'
+  static rdataFields = ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
   constructor(opts) {
     super(opts)
   }
@@ -75,10 +76,6 @@ export default class IPSECKEY extends RR {
 
   getTags() {
     return ['security']
-  }
-
-  getRdataFields(arg) {
-    return ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
   }
 
   getRFCs() {

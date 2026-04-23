@@ -5,6 +5,7 @@ import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NSEC extends RR {
   static typeName = 'NSEC'
+  static rdataFields = ['next domain', 'type bit maps']
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -33,10 +34,6 @@ export default class NSEC extends RR {
 
   getTags() {
     return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['next domain', 'type bit maps']
   }
 
   getRFCs() {

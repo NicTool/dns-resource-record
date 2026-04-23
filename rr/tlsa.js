@@ -5,6 +5,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class TLSA extends RR {
   static typeName = 'TLSA'
+  static rdataFields = ['certificate usage', 'selector', 'matching type', 'certificate association data']
   constructor(opts) {
     super(opts)
   }
@@ -64,10 +65,6 @@ export default class TLSA extends RR {
     return ['security']
   }
 
-  getRdataFields(arg) {
-    return ['certificate usage', 'selector', 'matching type', 'certificate association data']
-  }
-
   getRFCs() {
     return [6698, 7671]
   }
@@ -87,10 +84,6 @@ export default class TLSA extends RR {
       'matching type': 1,
       'certificate association data': 'ABCDEF...',
     }
-  }
-
-  getQuotedFields() {
-    return []
   }
 
   /******  IMPORTERS   *******/

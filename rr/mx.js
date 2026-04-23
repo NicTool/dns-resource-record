@@ -2,6 +2,10 @@ import RR from '../rr.js'
 
 export default class MX extends RR {
   static typeName = 'MX'
+  static tinydnsType = '@'
+  static rdataFields = ['preference', 'exchange']
+  static fqdnFields = ['exchange']
+
   constructor(opts) {
     super(opts)
   }
@@ -15,15 +19,7 @@ export default class MX extends RR {
   }
 
   setExchange(val) {
-    if (!val) this.throwHelp('MX: exchange is required')
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`MX: exchange must be a FQDN`)
-
-    this.isFullyQualified('MX', 'exchange', val)
-    this.isValidHostname('MX', 'exchange', val)
-
-    // RFC 4034: letters in the DNS names ... are lower cased
-    this.set('exchange', val.toLowerCase())
+    this.setFqdnValue('MX', 'exchange', val)
   }
 
   getDescription() {
@@ -32,10 +28,6 @@ export default class MX extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['preference', 'exchange']
   }
 
   getRFCs() {
@@ -60,8 +52,7 @@ export default class MX extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
-    // eslint-disable-next-line no-unused-vars
-    const [owner, ip, x, preference, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const [owner, _ip, x, preference, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new MX({
       type: 'MX',
@@ -71,20 +62,6 @@ export default class MX extends RR {
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    const [preference, exchange] = rdata
-
-    return new MX({
-      owner,
-      ttl,
-      class: cls,
-      type: 'MX',
-      preference: parseInt(preference, 10),
-      exchange,
     })
   }
 
@@ -102,10 +79,6 @@ export default class MX extends RR {
     new DataView(result.buffer).setUint16(0, this.get('preference'))
     result.set(domain, 2)
     return result
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
   }
 
   toTinydns() {

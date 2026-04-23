@@ -3,29 +3,20 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DNAME extends RR {
   static typeName = 'DNAME'
+  static rdataFields = ['target']
+  static fqdnFields = ['target']
+
   constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
   setTarget(val) {
-    if (!val) this.throwHelp('DNAME: target is required')
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`DNAME: target must be a domain name`)
-
-    this.isFullyQualified('DNAME', 'target', val)
-    this.isValidHostname('DNAME', 'target', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('target', val.toLowerCase())
+    this.setFqdnValue('DNAME', 'target', val)
   }
 
   getDescription() {
     return 'Delegation Name'
-  }
-
-  getRdataFields(arg) {
-    return ['target']
   }
 
   getRFCs() {
@@ -59,18 +50,6 @@ export default class DNAME extends RR {
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DNAME  ...
-    const [owner, ttl, c, type, target] = bindline.split(/\s+/)
-    return new DNAME({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      target,
     })
   }
 

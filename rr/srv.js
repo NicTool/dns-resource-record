@@ -3,6 +3,9 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SRV extends RR {
   static typeName = 'SRV'
+  static rdataFields = ['priority', 'weight', 'port', 'target']
+  static fqdnFields = ['target']
+
   constructor(opts) {
     super(opts)
   }
@@ -10,32 +13,21 @@ export default class SRV extends RR {
   /****** Resource record specific setters   *******/
   setPriority(val) {
     this.is16bitInt('SRV', 'priority', val)
-
     this.set('priority', val)
   }
 
   setPort(val) {
     this.is16bitInt('SRV', 'port', val)
-
     this.set('port', val)
   }
 
   setWeight(val) {
     this.is16bitInt('SRV', 'weight', val)
-
     this.set('weight', val)
   }
 
   setTarget(val) {
-    if (!val) this.throwHelp(`SRV: target is required`)
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`SRV: target must be a FQDN`)
-
-    this.isFullyQualified('SRV', 'target', val)
-    this.isValidHostname('SRV', 'target', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('target', val.toLowerCase())
+    this.setFqdnValue('SRV', 'target', val)
   }
 
   getDescription() {
@@ -44,10 +36,6 @@ export default class SRV extends RR {
 
   getTags() {
     return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'weight', 'port', 'target']
   }
 
   getRFCs() {
@@ -100,21 +88,6 @@ export default class SRV extends RR {
       target: this.fullyQualify(addr),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    const [pri, weight, port, target] = rdata
-    return new SRV({
-      owner,
-      ttl,
-      class: cls,
-      type: 'SRV',
-      priority: parseInt(pri, 10),
-      weight: parseInt(weight, 10),
-      port: parseInt(port, 10),
-      target: target,
     })
   }
 

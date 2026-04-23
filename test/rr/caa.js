@@ -124,7 +124,7 @@ const invalidRecords = [
   },
   {
     bindline: 'this is not valid caa',
-    msg: /unable to parse CAA/,
+    msg: /fully qualified/,
   },
 ]
 

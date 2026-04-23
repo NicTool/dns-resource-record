@@ -2,6 +2,10 @@ import RR from '../rr.js'
 
 export default class SOA extends RR {
   static typeName = 'SOA'
+  static tinydnsType = 'Z'
+  static rdataFields = ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum']
+  static fqdnFields = ['mname', 'rname']
+
   constructor(opts) {
     super(opts)
   }
@@ -76,10 +80,6 @@ export default class SOA extends RR {
     return ['common']
   }
 
-  getRdataFields(arg) {
-    return ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum']
-  }
-
   getRFCs() {
     return [1035, 2308]
   }
@@ -105,25 +105,6 @@ export default class SOA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind(opts) {
-    const { owner, ttl, cls, rdata } = opts
-    const [mname, rname, serial, refresh, retry, expire, minimum] = rdata
-
-    return new SOA({
-      owner,
-      ttl: ttl || parseInt(minimum, 10),
-      class: cls,
-      type: 'SOA',
-      mname,
-      rname,
-      serial: parseInt(serial, 10),
-      refresh: parseInt(refresh, 10),
-      retry: parseInt(retry, 10),
-      expire: parseInt(expire, 10),
-      minimum: parseInt(minimum, 10),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     // Zfqdn:mname:rname:ser:ref:ret:exp:min:ttl:time:lo
     const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = tinyline.slice(1).split(':')
@@ -164,13 +145,8 @@ export default class SOA extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind(zone_opts) {
-    const numFields = ['serial', 'refresh', 'retry', 'expire', 'minimum']
-    return `${this.getFQDN('owner', zone_opts)}\t${this.get('ttl')}\t${this.get('class')}\tSOA\t${this.getFQDN('mname', zone_opts)}\t${this.getFQDN('rname', zone_opts)}${numFields.map((f) => '\t' + this.get(f)).join('')}\n`
-  }
-
   toMaraDNS() {
-    return `${this.get('owner')}\t SOA\t${this.getRdataFields()
+    return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
   }

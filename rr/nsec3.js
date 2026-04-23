@@ -4,6 +4,7 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NSEC3 extends RR {
   static typeName = 'NSEC3'
+  static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -67,10 +68,6 @@ export default class NSEC3 extends RR {
 
   getTags() {
     return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
   }
 
   getRFCs() {

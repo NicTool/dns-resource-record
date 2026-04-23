@@ -4,6 +4,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class KEY extends RR {
   static typeName = 'KEY'
+  static rdataFields = ['flags', 'protocol', 'algorithm', 'publickey']
   constructor(opts) {
     super(opts)
   }
@@ -55,10 +56,6 @@ export default class KEY extends RR {
 
   getTags() {
     return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'protocol', 'algorithm', 'publickey']
   }
 
   getRFCs() {

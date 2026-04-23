@@ -4,6 +4,7 @@ import * as BINARY from '../lib/binary.js'
 
 export default class OPENPGPKEY extends RR {
   static typeName = 'OPENPGPKEY'
+  static rdataFields = ['public key']
   constructor(opts) {
     super(opts)
   }
@@ -20,10 +21,6 @@ export default class OPENPGPKEY extends RR {
 
   getTags() {
     return ['security']
-  }
-
-  getRdataFields() {
-    return ['public key']
   }
 
   getRFCs() {

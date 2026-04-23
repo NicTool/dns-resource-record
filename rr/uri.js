@@ -4,6 +4,8 @@ import * as TINYDNS from '../lib/tinydns.js'
 
 export default class URI extends RR {
   static typeName = 'URI'
+  static rdataFields = ['priority', 'weight', 'target']
+  static quotedFields = ['target']
   constructor(opts) {
     super(opts)
   }
@@ -45,27 +47,9 @@ export default class URI extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  URI  priority, weight, target
-    const [owner, ttl, c, type, priority, weight, target] = bindline.split(/\s+/)
-    return new URI({
-      class: c,
-      type: type,
-      owner,
-      priority: parseInt(priority, 10),
-      weight: parseInt(weight, 10),
-      target: target.replace(/^"|"$/g, ''),
-      ttl: parseInt(ttl, 10),
-    })
-  }
-
   /******  MISC   *******/
   getDescription() {
     return 'URI'
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'weight', 'target']
   }
 
   getRFCs() {
@@ -86,10 +70,6 @@ export default class URI extends RR {
       weight: 10,
       target: 'http://www.example.com/',
     }
-  }
-
-  getQuotedFields() {
-    return ['target']
   }
 
   fromWire({ owner, cls, ttl, rdata }) {
