@@ -1,7 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
-import * as WIRE from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class HTTPS extends RR {
   static typeName = 'HTTPS'
