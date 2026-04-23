@@ -101,19 +101,19 @@ export default class SMIMEA extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    const binaryRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    const binaryRdata = TINYDNS.octalRdataToBytes(rdata)
 
     return new SMIMEA({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SMIMEA',
       'certificate usage': binaryRdata[0],
       selector: binaryRdata[1],
       'matching type': binaryRdata[2],
       'certificate association data': BINARY.bytesToHex(binaryRdata.subarray(3)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

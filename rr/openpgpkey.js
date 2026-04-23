@@ -55,14 +55,15 @@ export default class OPENPGPKEY extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('OPENPGPKEY fromTinydns, invalid n')
     return new OPENPGPKEY({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'OPENPGPKEY',
-      'public key': TINYDNS.octalToBase64(rd),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'public key': TINYDNS.octalToBase64(rdata),
+      timestamp,
+      location,
     })
   }
 

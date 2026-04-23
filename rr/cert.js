@@ -88,24 +88,24 @@ export default class CERT extends RR {
   /******  IMPORTERS   *******/
 
   fromTinydns({ tinyline }) {
-    const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('CERT fromTinydns, invalid n')
 
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
     const typeNum = (bytes[0] << 8) | bytes[1]
 
     const certType = CERT.CERT_TYPES_REVERSE[typeNum] ?? typeNum
 
     return new CERT({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'CERT',
       'cert type': certType,
       'key tag': (bytes[2] << 8) | bytes[3],
       algorithm: bytes[4],
       certificate: BINARY.bytesToBase64(bytes.subarray(5)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

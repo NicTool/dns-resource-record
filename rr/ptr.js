@@ -2,8 +2,11 @@ import RR from '../rr.js'
 
 export default class PTR extends RR {
   static typeName = 'PTR'
+  static typeId = 12
+  static RFCs = [1035]
   static tinydnsType = '^'
   static rdataFields = [['dname', 'fqdn']]
+  static tags = ['common']
 
   constructor(opts) {
     super(opts)
@@ -21,9 +24,7 @@ export default class PTR extends RR {
   getDescription() {
     return 'Pointer'
   }
-  static tags = ['common']
-  static RFCs = [1035]
-  static typeId = 12
+
   getCanonical() {
     return {
       owner: '2.2.0.192.in-addr.arpa.',

@@ -60,21 +60,21 @@ export default class DS extends RR {
 
   fromTinydns(opts) {
     const { tinyline } = opts
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DS fromTinydns, invalid n')
 
-    const binRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const binRdata = TINYDNS.octalRdataToBytes(rdata)
 
     return new DS({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'DS',
       'key tag': (binRdata[0] << 8) | binRdata[1],
       algorithm: binRdata[2],
       'digest type': binRdata[3],
       digest: BINARY.bytesToHex(binRdata.subarray(4)).toUpperCase(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

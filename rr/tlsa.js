@@ -106,21 +106,21 @@ export default class TLSA extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 52) this.throwHelp('TLSA fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('TLSA fromTinydns, invalid n')
 
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new TLSA({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'TLSA',
       'certificate usage': bytes[0],
       selector: bytes[1],
       'matching type': bytes[2],
       'certificate association data': BINARY.bytesToHex(bytes.subarray(3)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

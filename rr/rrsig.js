@@ -5,6 +5,8 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
+  static typeId = 46
+  static RFCs = [4034]
   static rdataFields = [
     ['type covered', 'u16'],
     ['algorithm', 'u8'],
@@ -16,6 +18,8 @@ export default class RRSIG extends RR {
     ['signers name', 'fqdn'],
     ['signature', 'str'],
   ]
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
   }
@@ -60,9 +64,7 @@ export default class RRSIG extends RR {
   getDescription() {
     return 'Resource Record Signature'
   }
-  static tags = ['dnssec']
-  static RFCs = [4034]
-  static typeId = 46
+
   getCanonical() {
     return {
       owner: 'example.com.',

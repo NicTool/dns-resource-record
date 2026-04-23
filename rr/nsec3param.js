@@ -81,25 +81,26 @@ export default class NSEC3PARAM extends RR {
 
   fromTinydns({ tinyline }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (rd.length < 4) {
-      this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('NSEC3PARAM fromTinydns, invalid n')
+    if (rdata.length < 4) {
+      this.throwHelp(`NSEC3PARAM: RDATA too short: ${rdata}`)
     }
 
     // rd may contain actual binary characters (from JS string '\\001' -> char 0x01),
     // so convert via octalToChar and read bytes from a Uint8Array for robust parsing.
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rd), (c) => c.charCodeAt(0))
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new NSEC3PARAM({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'NSEC3PARAM',
       'hash algorithm': bytes[0],
       flags: bytes[1],
       iterations: (bytes[2] << 8) | bytes[3],
       salt: bytes[4] === 0 ? '-' : BINARY.bytesToHex(bytes.subarray(5, 5 + bytes[4])),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

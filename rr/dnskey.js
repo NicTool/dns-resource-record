@@ -133,21 +133,21 @@ export default class DNSKEY extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
-    if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new DNSKEY({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'DNSKEY',
       flags: (bytes[0] << 8) | bytes[1],
       protocol: bytes[2],
       algorithm: bytes[3],
       publickey: BINARY.bytesToBase64(bytes.subarray(4)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

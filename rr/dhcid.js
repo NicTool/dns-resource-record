@@ -36,16 +36,16 @@ export default class DHCID extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // DHCID via generic, :fqdn:49:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 49) this.throwHelp('DHCID fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DHCID fromTinydns, invalid n')
 
     return new DHCID({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'DHCID',
       data: TINYDNS.octalToBase64(rdata),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

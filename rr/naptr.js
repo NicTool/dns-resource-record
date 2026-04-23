@@ -75,18 +75,18 @@ export default class NAPTR extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('NAPTR fromTinydns, invalid n')
 
-    const binRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const binRdata = TINYDNS.octalRdataToBytes(rdata)
     const dv = new DataView(binRdata.buffer, binRdata.byteOffset, binRdata.byteLength)
 
     const rec = {
       type: 'NAPTR',
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      owner,
+      ttl,
+      timestamp,
+      location,
       order: dv.getUint16(0),
       preference: dv.getUint16(2),
     }

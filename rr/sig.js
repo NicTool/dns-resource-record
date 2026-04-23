@@ -6,6 +6,8 @@ import * as WIRELIB from '../lib/wire.js'
 
 export default class SIG extends RR {
   static typeName = 'SIG'
+  static typeId = 24
+  static RFCs = [2535, 3755]
   static rdataFields = [
     ['type covered', 'u16'],
     ['algorithm', 'u8'],
@@ -17,6 +19,8 @@ export default class SIG extends RR {
     ['signers name', 'fqdn'],
     ['signature', 'str'],
   ]
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -81,9 +85,7 @@ export default class SIG extends RR {
   getDescription() {
     return 'Signature'
   }
-  static tags = ['obsolete']
-  static RFCs = [2535, 3755]
-  static typeId = 24
+
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -179,10 +181,10 @@ export default class SIG extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('SIG fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (parseInt(typeId, 10) !== this.getTypeId()) this.throwHelp('SIG fromTinydns, invalid n')
 
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
     const typeCovered = dv.getUint16(0)
@@ -207,8 +209,8 @@ export default class SIG extends RR {
     const signature = new TextDecoder().decode(bytes.subarray(pos))
 
     return new SIG({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SIG',
       'type covered': typeCovered,
       algorithm,
@@ -219,8 +221,8 @@ export default class SIG extends RR {
       'key tag': keyTag,
       'signers name': signersName,
       signature,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

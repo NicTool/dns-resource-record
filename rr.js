@@ -19,6 +19,7 @@ export default class RR {
   static typeId
   static RFCs = []
   static tags = []
+
   constructor(opts) {
     if (opts === null) return
 
@@ -72,32 +73,7 @@ export default class RR {
   }
 
   fromTinydns(opts) {
-    const { tinyline } = opts
-    const fields = this.getFields('rdata')
-    const parts = tinyline.slice(1).split(':')
-
-    // Standard tinydns: [owner, ...rdata, ttl, timestamp, location]
-    // But some records have different counts.
-    // This generic version assumes: [owner, ...fields, ttl, timestamp, location]
-    const rdataCount = fields.length
-    const owner = parts[0]
-    const rdata = parts.slice(1, 1 + rdataCount)
-    const [ttl, ts, loc] = parts.slice(1 + rdataCount)
-
-    const result = {
-      owner: this.fullyQualify(owner),
-      type: this.constructor.typeName,
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    }
-
-    for (let i = 0; i < fields.length; i++) {
-      const val = rdata[i]
-      result[fields[i]] = this.isFqdnField(fields[i]) ? this.fullyQualify(val) : val
-    }
-
-    return new this.constructor(result)
+    return TINYDNS.fromGeneric(this, opts)
   }
 
   static fromWire(wireBytes) {
@@ -593,20 +569,13 @@ export default class RR {
     return bindToGeneric(this, zone_opts)
   }
 
+  parseTinydnsLine(tinyline) {
+    const parsed = TINYDNS.parseGenericLine(tinyline)
+    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
+  }
+
   toTinydns() {
-    if (this.constructor.tinydnsType) {
-      const fields = this.getFields('rdata')
-      const rdata = fields
-        .map((f) => {
-          if (this.isFqdnField(f)) {
-            return this.getTinyFQDN(f)
-          }
-          return this.get(f)
-        })
-        .join(':')
-      return `${this.constructor.tinydnsType}${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
-    }
-    return this.getTinydnsGeneric(TINYDNS.bytesToOctalString(this.getWireRdata()))
+    return TINYDNS.to(this)
   }
 
   isFqdnField(field) {
