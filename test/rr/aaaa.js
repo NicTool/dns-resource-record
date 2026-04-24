@@ -104,6 +104,7 @@ describe('AAAA record', function () {
 
   base.fromBind(AAAA, validRecords)
   base.fromTinydns(AAAA, validRecords)
+  base.fromWire(AAAA, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns AAAA (generic) record (${val.owner})`, async function () {
@@ -122,5 +123,3 @@ describe('AAAA record', function () {
     assert.equal(r.get('ttl'), 3600)
   })
 })
-
-base.fromWire(AAAA, validRecords)

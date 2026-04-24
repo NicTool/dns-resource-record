@@ -80,6 +80,5 @@ describe('TSIG record', function () {
 
   base.fromBind(TSIG, validRecords)
   base.fromTinydns(TSIG, validRecords)
+  base.fromWire(TSIG, validRecords)
 })
-
-base.fromWire(TSIG, validRecords)

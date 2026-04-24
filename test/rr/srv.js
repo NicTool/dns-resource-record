@@ -109,6 +109,7 @@ describe('SRV record', function () {
 
   base.fromBind(SRV, validRecords)
   base.fromTinydns(SRV, validRecords)
+  base.fromWire(SRV, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns SRV (generic) record (${val.owner})`, async function () {
@@ -129,5 +130,3 @@ describe('SRV record', function () {
     }
   })
 })
-
-base.fromWire(SRV, validRecords)

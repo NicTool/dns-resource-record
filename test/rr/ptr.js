@@ -45,6 +45,7 @@ describe('PTR record', function () {
 
   base.fromBind(PTR, validRecords)
   base.fromTinydns(PTR, validRecords)
+  base.fromWire(PTR, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns PTR (^) record (${val.owner})`, async function () {
@@ -56,5 +57,3 @@ describe('PTR record', function () {
     })
   }
 })
-
-base.fromWire(PTR, validRecords)

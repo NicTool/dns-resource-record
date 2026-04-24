@@ -142,6 +142,5 @@ describe('SSHFP record', function () {
 
   base.fromBind(SSHFP, validRecords)
   base.fromTinydns(SSHFP, validRecords)
+  base.fromWire(SSHFP, validRecords)
 })
-
-base.fromWire(SSHFP, validRecords)

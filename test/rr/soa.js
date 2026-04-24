@@ -71,6 +71,7 @@ describe('SOA record', function () {
 
   base.fromBind(SOA, validRecords)
   base.fromTinydns(SOA, validRecords)
+  base.fromWire(SOA, validRecords)
 
   it('exports SOA record in MaraDNS format', function () {
     const soa = new SOA(validRecords[0])
@@ -90,5 +91,3 @@ describe('SOA record', function () {
     })
   }
 })
-
-base.fromWire(SOA, validRecords)

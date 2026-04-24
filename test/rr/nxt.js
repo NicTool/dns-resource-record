@@ -40,6 +40,5 @@ describe('NXT record', function () {
 
   base.fromBind(NXT, validRecords)
   base.fromTinydns(NXT, validRecords)
+  base.fromWire(NXT, validRecords)
 })
-
-base.fromWire(NXT, validRecords)

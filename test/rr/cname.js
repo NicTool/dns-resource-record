@@ -72,6 +72,5 @@ describe('CNAME record', function () {
 
   base.fromTinydns(CNAME, validRecords)
   base.fromBind(CNAME, validRecords)
+  base.fromWire(CNAME, validRecords)
 })
-
-base.fromWire(CNAME, validRecords)

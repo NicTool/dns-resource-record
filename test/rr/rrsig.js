@@ -88,6 +88,7 @@ describe('RRSIG record', function () {
 
   base.fromBind(RRSIG, validRecords)
   base.fromTinydns(RRSIG, validRecords)
+  base.fromWire(RRSIG, validRecords)
 
   // test outside of roundtrip tests b/c mnemonic types are stored as ints
   it('resolves type name string "A" to numeric 1', function () {
@@ -112,5 +113,3 @@ describe('RRSIG record', function () {
     assert.equal(r.get('type covered'), 28)
   })
 })
-
-base.fromWire(RRSIG, validRecords)

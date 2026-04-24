@@ -24,7 +24,8 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 import * as rrtypes from '../index.js'
-import { buildQuery, parseResponse, dnsQuery } from '../lib/wire.js'
+import { buildQuery, parseResponse } from '../lib/wire.js'
+import { dnsQuery } from '../lib/dns-query.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ZONE_FILE = join(__dirname, 'fixtures', 'nictool.tnpi.net.zone')

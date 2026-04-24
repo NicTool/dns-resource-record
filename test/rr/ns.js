@@ -64,6 +64,7 @@ describe('NS record', function () {
 
   base.fromBind(NS, validRecords)
   base.fromTinydns(NS, validRecords)
+  base.fromWire(NS, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns NS (&) record (${val.owner})`, function () {
@@ -75,5 +76,3 @@ describe('NS record', function () {
     })
   }
 })
-
-base.fromWire(NS, validRecords)

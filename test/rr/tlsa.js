@@ -62,6 +62,5 @@ describe('TLSA record', function () {
 
   base.fromBind(TLSA, validRecords)
   base.fromTinydns(TLSA, validRecords)
+  base.fromWire(TLSA, validRecords)
 })
-
-base.fromWire(TLSA, validRecords)

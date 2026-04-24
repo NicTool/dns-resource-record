@@ -109,3 +109,4 @@ config.yml
 CLAUDE.md
 GEMINI.md
 .release/
+fuzz/

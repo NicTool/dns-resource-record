@@ -38,6 +38,7 @@ describe('SPF record', function () {
 
   base.fromBind(SPF, validRecords)
   base.fromTinydns(SPF, validRecords)
+  base.fromWire(SPF, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns SPF (generic) record`, async function () {
@@ -49,5 +50,3 @@ describe('SPF record', function () {
     })
   }
 })
-
-base.fromWire(SPF, validRecords)

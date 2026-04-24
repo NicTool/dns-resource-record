@@ -145,6 +145,7 @@ describe('CAA record', function () {
 
   base.fromBind(CAA, validRecords)
   base.fromTinydns(CAA, validRecords)
+  base.fromWire(CAA, validRecords)
 
   it('strips quotes from CAA value when quoted', function () {
     const r = new CAA({
@@ -170,5 +171,3 @@ describe('CAA record', function () {
     assert.equal(r.get('type'), 'CAA')
   })
 })
-
-base.fromWire(CAA, validRecords)

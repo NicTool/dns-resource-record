@@ -64,6 +64,7 @@ describe('HINFO record', function () {
 
   base.fromBind(HINFO, validRecords)
   base.fromTinydns(HINFO, validRecords)
+  base.fromWire(HINFO, validRecords)
 
   for (const val of validRecords) {
     if (!val.testT) continue
@@ -89,5 +90,3 @@ describe('HINFO record', function () {
     })
   }
 })
-
-base.fromWire(HINFO, validRecords)

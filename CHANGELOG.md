@@ -22,12 +22,16 @@ Notable changes to this project are documented in this file.
 
 #### Additions
 
-- feat: rollup dns-rr.min.js + min.js.map
+- add rr/TEMPLATE.js with lots of docs
+- declarative rdataFields to remove lots of boilerplate from rr/all
+- browser compat enhancements
+  - rollup dns-rr.min.js + min.js.map
   - add `static typeName` as constructor.name doesn't survive minification
-- feat(lib/binary): add shared binary functions
-  - change: replace `Buffer` with Uint8Array, DataView, and math
+  - feat(lib/binary): add shared binary functions
+    - change: replace `Buffer` with Uint8Array, DataView, and math
 - feat(lib/wire): add wire format helpers
 - feat(fromWire): added wire format parsers
+  - used to round-trip DNS and validate parsing & formatting
 - feat(fromBind): use a parser (vs regexes)
 - test: add dnsLiveTests, test `toWire()` against live NSD & tinydns
   - uncovered edge cases in round trips between formats

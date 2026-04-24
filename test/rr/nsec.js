@@ -40,6 +40,5 @@ describe('NSEC record', function () {
 
   base.fromBind(NSEC, validRecords)
   base.fromTinydns(NSEC, validRecords)
+  base.fromWire(NSEC, validRecords)
 })
-
-base.fromWire(NSEC, validRecords)

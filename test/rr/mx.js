@@ -90,6 +90,7 @@ describe('MX record', function () {
 
   base.fromBind(MX, validRecords)
   base.fromTinydns(MX, validRecords)
+  base.fromWire(MX, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns MX (@) record (${val.owner})`, async function () {
@@ -101,5 +102,3 @@ describe('MX record', function () {
     })
   }
 })
-
-base.fromWire(MX, validRecords)

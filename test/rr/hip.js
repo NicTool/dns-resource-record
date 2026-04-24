@@ -95,6 +95,7 @@ describe('HIP record', function () {
 
   base.fromBind(HIP, validRecords)
   base.fromTinydns(HIP, validRecords)
+  base.fromWire(HIP, validRecords)
 
   test('fromBind reassembles space-joined multi-chunk base64 key and separates RVS', () => {
     // Simulates the zone parser joining a parenthesized multi-line HIP record.
@@ -108,5 +109,3 @@ describe('HIP record', function () {
     assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
   })
 })
-
-base.fromWire(HIP, validRecords)

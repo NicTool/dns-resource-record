@@ -1,5 +1,6 @@
-import { inspect } from 'util'
 import * as TINYDNS from './lib/tinydns.js'
+
+const customInspect = Symbol.for('nodejs.util.inspect.custom')
 import {
   wireUnpackDomain,
   wirePackDomain,
@@ -107,7 +108,7 @@ export default class RR {
     return obj
   }
 
-  [inspect.custom](depth, options, nextInspect) {
+  [customInspect](depth, options, nextInspect) {
     // Returns a formatted string that looks like: A { ... }
     return `${this.type} ${nextInspect(this.toJSON(), options)}`
   }

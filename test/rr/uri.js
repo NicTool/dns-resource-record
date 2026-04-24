@@ -87,6 +87,7 @@ describe('URI record', function () {
 
   base.fromBind(URI, validRecords)
   base.fromTinydns(URI, validRecords)
+  base.fromWire(URI, validRecords)
 
   for (const val of validRecords) {
     it(`imports tinydns (generic) record`, async function () {
@@ -98,5 +99,3 @@ describe('URI record', function () {
     })
   }
 })
-
-base.fromWire(URI, validRecords)

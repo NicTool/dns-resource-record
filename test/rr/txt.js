@@ -75,6 +75,7 @@ describe('TXT record', function () {
 
   base.fromTinydns(TXT, validRecords)
   base.fromBind(TXT, validRecords)
+  base.fromWire(TXT, validRecords)
 
   it(`toBind chunks non-ASCII TXT data by UTF-8 bytes, not characters`, function () {
     // 200 × "é" = 200 chars but 400 UTF-8 bytes → must split into multiple
@@ -118,5 +119,3 @@ describe('TXT record', function () {
     assert.equal(r.toMaraDNS(), "example.com.\t+3600\tTXT\t'v=spf1 mx -all' ~\n")
   })
 })
-
-base.fromWire(TXT, validRecords)

@@ -84,6 +84,5 @@ describe('APL record', function () {
 
   base.fromBind(APL, validRecords)
   base.fromTinydns(APL, validRecords)
+  base.fromWire(APL, validRecords)
 })
-
-base.fromWire(APL, validRecords)

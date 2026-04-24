@@ -50,6 +50,5 @@ describe('DS record', function () {
 
   base.fromBind(DS, validRecords)
   base.fromTinydns(DS, validRecords)
+  base.fromWire(DS, validRecords)
 })
-
-base.fromWire(DS, validRecords)

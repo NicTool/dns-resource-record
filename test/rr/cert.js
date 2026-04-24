@@ -111,10 +111,9 @@ describe('CERT record', function () {
 
   base.fromBind(CERT, validRecords)
   base.fromTinydns(CERT, validRecords)
+  base.fromWire(CERT, validRecords)
 
   it('getCertTypeValue throws for unknown mnemonic', function () {
     assert.throws(() => new CERT(null).getCertTypeValue('DOESNOTEXIST'), /unknown cert type mnemonic/i)
   })
 })
-
-base.fromWire(CERT, validRecords)

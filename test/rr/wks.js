@@ -82,6 +82,5 @@ describe('WKS record', function () {
 
   base.fromBind(WKS, validRecords)
   base.fromTinydns(WKS, validRecords)
+  base.fromWire(WKS, validRecords)
 })
-
-base.fromWire(WKS, validRecords)
