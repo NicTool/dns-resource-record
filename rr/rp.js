@@ -3,6 +3,12 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class RP extends RR {
+  static typeName = 'RP'
+  static rdataFields = [
+    ['mbox', 'fqdn'],
+    ['txt', 'fqdn'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -27,23 +33,9 @@ export default class RP extends RR {
   getDescription() {
     return 'Responsible Person'
   }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return ['mbox', 'txt']
-  }
-
-  getRFCs() {
-    return [1183]
-  }
-
-  getTypeId() {
-    return 17
-  }
-
+  static tags = ['obsolete']
+  static RFCs = [1183]
+  static typeId = 17
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -56,19 +48,6 @@ export default class RP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  RP  mbox txt
-    const [owner, ttl, c, type, mbox, txt] = bindline.split(/\s+/)
-    return new RP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      mbox,
-      txt,
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
@@ -87,8 +66,14 @@ export default class RP extends RR {
   }
 
   /******  EXPORTERS   *******/
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('mbox', zone_opts)}\t${this.getFQDN('txt', zone_opts)}\n`
+
+  getWireRdata() {
+    const mbox = this.wirePackDomain(this.get('mbox'))
+    const txt = this.wirePackDomain(this.get('txt'))
+    const result = new Uint8Array(mbox.length + txt.length)
+    result.set(mbox, 0)
+    result.set(txt, mbox.length)
+    return result
   }
 
   toTinydns() {

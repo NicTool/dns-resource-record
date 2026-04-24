@@ -1,8 +1,20 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class TLSA extends RR {
+  static typeName = 'TLSA'
+  static typeId = 52
+  static RFCs = [6698, 7671]
+  static rdataFields = [
+    ['certificate usage', 'u8'],
+    ['selector', 'u8'],
+    ['matching type', 'u8'],
+    ['certificate association data', 'hex'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -58,22 +70,6 @@ export default class TLSA extends RR {
     return 'TLSA certificate association'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getRdataFields(arg) {
-    return ['certificate usage', 'selector', 'matching type', 'certificate association data']
-  }
-
-  getRFCs() {
-    return [6698, 7671]
-  }
-
-  getTypeId() {
-    return 52
-  }
-
   getCanonical() {
     return {
       owner: '_443._tcp.www.example.com.',
@@ -85,10 +81,6 @@ export default class TLSA extends RR {
       'matching type': 1,
       'certificate association data': 'ABCDEF...',
     }
-  }
-
-  getQuotedFields() {
-    return []
   }
 
   /******  IMPORTERS   *******/
@@ -114,33 +106,41 @@ export default class TLSA extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 52) this.throwHelp('TLSA fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('TLSA fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new TLSA({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'TLSA',
-      'certificate usage': bytes.readUInt8(0),
-      selector: bytes.readUInt8(1),
-      'matching type': bytes.readUInt8(2),
-      'certificate association data': bytes.slice(3).toString(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'certificate usage': bytes[0],
+      selector: bytes[1],
+      'matching type': bytes[2],
+      'certificate association data': BINARY.bytesToHex(bytes.subarray(3)),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('certificate usage')) +
         TINYDNS.UInt8toOctal(this.get('selector')) +
         TINYDNS.UInt8toOctal(this.get('matching type')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate association data')),
+        TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const cadBytes = BINARY.hexToBytes(this.get('certificate association data').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(3 + cadBytes.length)
+    bytes[0] = this.get('certificate usage')
+    bytes[1] = this.get('selector')
+    bytes[2] = this.get('matching type')
+    bytes.set(cadBytes, 3)
+    return bytes
   }
 }

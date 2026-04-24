@@ -2,59 +2,23 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SRV extends RR {
+  static typeName = 'SRV'
+  static typeId = 33
+  static RFCs = [2782]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['weight', 'u16'],
+    ['port', 'u16'],
+    ['target', 'fqdn'],
+  ]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
 
-  /****** Resource record specific setters   *******/
-  setPriority(val) {
-    this.is16bitInt('SRV', 'priority', val)
-
-    this.set('priority', val)
-  }
-
-  setPort(val) {
-    this.is16bitInt('SRV', 'port', val)
-
-    this.set('port', val)
-  }
-
-  setWeight(val) {
-    this.is16bitInt('SRV', 'weight', val)
-
-    this.set('weight', val)
-  }
-
-  setTarget(val) {
-    if (!val) this.throwHelp(`SRV: target is required`)
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`SRV: target must be a FQDN`)
-
-    this.isFullyQualified('SRV', 'target', val)
-    this.isValidHostname('SRV', 'target', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('target', val.toLowerCase())
-  }
-
   getDescription() {
     return 'Service'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'weight', 'port', 'target']
-  }
-
-  getRFCs() {
-    return [2782]
-  }
-
-  getTypeId() {
-    return 33
   }
 
   getCanonical() {
@@ -102,22 +66,18 @@ export default class SRV extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SRV Priority Weight Port Target
-    const [owner, ttl, c, type, pri, weight, port, target] = bindline.split(/\s+/)
-    return new SRV({
-      owner: owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      priority: parseInt(pri, 10),
-      weight: parseInt(weight, 10),
-      port: parseInt(port, 10),
-      target: target,
-    })
-  }
-
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const target = this.wirePackDomain(this.get('target'))
+    const result = new Uint8Array(6 + target.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('priority'))
+    dv.setUint16(2, this.get('weight'))
+    dv.setUint16(4, this.get('port'))
+    result.set(target, 6)
+    return result
+  }
 
   toTinydns() {
     let rdata = ''

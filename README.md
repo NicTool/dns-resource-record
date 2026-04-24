@@ -1,272 +1,396 @@
-[![Module Tests](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg)](https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg?branch=master)](https://coveralls.io/github/NicTool/dns-resource-record?branch=master)
+[![Module Tests][ci-img]][ci-url]
+[![Test Coverage][cov-img]][cov-url]
 
 # dns-resource-record
 
-DNS resource record parser, validator, importer, and exporter for node.js & browsers.
+DNS resource record parser, validator, importer, and exporter for node.js & browsers
 
-## SYNOPSIS
+**Quick Links:** [Getting Started](#getting-started) | [API Reference](#api-reference) | [Browser/CDN](#browser--cdn) | [Supported Records](#supported-records) | [Contributing](#development)
 
-This module is used to:
+## Overview
 
-- validate well formedness and RFC compliance of DNS resource records
-- import RRs to and from the following formats:
+This module validates, imports, and exports DNS resource records (RRs) with rigorous RFC compliance and robust test coverage.
 
-|                      **RR format**                       |     **import**     |     **export**     |
-| :------------------------------------------------------: | :----------------: | :----------------: |
-|                         **JSON**                         | :white_check_mark: | :white_check_mark: |
-|     **[BIND](https://www.isc.org/bind/) / RFC 1035**     | :white_check_mark: | :white_check_mark: |
-| **[Tinydns](https://cr.yp.to/djbdns/tinydns-data.html)** | :white_check_mark: | :white_check_mark: |
-|                       **MaraDNS**                        |                    | :white_check_mark: |
-|                          **JS**                          | :white_check_mark: | :white_check_mark: |
-|                       **PowerDNS**                       |                    |                    |
-|                         **Wire**                         |                    | :white_check_mark: |
+**What you can do:**
 
-This package intends to import and export RFC compliant DNS resource records. Please [raise an issue](https://github.com/NicTool/dns-resource-record/issues) if a valid resource record fails to pass or an invalid resource record passes.
+- **Validate** DNS records for RFC compliance and well-formedness
+- **Parse/Import** records from BIND zone files, tinydns data files, or JS objects
+- **Export** records to BIND, tinydns, MaraDNS, JSON, or wire format
+- **Manipulate** validated records with type-safe setters
+- **Convert** between formats seamlessly (e.g., tinydns → BIND -> wire)
 
-This package is for working with _individual_ Resource Records. For working with zones of RRs, use [dns-zone](https://github.com/NicTool/dns-zone).
+**Scope:** This package handles individual Resource Records. For zone file operations, see [dns-zone](https://github.com/NicTool/dns-zone).
 
-## USAGE
-
-Load the index for access to all RR types:
-
-```js
-import * as RR from '@nictool/dns-resource-record'
-```
-
-### EXAMPLES
-
-```js
-const exampleRRs = {
-    A: {
-        owner  : 'test.example.com.',
-        type   : 'A',
-        address: '192.0.2.127',
-        ttl    : 3600,
-    },
-    AAAA: {
-        owner  : 'test.example.com.',
-        type   : 'AAAA',
-        address: '2605:7900:20:a::4',
-        ttl    : 3600,
-    },
-    SOA: {
-        owner  : 'example.com.',
-        type   : 'SOA',
-        mname  : 'matt.example.com.',
-        rname  : 'ns1.example.com.',
-        serial : 1,
-        refresh: 7200,
-        retry  : 3600,
-        expire : 1209600,
-        minimum: 3600,
-        ttl    : 3600,
-    }
-}
-try {
-    console.log(new RR.SOA(exampleRRs.SOA))
-    SOA(11) [Map] {
-        'owner' => 'example.com.',
-        'ttl' => 3600,
-        'class' => 'IN',
-        'type' => 'SOA',
-        'mname' => 'matt.example.com.',
-        'rname' => 'ns1.example.com.',
-        'serial' => 1,
-        'refresh' => 7200,
-        'retry' => 3600,
-        'expire' => 1209600,
-        'minimum' => 3600
-    }
-}
-catch (e) {
-    console.error(e.message) // invalid RRs throw
-}
-```
-
-Validate records by passing a properly formatted JS object to the record-specific class. To validate an A record:
-
-```js
-const validatedA = new RR.A(exampleRRs.A)
-```
-
-Manipulate the validated record using pattern named setters:
-
-```js
-console.log(validatedA.toBind())
-test.example.com.    3600    IN  A   192.0.2.127
-
-validatedA.setAddress('192.0.2.128')
-console.log(validatedA.toBind())
-test.example.com.    3600    IN  A   192.0.2.128
-```
-
-The setters are named: `set` + `Field`, where field is the resource record field name to modify. Multi-word names are camel cased, so a field named `Certificate Usage` has a setter named `setCertificateUsage`. The RFCs aren't always consistent regarding RR field names so aliases are permissible for interoperability.
-
-## FUNCTIONS
-
-### getCanonical
-
-```js
-> console.log(new RR.AAAA(null).getCanonical())
-{
-  owner: 'host.example.com.',
-  address: '2001:0db8:0020:000a:0000:0000:0000:0004',
-  class: 'IN',
-  ttl: 3600,
-  type: 'AAAA'
-}
-```
-
-### getFields
-
-Get the field names for each RR type
-
-```js
-> import * as RR from 'dns-resource-record'
-> new RR.A(null).getFields()   // [ 'owner', 'ttl', 'class', 'type', 'address' ]
-
-> new RR.PTR(null).getFields() // [ 'owner', 'ttl', 'class', 'type', 'dname' ]
-
-> new RR.SSHFP(null).getFields()
-// [ 'owner', 'ttl', 'class', 'type', 'algorithm', 'fptype', 'fingerprint' ]
-```
-
-### getRFCs
-
-Get a list of RFCs references for each RR type
-
-```js
-> new RR.A(null).getRFCs()    // [ 1035 ]
-> new RR.SRV(null).getRFCs()  // [ 2782 ]
-> new RR.MX(null).getRFCs()   // [ 1035, 2181, 7505 ]
-```
-
-### toBind
-
-Validate a record and export to BIND format.
-
-```js
-console.log(new RR.A(exampleRRs.A).toBind())
-// test.example.com    3600    IN  A   192.0.2.127
-
-console.log(new RR.AAAA(exampleRRs.AAAA).toBind())
-// test.example.com    3600    IN  AAAA    2605:7900:20:a::4
-```
-
-### toTinydns
-
-Validate a record and export to tinydns format:
-
-```js
-console.log(new RR.A(exampleRRs.A).toTinydns()) // +test.example.com:192.0.2.127:3600::
-```
-
-### set
-
-The DNS validation checks can be bypassed entirely by using 'set':
-
-```js
-> validatedA.set('address', 'oops')
-A(5) [Map] {
-  'owner' => 'test.example.com',
-  'ttl' => 3600,
-  'class' => 'IN',
-  'type' => 'A',
-  'address' => 'oops'
-}
-```
-
-Consider this a "running with scissors" mode.
-
-### fromTinydns toBind
-
-Convert a tinydns line to BIND:
-
-```js
-console.log(new RR.CAA({
-  tinyline: ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n'
-}).toBind())
-ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
-```
+**Quality:** RFC compliance is a first-class concern. If you encounter a valid RR that fails to parse or an invalid RR that passes validation, please [open an issue](https://github.com/NicTool/dns-resource-record/issues).
 
 ## Supported Records
 
-This module intends to support all current (ie, not officially deprecated) DNS RRs **and** all RRs that are in active use on the internet.
+This module supports all current DNS RRs in active use on the internet.
 
-PRs are welcome, especially PRs with tests.
+|     Usage     |                   **Resource Record Types**                   |
+| :-----------: | :-----------------------------------------------------------: |
+|   _Common_    |       A, AAAA, CNAME, HTTPS, MX, NS, PTR, SOA, SRV, TXT       |
+| _Less Common_ | APL, CERT, DHCID, DNAME, HIP, KX, LOC, NAPTR, SVCB, TSIG, URI |
+|  _Security_   |        CAA, IPSECKEY, OPENPGPKEY, SMIMEA, SSHFP, TLSA         |
+|   _DNSSEC_    |          DNSKEY, DS, NSEC, NSEC3, NSEC3PARAM, RRSIG           |
+|  _Obsolete_   |              HINFO, KEY, NXT, RP, SIG, SPF, WKS               |
 
-|     **RR**     | **BIND / RFC 1035** |    **Tinydns**     |
-| :------------: | :-----------------: | :----------------: |
-|    _Common_    |
-|     **A**      | :white_check_mark:  | :white_check_mark: |
-|    **AAAA**    | :white_check_mark:  | :white_check_mark: |
-|   **CNAME**    | :white_check_mark:  | :white_check_mark: |
-|   **HTTPS**    | :white_check_mark:  | :white_check_mark: |
-|     **MX**     | :white_check_mark:  | :white_check_mark: |
-|     **NS**     | :white_check_mark:  | :white_check_mark: |
-|    **PTR**     | :white_check_mark:  | :white_check_mark: |
-|    **SRV**     | :white_check_mark:  | :white_check_mark: |
-|    **TXT**     | :white_check_mark:  | :white_check_mark: |
-| _Less Common_  |
-|    **APL**     | :white_check_mark:  | :white_check_mark: |
-|    **CERT**    | :white_check_mark:  | :white_check_mark: |
-|   **DHCID**    | :white_check_mark:  | :white_check_mark: |
-|   **DNAME**    | :white_check_mark:  | :white_check_mark: |
-|    **HIP**     | :white_check_mark:  | :white_check_mark: |
-|    **KEY**     | :white_check_mark:  | :white_check_mark: |
-|     **KX**     | :white_check_mark:  | :white_check_mark: |
-|    **LOC**     | :white_check_mark:  | :white_check_mark: |
-|   **NAPTR**    | :white_check_mark:  | :white_check_mark: |
-|    **SOA**     | :white_check_mark:  | :white_check_mark: |
-|    **SVCB**    | :white_check_mark:  | :white_check_mark: |
-|    **TSIG**    | :white_check_mark:  | :white_check_mark: |
-|    **URI**     | :white_check_mark:  | :white_check_mark: |
-|   _Security_   |
-|    **CAA**     | :white_check_mark:  | :white_check_mark: |
-|  **IPSECKEY**  | :white_check_mark:  | :white_check_mark: |
-| **OPENPGPKEY** | :white_check_mark:  | :white_check_mark: |
-|   **SMIMEA**   | :white_check_mark:  | :white_check_mark: |
-|   **SSHFP**    | :white_check_mark:  | :white_check_mark: |
-|    **TLSA**    | :white_check_mark:  | :white_check_mark: |
-|    _DNSSEC_    |
-|   **DNSKEY**   | :white_check_mark:  | :white_check_mark: |
-|     **DS**     | :white_check_mark:  | :white_check_mark: |
-|    **NSEC**    | :white_check_mark:  | :white_check_mark: |
-|   **NSEC3**    | :white_check_mark:  | :white_check_mark: |
-| **NSEC3PARAM** | :white_check_mark:  | :white_check_mark: |
-|   **RRSIG**    | :white_check_mark:  | :white_check_mark: |
-|  _Deprecated_  |
-|    **NXT**     | :white_check_mark:  | :white_check_mark: |
-|    **SPF**     | :white_check_mark:  | :white_check_mark: |
-|   _Obsolete_   |
-|   **HINFO**    | :white_check_mark:  | :white_check_mark: |
-|     **RP**     | :white_check_mark:  | :white_check_mark: |
-|    **SIG**     | :white_check_mark:  | :white_check_mark: |
-|    **WKS**     | :white_check_mark:  | :white_check_mark: |
+## Getting Started
 
-## TIPS
+### Installation
 
-- Domain owner names are:
-  - stored fully qualified, aka absolute.
-  - normalized to lower case, because:
-    - DNS is case insensitive (see RFCs 4343, 1035, 1034)
-    - this library enforces duplicate suppression
-    - DNSSEC canonicalization (see RFC 4034)
-    - wire format for most RRs require it
-  - Master Zone File expansions exist in [dns-zone](https://github.com/NicTool/dns-zone)
-- to{Bind|MaraDNS} output can be influenced (suppress TTL, class, relative domain names) with an options object. See it in `bin/dns-zone` in the [dns-zone](https://github.com/NicTool/dns-zone) package.
+```sh
+npm install @nictool/dns-resource-record
+```
 
-## SEE ALSO
+### Validation
 
-- [Dictionary of DNS terms](https://nictool.github.io/web/Dictionary)
-- [Wikipedia, List of DNS Record Types](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
-- @nictool/[dns-zone](https://www.npmjs.com/package/@nictool/dns-zone)
-- @nictool/[dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver)
+Validate an A record:
 
-## DEVELOP
+```js
+import * as RR from '@nictool/dns-resource-record'
 
-- There are no dependencies. That's no accident.
-- ESM browsers and node.js
-- Platform independence is a goal
-  - [x] CI tests are on linux, windows, and macOS
+const validA = new RR.A({
+  owner: 'example.com.',
+  address: '192.0.2.1',
+  ttl: 3600,
+})
+
+console.log(validA.toBind())
+// example.com          3600    IN  A   192.0.2.1
+```
+
+Invalid records throw immediately:
+
+```js
+try {
+  new RR.A({ owner: 'example.com.', address: 'not-an-ip' })
+} catch (err) {
+  console.error(err.message) // Error: A address must be IPv4
+}
+```
+
+This library enforces RFC-compliance during construction, catching errors early.
+
+---
+
+## API Reference
+
+### Understanding Record Structure
+
+Every DNS record has these standard fields:
+
+- **owner** — The domain name this record belongs to (always fully qualified, e.g., `example.com.`)
+- **type** — The record type (A, AAAA, MX, TXT, etc.)
+- **ttl** — Time to live in seconds
+- **class** — Almost always `IN` (Internet); omitted in examples
+
+Plus **rdata fields** specific to each record type (e.g., `address` for A records, `preference`/`exchange` for MX records).
+
+### Core Workflows
+
+#### 1. **Validate & Create** — Use the Constructor
+
+When you have data in JavaScript object form:
+
+```js
+new RR.SOA({
+  owner: 'example.com.',
+  mname: 'ns1.example.com.',
+  rname: 'hostmaster.example.com.',
+  serial: 2024042201,
+  refresh: 7200,
+  retry: 3600,
+  expire: 1209600,
+  minimum: 3600,
+  ttl: 3600,
+})
+```
+
+**When to use:** Building records programmatically, validating user input, working with API responses.
+
+---
+
+#### 2. **Parse BIND Format** — Use `fromBind()`
+
+When you have a line from a BIND zone file:
+
+```js
+const rr = RR.A.fromBind('www.example.com.  3600  IN  A  192.0.2.1\n')
+console.log(rr.get('address')) // '192.0.2.1'
+```
+
+**When to use:** Processing BIND zone files, DNS configs, or standard zone file exports.
+
+---
+
+#### 3. **Parse Tinydns Format** — Use `fromTinydns()`
+
+When you have a line from a tinydns data file:
+
+```js
+const rr = RR.A.fromTinydns('+www.example.com:192.0.2.1:3600::\n')
+console.log(rr.get('address')) // '192.0.2.1'
+```
+
+**When to use:** Working with djbdns/tinydns configurations, or when parsing tinydns data files.
+
+---
+
+#### 4. **Export to BIND** — Use `toBind()`
+
+Convert any validated record to BIND zone file format:
+
+```js
+new RR.MX({
+  owner: 'example.com.',
+  preference: 10,
+  exchange: 'mail.example.com.',
+  ttl: 3600,
+}).toBind()
+// example.com          3600    IN  MX  10 mail.example.com.
+```
+
+**When to use:** Generating zone files, displaying records for editing, exporting to BIND nameservers.
+
+---
+
+#### 5. **Export to Tinydns** — Use `toTinydns()`
+
+Convert to tinydns data file format:
+
+```js
+new RR.A({
+  owner: 'example.com.',
+  address: '192.0.2.1',
+  ttl: 3600,
+}).toTinydns()
+// +example.com:192.0.2.1:3600::
+```
+
+**When to use:** Generating tinydns data files, migrating to djbdns, or integrating with tinydns tooling.
+
+---
+
+#### 6. **Round-Trip Conversion**
+
+Parse from one format, export to another:
+
+```js
+// tinydns → BIND
+const fromTiny = RR.CAA.fromTinydns(
+  ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
+)
+console.log(fromTiny.toBind())
+// ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
+```
+
+**When to use:** DNS migrations, format conversions, tool interoperability.
+
+---
+
+### Manipulating Records
+
+Use **setter methods** to modify validated records. Setter names follow the pattern `set` + `FieldName` (camelCased):
+
+```js
+const a = new RR.A({
+  owner: 'example.com.',
+  address: '192.0.2.1',
+  ttl: 3600,
+})
+
+a.setAddress('192.0.2.2')
+a.setTtl(7200)
+
+console.log(a.toBind())
+// example.com          7200    IN  A   192.0.2.2
+```
+
+Setters include validation. Invalid values throw with helpful error messages.
+
+For a list of available setters, check `getFields('rdata')` for your record type:
+
+```js
+new RR.SSHFP(null).getFields('rdata')
+// ['algorithm', 'fptype', 'fingerprint']
+// So use: setSshfp(), setFptype(), setFingerprint()
+```
+
+---
+
+### Metadata Methods
+
+Get information about record types:
+
+#### `getFields([section])`
+
+Get field names for a record type. Pass `'rdata'` to get only the custom fields:
+
+```js
+new RR.A(null).getFields() // ['owner', 'ttl', 'class', 'type', 'address']
+new RR.A(null).getFields('rdata') // ['address']
+new RR.MX(null).getFields('rdata') // ['preference', 'exchange']
+```
+
+#### `getRFCs()`
+
+Get RFC references for a record type:
+
+```js
+new RR.A(null).getRFCs() // [1035]
+new RR.MX(null).getRFCs() // [1035, 2181, 7505]
+new RR.SRV(null).getRFCs() // [2782]
+```
+
+#### `getCanonical()`
+
+Get a record with all fields populated with default/canonical values:
+
+```js
+new RR.AAAA(null).getCanonical()
+// {
+//   owner: 'host.example.com.',
+//   address: '2001:0db8:0020:000a:0000:0000:0000:0004',
+//   class: 'IN',
+//   ttl: 3600,
+//   type: 'AAAA'
+// }
+```
+
+#### `toJSON()` / `JSON.stringify()`
+
+Serialize a record to a plain object:
+
+```js
+const a = new RR.A({ owner: 'example.com.', address: '192.0.2.1', ttl: 3600 })
+JSON.stringify(a)
+// {"owner":"example.com.","ttl":3600,"class":"IN","type":"A","address":"192.0.2.1"}
+```
+
+---
+
+### Advanced: Bypassing Validation
+
+The `set()` method bypasses validation (use carefully):
+
+```js
+record.set('address', 'invalid-value')
+// Works, but now the record is malformed — useful only for testing or low-level manipulation
+```
+
+**Note:** Validation is there to protect data integrity. Use at your own risk.
+
+---
+
+## Browser & CDN
+
+Use this module directly in browsers via CDN:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DNS Record Validator</title>
+  </head>
+  <body>
+    <h1>DNS Record Validator</h1>
+    <pre id="output"></pre>
+
+    <script type="module">
+      // Import from unpkg (or jsdelivr, esm.sh)
+      import * as RR from 'https://unpkg.com/@nictool/dns-resource-record@latest/dist/dns-rr.min.js'
+
+      // Use just like Node.js
+      const record = new RR.A({
+        owner: 'example.com.',
+        address: '192.0.2.1',
+        ttl: 3600,
+      })
+
+      document.getElementById('output').textContent = record.toBind()
+    </script>
+  </body>
+</html>
+```
+
+**Available CDNs:**
+
+- **unpkg:** `https://unpkg.com/@nictool/dns-resource-record/dist/dns-rr.min.js`
+- **jsdelivr:** `https://cdn.jsdelivr.net/npm/@nictool/dns-resource-record/dist/dns-rr.min.js`
+- **esm.sh:** `https://esm.sh/@nictool/dns-resource-record`
+
+**Live example:** See [nictool.github.io/builder/](https://nictool.github.io/builder/) for an interactive DNS record editor using this library.
+
+---
+
+## Important Concepts
+
+### Domain Name Normalization
+
+Domain owner names are:
+
+- **Stored fully qualified** (absolute), e.g., `example.com.` not `example.com`
+- **Normalized to lowercase** because:
+  - DNS is case-insensitive (RFC 4343, RFC 1035)
+  - This library enforces automatic duplicate suppression
+  - DNSSEC canonicalization requires it (RFC 4034)
+  - Wire format for most RRs requires lowercase
+
+**Example:**
+
+```js
+new RR.A({ owner: 'EXAMPLE.COM', address: '192.0.2.1', ttl: 3600 })
+// Automatically normalized to: 'example.com.'
+```
+
+### Relative vs Absolute Names
+
+Master zone file expansions (relative domain names) are handled by [dns-zone](https://github.com/NicTool/dns-zone). This library works only with fully qualified names.
+
+### Export Options
+
+The `toBind()` and `toMaraDNS()` methods accept an options object to customize output:
+
+```js
+record.toBind({ suppressTtl: true, suppressClass: true, relativeName: true })
+```
+
+See [dns-zone](https://github.com/NicTool/dns-zone) for full options documentation.
+
+## Development
+
+No external dependencies. Runs on node.js and modern browsers.
+
+**Key scripts:**
+
+- `npm test` — Run all tests with node's built-in test runner
+- `npm run watch` — Run tests in watch mode during development
+- `npm run lint` — Check code with ESLint
+- `npm run format` — Auto-format with Prettier and fix linting issues
+- `npm run build` — Regenerate browser bundle and README
+- `npm run test:coverage` — Generate test coverage report
+
+**Architecture:**
+
+- **rr.js** — Base class with shared DNS logic and validation
+- **rr/\*.js** — Individual RR type implementations
+- **test/\*.js** — Comprehensive test suite for each RR type
+
+## References
+
+- [DNS Record Types (Wikipedia)](https://en.wikipedia.org/wiki/List_of_DNS_record_types)
+- [DNS Terminology (NicTool Dictionary)](https://nictool.github.io/Dictionary)
+- [dns-zone](https://www.npmjs.com/package/@nictool/dns-zone) — Zone file operations
+- [dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver) — Nameserver management
+
+---
+
+[ci-img]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml
+[cov-img]: https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg
+[cov-url]: https://coveralls.io/github/NicTool/dns-resource-record
+[bind-url]: https://www.isc.org/bind/
+[knot-url]: https://www.knot-dns.cz
+[nsd-url]: https://www.nlnetlabs.nl/projects/nsd/about/
+[pdns-url]: https://www.powerdns.com/powerdns-authoritative-server

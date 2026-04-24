@@ -143,4 +143,34 @@ describe('TINYDNS', function () {
       assert.deepEqual(TINYDNS.unpackString('\\015matt wuz here'), ['matt wuz here'])
     })
   })
+
+  describe('UInt8toOctal', function () {
+    it('rejects values above 255 with a clear Latin-1 error', function () {
+      assert.throws(() => TINYDNS.UInt8toOctal(256), /Latin-1.*0xFF/i)
+      assert.throws(() => TINYDNS.UInt8toOctal('é'.charCodeAt(0) + 1000), /exceeds 255/i)
+    })
+  })
+
+  describe('unescapeOctal', function () {
+    it('converts octal-escaped string to characters', function () {
+      assert.equal(TINYDNS.unescapeOctal('\\110\\145\\154\\154\\157'), 'Hello')
+    })
+  })
+
+  describe('octalToIPv6', function () {
+    it('converts octal-escaped bytes to IPv6 address string', function () {
+      assert.equal(
+        TINYDNS.octalToIPv6(
+          '\\040\\001\\015\\270\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001',
+        ),
+        '2001:0db8:0000:0000:0000:0000:0000:0001',
+      )
+    })
+  })
+
+  describe('base64toOctal error handling', function () {
+    it('throws for invalid base64 input', function () {
+      assert.throws(() => TINYDNS.base64toOctal('not valid!!!'), /Invalid character/)
+    })
+  })
 })

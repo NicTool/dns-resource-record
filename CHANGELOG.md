@@ -4,6 +4,38 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.7.0] - 2026-04-20
+
+#### Fixes
+
+- rr/txt: chunk by UTF-8 bytes (vs ASCII)
+- rr/rrsig: validate "type covered" correctly
+
+#### Changes
+
+- RR is strictly a factory now
+  - no longer returns a different object based on bindLine or tinyLine
+- doc(CAA, DS): added RFC 9619
+- openpgpkey: reject keys with non-ASCII
+- tinydns: name any out-of-range chars in error msg
+- fromBind: use a tokenizing parser (vs regexes)
+
+#### Additions
+
+- add rr/TEMPLATE.js with lots of docs
+- declarative rdataFields to remove lots of boilerplate from rr/all
+- browser compat enhancements
+  - rollup dns-rr.min.js + min.js.map
+  - add `static typeName` as constructor.name doesn't survive minification
+  - feat(lib/binary): add shared binary functions
+    - change: replace `Buffer` with Uint8Array, DataView, and math
+- feat(lib/wire): add wire format helpers
+- feat(fromWire): added wire format parsers
+  - used to round-trip DNS and validate parsing & formatting
+- feat(fromBind): use a parser (vs regexes)
+- test: add dnsLiveTests, test `toWire()` against live NSD & tinydns
+  - uncovered edge cases in round trips between formats
+
 ### [1.6.1] - 2026-04-20
 
 - doc(README): add wire export format
@@ -385,3 +417,4 @@ Notable changes to this project are documented in this file.
 [1.5.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.5.0
 [1.6.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.0
 [1.6.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.1
+[1.7.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.7.0

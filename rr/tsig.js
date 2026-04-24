@@ -1,7 +1,14 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class TSIG extends RR {
+  static typeName = 'TSIG'
+  static typeId = 250
+  static RFCs = [2845, 8945]
+  static rdataFields = ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
+
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -11,18 +18,6 @@ export default class TSIG extends RR {
 
   getDescription() {
     return 'Transaction Signature'
-  }
-
-  getRdataFields(arg) {
-    return ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
-  }
-
-  getRFCs() {
-    return [2845, 8945]
-  }
-
-  getTypeId() {
-    return 250
   }
 
   getCanonical() {
@@ -114,22 +109,23 @@ export default class TSIG extends RR {
     const algUnpacked = TINYDNS.unpackDomainName(rdata)
     const algBinaryLen = algUnpacked[2]
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     let bpos = algBinaryLen
 
-    const timeSigned = bytes.readUInt32BE(bpos)
+    const timeSigned = dv.getUint32(bpos)
     bpos += 4
-    const fudge = bytes.readUInt16BE(bpos)
+    const fudge = dv.getUint16(bpos)
     bpos += 2
-    const macSize = bytes.readUInt16BE(bpos)
+    const macSize = dv.getUint16(bpos)
     bpos += 2
-    const mac = macSize > 0 ? bytes.slice(bpos, bpos + macSize).toString('hex') : ''
+    const mac = macSize > 0 ? BINARY.bytesToHex(bytes.subarray(bpos, bpos + macSize)) : ''
     bpos += macSize
-    const originalId = bytes.readUInt16BE(bpos)
+    const originalId = dv.getUint16(bpos)
     bpos += 2
-    const error = bytes.readUInt16BE(bpos)
+    const error = dv.getUint16(bpos)
     bpos += 2
-    const other = bpos < bytes.length ? bytes.slice(bpos).toString() : ''
+    const other = bpos < bytes.length ? new TextDecoder().decode(bytes.subarray(bpos)) : ''
 
     return new TSIG({
       owner: this.fullyQualify(owner),
@@ -145,6 +141,38 @@ export default class TSIG extends RR {
       other,
       timestamp: ts,
       location: loc?.trim() ?? '',
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: algorithmName, end } = this.wireUnpackDomain(rdata, 0)
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    let pos = end
+    const timeSigned = dv.getUint32(pos)
+    pos += 4
+    const fudge = dv.getUint16(pos)
+    pos += 2
+    const macSize = dv.getUint16(pos)
+    pos += 2
+    const mac = macSize > 0 ? BINARY.bytesToHex(rdata.subarray(pos, pos + macSize)) : ''
+    pos += macSize
+    const originalId = dv.getUint16(pos)
+    pos += 2
+    const error = dv.getUint16(pos)
+    pos += 2
+    const other = pos < rdata.length ? new TextDecoder().decode(rdata.subarray(pos)) : ''
+    return new TSIG({
+      owner,
+      ttl: 0,
+      class: 'ANY',
+      type: 'TSIG',
+      'algorithm name': algorithmName,
+      'time signed': timeSigned,
+      fudge,
+      mac,
+      'original id': originalId,
+      error,
+      other,
     })
   }
 
@@ -172,19 +200,54 @@ export default class TSIG extends RR {
     )
   }
 
+  getWireRdata() {
+    const algWire = WIRE.wirePackDomain(this.get('algorithm name') || '')
+    const mac = this.get('mac') ?? ''
+    const macBytes = mac.length > 0 ? BINARY.hexToBytes(mac) : new Uint8Array()
+    const other = this.get('other') ?? ''
+    const otherBytes = other.length > 0 ? new TextEncoder().encode(other) : new Uint8Array()
+
+    const bytes = new Uint8Array(algWire.length + 4 + 2 + 2 + macBytes.length + 2 + 2 + otherBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    let pos = 0
+
+    bytes.set(algWire, pos)
+    pos += algWire.length
+    dv.setUint32(pos, this.get('time signed') ?? 0)
+    pos += 4
+    dv.setUint16(pos, this.get('fudge') ?? 0)
+    pos += 2
+    dv.setUint16(pos, macBytes.length)
+    pos += 2
+    if (macBytes.length > 0) {
+      bytes.set(macBytes, pos)
+      pos += macBytes.length
+    }
+    dv.setUint16(pos, this.get('original id') ?? 0)
+    pos += 2
+    dv.setUint16(pos, this.get('error') ?? 0)
+    pos += 2
+    if (otherBytes.length > 0) bytes.set(otherBytes, pos)
+
+    return bytes
+  }
+
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     const alg = this.get('algorithm name') || ''
+    const mac = this.get('mac') ?? ''
+    const macByteLen = mac.length > 0 ? mac.length / 2 : 0
 
     return this.getTinydnsGeneric(
       TINYDNS.packDomainName(alg) +
         TINYDNS.UInt32toOctal(this.get('time signed') ?? 0) +
         TINYDNS.UInt16toOctal(this.get('fudge')) +
-        TINYDNS.UInt16toOctal(this.get('mac size') ?? 0) +
-        (this.get('mac size') > 0 ? TINYDNS.escapeOctal(dataRe, this.get('mac')) : '') +
+        TINYDNS.UInt16toOctal(macByteLen) +
+        (macByteLen > 0 ? TINYDNS.packHex(mac) : '') +
         TINYDNS.UInt16toOctal(this.get('original id') ?? 0) +
         TINYDNS.UInt16toOctal(this.get('error') ?? 0) +
-        (this.get('other').length > 0 ? TINYDNS.escapeOctal(dataRe, this.get('other')) : ''),
+        (this.get('other').length > 0
+          ? TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('other'))
+          : ''),
     )
   }
 }

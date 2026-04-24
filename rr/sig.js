@@ -1,8 +1,26 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as WIRE from '../lib/binary.js'
+import * as WIRELIB from '../lib/wire.js'
 
 export default class SIG extends RR {
+  static typeName = 'SIG'
+  static typeId = 24
+  static RFCs = [2535, 3755]
+  static rdataFields = [
+    ['type covered', 'u16'],
+    ['algorithm', 'u8'],
+    ['labels', 'u8'],
+    ['original ttl', 'u32'],
+    ['signature expiration', 'u32'],
+    ['signature inception', 'u32'],
+    ['key tag', 'u16'],
+    ['signers name', 'fqdn'],
+    ['signature', 'str'],
+  ]
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -68,32 +86,6 @@ export default class SIG extends RR {
     return 'Signature'
   }
 
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return [
-      'type covered',
-      'algorithm',
-      'labels',
-      'original ttl',
-      'signature expiration',
-      'signature inception',
-      'key tag',
-      'signers name',
-      'signature',
-    ]
-  }
-
-  getRFCs() {
-    return [2535, 3755]
-  }
-
-  getTypeId() {
-    return 24
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -117,13 +109,17 @@ export default class SIG extends RR {
   fromBind({ bindline }) {
     // example.com. 3600 IN SIG TypeCovered Algorithm Labels OrigTTL SigExpiration SigInception KeyTag SignersName ( Signature )
     const parts = bindline.trim().split(/\s+/)
+    const typeCoveredStr = parts[4]
+    const typeCovered = /^\d+$/.test(typeCoveredStr)
+      ? parseInt(typeCoveredStr, 10)
+      : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
 
     return new SIG({
       owner: parts[0],
       ttl: parseInt(parts[1], 10),
       class: parts[2],
       type: 'SIG',
-      'type covered': parseInt(parts[4], 10),
+      'type covered': typeCovered,
       algorithm: parseInt(parts[5], 10),
       labels: parseInt(parts[6], 10),
       'original ttl': parseInt(parts[7], 10),
@@ -156,36 +152,65 @@ export default class SIG extends RR {
     )
   }
 
+  getWireRdata() {
+    const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
+    const sigBytes = new TextEncoder().encode(this.get('signature'))
+
+    const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    dv.setUint16(pos, this.get('type covered'))
+    pos += 2
+    bytes[pos++] = this.get('algorithm')
+    bytes[pos++] = this.get('labels')
+    dv.setUint32(pos, this.get('original ttl'))
+    pos += 4
+    dv.setUint32(pos, this.get('signature expiration'))
+    pos += 4
+    dv.setUint32(pos, this.get('signature inception'))
+    pos += 4
+    dv.setUint16(pos, this.get('key tag'))
+    pos += 2
+    bytes.set(signerBytes, pos)
+    pos += signerBytes.length
+    bytes.set(sigBytes, pos)
+
+    return bytes
+  }
+
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('SIG fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (parseInt(typeId, 10) !== this.getTypeId()) this.throwHelp('SIG fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-    const typeCovered = bytes.readUInt16BE(0)
-    const algorithm = bytes.readUInt8(2)
-    const labels = bytes.readUInt8(3)
-    const originalTtl = bytes.readUInt32BE(4)
-    const signatureExpiration = bytes.readUInt32BE(8)
-    const signatureInception = bytes.readUInt32BE(12)
-    const keyTag = bytes.readUInt16BE(16)
+    const typeCovered = dv.getUint16(0)
+    const algorithm = bytes[2]
+    const labels = bytes[3]
+    const originalTtl = dv.getUint32(4)
+    const signatureExpiration = dv.getUint32(8)
+    const signatureInception = dv.getUint32(12)
+    const keyTag = dv.getUint16(16)
 
-    // parse signers name from binary buffer starting at offset 18
+    // parse signers name from binary starting at offset 18
     let pos = 18
     const labelsArr = []
     while (pos < bytes.length) {
-      const len = bytes.readUInt8(pos++)
+      const len = bytes[pos++]
       if (len === 0) break
-      labelsArr.push(bytes.slice(pos, pos + len).toString())
+      labelsArr.push(new TextDecoder().decode(bytes.subarray(pos, pos + len)))
       pos += len
     }
     const signersName = `${labelsArr.join('.')}.`
 
-    const signature = bytes.slice(pos).toString()
+    const signature = new TextDecoder().decode(bytes.subarray(pos))
 
     return new SIG({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SIG',
       'type covered': typeCovered,
       algorithm,
@@ -196,8 +221,8 @@ export default class SIG extends RR {
       'key tag': keyTag,
       'signers name': signersName,
       signature,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 

@@ -1,8 +1,18 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class SVCB extends RR {
+  static typeName = 'SVCB'
+  static typeId = 64
+  static RFCs = [9460]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['target name', 'fqdn'],
+    ['params', 'svcparams'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -30,18 +40,6 @@ export default class SVCB extends RR {
 
   getDescription() {
     return 'Service Binding'
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'target name', 'params']
-  }
-
-  getRFCs() {
-    return [9460]
-  }
-
-  getTypeId() {
-    return 64
   }
 
   getCanonical() {
@@ -75,40 +73,19 @@ export default class SVCB extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    if (rd.length < 6) {
-      this.throwHelp(`SVCB: RDATA too short: ${rd}`)
-    }
-
-    // Convert escaped octal RDATA into a binary buffer for reliable parsing
-    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
-
-    const priority = binary.readUInt16BE(0)
-
-    // parse domain name from binary starting at offset 2
-    let pos = 2
-    const labels = []
-    while (true) {
-      const len = binary.readUInt8(pos)
-      pos += 1
-      if (len === 0) break
-      labels.push(binary.slice(pos, pos + len).toString())
-      pos += len
-    }
-    const targetName = `${labels.join('.')}.`
-    // remaining params are ASCII text after the domain
-    const params = binary.slice(pos).toString()
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('SVCB fromTinydns, invalid n')
+    const { priority, targetName, params } = TINYDNS.parseSvcbLikeRdata(rdata, 'SVCB')
 
     return new SVCB({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SVCB',
       priority: priority,
       'target name': targetName,
       params: params,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 
@@ -122,5 +99,15 @@ export default class SVCB extends RR {
         TINYDNS.packDomainName(this.get('target name')) +
         TINYDNS.escapeOctal(dataRe, this.get('params')),
     )
+  }
+
+  getWireRdata() {
+    const targetBytes = this.wirePackDomain(this.get('target name'))
+    const paramsBytes = WIRE.svcParamsToWire(this.get('params'))
+    const result = new Uint8Array(2 + targetBytes.length + paramsBytes.length)
+    new DataView(result.buffer).setUint16(0, this.get('priority'))
+    result.set(targetBytes, 2)
+    result.set(paramsBytes, 2 + targetBytes.length)
+    return result
   }
 }

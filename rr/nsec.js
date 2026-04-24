@@ -1,8 +1,15 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NSEC extends RR {
+  static typeName = 'NSEC'
+  static typeId = 47
+  static RFCs = [4034]
+  static rdataFields = ['next domain', 'type bit maps']
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -29,22 +36,6 @@ export default class NSEC extends RR {
     return 'Next Secure'
   }
 
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['next domain', 'type bit maps']
-  }
-
-  getRFCs() {
-    return [4034]
-  }
-
-  getTypeId() {
-    return 47
-  }
-
   getCanonical() {
     return {
       owner: 'alfa.example.com.',
@@ -60,7 +51,7 @@ export default class NSEC extends RR {
 
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const binaryRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
     const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
 
     return new NSEC({
@@ -68,7 +59,7 @@ export default class NSEC extends RR {
       ttl: parseInt(ttl, 10),
       type: 'NSEC',
       'next domain': nextDomain,
-      'type bit maps': binaryRdata.slice(binaryLen).toString(),
+      'type bit maps': new TextDecoder().decode(binaryRdata.subarray(binaryLen)),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -87,6 +78,19 @@ export default class NSEC extends RR {
     })
   }
 
+  fromWire({ owner, cls, ttl, rdata }) {
+    const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
+    const typeBitMaps = nsecBitmapToTypes(rdata.subarray(end))
+    return new NSEC({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC',
+      'next domain': nextDomain,
+      'type bit maps': typeBitMaps,
+    })
+  }
+
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -97,6 +101,73 @@ export default class NSEC extends RR {
         TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
   }
+
+  getWireRdata() {
+    const nameBytes = this.wirePackDomain(this.get('next domain'))
+    const bitmapBytes = typesToNsecBitmap(this.get('type bit maps'))
+    const result = new Uint8Array(nameBytes.length + bitmapBytes.length)
+    result.set(nameBytes)
+    result.set(bitmapBytes, nameBytes.length)
+    return result
+  }
 }
 
 const removeParens = (a) => !['(', ')'].includes(a)
+
+function nsecBitmapToTypes(bitmap) {
+  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))
+  const types = []
+  let pos = 0
+  while (pos + 2 <= bitmap.length) {
+    const windowNum = bitmap[pos]
+    const bitmapLen = bitmap[pos + 1]
+    pos += 2
+    for (let i = 0; i < bitmapLen; i++) {
+      const byte = bitmap[pos + i]
+      for (let bit = 0; bit < 8; bit++) {
+        if (byte & (0x80 >> bit)) {
+          const typeId = windowNum * 256 + i * 8 + bit
+          types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`)
+        }
+      }
+    }
+    pos += bitmapLen
+  }
+  return types.join(' ')
+}
+
+function typesToNsecBitmap(typeNamesStr) {
+  const typeIds = typeNamesStr
+    .trim()
+    .split(/\s+/)
+    .map((t) => {
+      if (/^TYPE\d+$/i.test(t)) return parseInt(t.slice(4), 10)
+      return DNS_TYPE_IDS[t.toUpperCase()]
+    })
+    .filter((id) => id !== undefined && id >= 0)
+
+  const windows = new Map()
+  for (const id of typeIds) {
+    const w = Math.floor(id / 256)
+    if (!windows.has(w)) windows.set(w, [])
+    windows.get(w).push(id % 256)
+  }
+
+  const blocks = []
+  for (const [wNum, bits] of [...windows.entries()].sort((a, b) => a[0] - b[0])) {
+    const maxBit = Math.max(...bits)
+    const bitmapLen = Math.floor(maxBit / 8) + 1
+    const bitmap = new Uint8Array(bitmapLen)
+    for (const b of bits) bitmap[Math.floor(b / 8)] |= 0x80 >> (b % 8)
+    blocks.push(new Uint8Array([wNum, bitmapLen, ...bitmap]))
+  }
+
+  const total = blocks.reduce((s, b) => s + b.length, 0)
+  const result = new Uint8Array(total)
+  let pos = 0
+  for (const b of blocks) {
+    result.set(b, pos)
+    pos += b.length
+  }
+  return result
+}

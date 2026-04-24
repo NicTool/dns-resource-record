@@ -1,7 +1,19 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class KEY extends RR {
+  static typeName = 'KEY'
+  static typeId = 25
+  static RFCs = [2535, 3445, 4034, 6840]
+  static rdataFields = [
+    ['flags', 'u16'],
+    ['protocol', 'u8'],
+    ['algorithm', 'u8'],
+    ['publickey', 'base64'],
+  ]
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -43,24 +55,12 @@ export default class KEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`KEY: publickey is required`)
-
+    this.isBase64('KEY', 'publickey', val.replace(/[\s()]/g, ''))
     this.set('publickey', val)
   }
 
   getDescription() {
     return 'DNS Public Key'
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'protocol', 'algorithm', 'publickey']
-  }
-
-  getRFCs() {
-    return [2535, 3445]
-  }
-
-  getTypeId() {
-    return 25
   }
 
   getCanonical() {
@@ -72,7 +72,8 @@ export default class KEY extends RR {
       flags: 256,
       protocol: 3,
       algorithm: 5,
-      publickey: 'AQPSKAsj8...',
+      publickey:
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
     }
   }
 
@@ -94,34 +95,43 @@ export default class KEY extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    // RDATA format: Flags (6 octal chars) + Protocol (3 octal chars) + Algorithm (3 octal chars) + Public Key (escaped data)
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (rd.length < 12) {
-      this.throwHelp(`KEY: RDATA too short: ${rd}`)
+    // RDATA format: Flags (8 octal chars) + Protocol (4 octal chars) + Algorithm (4 octal chars) + Public Key (escaped data)
+    const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (rdata.length < 16) {
+      this.throwHelp(`KEY: RDATA too short: ${rdata}`)
     }
 
     return new KEY({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'KEY',
-      flags: TINYDNS.octalToUInt16(rd.slice(0, 6)),
-      protocol: TINYDNS.octalToUInt8(rd.slice(6, 9)),
-      algorithm: TINYDNS.octalToUInt8(rd.slice(9, 12)),
-      publickey: TINYDNS.unescapeOctal(rd.slice(12)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      flags: TINYDNS.octalToUInt16(rdata.slice(0, 8)),
+      protocol: TINYDNS.octalToUInt8(rdata.slice(8, 12)),
+      algorithm: TINYDNS.octalToUInt8(rdata.slice(12, 16)),
+      publickey: TINYDNS.octalToBase64(rdata.slice(16)),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('protocol')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('publickey')),
+        TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const keyBytes = BINARY.base64ToBytes(this.get('publickey').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(4 + keyBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.get('flags'))
+    bytes[2] = this.get('protocol')
+    bytes[3] = this.get('algorithm')
+    bytes.set(keyBytes, 4)
+    return bytes
   }
 }

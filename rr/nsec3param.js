@@ -1,7 +1,14 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class NSEC3PARAM extends RR {
+  static typeName = 'NSEC3PARAM'
+  static typeId = 51
+  static RFCs = [5155]
+  static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt']
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -57,22 +64,6 @@ export default class NSEC3PARAM extends RR {
     return 'Next Secure Parameters'
   }
 
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['hash algorithm', 'flags', 'iterations', 'salt']
-  }
-
-  getRFCs() {
-    return [5155]
-  }
-
-  getTypeId() {
-    return 51
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -88,62 +79,74 @@ export default class NSEC3PARAM extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NSEC3PARAM  <hash> <flags> <iterations> <salt>
-    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
-    return new NSEC3PARAM({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'hash algorithm': parseInt(ha, 10),
-      flags: parseInt(flags, 10),
-      iterations: parseInt(iterations, 10),
-      salt: salt,
-    })
-  }
-
   fromTinydns({ tinyline }) {
     // RDATA format: Hash Algorithm (3 octal chars) + Flags (3 octal chars) + Iterations (6 octal chars) + Salt (escaped hex string)
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (rd.length < 4) {
-      this.throwHelp(`NSEC3PARAM: RDATA too short: ${rd}`)
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('NSEC3PARAM fromTinydns, invalid n')
+    if (rdata.length < 4) {
+      this.throwHelp(`NSEC3PARAM: RDATA too short: ${rdata}`)
     }
 
     // rd may contain actual binary characters (from JS string '\\001' -> char 0x01),
-    // so convert via octalToChar and read bytes from a Buffer for robust parsing.
-    const bytes = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
+    // so convert via octalToChar and read bytes from a Uint8Array for robust parsing.
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new NSEC3PARAM({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'NSEC3PARAM',
-      'hash algorithm': bytes.readUInt8(0),
-      flags: bytes.readUInt8(1),
-      iterations: bytes.readUInt16BE(2),
-      salt: bytes.slice(4).toString('utf8'),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'hash algorithm': bytes[0],
+      flags: bytes[1],
+      iterations: (bytes[2] << 8) | bytes[3],
+      salt: bytes[4] === 0 ? '-' : BINARY.bytesToHex(bytes.subarray(5, 5 + bytes[4])),
+      timestamp,
+      location,
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const saltLen = rdata[4]
+    const salt = saltLen === 0 ? '-' : BINARY.bytesToHex(rdata.subarray(5, 5 + saltLen))
+    return new NSEC3PARAM({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC3PARAM',
+      'hash algorithm': rdata[0],
+      flags: rdata[1],
+      iterations: dv.getUint16(2),
+      salt,
     })
   }
 
   /******  EXPORTERS   *******/
 
-  toBind(zone_opts) {
-    // Example: test.example.com. 3600 IN NSEC3PARAM 1 1 12 aabbccdd
-    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	NSEC3PARAM	${this.get('hash algorithm')}	${this.get('flags')}	${this.get('iterations')}	${this.get('salt')}
-`
-  }
-
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
+    const salt = this.get('salt')
+    const saltOctal =
+      salt === '-' ? TINYDNS.UInt8toOctal(0) : TINYDNS.UInt8toOctal(salt.length / 2) + TINYDNS.packHex(salt)
 
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('hash algorithm')) +
         TINYDNS.UInt8toOctal(this.get('flags')) +
         TINYDNS.UInt16toOctal(this.get('iterations')) +
-        TINYDNS.escapeOctal(dataRe, this.get('salt')),
+        saltOctal,
     )
+  }
+
+  getWireRdata() {
+    const salt = this.get('salt')
+    const saltBytes = salt === '-' ? new Uint8Array(0) : BINARY.hexToBytes(salt)
+    const bytes = new Uint8Array(4 + 1 + saltBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    bytes[0] = this.get('hash algorithm')
+    bytes[1] = this.get('flags')
+    dv.setUint16(2, this.get('iterations'))
+    bytes[4] = saltBytes.length
+    bytes.set(saltBytes, 5)
+
+    return bytes
   }
 }

@@ -1,8 +1,34 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class CERT extends RR {
+  static typeName = 'CERT'
+  static typeId = 37
+  static RFCs = [2538, 4398]
+  static rdataFields = [
+    ['cert type', 'certtype'],
+    ['key tag', 'u16'],
+    ['algorithm', 'u8'],
+    ['certificate', 'base64'],
+  ]
+
+  static CERT_TYPES = {
+    PKIX: 1,
+    SPKI: 2,
+    PGP: 3,
+    IPKIX: 4,
+    ISPKI: 5,
+    IPGP: 6,
+    ACPKIX: 7,
+    IACPKIX: 8,
+    URI: 253,
+    OID: 254,
+  }
+
+  static CERT_TYPES_REVERSE = Object.fromEntries(Object.entries(CERT.CERT_TYPES).map(([k, v]) => [v, k]))
+
   constructor(opts) {
     super(opts)
   }
@@ -15,20 +41,8 @@ export default class CERT extends RR {
       this.throwHelp('cert type is required')
     }
     // Accept both mnemonic and numeric, but validate mnemonic
-    if (typeof val === 'string') {
-      const types = {
-        PKIX: 1,
-        SPKI: 2,
-        PGP: 3,
-        IPKIX: 4,
-        ISPKI: 5,
-        IPGP: 6,
-        ACPKIX: 7,
-        IACPKIX: 8,
-        URI: 253,
-        OID: 254,
-      }
-      if (!Object.hasOwn(types, val)) {
+    if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
+      if (!Object.hasOwn(CERT.CERT_TYPES, val)) {
         this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
       }
     } else {
@@ -39,37 +53,9 @@ export default class CERT extends RR {
 
   getCertTypeValue(val) {
     if (typeof val === 'number') return val
-    const types = {
-      PKIX: 1,
-      SPKI: 2,
-      PGP: 3,
-      IPKIX: 4,
-      ISPKI: 5,
-      IPGP: 6,
-      ACPKIX: 7,
-      IACPKIX: 8,
-      URI: 253,
-      OID: 254,
-    }
-    if (Object.hasOwn(types, val)) return types[val]
+    if (/^[0-9]+$/.test(val)) return parseInt(val, 10)
+    if (Object.hasOwn(CERT.CERT_TYPES, val)) return CERT.CERT_TYPES[val]
     this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
-  }
-
-  setKeyTag(val) {
-    // The key tag field is the 16-bit value
-    // The key tag field is represented as an unsigned decimal integer.
-
-    this.is16bitInt('CERT', 'key tag', val)
-
-    this.set('key tag', val)
-  }
-
-  setAlgorithm(val) {
-    // The algorithm field has the same meaning as the algorithm field in DNSKEY
-    // The algorithm field is represented as an unsigned decimal integer
-    this.is8bitInt('CERT', 'algorithm', val)
-
-    this.set('algorithm', val)
   }
 
   setCertificate(val) {
@@ -78,23 +64,12 @@ export default class CERT extends RR {
     if (val === undefined || val === null || val === '') {
       this.throwHelp('certificate is required and cannot be empty')
     }
+    this.isBase64('CERT', 'certificate', val.replace(/[\s()]/g, ''))
     this.set('certificate', val)
   }
 
   getDescription() {
     return 'Certificate'
-  }
-
-  getRdataFields() {
-    return ['cert type', 'key tag', 'algorithm', 'certificate']
-  }
-
-  getRFCs() {
-    return [2538, 4398]
-  }
-
-  getTypeId() {
-    return 37
   }
 
   getCanonical() {
@@ -106,44 +81,31 @@ export default class CERT extends RR {
       'cert type': 'PGP',
       'key tag': 0,
       algorithm: 0,
-      certificate: 'hexidecimalkeystring1',
+      certificate: 'AQIDBA==',
     }
   }
 
   /******  IMPORTERS   *******/
 
   fromTinydns({ tinyline }) {
-    const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 37) this.throwHelp('CERT fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('CERT fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const typeNum = bytes.readUInt16BE(0)
-    let certType = typeNum
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
+    const typeNum = (bytes[0] << 8) | bytes[1]
 
-    const types = {
-      1: 'PKIX',
-      2: 'SPKI',
-      3: 'PGP',
-      4: 'IPKIX',
-      5: 'ISPKI',
-      6: 'IPGP',
-      7: 'ACPKIX',
-      8: 'IACPKIX',
-      253: 'URI',
-      254: 'OID',
-    }
-    if (types[typeNum]) certType = types[typeNum]
+    const certType = CERT.CERT_TYPES_REVERSE[typeNum] ?? typeNum
 
     return new CERT({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'CERT',
       'cert type': certType,
-      'key tag': bytes.readUInt16BE(2),
-      algorithm: bytes.readUInt8(4),
-      certificate: bytes.slice(5).toString(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'key tag': (bytes[2] << 8) | bytes[3],
+      algorithm: bytes[4],
+      certificate: BINARY.bytesToBase64(bytes.subarray(5)),
+      timestamp,
+      location,
     })
   }
 
@@ -165,13 +127,22 @@ export default class CERT extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.getCertTypeValue(this.get('cert type'))) +
         TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate')),
+        TINYDNS.base64toOctal(this.get('certificate').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const certBytes = BINARY.base64ToBytes(this.get('certificate').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(5 + certBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.getCertTypeValue(this.get('cert type')))
+    dv.setUint16(2, this.get('key tag'))
+    bytes[4] = this.get('algorithm')
+    bytes.set(certBytes, 5)
+    return bytes
   }
 }

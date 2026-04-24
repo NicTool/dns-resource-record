@@ -1,34 +1,26 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class OPENPGPKEY extends RR {
+  static typeName = 'OPENPGPKEY'
+  static typeId = 61
+  static RFCs = [4880, 7929]
+  static rdataFields = [['public key', 'base64']]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
   setPublicKey(val) {
+    this.isBase64('OPENPGPKEY', 'public key', val)
     this.set('public key', val)
   }
 
   getDescription() {
     return 'OpenPGP Public Key'
-  }
-
-  getTags() {
-    return ['security']
-  }
-
-  getRdataFields() {
-    return ['public key']
-  }
-
-  getRFCs() {
-    return [4880, 7929]
-  }
-
-  getTypeId() {
-    return 61
   }
 
   getCanonical() {
@@ -37,7 +29,8 @@ export default class OPENPGPKEY extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'OPENPGPKEY',
-      'public key': 'mQINBFY...',
+      'public key':
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
     }
   }
 
@@ -50,35 +43,36 @@ export default class OPENPGPKEY extends RR {
     if (!match) this.throwHelp(`unable to parse OPENPGPKEY: ${bindline}`)
 
     const { owner, ttl, class: c, type, publickey } = match.groups
+    const keyStr = publickey.trim().replace(/\s+/g, '')
 
     return new OPENPGPKEY({
       owner,
       ttl: parseInt(ttl, 10),
       class: c,
       type: type,
-      'public key': publickey.trim(),
+      'public key': keyStr,
     })
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('OPENPGPKEY fromTinydns, invalid n')
     return new OPENPGPKEY({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'OPENPGPKEY',
-      'public key': Buffer.from(TINYDNS.unescapeOctal(rd), 'base64').toString('utf-8'),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'public key': TINYDNS.octalToBase64(rdata),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-    const escapedPublicKey = TINYDNS.escapeOctal(
-      dataRe,
-      Buffer.from(this.get('public key'), 'utf-8').toString('base64'),
-    )
-    return this.getTinydnsGeneric(escapedPublicKey)
+    return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('public key')))
+  }
+
+  getWireRdata() {
+    return BINARY.base64ToBytes(this.get('public key'))
   }
 }

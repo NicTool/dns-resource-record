@@ -1,9 +1,16 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "DNS Resource Records",
   "main": "index.js",
+  "exports": {
+    ".": {
+      "browser": "./dist/dns-rr.min.js",
+      "default": "./index.js"
+    }
+  },
   "files": [
+    "dist",
     "lib",
     "rr",
     "CHANGELOG.md",
@@ -11,14 +18,15 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "node lib/readme.js",
-    "clean": "rm -rf coverage node_modules package-lock.json",
+    "build": "npm run build:browser",
+    "build:browser": "npx rollup -i index.js -o dist/dns-rr.js -f es && esbuild dist/dns-rr.js --minify --sourcemap --outfile=dist/dns-rr.min.js && rm dist/dns-rr.js",
+    "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
-    "lint": "npx eslint **/*.js",
+    "lint": "npx eslint **/*.js --no-warn-ignored",
     "lint:fix": "npm run lint -- --fix",
-    "prettier": "npx prettier --ignore-path .gitignore --check .",
-    "prettier:fix": "npx prettier --ignore-path .gitignore --write .",
+    "prettier": "npx prettier --check .",
+    "prettier:fix": "npx prettier --write .",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage",
     "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
@@ -49,6 +57,15 @@
     "url": "https://github.com/NicTool/dns-resource-record/issues"
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "browserslist": [
+    "chrome >= 74",
+    "firefox >= 90",
+    "safari >= 14.1",
+    "edge >= 79"
+  ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.2.1",

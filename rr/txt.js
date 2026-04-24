@@ -3,6 +3,13 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class TXT extends RR {
+  static typeName = 'TXT'
+  static typeId = 16
+  static RFCs = [1035, 4408, 7208, 6376]
+  static tinydnsType = "'"
+  static rdataFields = [['data', 'charstrs']]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
@@ -14,22 +21,6 @@ export default class TXT extends RR {
 
   getDescription() {
     return 'Text'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['data']
-  }
-
-  getRFCs() {
-    return [1035, 4408, 7208, 6376]
-  }
-
-  getTypeId() {
-    return 16
   }
 
   getCanonical() {
@@ -82,26 +73,6 @@ export default class TXT extends RR {
     return [fqdn, s, ttl, ts, loc]
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  TXT  "..."
-    const regex = /^(?<owner>\S{1,255})\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>\w{3})\s+(?<rdata>\S.*)$/i
-    const match = bindline.trim().match(regex)
-    if (!match) this.throwHelp(`unable to parse TXT: ${bindline}`)
-
-    const { owner, ttl, cls, type, rdata } = match.groups
-
-    return new this.constructor({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: cls,
-      type: type.toUpperCase(),
-      data: rdata
-        .match(/"([^"]+?)"/g)
-        .map((s) => s.replace(/^"|"$/g, ''))
-        .join(''),
-    })
-  }
-
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t"${asQuotedStrings(this.get('data'))}"\n`
@@ -127,38 +98,48 @@ export default class TXT extends RR {
 }
 
 function asQuotedStrings(data) {
-  // BIND croaks when any string in the TXT RR data is longer than 255
+  // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
+  // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
+  const enc = new TextEncoder()
+
   if (Array.isArray(data)) {
-    let hasTooLong = false
-    for (const str of data) {
-      if (str.length > 255) hasTooLong = true
-    }
-    return hasTooLong
-      ? data
-          .join('')
-          .match(/(.{1,255})/g)
-          .join('" "')
-      : data.join('" "')
+    const anyTooLong = data.some((s) => enc.encode(s).length > 255)
+    if (!anyTooLong) return data.join('" "')
+    return chunkByBytes(data.join(''), 255).join('" "')
   }
 
-  if (data.length > 255) {
-    return data.match(/(.{1,255})/g).join('" "')
-  }
+  if (enc.encode(data).length <= 255) return data
+  return chunkByBytes(data, 255).join('" "')
+}
 
-  return data
+function chunkByBytes(str, maxBytes) {
+  const bytes = new TextEncoder().encode(str)
+  const dec = new TextDecoder()
+  const chunks = []
+  let start = 0
+  while (start < bytes.length) {
+    let end = Math.min(start + maxBytes, bytes.length)
+    // back up to a UTF-8 codepoint boundary so decode() returns whole chars
+    while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--
+    chunks.push(dec.decode(bytes.subarray(start, end)))
+    start = end
+  }
+  return chunks
 }
 
 function packStringWire(str) {
-  const parts = str.match(/(.{1,255})/g)
-  let len = 0
-  for (const part of parts) len += part.length + 1
+  const encoded = new TextEncoder().encode(str)
+  if (encoded.length === 0) return new Uint8Array([0])
 
-  const buf = Buffer.allocUnsafe(len)
+  const chunks = []
+  for (let i = 0; i < encoded.length; i += 255) chunks.push(encoded.subarray(i, i + 255))
+
+  const buf = new Uint8Array(encoded.length + chunks.length)
   let offset = 0
-  for (const part of parts) {
-    buf.writeUInt8(part.length, offset++)
-    buf.write(part, offset, 'ascii')
-    offset += part.length
+  for (const chunk of chunks) {
+    buf[offset++] = chunk.length
+    buf.set(chunk, offset)
+    offset += chunk.length
   }
   return buf
 }

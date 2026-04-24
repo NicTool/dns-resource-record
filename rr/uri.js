@@ -3,6 +3,15 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class URI extends RR {
+  static typeName = 'URI'
+  static typeId = 256
+  static RFCs = [7553]
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['weight', 'u16'],
+    ['target', 'qstr'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -44,35 +53,9 @@ export default class URI extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  URI  priority, weight, target
-    const [owner, ttl, c, type, priority, weight, target] = bindline.split(/\s+/)
-    return new URI({
-      class: c,
-      type: type,
-      owner,
-      priority: parseInt(priority, 10),
-      weight: parseInt(weight, 10),
-      target: target.replace(/^"|"$/g, ''),
-      ttl: parseInt(ttl, 10),
-    })
-  }
-
   /******  MISC   *******/
   getDescription() {
     return 'URI'
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'weight', 'target']
-  }
-
-  getRFCs() {
-    return [7553]
-  }
-
-  getTypeId() {
-    return 256
   }
 
   getCanonical() {
@@ -87,11 +70,18 @@ export default class URI extends RR {
     }
   }
 
-  getQuotedFields() {
-    return ['target']
+  /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const target = new TextEncoder().encode(this.get('target'))
+    const result = new Uint8Array(4 + target.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('priority'))
+    dv.setUint16(2, this.get('weight'))
+    result.set(target, 4)
+    return result
   }
 
-  /******  EXPORTERS   *******/
   toTinydns() {
     const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
     let rdata = ''

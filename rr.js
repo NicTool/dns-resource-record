@@ -1,15 +1,30 @@
 import * as TINYDNS from './lib/tinydns.js'
 
-export default class RR extends Map {
-  constructor(opts) {
-    super()
+const customInspect = Symbol.for('nodejs.util.inspect.custom')
+import {
+  wireUnpackDomain,
+  wirePackDomain,
+  getWireRdata as wireGetRdata,
+  toWire as wireToWire,
+  fromWireBytes,
+  fromWireGeneric,
+} from './lib/wire.js'
+import {
+  parseBindLine as bindParseLine,
+  fromBind as bindFromGeneric,
+  toBind as bindToGeneric,
+} from './lib/bind.js'
 
+export default class RR {
+  static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
+  static typeId
+  static RFCs = []
+  static tags = []
+
+  constructor(opts) {
     if (opts === null) return
 
     if (opts?.default) this.default = opts.default
-
-    if (opts?.bindline) return this.fromBind(opts)
-    if (opts?.tinyline) return this.fromTinydns(opts)
 
     // tinydns specific
     this.setLocation(opts?.location)
@@ -20,16 +35,86 @@ export default class RR extends Map {
     this.setTtl(opts?.ttl)
     this.setClass(opts?.class)
 
-    for (const f of this.getFields('rdata')) {
+    for (const entry of this.constructor.rdataFields ?? []) {
+      const f = RR.fieldName(entry)
+      const fieldType = Array.isArray(entry) ? entry[1] : null
       const fnName = `set${this.ucFirst(f)}`
-      if (this[fnName] === undefined) this.throwHelp(`Missing ${fnName} in class ${this.get('type')}`)
-      this[fnName](opts?.[f])
+      if (typeof this[fnName] === 'function') {
+        this[fnName](opts?.[f])
+      } else if (fieldType) {
+        this.setTypedValue(fieldType, f, opts?.[f])
+      } else {
+        this.set(f, opts?.[f])
+      }
     }
 
     if (opts?.comment) this.set('comment', opts.comment)
   }
 
+  static fromBind(line, opts = {}) {
+    const instance = new this(null)
+    if (opts.default !== undefined) instance.default = opts.default
+    const parsed = this.parseBindLine(line)
+    if (!parsed) return null
+    return instance.fromBind({ ...opts, ...parsed, bindline: line })
+  }
+
+  fromBind(opts) {
+    return bindFromGeneric(this, opts)
+  }
+
+  static parseBindLine(line) {
+    return bindParseLine(line, RR.CLASSES)
+  }
+
+  static fromTinydns(line, opts = {}) {
+    const instance = new this(null)
+    if (opts.default !== undefined) instance.default = opts.default
+    return instance.fromTinydns({ ...opts, tinyline: line })
+  }
+
+  fromTinydns(opts) {
+    return TINYDNS.fromGeneric(this, opts)
+  }
+
+  static fromWire(wireBytes) {
+    return fromWireBytes(this, wireBytes, wireUnpackDomain)
+  }
+
+  fromWire(opts) {
+    return fromWireGeneric(this, opts)
+  }
+
+  static #reserved = ['__proto__', 'constructor', 'prototype']
+
+  get(key) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    return this[key]
+  }
+
+  set(key, value) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    this[key] = value
+    return this
+  }
+
+  toJSON() {
+    const fields = [...this.getFields(), 'location', 'timestamp', 'comment']
+    const obj = {}
+    for (const f of fields) {
+      const v = this.get(f)
+      if (v !== undefined) obj[f] = v
+    }
+    return obj
+  }
+
+  [customInspect](depth, options, nextInspect) {
+    // Returns a formatted string that looks like: A { ... }
+    return `${this.type} ${nextInspect(this.toJSON(), options)}`
+  }
+
   ucFirst(str) {
+    if (!str) return str
     return str
       .split(/\s/)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -37,23 +122,15 @@ export default class RR extends Map {
   }
 
   setClass(c) {
-    switch (c) {
-      case 'IN': // 1
-      case undefined:
-      case null:
-      case '':
-        this.set('class', 'IN')
-        break
-      case 'CS': // 2
-      case 'CH': // 3
-      case 'HS': // 4
-      case 'NONE': // 254
-      case 'ANY': // 255
-        this.set('class', c)
-        break
-      default:
-        this.throwHelp(`invalid class ${c}`)
+    if ([undefined, null, ''].includes(c)) {
+      this.set('class', 'IN')
+      return
     }
+    if (RR.CLASSES[c.toUpperCase()]) {
+      this.set('class', c.toUpperCase())
+      return
+    }
+    this.throwHelp(`invalid class ${c}`)
   }
 
   setLocation(l) {
@@ -80,7 +157,7 @@ export default class RR extends Map {
     if (n.length < 1 || n.length > 255)
       this.throwHelp('Domain names must have 1-255 octets (characters): RFC 2181')
 
-    this.isFullyQualified(this.constructor.name, 'owner', n)
+    this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
 
     // wildcard records: RFC 1034, 4592
@@ -95,7 +172,7 @@ export default class RR extends Map {
   setTtl(t) {
     t = t ?? this.default?.ttl
     if (t === undefined) {
-      if (['SOA', 'SSHPF'].includes(this.get('type'))) return
+      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
       this.throwHelp('TTL is required, no default available')
     }
 
@@ -108,24 +185,23 @@ export default class RR extends Map {
   }
 
   setType(t) {
-    switch (t) {
-      case '':
-      case undefined:
-        this.throwHelp(`type is required`)
-    }
+    if ([undefined, ''].includes(t)) t = this.constructor.typeName
 
-    if (t.toUpperCase() !== this.constructor.name)
-      this.throwHelp(`type ${t} doesn't match ${this.constructor.name}`)
+    if (t === undefined) this.throwHelp(`type is required`)
+
+    if (t.toUpperCase() !== this.constructor.typeName)
+      this.throwHelp(`type ${t} doesn't match ${this.constructor.typeName}`)
 
     this.set('type', t.toUpperCase())
   }
 
   throwHelp(e) {
-    if (this.constructor.name === 'RR') throw new Error(e)
+    if (!this.constructor.typeName) throw new Error(e)
 
+    const typeName = this.constructor.typeName
     const example = this.getCanonical
-      ? `Example ${this.constructor.name}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
-      : `${this.constructor.name} records have the fields: ${this.getFields().join(', ')}\n\n`
+      ? `Example ${typeName}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
+      : `${typeName} records have the fields: ${this.getFields().join(', ')}\n\n`
 
     throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)
   }
@@ -169,8 +245,8 @@ export default class RR extends Map {
   }
 
   getQuoted(prop) {
-    // if prop is not in quoted list, return bare
-    if (!this.getQuotedFields().includes(prop)) return this.get(prop)
+    // if prop is not a quoted string field, return bare
+    if (!this.isQuotedField(prop)) return this.get(prop)
 
     // if it's already quoted, return as-is
     if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
@@ -178,29 +254,49 @@ export default class RR extends Map {
     return `"${this.get(prop)}"` // add double quotes
   }
 
-  getQuotedFields() {
-    return []
+  static fieldName(entry) {
+    return Array.isArray(entry) ? entry[0] : entry
+  }
+
+  static fieldType(entry) {
+    return Array.isArray(entry) ? entry[1] : null
   }
 
   getRdataFields() {
-    return []
+    return (this.constructor.rdataFields ?? []).map((e) => RR.fieldName(e))
   }
 
   getTags() {
-    return []
+    return this.constructor.tags ?? []
+  }
+
+  getRFCs() {
+    return this.constructor.RFCs ?? []
+  }
+
+  getTypeId() {
+    const typeId = this.constructor.typeId
+    if (typeId === undefined) this.throwHelp(`${this.constructor.typeName}: missing static typeId`)
+    return typeId
+  }
+
+  static getTypeId() {
+    return this.typeId
   }
 
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)
 
+    const rdataFields = this.getRdataFields()
+
     switch (arg) {
       case 'common':
         return commonFields
       case 'rdata':
-        return this.getRdataFields()
+        return rdataFields
       default:
-        return commonFields.concat(this.getRdataFields())
+        return commonFields.concat(rdataFields)
     }
   }
 
@@ -249,43 +345,130 @@ export default class RR extends Map {
   }
 
   is8bitInt(type, field, value) {
-    if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
-      value >= 0 &&
-      value <= 255
-    )
-      return true
+    if (Number.isInteger(value) && value >= 0 && value <= 255) return true
 
     this.throwHelp(`${type} ${field} must be a 8-bit integer (in the range 0-255)`)
   }
 
   is16bitInt(type, field, value) {
-    if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
-      value >= 0 &&
-      value <= 65535
-    )
-      return true
+    if (Number.isInteger(value) && value >= 0 && value <= 65535) return true
 
     this.throwHelp(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`)
   }
 
   is32bitInt(type, field, value) {
+    if (Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
+
+    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
+  }
+
+  isBase64(type, field, value) {
     if (
-      typeof value === 'number' &&
-      parseInt(value, 10) === value && // assure integer
-      value >= 0 &&
-      value <= 2147483647
+      typeof value === 'string' &&
+      value.length > 0 &&
+      value.length % 4 === 0 &&
+      /^[A-Za-z0-9+/]*={0,2}$/.test(value)
     )
       return true
 
-    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-2147483647)`)
+    this.throwHelp(`${type} ${field} must be a valid base64 string`)
   }
 
   isQuoted(val) {
     return /^["']/.test(val) && /["']$/.test(val)
+  }
+
+  setFqdnValue(typeName, fieldName, val) {
+    if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
+    if (this.isIPv4(val) || this.isIPv6(val))
+      this.throwHelp(`${typeName}: ${fieldName} must be a domain name`)
+    this.isFullyQualified(typeName, fieldName, val)
+    this.isValidHostname(typeName, fieldName, val)
+    this.set(fieldName, val.toLowerCase())
+  }
+
+  setTypedValue(type, fieldName, val) {
+    const typeName = this.constructor.typeName
+    switch (type) {
+      case 'u8':
+        this.is8bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'u16':
+        this.is16bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'certtype': {
+        if (val === undefined || val === null || val === '')
+          this.throwHelp(`${typeName}: ${fieldName} is required`)
+        if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
+          const certTypes = this.constructor.CERT_TYPES
+          if (!certTypes || !Object.hasOwn(certTypes, val)) {
+            this.throwHelp(`${typeName}: unknown cert type mnemonic: ${val}`)
+          }
+          this.set(fieldName, val)
+          break
+        }
+        this.is16bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      }
+      case 'u32':
+        this.is32bitInt(typeName, fieldName, val)
+        this.set(fieldName, parseInt(val, 10))
+        break
+      case 'fqdn':
+        this.setFqdnValue(typeName, fieldName, val)
+        break
+      case 'base64':
+        this.isBase64(typeName, fieldName, val)
+        this.set(fieldName, val)
+        break
+      case 'hex':
+        if (!/^[0-9a-fA-F]*$/.test(val)) this.throwHelp(`${typeName}: ${fieldName} must be hexadecimal`)
+        this.set(fieldName, val)
+        break
+      case 'str':
+        if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'qstr':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'charstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        const value = String(val)
+        const byteLen = new TextEncoder().encode(value).length
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`)
+        this.set(fieldName, value)
+        break
+      }
+      case 'qcharstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        const value = String(val)
+        const byteLen = new TextEncoder().encode(value).length
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`)
+        this.set(fieldName, value)
+        break
+      }
+      case 'charstrs':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'svcparams':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
+        this.set(fieldName, val)
+        break
+      case 'ipv4':
+        if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`)
+        this.set(fieldName, val)
+        break
+      case 'ipv6':
+        if (!this.isIPv6(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv6 address`)
+        this.set(fieldName, this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
+        break
+    }
   }
 
   isFullyQualified(type, field, hostname) {
@@ -311,6 +494,10 @@ export default class RR extends Map {
     return /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/gm.test(
       string,
     )
+  }
+
+  expandIPv6(val, delimiter) {
+    return TINYDNS.expandIPv6(val, delimiter)
   }
 
   compressIPv6(val) {
@@ -358,39 +545,55 @@ export default class RR extends Map {
     return `${head}::${tail}`
   }
 
-  octalToBuffer(octalStr) {
-    return Buffer.from(TINYDNS.octalToChar(octalStr), 'binary')
+  octalToUint8Array(octalStr) {
+    const str = TINYDNS.octalToChar(octalStr)
+    return Uint8Array.from(str, (c) => c.charCodeAt(0))
+  }
+
+  wireUnpackDomain(bytes, offset = 0) {
+    return wireUnpackDomain(bytes, offset)
   }
 
   wirePackDomain(fqdn) {
-    return packDomainNameWire(fqdn)
+    return wirePackDomain(fqdn)
   }
 
   getWireRdata() {
-    const line = this.toTinydns()
-    if (!line.startsWith(':'))
-      throw new Error(`${this.get('type')}: override getWireRdata() — non-generic tinydns format`)
-    // line: :fqdn:typeId:rdata:ttl:ts:loc\n
-    const rdata = line.split(':')[3]
-    return this.octalToBuffer(rdata ?? '')
+    return wireGetRdata(this)
   }
 
   toWire() {
-    const rdata = this.getWireRdata()
-    const owner = this.wirePackDomain(this.get('owner'))
-    const classMap = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
-    const meta = Buffer.alloc(10)
-    meta.writeUInt16BE(this.getTypeId(), 0)
-    meta.writeUInt16BE(classMap[this.get('class')] ?? 1, 2)
-    meta.writeUInt32BE(this.get('ttl'), 4)
-    meta.writeUInt16BE(rdata.length, 8)
-    return Buffer.concat([owner, meta, rdata])
+    return wireToWire(this, RR.CLASSES)
   }
 
   toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getRdataFields()
-      .map((f) => this.getQuoted(f))
-      .join('\t')}\n`
+    return bindToGeneric(this, zone_opts)
+  }
+
+  parseTinydnsLine(tinyline) {
+    const parsed = TINYDNS.parseGenericLine(tinyline)
+    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
+  }
+
+  toTinydns() {
+    return TINYDNS.to(this)
+  }
+
+  isFqdnField(field) {
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && RR.fieldType(entry) === 'fqdn',
+      ) || false
+    )
+  }
+
+  isQuotedField(field) {
+    const quotedTypes = new Set(['qstr', 'qcharstr', 'charstrs'])
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && quotedTypes.has(RR.fieldType(entry)),
+      ) || false
+    )
   }
 
   toMaraDNS() {
@@ -399,37 +602,15 @@ export default class RR extends Map {
       /\s+/g,
     )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getRdataFields()
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
   }
 
   toMaraGeneric() {
     // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getRdataFields()
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join(' ')}' ~\n`
   }
-}
-
-function packDomainNameWire(fqdn) {
-  if (fqdn === '.') return Buffer.from([0])
-  const parts = fqdn.split('.')
-  let len = 0
-  for (const part of parts) {
-    if (part.length > 0) len += part.length + 1
-  }
-  len += 1 // for the final \0
-
-  const buf = Buffer.allocUnsafe(len)
-  let offset = 0
-  for (const part of parts) {
-    if (part.length > 0) {
-      buf.writeUInt8(part.length, offset++)
-      buf.write(part, offset, 'ascii')
-      offset += part.length
-    }
-  }
-  buf.writeUInt8(0, offset)
-  return buf
 }

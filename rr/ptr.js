@@ -1,6 +1,13 @@
 import RR from '../rr.js'
 
 export default class PTR extends RR {
+  static typeName = 'PTR'
+  static typeId = 12
+  static RFCs = [1035]
+  static tinydnsType = '^'
+  static rdataFields = [['dname', 'fqdn']]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
@@ -18,22 +25,6 @@ export default class PTR extends RR {
     return 'Pointer'
   }
 
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['dname']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 12
-  }
-
   getCanonical() {
     return {
       owner: '2.2.0.192.in-addr.arpa.',
@@ -44,39 +35,8 @@ export default class PTR extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // ^fqdn:p:ttl:timestamp:lo
-    const [fqdn, p, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    return new PTR({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'PTR',
-      dname: this.fullyQualify(p),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  PTR  dname
-    const [owner, ttl, c, type, dname] = bindline.split(/\s+/)
-    return new PTR({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      dname: dname,
-    })
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))
-  }
-
-  toTinydns() {
-    return `^${this.getTinyFQDN('owner')}:${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`
   }
 }

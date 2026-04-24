@@ -1,5 +1,3 @@
-const typeMap = {}
-
 import RR from './rr.js'
 import A from './rr/a.js'
 import AAAA from './rr/aaaa.js'
@@ -42,7 +40,55 @@ import TXT from './rr/txt.js'
 import URI from './rr/uri.js'
 import WKS from './rr/wks.js'
 
-export default RR
+const typeMap = {}
+const classes = [
+  A,
+  AAAA,
+  APL,
+  CAA,
+  CERT,
+  CNAME,
+  DHCID,
+  DNAME,
+  DNSKEY,
+  DS,
+  HINFO,
+  HIP,
+  HTTPS,
+  IPSECKEY,
+  KEY,
+  KX,
+  LOC,
+  MX,
+  NAPTR,
+  NS,
+  NSEC,
+  NSEC3,
+  NSEC3PARAM,
+  NXT,
+  OPENPGPKEY,
+  PTR,
+  RP,
+  RRSIG,
+  SIG,
+  SMIMEA,
+  SSHFP,
+  SOA,
+  SPF,
+  SRV,
+  SVCB,
+  TLSA,
+  TSIG,
+  TXT,
+  URI,
+  WKS,
+]
+
+for (const c of classes) {
+  const id = c.getTypeId()
+  typeMap[id] = c.typeName
+  typeMap[c.typeName] = id
+}
 
 export {
   A,
@@ -88,49 +134,4 @@ export {
   typeMap,
 }
 
-for (const c of [
-  A,
-  AAAA,
-  APL,
-  CAA,
-  CERT,
-  CNAME,
-  DHCID,
-  DNAME,
-  DNSKEY,
-  DS,
-  HINFO,
-  HIP,
-  HTTPS,
-  IPSECKEY,
-  KEY,
-  KX,
-  LOC,
-  MX,
-  NAPTR,
-  NS,
-  NSEC,
-  NSEC3,
-  NSEC3PARAM,
-  NXT,
-  OPENPGPKEY,
-  PTR,
-  RP,
-  RRSIG,
-  SIG,
-  SMIMEA,
-  SSHFP,
-  SOA,
-  SPF,
-  SRV,
-  SVCB,
-  TLSA,
-  TSIG,
-  TXT,
-  URI,
-  WKS,
-]) {
-  const id = new c(null).getTypeId()
-  typeMap[id] = c.name
-  typeMap[c.name] = id
-}
+export default RR

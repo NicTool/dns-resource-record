@@ -2,6 +2,12 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class AAAA extends RR {
+  static typeName = 'AAAA'
+  static typeId = 28
+  static RFCs = [3596, 5952]
+  static rdataFields = [['address', 'ipv6']]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
@@ -11,31 +17,15 @@ export default class AAAA extends RR {
     if (!val) this.throwHelp('AAAA: address is required')
     if (!this.isIPv6(val)) this.throwHelp(`AAAA: address must be IPv6 (${val})`)
 
-    this.set('address', this.expand(val.toLowerCase())) // lower case: RFC 5952
+    this.set('address', this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
   }
 
   getCompressed(val) {
-    return this.compress(val ?? this.get('address'))
+    return this.compressIPv6(val ?? this.get('address'))
   }
 
   getDescription() {
     return 'Address IPv6'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['address']
-  }
-
-  getRFCs() {
-    return [3596, 5952]
-  }
-
-  getTypeId() {
-    return 28
   }
 
   getCanonical() {
@@ -81,69 +71,12 @@ export default class AAAA extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  AAAA  ...
-    const [owner, ttl, c, type, ip] = bindline.split(/\s+/)
-    return new AAAA({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address: this.expand(ip),
-    })
-  }
-
-  compress(val) {
-    /*
-     * RFC 5952
-     * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
-     * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
-     * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
-     * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
-     * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
-     */
-    let r = val
-      .replace(/0000/g, '0') // 4.1 0000 -> 0
-      .replace(/:0+([1-9a-fA-F])/g, ':$1') // 4.1 remove leading zeros
-
-    const mostConsecutiveZeros = [
-      new RegExp(/0?(?::0){6,}:0?/),
-      new RegExp(/0?(?::0){5,}:0?/),
-      new RegExp(/0?(?::0){4,}:0?/),
-      new RegExp(/0?(?::0){3,}:0?/),
-      new RegExp(/0?(?::0){2,}:0?/),
-    ]
-
-    for (const re of mostConsecutiveZeros) {
-      if (re.test(r)) {
-        r = r.replace(re, '::') // 4.2
-        break
-      }
-    }
-
-    return r.toLowerCase() // 4.3
-  }
-
-  expand(val, delimiter) {
-    if (delimiter === undefined) delimiter = ':'
-
-    const colons = val.match(/:/g)
-    if (colons?.length < 7) {
-      // console.log(`AAAA: restoring compressed colons`)
-      val = val.replace(/::/, ':'.repeat(9 - colons.length))
-    }
-
-    // restore compressed leading zeros
-    return val
-      .split(':')
-      .map((s) => s.padStart(4, 0))
-      .join(delimiter)
-      .toLowerCase()
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
-    return Buffer.from(this.expand(this.get('address'), ''), 'hex')
+    const hex = this.expandIPv6(this.get('address'), '')
+    const arr = new Uint8Array(hex.length / 2)
+    for (let i = 0; i < arr.length; i++) arr[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+    return arr
   }
 
   toBind(zone_opts) {
@@ -152,7 +85,7 @@ export default class AAAA extends RR {
 
   toTinydns() {
     // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
-    const rdata = TINYDNS.packHex(this.expand(this.get('address'), ''))
+    const rdata = TINYDNS.packHex(this.expandIPv6(this.get('address'), ''))
     return this.getTinydnsGeneric(rdata)
   }
 }

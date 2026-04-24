@@ -1,0 +1,123 @@
+nictool.tnpi.net.	3600	IN	SOA	ns1.tnpi.net.	hostmaster.tnpi.net.	2026042104	7200	3600	1209600	3600
+
+nictool.tnpi.net.	3600	IN	NS	ns1.tnpi.net.
+nictool.tnpi.net.	3600	IN	NS	ns2.tnpi.net.
+
+nictool.tnpi.net.	3600	IN	A	192.0.2.1
+www.nictool.tnpi.net.	3600	IN	A	192.0.2.2
+mail.nictool.tnpi.net.	3600	IN	A	192.0.2.3
+
+nictool.tnpi.net.	3600	IN	AAAA	2001:db8::1
+www.nictool.tnpi.net.	3600	IN	AAAA	2001:db8::2
+
+ftp.nictool.tnpi.net.	3600	IN	CNAME	www.nictool.tnpi.net.
+webmail.nictool.tnpi.net.	3600	IN	CNAME	mail.nictool.tnpi.net.
+
+nictool.tnpi.net.	3600	IN	MX	10	mail.nictool.tnpi.net.
+nictool.tnpi.net.	3600	IN	MX	20	mail.tnpi.net.
+
+nictool.tnpi.net.	3600	IN	TXT	"v=spf1 mx include:tnpi.net -all"
+dkim._domainkey.nictool.tnpi.net.	3600	IN	TXT	"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27Fr" "iHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"
+
+nictool.tnpi.net.	3600	IN	SPF	"v=spf1 mx include:tnpi.net -all"
+
+nictool.tnpi.net.	3600	IN	CAA	0	issue	"letsencrypt.org"
+nictool.tnpi.net.	3600	IN	CAA	0	issuewild	"letsencrypt.org"
+nictool.tnpi.net.	3600	IN	CAA	0	iodef	"mailto:hostmaster@tnpi.net"
+
+_imaps._tcp.nictool.tnpi.net.	3600	IN	SRV	1	0	993	mail.nictool.tnpi.net.
+_https._tcp.nictool.tnpi.net.	3600	IN	SRV	1	0	443	www.nictool.tnpi.net.
+_sip._udp.nictool.tnpi.net.	3600	IN	SRV	10	1	5060	sip.nictool.tnpi.net.
+
+; 1.2.0.192.in-addr.arpa.	86400	IN	PTR	nictool.tnpi.net.
+; 2.2.0.192.in-addr.arpa.	86400	IN	PTR	www.nictool.tnpi.net.
+; 3.2.0.192.in-addr.arpa.	86400	IN	PTR	mail.nictool.tnpi.net.
+
+hinfo.nictool.tnpi.net.	3600	IN	HINFO	"Intel-Xeon"	"Linux"
+
+nictool.tnpi.net.	3600	IN	RP	hostmaster.tnpi.net.	contact.nictool.tnpi.net.
+
+loc.nictool.tnpi.net.	3600	IN	LOC	37 46 39 N 122 25 9 W 16m 1m 10000m 10m
+
+ssh.nictool.tnpi.net.	3600	IN	SSHFP	1	1	546f3801f4159f81643666d97a9f73587000d60d
+ssh.nictool.tnpi.net.	3600	IN	SSHFP	3	2	b0e5a9735d49246603d646b97607755e13583688b58a18357a700f7223644f77
+ssh.nictool.tnpi.net.	3600	IN	SSHFP	4	2	11e9a933f7608246f4142646f903745213583688b58a18357a700f7223644f77
+
+_443._tcp.nictool.tnpi.net.	3600	IN	TLSA	3	1	1	d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971
+_25._tcp.mail.nictool.tnpi.net.	3600	IN	TLSA	3	1	2	b3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4
+
+_443._tcp.nictool.tnpi.net.	3600	IN	SMIMEA	3	0	1	d2abde240d7cd3ee6b4b28c54df034b9 7983a1d16e8a410e4561cb106618e971
+
+024765d70659687441589408b049645607b61d36a71e847ce733b865._openpgpkey.nictool.tnpi.net. IN OPENPGPKEY	mDMEaeW+cxYJKwYBBAHaRw8BAQdAHbWOIfAP8oLVJbSAqGUiaR4VrXeMCmOLq/iGsY3WCTW0IE1hdHRoZXcgU2ltZXJzb24gPG1hdHRAdG5waS5iaXo+iLUEExYKAF0WIQQw2QaI3zC1w752cHumkf23dUQeeAUCaeW/WhsUgAAAAAAEAA5tYW51MiwyLjUrMS4xMiwwLDMCGwMFCQWjmoAFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQppH9t3VEHniwQgEA+xeXaDTvgR6qc9JOkgSCBsJUAF/2cQo8NLr01woeY18A/3+k40CEA1jJmnoSIoEZnY2ehTYoaqYy1FDhWeTMDUgKtCBNYXR0aGV3IFNpbWVyc29uIDxtYXR0QHRucGkubmV0Poi1BBMWCgBdFiEEMNkGiN8wtcO+dnB7ppH9t3VEHngFAmnlvnMbFIAAAAAABAAObWFudTIsMi41KzEuMTIsMCwzAhsDBQkFo5qABQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJEKaR/bd1RB540UQBAMMsleHjEWYNA3fX8XQ8/XeeWUdYnvbOYC3HBYHHnDC1APwLS303NXDIWYPOGh+o8F6ZQzA9Nou7L4chrEQfKKFBA7QkTWF0dGhldyBTaW1lcnNvbiA8bWF0dEBzaW1lcnNvbi5uZXQ+iLUEExYKAF0WIQQw2QaI3zC1w752cHumkf23dUQeeAUCaeW/DxsUgAAAAAAEAA5tYW51MiwyLjUrMS4xMiwwLDMCGwMFCQWjmoAFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQppH9t3VEHnhJQwD9HUx7uGONDHLTzWwHFftlhL6jLGbcts2tqltXh+6HcDQA/jXmi0bB9nC5uEDOwe6GAHVszHCBtxBZFd5csl06RqEJtCRNYXR0aGV3IFNpbWVyc29uIDxtYXR0QGNhZGlsbGFjLm5ldD6ItQQTFgoAXRYhBDDZBojfMLXDvnZwe6aR/bd1RB54BQJp5b8oGxSAAAAAAAQADm1hbnUyLDIuNSsxLjEyLDAsMwIbAwUJBaOagAULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCRCmkf23dUQeeKWBAPwLeJ1vi6cYrzTVWWJ5sXksS6iKG8VPW3m/8W6nlOyrHAEAgagA8H9oYqnW8H/Mz7HcEryVc1PNiuPGMPQEqEuw9Q60Jk1hdHRoZXcgU2ltZXJzb24gPG1hdHRAdGhlYXJ0ZmFybS5jb20+iLUEExYKAF0WIQQw2QaI3zC1w752cHumkf23dUQeeAUCaeW/RRsUgAAAAAAEAA5tYW51MiwyLjUrMS4xMiwwLDMCGwMFCQWjmoAFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQppH9t3VEHnjJHAD+M3im/8Y9Rh6gWFxGP7foUaA7EhuPGtQqXFVPK6XxpGUA/0f8DYUfW4AHCo8LYBFW30JEzrWkVR6kXCr1rHz0mooFuDgEaeW+cxIKKwYBBAGXVQEFAQEHQMELv3CYSvRNLIXZYu3F0RZ05eITvIIoEjRhHw9szk8kAwEIB4iaBBgWCgBCFiEEMNkGiN8wtcO+dnB7ppH9t3VEHngFAmnlvnMbFIAAAAAABAAObWFudTIsMi41KzEuMTIsMCwzAhsMBQkFo5qAAAoJEKaR/bd1RB542wAA/irAlYlo5MyLRLvZNLsya3VaJ2oFYKYVKid0MYOseVurAPwIRTQaRRqmRsOomasvVYJ40v6yAqITwYssJE5jCEOvAQ==
+
+nictool.tnpi.net.	3600	IN	DS	12345	5	1	2BB183AF5F22588179A53B0A98631FAD1A292118
+
+nictool.tnpi.net.	3600	IN	DNSKEY	256	3	5	AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10hWqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1UaNvv4w==
+nictool.tnpi.net.	3600	IN	DNSKEY	257	3	5	(
+                AwEAAc06+6X2fM6Y5I7Cj8K7Z4vL0F6yL8v4f5u9Z+8v
+                5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u
+                9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z
+                +8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8
+                v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5u9Z+8v5
+                u9Z+8v5u9Z+8v5u9Z+8v5u9Z+w== )
+
+nictool.tnpi.net.	3600	IN	KEY	256	3	5	( AQPSKmynfzW4kyBv015MUG2DeIQ3 Cbl+BBZH4b/0PY1kxkmvHjcZc8no kfzj31GajIQKY+5CptLr3buXA10h WqTkF7H6RfoRqXQeogmMHfpftf6z Mv1LyBUgia7za6ZEzOJBOztyvhjL 742iU/TpPSEDhm2SNKLijfUppn1U aNvv4w== )
+
+nictool.tnpi.net.	0	IN	NSEC3PARAM	1	0	0	-
+
+test.nictool.tnpi.net.	3600	IN	NSEC3	1	1	12	aabbccdd	(2vptu5timamqttgl4luu9kg21e0aor3s	A	RRSIG)
+
+nictool.tnpi.net.	3600	IN	NSEC	www.nictool.tnpi.net.	A NS SOA MX TXT AAAA RRSIG NSEC DNSKEY
+
+nictool.tnpi.net.	3600	IN	RRSIG	A	5	3	3600	(
+                20261231000000 20260101000000 12345 nictool.tnpi.net.
+                oXv8vP9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7
+                Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X
+                7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8
+                X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A
+                8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3
+                A8X7Y4Z5V8P9WQ3A8X7Y4A== )
+
+nictool.tnpi.net.	3600	IN	SIG	A	5	3	3600	(
+                1798675200 1767225600 12345 nictool.tnpi.net.
+                oXv8vP9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7
+                Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X
+                7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8
+                X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A
+                8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3
+                A8X7Y4Z5V8P9WQ3A8X7Y4A== )
+
+sip.nictool.tnpi.net.	3600	IN	NAPTR	100	10	"S"	"SIP+D2U"	""	_sip._udp.nictool.tnpi.net.
+naptr.nictool.tnpi.net.	3600	IN	NAPTR	100	10	"U"	"E2U+email"	"!^.*$!mailto:info@nictool.tnpi.net!"	.
+
+nictool.tnpi.net.	3600	IN	KX	10	kx.nictool.tnpi.net.
+
+old.nictool.tnpi.net.	3600	IN	DNAME	new.tnpi.net.
+
+_http._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"https://nictool.tnpi.net/"
+_ftp._tcp.nictool.tnpi.net.	3600	IN	URI	1	10	"ftp://ftp.nictool.tnpi.net/"
+
+apl.nictool.tnpi.net.	3600	IN	APL	1:192.0.2.1/32 !1:192.0.2.64/28 2:2001:db8::80/121
+
+wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	TCP	ftp smtp
+wks.nictool.tnpi.net.	3600	IN	WKS	192.0.2.1	UDP	domain
+
+dhcid.nictool.tnpi.net.	3600	IN	DHCID	AAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA
+
+ipsec.nictool.tnpi.net.	3600	IN	IPSECKEY	10	1	2	192.0.2.38	AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+
+hip.nictool.tnpi.net.	3600	IN	HIP	2	200100107B1A74DF365639CC39F1D578	AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==	rvs.nictool.tnpi.net.
+
+cert.nictool.tnpi.net.  3600    IN      CERT    3 12345 0 (
+                mDMEX2X93RYJKwYBBAHaRw8BAQdA9WQ3A8X7Y4Z5V8P9
+                WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P
+                9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8
+                P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4Z5V8P9WQ3A8X7Y4A== )
+
+nictool.tnpi.net.	3600	IN	NXT	www.nictool.tnpi.net.	A SIG NXT
+
+_443._tcp.nictool.tnpi.net.	3600	IN	SVCB	1	nictool.tnpi.net.
+_8443._foo.nictool.tnpi.net.	3600	IN	SVCB	0	api.nictool.tnpi.net.	alpn="h2" port="8443"
+
+nictool.tnpi.net.	3600	IN	HTTPS	1	.	alpn="h2,h3"
+www.nictool.tnpi.net.	3600	IN	HTTPS	0	nictool.tnpi.net.

@@ -2,6 +2,16 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
+  static typeName = 'CAA'
+  static typeId = 257
+  static RFCs = [6844, 8659, 9619]
+  static rdataFields = [
+    ['flags', 'u8'],
+    ['tag', 'charstr'],
+    ['value', 'qstr'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -62,26 +72,6 @@ export default class CAA extends RR {
     return 'Certification Authority Authorization'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getQuotedFields() {
-    return ['value']
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'tag', 'value']
-  }
-
-  getRFCs() {
-    return [6844, 8659]
-  }
-
-  getTypeId() {
-    return 257
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -97,8 +87,8 @@ export default class CAA extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 257) this.throwHelp('CAA fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('CAA fromTinydns, invalid typeId')
 
     const flags = TINYDNS.octalToUInt8(rdata.slice(0, 4))
     const taglen = TINYDNS.octalToUInt8(rdata.slice(4, 8))
@@ -108,49 +98,36 @@ export default class CAA extends RR {
     const fingerprint = unescaped.slice(taglen)
 
     return new CAA({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'CAA',
       flags,
       tag,
       value: fingerprint,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  CAA flags, tags, value
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>CAA)\s+(?<flags>\d+)\s+(?<tag>\w+)\s+(?:"(?<quotedValue>[^"]+)"|(?<unquotedValue>\S+))$/i
-
-    const match = bindline.trim().match(regex)
-
-    if (!match) {
-      this.throwHelp(`unable to parse CAA: ${bindline}`)
-    }
-
-    const { owner, ttl, class: c, type, flags, tag, quotedValue, unquotedValue } = match.groups
-
-    return new CAA({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      flags: parseInt(flags, 10),
-      tag,
-      value: quotedValue ?? unquotedValue,
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    const tag = new TextEncoder().encode(this.get('tag'))
+    const value = new TextEncoder().encode(this.get('value'))
+    const result = new Uint8Array(2 + tag.length + value.length)
+    result[0] = this.get('flags')
+    result[1] = tag.length
+    result.set(tag, 2)
+    result.set(value, 2 + tag.length)
+    return result
+  }
 
   toTinydns() {
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('tag').length) +
         TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.getQuoted('value')),
+        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value')),
     )
   }
 }

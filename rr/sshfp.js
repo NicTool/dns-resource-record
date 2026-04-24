@@ -1,16 +1,20 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class SSHFP extends RR {
+  static typeName = 'SSHFP'
+  static typeId = 44
+  static RFCs = [4255, 7479, 8709]
+  static rdataFields = [
+    ['algorithm', 'u8'],
+    ['fptype', 'u8'],
+    ['fingerprint', 'hex'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
-  }
-
-  /****** Resource record specific setters   *******/
-  setAlgorithm(val) {
-    this.is8bitInt('SSHFP', 'algorithm', val)
-
-    this.set('algorithm', val)
   }
 
   getAlgorithmOptions() {
@@ -24,12 +28,6 @@ export default class SSHFP extends RR {
     ])
   }
 
-  setFptype(val) {
-    this.is8bitInt('SSHFP', 'fptype', val)
-
-    this.set('fptype', val)
-  }
-
   getFptypeOptions() {
     return new Map([
       [0, 'reserved'],
@@ -38,28 +36,8 @@ export default class SSHFP extends RR {
     ])
   }
 
-  setFingerprint(val) {
-    this.set('fingerprint', val)
-  }
-
   getDescription() {
     return 'Secure Shell Key Fingerprints'
-  }
-
-  getTags() {
-    return ['security']
-  }
-
-  getRdataFields() {
-    return ['algorithm', 'fptype', 'fingerprint']
-  }
-
-  getRFCs() {
-    return [4255, 7479, 8709]
-  }
-
-  getTypeId() {
-    return 44
   }
 
   getCanonical() {
@@ -77,32 +55,18 @@ export default class SSHFP extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 44) this.throwHelp('SSHFP fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('SSHFP fromTinydns, invalid n')
 
     return new SSHFP({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SSHFP',
       algorithm: TINYDNS.octalToUInt8(rdata.slice(0, 4)),
       fptype: TINYDNS.octalToUInt8(rdata.slice(4, 8)),
       fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SSHFP  algo fptype fp
-    const [owner, ttl, c, type, algo, fptype, fp] = bindline.split(/\s+/)
-    return new SSHFP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      algorithm: parseInt(algo, 10),
-      fptype: parseInt(fptype, 10),
-      fingerprint: fp,
+      timestamp,
+      location,
     })
   }
 
@@ -114,5 +78,13 @@ export default class SSHFP extends RR {
         TINYDNS.UInt8toOctal(this.get('fptype')) +
         TINYDNS.packHex(this.get('fingerprint')),
     )
+  }
+
+  getWireRdata() {
+    const bytes = new Uint8Array(2 + BINARY.hexToBytes(this.get('fingerprint')).length)
+    bytes[0] = this.get('algorithm')
+    bytes[1] = this.get('fptype')
+    bytes.set(BINARY.hexToBytes(this.get('fingerprint')), 2)
+    return bytes
   }
 }

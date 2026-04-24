@@ -1,6 +1,16 @@
 import RR from '../rr.js'
 
 export default class MX extends RR {
+  static typeName = 'MX'
+  static typeId = 15
+  static RFCs = [1035, 2181, 7505]
+  static tinydnsType = '@'
+  static rdataFields = [
+    ['preference', 'u16'],
+    ['exchange', 'fqdn'],
+  ]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
@@ -13,36 +23,8 @@ export default class MX extends RR {
     this.set('preference', val)
   }
 
-  setExchange(val) {
-    if (!val) this.throwHelp('MX: exchange is required')
-
-    if (this.isIPv4(val) || this.isIPv6(val)) this.throwHelp(`MX: exchange must be a FQDN`)
-
-    this.isFullyQualified('MX', 'exchange', val)
-    this.isValidHostname('MX', 'exchange', val)
-
-    // RFC 4034: letters in the DNS names ... are lower cased
-    this.set('exchange', val.toLowerCase())
-  }
-
   getDescription() {
     return 'Mail Exchanger'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['preference', 'exchange']
-  }
-
-  getRFCs() {
-    return [1035, 2181, 7505]
-  }
-
-  getTypeId() {
-    return 15
   }
 
   getCanonical() {
@@ -59,8 +41,7 @@ export default class MX extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // @fqdn:ip:x:dist:ttl:timestamp:lo
-    // eslint-disable-next-line no-unused-vars
-    const [owner, ip, x, preference, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const [owner, _ip, x, preference, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new MX({
       type: 'MX',
@@ -73,29 +54,13 @@ export default class MX extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  MX  preference exchange
-    const [owner, ttl, c, type, preference, exchange] = bindline.split(/\s+/)
-
-    return new MX({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      preference: parseInt(preference),
-      exchange,
-    })
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
-    const pref = Buffer.alloc(2)
-    pref.writeUInt16BE(this.get('preference'))
-    return Buffer.concat([pref, this.wirePackDomain(this.get('exchange'))])
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchange', zone_opts)}\n`
+    const domain = this.wirePackDomain(this.get('exchange'))
+    const result = new Uint8Array(2 + domain.length)
+    new DataView(result.buffer).setUint16(0, this.get('preference'))
+    result.set(domain, 2)
+    return result
   }
 
   toTinydns() {

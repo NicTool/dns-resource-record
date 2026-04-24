@@ -3,6 +3,11 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class DHCID extends RR {
+  static typeName = 'DHCID'
+  static typeId = 49
+  static RFCs = [4701]
+  static rdataFields = [['data', 'base64']]
+
   constructor(opts) {
     super(opts)
   }
@@ -10,23 +15,12 @@ export default class DHCID extends RR {
   /****** Resource record specific setters   *******/
   setData(val) {
     if (!val) this.throwHelp('DHCID: data is required')
+    this.isBase64('DHCID', 'data', val)
     this.set('data', val)
   }
 
   getDescription() {
     return 'DHCP Identifier'
-  }
-
-  getRdataFields(arg) {
-    return ['data']
-  }
-
-  getRFCs() {
-    return [4701]
-  }
-
-  getTypeId() {
-    return 49
   }
 
   getCanonical() {
@@ -42,33 +36,29 @@ export default class DHCID extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // DHCID via generic, :fqdn:49:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 49) this.throwHelp('DHCID fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DHCID fromTinydns, invalid n')
 
-    return new DHCID({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'DHCID',
-      data: TINYDNS.octalToBase64(rdata),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // host.example.com  3600  IN  DHCID  <base64data>
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type] = parts
     return new DHCID({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      data: parts.slice(4).join(''),
+      ttl,
+      type: 'DHCID',
+      data: TINYDNS.octalToBase64(rdata),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    return new Uint8Array(
+      atob(this.get('data'))
+        .split('')
+        .map((c) => c.charCodeAt(0)),
+    )
+  }
+
   toTinydns() {
     return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('data')))
   }

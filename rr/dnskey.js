@@ -1,8 +1,20 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class DNSKEY extends RR {
+  static typeName = 'DNSKEY'
+  static typeId = 48
+  static RFCs = [4034, 6014, 8624, 9619, 9905]
+  static rdataFields = [
+    ['flags', 'u16'],
+    ['protocol', 'u8'],
+    ['algorithm', 'u8'],
+    ['publickey', 'base64'],
+  ]
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
   }
@@ -71,28 +83,12 @@ export default class DNSKEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`DNSKEY: publickey is required`)
-
+    this.isBase64('DNSKEY', 'publickey', val.replace(/[\s()]/g, ''))
     this.set('publickey', val)
   }
 
   getDescription() {
     return 'DNS Public Key'
-  }
-
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['flags', 'protocol', 'algorithm', 'publickey']
-  }
-
-  getRFCs() {
-    return [4034, 6014, 8624]
-  }
-
-  getTypeId() {
-    return 48
   }
 
   getCanonical() {
@@ -104,7 +100,8 @@ export default class DNSKEY extends RR {
       flags: 256,
       protocol: 3,
       algorithm: 5,
-      publickey: 'AQPSKAsj8...',
+      publickey:
+        'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA==',
     }
   }
 
@@ -136,34 +133,43 @@ export default class DNSKEY extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.substring(1).split(':')
-    if (n != 48) this.throwHelp('DNSKEY fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DNSKEY fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = TINYDNS.octalRdataToBytes(rdata)
 
     return new DNSKEY({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'DNSKEY',
-      flags: bytes.readUInt16BE(0),
-      protocol: bytes.readUInt8(2),
-      algorithm: bytes.readUInt8(3),
-      publickey: bytes.slice(4).toString(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      flags: (bytes[0] << 8) | bytes[1],
+      protocol: bytes[2],
+      algorithm: bytes[3],
+      publickey: BINARY.bytesToBase64(bytes.subarray(4)),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('flags')) +
         TINYDNS.UInt8toOctal(this.get('protocol')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.escapeOctal(dataRe, this.get('publickey')),
+        TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const keyBytes = BINARY.base64ToBytes(this.get('publickey').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(4 + keyBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.get('flags'))
+    bytes[2] = this.get('protocol')
+    bytes[3] = this.get('algorithm')
+    bytes.set(keyBytes, 4)
+    return bytes
   }
 }

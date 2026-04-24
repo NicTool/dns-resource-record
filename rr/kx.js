@@ -3,6 +3,14 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class KX extends RR {
+  static typeName = 'KX'
+  static typeId = 36
+  static RFCs = [2230]
+  static rdataFields = [
+    ['preference', 'u16'],
+    ['exchanger', 'fqdn'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -25,18 +33,6 @@ export default class KX extends RR {
 
   getDescription() {
     return 'Key Exchanger'
-  }
-
-  getRdataFields(arg) {
-    return ['preference', 'exchanger']
-  }
-
-  getRFCs() {
-    return [2230]
-  }
-
-  getTypeId() {
-    return 36
   }
 
   getCanonical() {
@@ -67,22 +63,15 @@ export default class KX extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  KX  preference exchanger
-    const [owner, ttl, c, type, preference, exchanger] = bindline.split(/\s+/)
-    return new KX({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      preference: parseInt(preference, 10),
-      exchanger,
-    })
-  }
-
   /******  EXPORTERS   *******/
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.get('preference')}\t${this.getFQDN('exchanger', zone_opts)}\n`
+
+  getWireRdata() {
+    const exchanger = this.wirePackDomain(this.get('exchanger'))
+    const result = new Uint8Array(2 + exchanger.length)
+    const dv = new DataView(result.buffer)
+    dv.setUint16(0, this.get('preference'))
+    result.set(exchanger, 2)
+    return result
   }
 
   toTinydns() {

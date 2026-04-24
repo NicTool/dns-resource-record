@@ -1,9 +1,15 @@
 import RR from '../rr.js'
 
 export default class NS extends RR {
+  static typeName = 'NS'
+  static typeId = 2
+  static RFCs = [1035]
+  static tinydnsType = '&'
+  static rdataFields = [['dname', 'fqdn']]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
-    if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
@@ -21,22 +27,6 @@ export default class NS extends RR {
     return 'Name Server'
   }
 
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['dname']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 2
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -50,8 +40,7 @@ export default class NS extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // &fqdn:ip:x:ttl:timestamp:lo
-    // eslint-disable-next-line no-unused-vars
-    const [fqdn, ip, dname, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const [fqdn, _ip, dname, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new NS({
       type: 'NS',
@@ -63,26 +52,9 @@ export default class NS extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NS dname
-    const [owner, ttl, c, type, dname] = bindline.split(/\s+/)
-
-    return new NS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      dname: dname,
-    })
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
     return this.wirePackDomain(this.get('dname'))
-  }
-
-  toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t${this.getFQDN('dname', zone_opts)}\n`
   }
 
   toTinydns() {

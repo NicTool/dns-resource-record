@@ -5,6 +5,12 @@ import TXT from './txt.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SPF extends TXT {
+  static typeName = 'SPF'
+  static typeId = 99
+  static RFCs = [4408, 7208]
+  static rdataFields = [['data', 'charstrs']]
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -17,23 +23,6 @@ export default class SPF extends TXT {
   getDescription() {
     return 'Sender Policy Framework'
   }
-
-  getTags() {
-    return ['deprecated']
-  }
-
-  getRdataFields(arg) {
-    return ['data']
-  }
-
-  getRFCs() {
-    return [4408, 7208]
-  }
-
-  getTypeId() {
-    return 99
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -61,6 +50,10 @@ export default class SPF extends TXT {
   }
 
   /******  EXPORTERS   *******/
+  getWireRdata() {
+    return super.getWireRdata()
+  }
+
   toTinydns() {
     const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
     return this.getTinydnsGeneric(rdata)

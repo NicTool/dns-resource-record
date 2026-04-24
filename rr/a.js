@@ -1,6 +1,13 @@
 import RR from '../rr.js'
 
 export default class A extends RR {
+  static typeName = 'A'
+  static typeId = 1
+  static RFCs = [1035]
+  static tinydnsType = '+'
+  static rdataFields = [['address', 'ipv4']]
+  static tags = ['common']
+
   constructor(opts) {
     super(opts)
   }
@@ -16,22 +23,6 @@ export default class A extends RR {
     return 'Address'
   }
 
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['address']
-  }
-
-  getRFCs() {
-    return [1035]
-  }
-
-  getTypeId() {
-    return 1
-  }
-
   getCanonical() {
     return {
       owner: 'host.example.com.',
@@ -42,39 +33,8 @@ export default class A extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // +fqdn:ip:ttl:timestamp:lo
-    const [owner, ip, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    return new A({
-      owner: this.fullyQualify(owner),
-      type: 'A',
-      address: ip,
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  A  192.0.2.127
-    const [owner, ttl, c, type, address] = bindline.split(/\s+/)
-    return new A({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address,
-    })
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
-    return Buffer.from(this.get('address').split('.').map(Number))
-  }
-
-  toTinydns() {
-    return `+${this.getTinyFQDN('owner')}:${this.get('address')}:${this.getTinydnsPostamble()}\n`
+    return new Uint8Array(this.get('address').split('.').map(Number))
   }
 }

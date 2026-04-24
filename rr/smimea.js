@@ -1,8 +1,20 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class SMIMEA extends RR {
+  static typeName = 'SMIMEA'
+  static typeId = 53
+  static RFCs = [8162]
+  static rdataFields = [
+    ['certificate usage', 'u8'],
+    ['selector', 'u8'],
+    ['matching type', 'u8'],
+    ['certificate association data', 'hex'],
+  ]
+  static tags = ['security']
+
   constructor(opts) {
     super(opts)
   }
@@ -58,22 +70,6 @@ export default class SMIMEA extends RR {
     return 'S/MIME cert association'
   }
 
-  getTags() {
-    return ['security']
-  }
-
-  getRdataFields(arg) {
-    return ['certificate usage', 'selector', 'matching type', 'certificate association data']
-  }
-
-  getRFCs() {
-    return [8162]
-  }
-
-  getTypeId() {
-    return 53
-  }
-
   getCanonical() {
     return {
       owner: '_443._tcp.www.example.com.',
@@ -85,10 +81,6 @@ export default class SMIMEA extends RR {
       'matching type': 1,
       'certificate association data': 'ABCDEF...',
     }
-  }
-
-  getQuotedFields() {
-    return []
   }
 
   /******  IMPORTERS   *******/
@@ -109,31 +101,39 @@ export default class SMIMEA extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    const binaryRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    const binaryRdata = TINYDNS.octalRdataToBytes(rdata)
 
     return new SMIMEA({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'SMIMEA',
-      'certificate usage': binaryRdata.readUInt8(0),
-      selector: binaryRdata.readUInt8(1),
-      'matching type': binaryRdata.readUInt8(2),
-      'certificate association data': binaryRdata.slice(3).toString(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'certificate usage': binaryRdata[0],
+      selector: binaryRdata[1],
+      'matching type': binaryRdata[2],
+      'certificate association data': BINARY.bytesToHex(binaryRdata.subarray(3)),
+      timestamp,
+      location,
     })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt8toOctal(this.get('certificate usage')) +
         TINYDNS.UInt8toOctal(this.get('selector')) +
         TINYDNS.UInt8toOctal(this.get('matching type')) +
-        TINYDNS.escapeOctal(dataRe, this.get('certificate association data')),
+        TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const cadBytes = BINARY.hexToBytes(this.get('certificate association data').replace(/[\s()]/g, ''))
+    const bytes = new Uint8Array(3 + cadBytes.length)
+    bytes[0] = this.get('certificate usage')
+    bytes[1] = this.get('selector')
+    bytes[2] = this.get('matching type')
+    bytes.set(cadBytes, 3)
+    return bytes
   }
 }

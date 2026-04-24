@@ -2,7 +2,102 @@ import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 
+const WELL_KNOWN_PORTS = {
+  echo: 7,
+  discard: 9,
+  systat: 11,
+  daytime: 13,
+  netstat: 15,
+  ftp_data: 20,
+  ftp: 21,
+  ssh: 22,
+  telnet: 23,
+  smtp: 25,
+  time: 37,
+  rlp: 39,
+  nameserver: 42,
+  nicname: 43,
+  domain: 53,
+  mtp: 57,
+  bootps: 67,
+  bootpc: 68,
+  tftp: 69,
+  gopher: 70,
+  rje: 77,
+  finger: 79,
+  http: 80,
+  link: 87,
+  supdup: 95,
+  hostnames: 101,
+  iso_tsap: 102,
+  csnet_ns: 105,
+  pop_2: 109,
+  pop3: 110,
+  sunrpc: 111,
+  auth: 113,
+  sftp: 115,
+  uucp_path: 117,
+  nntp: 119,
+  ntp: 123,
+  netbios_ns: 137,
+  netbios_dgm: 138,
+  netbios_ssn: 139,
+  imap: 143,
+  sql_net: 150,
+  snmp: 161,
+  snmp_trap: 162,
+  cmip_man: 163,
+  cmip_agent: 164,
+  xdmcp: 177,
+  nextstep: 178,
+  bgp: 179,
+  prospero: 191,
+  irc: 194,
+  smux: 199,
+  at_rtmp: 201,
+  at_nbp: 202,
+  at_echo: 204,
+  at_zis: 206,
+  qmtp: 209,
+  z3950: 210,
+  ipx: 213,
+  imap3: 220,
+  ulistproc: 372,
+  https: 443,
+  snpp: 444,
+  microsoft_ds: 445,
+  kpasswd: 464,
+  urd: 465,
+  saft: 487,
+  isakmp: 500,
+  exec: 512,
+  biff: 512,
+  login: 513,
+  who: 513,
+  cmd: 514,
+  syslog: 514,
+  printer: 515,
+  talk: 517,
+  ntalk: 518,
+  route: 520,
+  timed: 525,
+  tempo: 526,
+  courier: 530,
+  netnews: 532,
+  netwall: 533,
+  uucp: 540,
+  remotefs: 556,
+  nntps: 563,
+  ldap: 389,
+}
+
 export default class WKS extends RR {
+  static typeName = 'WKS'
+  static typeId = 11
+  static RFCs = [883, 1035]
+  static rdataFields = ['address', 'protocol', 'bit map']
+  static tags = ['obsolete']
+
   constructor(opts) {
     super(opts)
   }
@@ -27,22 +122,6 @@ export default class WKS extends RR {
 
   getDescription() {
     return 'Well Known Service'
-  }
-
-  getTags() {
-    return ['obsolete']
-  }
-
-  getRdataFields(arg) {
-    return ['address', 'protocol', 'bit map']
-  }
-
-  getRFCs() {
-    return [883, 1035]
-  }
-
-  getTypeId() {
-    return 11
   }
 
   getCanonical() {
@@ -77,14 +156,12 @@ export default class WKS extends RR {
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
 
-    const binary = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const address = [binary.readUInt8(0), binary.readUInt8(1), binary.readUInt8(2), binary.readUInt8(3)].join(
-      '.',
-    )
-    const protoNum = binary.readUInt8(4)
+    const binary = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const address = [binary[0], binary[1], binary[2], binary[3]].join('.')
+    const protoNum = binary[4]
     const protoMap = { 6: 'TCP', 17: 'UDP' }
     const protocol = protoMap[protoNum] ?? protoNum
-    const bitmap = binary.slice(5).toString()
+    const bitmap = new TextDecoder().decode(binary.subarray(5))
 
     return new WKS({
       owner: this.fullyQualify(owner),
@@ -95,6 +172,33 @@ export default class WKS extends RR {
       'bit map': bitmap,
       timestamp: ts,
       location: loc?.trim() ?? '',
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const address = [...rdata.subarray(0, 4)].join('.')
+    const protoNum = rdata[4]
+    const protoMap = { 6: 'TCP', 17: 'UDP' }
+    const protocol = protoMap[protoNum] ?? String(protoNum)
+    const PORT_NAMES = Object.fromEntries(Object.entries(WELL_KNOWN_PORTS).map(([k, v]) => [v, k]))
+    const bitmap = rdata.subarray(5)
+    const ports = []
+    for (let i = 0; i < bitmap.length; i++) {
+      for (let bit = 0; bit < 8; bit++) {
+        if (bitmap[i] & (0x80 >> bit)) {
+          const port = i * 8 + bit
+          ports.push(PORT_NAMES[port] ?? String(port))
+        }
+      }
+    }
+    return new WKS({
+      owner,
+      ttl,
+      class: cls,
+      type: 'WKS',
+      address,
+      protocol,
+      'bit map': ports.join(' '),
     })
   }
 
@@ -110,5 +214,33 @@ export default class WKS extends RR {
         TINYDNS.UInt8toOctal(protoNum) +
         TINYDNS.escapeOctal(dataRe, this.get('bit map')),
     )
+  }
+
+  getWireRdata() {
+    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 }
+    const addrBytes = this.get('address').split('.').map(Number)
+    const protoNum = protoMap[this.get('protocol')]
+
+    const portNums = this.get('bit map')
+      .trim()
+      .split(/\s+/)
+      .map((s) => {
+        if (/^\d+$/.test(s)) return parseInt(s, 10)
+        return WELL_KNOWN_PORTS[s.toLowerCase()]
+      })
+      .filter((p) => p !== undefined)
+
+    if (portNums.length === 0) return new Uint8Array([...addrBytes, protoNum])
+
+    const maxPort = Math.max(...portNums)
+    const bitmapLen = Math.floor(maxPort / 8) + 1
+    const bitmap = new Uint8Array(bitmapLen)
+    for (const port of portNums) bitmap[Math.floor(port / 8)] |= 0x80 >> (port % 8)
+
+    const result = new Uint8Array(5 + bitmapLen)
+    result.set(addrBytes)
+    result[4] = protoNum
+    result.set(bitmap, 5)
+    return result
   }
 }

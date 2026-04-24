@@ -1,21 +1,20 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
 
 export default class DS extends RR {
+  static typeName = 'DS'
+  static typeId = 43
+  static RFCs = [4034, 4509, 9619]
+  static rdataFields = [['key tag', 'u16'], 'algorithm', 'digest type', ['digest', 'str']]
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
   }
 
   /****** Resource record specific setters   *******/
-  setKeyTag(val) {
-    // a 2 octet Key Tag field...in network byte order
-    if (!val) this.throwHelp(`DS: key tag is required`)
-    if (val.length > 2) this.throwHelp(`DS: key tag is too long`)
-
-    this.set('key tag', val)
-  }
-
   setAlgorithm(val) {
     if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`DS: algorithm invalid`)
 
@@ -40,30 +39,8 @@ export default class DS extends RR {
     this.set('digest type', val)
   }
 
-  setDigest(val) {
-    if (!val) this.throwHelp(`DS: digest is required`)
-
-    this.set('digest', val)
-  }
-
   getDescription() {
     return 'Delegation Signer'
-  }
-
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['key tag', 'algorithm', 'digest type', 'digest']
-  }
-
-  getRFCs() {
-    return [4034, 4509]
-  }
-
-  getTypeId() {
-    return 43
   }
 
   getCanonical() {
@@ -81,50 +58,59 @@ export default class DS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DS Key Tag Algorithm, Digest Type, Digest
-    const [owner, ttl, c, type, keytag, algorithm, digesttype] = bindline.split(/\s+/)
+  fromTinydns(opts) {
+    const { tinyline } = opts
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('DS fromTinydns, invalid n')
+
+    const binRdata = TINYDNS.octalRdataToBytes(rdata)
+
     return new DS({
       owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'key tag': parseInt(keytag, 10),
-      algorithm: parseInt(algorithm, 10),
-      'digest type': parseInt(digesttype, 10),
-      digest: bindline.split(/\s+/).slice(7).join(' ').trim(),
+      ttl,
+      type: 'DS',
+      'key tag': (binRdata[0] << 8) | binRdata[1],
+      algorithm: binRdata[2],
+      'digest type': binRdata[3],
+      digest: BINARY.bytesToHex(binRdata.subarray(4)).toUpperCase(),
+      timestamp,
+      location,
     })
   }
 
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 43) this.throwHelp('DS fromTinydns, invalid n')
-
-    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
     return new DS({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
+      class: cls,
       type: 'DS',
-      'key tag': binRdata.readUInt16BE(0),
-      algorithm: binRdata.readUInt8(2),
-      'digest type': binRdata.readUInt8(3),
-      digest: binRdata.slice(4).toString(),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      'key tag': dv.getUint16(0),
+      algorithm: rdata[2],
+      'digest type': rdata[3],
+      digest: BINARY.bytesToHex(rdata.subarray(4)).toUpperCase(),
     })
   }
 
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
         TINYDNS.UInt8toOctal(this.get('digest type')) +
-        TINYDNS.escapeOctal(rdataRe, this.get('digest')),
+        TINYDNS.packHex(this.get('digest').replace(/\s+/g, '')),
     )
+  }
+
+  getWireRdata() {
+    const digestBytes = BINARY.hexToBytes(this.get('digest').replace(/\s+/g, ''))
+    const bytes = new Uint8Array(4 + digestBytes.length)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+    dv.setUint16(0, this.get('key tag'))
+    bytes[2] = this.get('algorithm')
+    bytes[3] = this.get('digest type')
+    bytes.set(digestBytes, 4)
+    return bytes
   }
 }

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import { bytesToHex } from '../lib/binary.js'
+
 export function valid(type, validRecords) {
   describe('valid', function () {
     for (const val of validRecords) {
@@ -19,17 +21,26 @@ export function valid(type, validRecords) {
 }
 
 export function invalid(type, invalidRecords) {
+  const callerErr = new Error() // captured at call site (e.g. test/soa.js)
   describe('invalid', function () {
     for (const inv of invalidRecords) {
-      it(`throws on record (${inv.owner})`, function () {
-        assert.throws(
-          () => {
-            new type(inv)
-          },
-          {
-            message: inv.msg,
-          },
-        )
+      it(`throws on record (${inv.owner ?? inv.bindline ?? inv.tinyline})`, function () {
+        try {
+          let thrower
+          if (inv.bindline !== undefined) {
+            thrower = () => type.fromBind(inv.bindline)
+          } else if (inv.tinyline !== undefined) {
+            thrower = () => type.fromTinydns(inv.tinyline)
+          } else {
+            thrower = () => {
+              new type(inv)
+            }
+          }
+          assert.throws(thrower, { message: inv.msg })
+        } catch (e) {
+          e.stack = `${e.message}\n${callerErr.stack.split('\n').slice(1).join('\n')}`
+          throw e
+        }
       })
     }
   })
@@ -38,6 +49,7 @@ export function invalid(type, invalidRecords) {
 export function toBind(type, validRecords) {
   describe('toBind', function () {
     for (const val of validRecords) {
+      if (val.testB === undefined) continue
       it(`exports to BIND: ${val.owner}`, function () {
         const r = new type(val).toBind()
         if (process.env.DEBUG) console.dir(r)
@@ -84,7 +96,7 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
     const testLine = nsLineName === 'bindline' ? val.testB : val.testT
     if (testLine == undefined) continue
     it(`imports ${nsName} record: ${val.owner}`, function () {
-      const r = new type({ [nsLineName]: testLine })
+      const r = nsLineName === 'bindline' ? type.fromBind(testLine) : type.fromTinydns(testLine)
       if (process.env.DEBUG) console.dir(r)
       for (const f of r.getFields()) {
         if (f === 'class') continue
@@ -152,8 +164,12 @@ export function toWire(type, validRecords) {
       it(`exports to wire format: ${val.owner}`, function () {
         const r = new type(val)
         const wire = r.toWire()
-        assert.ok(Buffer.isBuffer(wire))
+        assert.ok(wire instanceof Uint8Array)
         assert.ok(wire.length > 10)
+
+        if (val.testW) {
+          assert.equal(bytesToHex(wire), val.testW)
+        }
       })
     }
   })
@@ -166,5 +182,18 @@ export function getTags(type) {
     it(`can retrieve tags: ${tags.join(',')}`, function () {
       assert.ok(Array.isArray(tags))
     })
+  })
+}
+
+export function fromWire(type, validRecords) {
+  describe('fromWire', function () {
+    for (const val of validRecords) {
+      it(`round-trips wire: ${val.owner}`, function () {
+        const r = new type(val)
+        const wire = r.toWire()
+        const r2 = type.fromWire(wire)
+        assert.deepEqual(r2.toWire(), wire)
+      })
+    }
   })
 }

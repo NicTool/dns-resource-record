@@ -1,8 +1,15 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as BINARY from '../lib/binary.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class HIP extends RR {
+  static typeName = 'HIP'
+  static typeId = 55
+  static RFCs = [8005]
+  static rdataFields = ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
+
   constructor(opts) {
     super(opts)
   }
@@ -32,18 +39,6 @@ export default class HIP extends RR {
     return 'Host Identity Protocol'
   }
 
-  getRdataFields(arg) {
-    return ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
-  }
-
-  getRFCs() {
-    return [8005]
-  }
-
-  getTypeId() {
-    return 55
-  }
-
   getCanonical() {
     return {
       owner: 'example.com.',
@@ -64,22 +59,19 @@ export default class HIP extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 55) this.throwHelp('HIP fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
-    const hitLen = bytes.readUInt8(0)
-    const pkAlgorithm = bytes.readUInt8(1)
-    const pkLen = bytes.readUInt16BE(2)
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const hitLen = bytes[0]
+    const pkAlgorithm = bytes[1]
+    const pkLen = (bytes[2] << 8) | bytes[3]
 
-    const hit = bytes
-      .slice(4, 4 + hitLen)
-      .toString('hex')
-      .toUpperCase()
-    const publicKey = bytes.slice(4 + hitLen, 4 + hitLen + pkLen).toString('base64')
+    const hit = BINARY.bytesToHex(bytes.subarray(4, 4 + hitLen)).toUpperCase()
+    const publicKey = BINARY.bytesToBase64(bytes.subarray(4 + hitLen, 4 + hitLen + pkLen))
 
     const rvsNames = []
     let pos = 4 + hitLen + pkLen
     while (pos < bytes.length) {
       const [name, newPos] = TINYDNS.unpackDomainName(
-        [...bytes.slice(pos)]
+        [...bytes.subarray(pos)]
           .map((b) => (b < 32 || b > 126 ? TINYDNS.UInt8toOctal(b) : String.fromCharCode(b)))
           .join(''),
       )
@@ -102,8 +94,20 @@ export default class HIP extends RR {
 
   fromBind({ bindline }) {
     // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
+    // The public key may be split across multiple lines and joined with spaces
+    // by the zone parser. Base64 chars are [A-Za-z0-9+/=]; domain names contain '.'.
     const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type, pkAlgorithm, hit, publicKey] = parts
+    const [owner, ttl, c, type, pkAlgorithm, hit] = parts
+    const rest = parts.slice(6)
+    const keyParts = []
+    const rvsParts = []
+    for (const token of rest) {
+      if (/^[A-Za-z0-9+/=]+$/.test(token)) {
+        keyParts.push(token)
+      } else {
+        rvsParts.push(token)
+      }
+    }
     return new HIP({
       owner,
       ttl: parseInt(ttl, 10),
@@ -111,8 +115,34 @@ export default class HIP extends RR {
       type,
       'pk algorithm': parseInt(pkAlgorithm, 10),
       hit,
+      'public key': keyParts.join(''),
+      'rendezvous servers': rvsParts.join(' ').trim(),
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const hitLen = rdata[0]
+    const pkAlgorithm = rdata[1]
+    const pkLen = dv.getUint16(2)
+    const hit = BINARY.bytesToHex(rdata.subarray(4, 4 + hitLen)).toUpperCase()
+    const publicKey = BINARY.bytesToBase64(rdata.subarray(4 + hitLen, 4 + hitLen + pkLen))
+    const rvsNames = []
+    let pos = 4 + hitLen + pkLen
+    while (pos < rdata.length) {
+      const { fqdn, end } = this.wireUnpackDomain(rdata, pos)
+      rvsNames.push(fqdn)
+      pos = end
+    }
+    return new HIP({
+      owner,
+      ttl,
+      class: cls,
+      type: 'HIP',
+      'pk algorithm': pkAlgorithm,
+      hit,
       'public key': publicKey,
-      'rendezvous servers': parts.slice(7).join(' ').trim(),
+      'rendezvous servers': rvsNames.join(' '),
     })
   }
 
@@ -124,8 +154,9 @@ export default class HIP extends RR {
   }
 
   toTinydns() {
-    const hitBytes = Buffer.from(this.get('hit'), 'hex')
-    const pkBytes = Buffer.from(this.get('public key'), 'base64')
+    const hitHex = this.get('hit')
+    const hitBytes = BINARY.hexToBytes(hitHex)
+    const pkBytes = BINARY.base64ToBytes(this.get('public key'))
     const rs = this.get('rendezvous servers')
 
     let rdata = ''
@@ -139,5 +170,36 @@ export default class HIP extends RR {
     }
 
     return this.getTinydnsGeneric(rdata)
+  }
+
+  getWireRdata() {
+    const hitHex = this.get('hit')
+    const hitBytes = BINARY.hexToBytes(hitHex)
+    const pkBytes = BINARY.base64ToBytes(this.get('public key'))
+    const rs = this.get('rendezvous servers')
+
+    const rsNames = rs ? rs.split(/\s+/) : []
+    const rsDomains = rsNames.map((name) => WIRE.wirePackDomain(name))
+    const rsTotalLen = rsDomains.reduce((sum, b) => sum + b.length, 0)
+
+    const totalLen = 1 + 1 + 2 + hitBytes.length + pkBytes.length + rsTotalLen
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    bytes[pos++] = hitBytes.length
+    bytes[pos++] = this.get('pk algorithm')
+    dv.setUint16(pos, pkBytes.length)
+    pos += 2
+    bytes.set(hitBytes, pos)
+    pos += hitBytes.length
+    bytes.set(pkBytes, pos)
+    pos += pkBytes.length
+    for (const rdomain of rsDomains) {
+      bytes.set(rdomain, pos)
+      pos += rdomain.length
+    }
+
+    return bytes
   }
 }

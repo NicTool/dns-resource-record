@@ -1,8 +1,19 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import * as WIRE from '../lib/wire.js'
 
 export default class HTTPS extends RR {
+  static typeName = 'HTTPS'
+  static typeId = 65
+  static RFCs = [9460]
+  static tags = ['common']
+  static rdataFields = [
+    ['priority', 'u16'],
+    ['target name', 'fqdn'],
+    ['params', 'svcparams'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
@@ -30,22 +41,6 @@ export default class HTTPS extends RR {
 
   getDescription() {
     return 'HTTP Semantics'
-  }
-
-  getTags() {
-    return ['common']
-  }
-
-  getRdataFields(arg) {
-    return ['priority', 'target name', 'params']
-  }
-
-  getRFCs() {
-    return [9460]
-  }
-
-  getTypeId() {
-    return 65
   }
 
   getCanonical() {
@@ -77,36 +72,19 @@ export default class HTTPS extends RR {
   }
 
   fromTinydns({ tinyline }) {
-    const [owner, _typeId, rd, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    if (rd.length < 6) {
-      this.throwHelp(`HTTPS: RDATA too short: ${rd}`)
-    }
-
-    const binary = Buffer.from(TINYDNS.octalToChar(rd), 'binary')
-    const priority = binary.readUInt16BE(0)
-
-    let pos = 2
-    const labels = []
-    while (true) {
-      const len = binary.readUInt8(pos)
-      pos += 1
-      if (len === 0) break
-      labels.push(binary.slice(pos, pos + len).toString())
-      pos += len
-    }
-    const targetName = `${labels.join('.')}.`
-    const params = binary.slice(pos).toString()
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('HTTPS fromTinydns, invalid n')
+    const { priority, targetName, params } = TINYDNS.parseSvcbLikeRdata(rdata, 'HTTPS')
 
     return new HTTPS({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
+      owner,
+      ttl,
       type: 'HTTPS',
       priority,
       'target name': targetName,
       params,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
+      timestamp,
+      location,
     })
   }
 
@@ -120,5 +98,15 @@ export default class HTTPS extends RR {
         TINYDNS.packDomainName(this.get('target name')) +
         TINYDNS.escapeOctal(dataRe, this.get('params')),
     )
+  }
+
+  getWireRdata() {
+    const targetBytes = this.wirePackDomain(this.get('target name'))
+    const paramsBytes = WIRE.svcParamsToWire(this.get('params'))
+    const result = new Uint8Array(2 + targetBytes.length + paramsBytes.length)
+    new DataView(result.buffer).setUint16(0, this.get('priority'))
+    result.set(targetBytes, 2)
+    result.set(paramsBytes, 2 + targetBytes.length)
+    return result
   }
 }

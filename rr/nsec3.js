@@ -3,6 +3,19 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 
 export default class NSEC3 extends RR {
+  static typeName = 'NSEC3'
+  static typeId = 50
+  static RFCs = [5155, 9077]
+  static rdataFields = [
+    'hash algorithm',
+    'flags',
+    'iterations',
+    'salt',
+    'next hashed owner name',
+    'type bit maps',
+  ]
+  static tags = ['dnssec']
+
   constructor(opts) {
     super(opts)
     if (opts === null) return
@@ -64,22 +77,6 @@ export default class NSEC3 extends RR {
     return 'Next Secure'
   }
 
-  getTags() {
-    return ['dnssec']
-  }
-
-  getRdataFields(arg) {
-    return ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps']
-  }
-
-  getRFCs() {
-    return [5155, 9077]
-  }
-
-  getTypeId() {
-    return 50
-  }
-
   getCanonical() {
     return {
       owner: 'test.example.com.',
@@ -100,7 +97,10 @@ export default class NSEC3 extends RR {
   fromBind({ bindline }) {
     // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
     const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
-    const rdata = bindline.split(/\(|\)/)[1]
+    // rdata may be parenthesized or inline
+    const rdataStr = bindline.includes('(')
+      ? bindline.split(/\(|\)/)[1]
+      : bindline.split(/\s+/).slice(8).join(' ')
 
     return new NSEC3({
       owner,
@@ -111,8 +111,8 @@ export default class NSEC3 extends RR {
       flags: parseInt(flags, 10),
       iterations: parseInt(iterations, 10),
       salt,
-      'next hashed owner name': rdata.split(/\s+/)[0],
-      'type bit maps': rdata.split(/\s+/).slice(1).join('	'),
+      'next hashed owner name': rdataStr.trim().split(/\s+/)[0],
+      'type bit maps': rdataStr.trim().split(/\s+/).slice(1).join('\t'),
     })
   }
 
@@ -120,11 +120,12 @@ export default class NSEC3 extends RR {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
     if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n')
 
-    const bytes = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-    const hashAlgorithm = bytes.readUInt8(0)
-    const flags = bytes.readUInt8(1)
-    const iterations = bytes.readUInt16BE(2)
+    const hashAlgorithm = bytes[0]
+    const flags = bytes[1]
+    const iterations = dv.getUint16(2)
 
     // The remaining bytes in the buffer contain:
     // Salt Length (1 octet)
@@ -145,6 +146,23 @@ export default class NSEC3 extends RR {
       'type bit maps': typeBitMaps,
       timestamp: ts,
       location: loc?.trim() ?? '',
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata }) {
+    const dv = new DataView(rdata.buffer, rdata.byteOffset)
+    const { salt, nextHashedOwnerName, typeBitMaps } = parseNSEC3Buffer(rdata)
+    return new NSEC3({
+      owner,
+      ttl,
+      class: cls,
+      type: 'NSEC3',
+      'hash algorithm': rdata[0],
+      flags: rdata[1],
+      iterations: dv.getUint16(2),
+      salt,
+      'next hashed owner name': nextHashedOwnerName,
+      'type bit maps': typeBitMaps,
     })
   }
 
@@ -173,15 +191,33 @@ export default class NSEC3 extends RR {
         TINYDNS.escapeOctal(dataRe, this.get('type bit maps')),
     )
   }
+
+  getWireRdata() {
+    const tail = `${this.get('salt')}${this.get('next hashed owner name')}${this.get('type bit maps')}`
+    const tailBytes = new TextEncoder().encode(tail)
+
+    const totalLen = 4 + tailBytes.length
+    const bytes = new Uint8Array(totalLen)
+    const dv = new DataView(bytes.buffer, bytes.byteOffset)
+
+    let pos = 0
+    bytes[pos++] = this.get('hash algorithm')
+    bytes[pos++] = this.get('flags')
+    dv.setUint16(pos, this.get('iterations'))
+    pos += 2
+    bytes.set(tailBytes, pos)
+
+    return bytes
+  }
 }
 
 function parseNSEC3Buffer(bytes) {
-  // bytes is a Buffer containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
+  // bytes is a Uint8Array containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
   // Start after the first 4 bytes (hash alg, flags, iterations)
-  const rest = bytes.slice(4).toString('utf8')
+  const rest = new TextDecoder().decode(bytes.subarray(4))
 
   // determine expected next hashed owner name length from hash algorithm
-  const hashAlgorithm = bytes.readUInt8(0)
+  const hashAlgorithm = bytes[0]
   // common mapping: algorithm 1 => SHA-1 => 20 bytes => base32 length 32
   const expectedLen = hashAlgorithm === 1 ? 32 : hashAlgorithm === 2 ? 52 : 32
 

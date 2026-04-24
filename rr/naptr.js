@@ -4,28 +4,24 @@ import * as TINYDNS from '../lib/tinydns.js'
 const rdataRe = /[\r\n\t:\\/]/
 
 export default class NAPTR extends RR {
+  static typeName = 'NAPTR'
+  static typeId = 35
+  static RFCs = [2915, 3403, 4848]
+  static rdataFields = [
+    ['order', 'u16'],
+    ['preference', 'u16'],
+    ['flags', 'qcharstr'],
+    ['service', 'qcharstr'],
+    ['regexp', 'qcharstr'],
+    ['replacement', 'fqdn'],
+  ]
+
   constructor(opts) {
     super(opts)
   }
 
   getDescription() {
     return 'Naming Authority Pointer'
-  }
-
-  getQuotedFields() {
-    return ['flags', 'service', 'regexp']
-  }
-
-  getRdataFields(arg) {
-    return ['order', 'preference', 'flags', 'service', 'regexp', 'replacement']
-  }
-
-  getRFCs() {
-    return [2915, 3403, 4848]
-  }
-
-  getTypeId() {
-    return 35
   }
 
   getCanonical() {
@@ -79,40 +75,41 @@ export default class NAPTR extends RR {
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
     // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 35) this.throwHelp('NAPTR fromTinydns, invalid n')
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (typeId != this.getTypeId()) this.throwHelp('NAPTR fromTinydns, invalid n')
 
-    const binRdata = Buffer.from(TINYDNS.octalToChar(rdata), 'binary')
+    const binRdata = TINYDNS.octalRdataToBytes(rdata)
+    const dv = new DataView(binRdata.buffer, binRdata.byteOffset, binRdata.byteLength)
 
     const rec = {
       type: 'NAPTR',
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-      order: binRdata.readUInt16BE(0, 2),
-      preference: binRdata.readUInt16BE(2, 4),
+      owner,
+      ttl,
+      timestamp,
+      location,
+      order: dv.getUint16(0),
+      preference: dv.getUint16(2),
     }
 
     let idx = 4
-    const flagsLength = binRdata.readUInt8(idx)
+    const flagsLength = binRdata[idx]
     idx++
-    rec.flags = binRdata.slice(idx, idx + flagsLength).toString()
+    rec.flags = new TextDecoder().decode(binRdata.subarray(idx, idx + flagsLength))
     idx += flagsLength
 
-    const serviceLen = binRdata.readUInt8(idx)
+    const serviceLen = binRdata[idx]
     idx++
-    rec.service = binRdata.slice(idx, idx + serviceLen).toString()
+    rec.service = new TextDecoder().decode(binRdata.subarray(idx, idx + serviceLen))
     idx += serviceLen
 
-    const regexpLen = binRdata.readUInt8(idx)
+    const regexpLen = binRdata[idx]
     idx++
-    rec.regexp = binRdata.slice(idx, idx + regexpLen).toString()
+    rec.regexp = new TextDecoder().decode(binRdata.subarray(idx, idx + regexpLen))
     idx += regexpLen
 
-    const replaceLen = binRdata.readUInt8(idx)
+    const replaceLen = binRdata[idx]
     idx++
-    rec.replacement = binRdata.slice(idx, idx + replaceLen).toString()
+    rec.replacement = new TextDecoder().decode(binRdata.subarray(idx, idx + replaceLen))
 
     return new NAPTR(rec)
   }
@@ -163,5 +160,33 @@ export default class NAPTR extends RR {
     rdata += '\\000'
 
     return this.getTinydnsGeneric(rdata)
+  }
+
+  getWireRdata() {
+    const enc = new TextEncoder()
+    const flags = enc.encode(this.get('flags'))
+    const service = enc.encode(this.get('service'))
+    const regexp = enc.encode(this.get('regexp'))
+    const replacementBytes = this.wirePackDomain(this.get('replacement'))
+
+    const len = 4 + 1 + flags.length + 1 + service.length + 1 + regexp.length + replacementBytes.length
+    const buf = new Uint8Array(len)
+    const view = new DataView(buf.buffer)
+    let pos = 0
+    view.setUint16(pos, this.get('order'))
+    pos += 2
+    view.setUint16(pos, this.get('preference'))
+    pos += 2
+    buf[pos++] = flags.length
+    buf.set(flags, pos)
+    pos += flags.length
+    buf[pos++] = service.length
+    buf.set(service, pos)
+    pos += service.length
+    buf[pos++] = regexp.length
+    buf.set(regexp, pos)
+    pos += regexp.length
+    buf.set(replacementBytes, pos)
+    return buf
   }
 }

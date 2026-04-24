@@ -81,7 +81,6 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 .cache/
 
@@ -110,3 +109,4 @@ config.yml
 CLAUDE.md
 GEMINI.md
 .release/
+fuzz/
