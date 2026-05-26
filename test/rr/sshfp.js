@@ -99,7 +99,7 @@ const invalidRecords = [
     algorithm: 256,
     fptype: 1,
     fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
-    msg: /SSHFP algorithm must be a 8-bit integer/i,
+    msg: /SSHFP: algorithm invalid/i,
   },
   {
     ...common,
@@ -107,7 +107,25 @@ const invalidRecords = [
     algorithm: 1,
     fptype: 999,
     fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
-    msg: /SSHFP fptype must be a 8-bit integer/i,
+    msg: /SSHFP: fptype invalid/i,
+  },
+  // 5 is in the u8 range but unassigned in the IANA SSHFP Algorithm registry
+  {
+    ...common,
+    owner: 'mail.example.com.',
+    algorithm: 5,
+    fptype: 1,
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    msg: /SSHFP: algorithm invalid/i,
+  },
+  // 3 is in the u8 range but not in the SSHFP fptype registry
+  {
+    ...common,
+    owner: 'mail.example.com.',
+    algorithm: 1,
+    fptype: 3,
+    fingerprint: 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26',
+    msg: /SSHFP: fptype invalid/i,
   },
 ]
 

@@ -8,6 +8,8 @@ import {
   buildQuery,
   parseResponse,
   svcParamsToWire,
+  wirePackDomain,
+  wirePackDomainCompressed,
 } from '../lib/wire.js'
 
 // ── encodeName ────────────────────────────────────────────────────────────────
@@ -61,6 +63,135 @@ describe('readWireName', () => {
     const packet = Buffer.from([3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 0xc0, 0x00])
     const { end } = readWireName(packet, 10)
     assert.equal(end, 12) // two bytes consumed for the pointer
+  })
+
+  test('rejects a self-referential pointer', () => {
+    // offset 0: \xc0\x00 — points to itself
+    const packet = Buffer.from([0xc0, 0x00])
+    assert.throws(() => readWireName(packet, 0), /pointer cycle detected/)
+  })
+
+  test('rejects a two-pointer cycle', () => {
+    // offset 0: \xc0\x02   offset 2: \xc0\x00
+    const packet = Buffer.from([0xc0, 0x02, 0xc0, 0x00])
+    assert.throws(() => readWireName(packet, 0), /pointer cycle detected/)
+  })
+
+  test('rejects an over-long pointer chain', () => {
+    // 200 unique-offset pointers, each pointing to the next two bytes ahead.
+    // Final slot terminates with a zero byte so a non-protected reader would
+    // still finish; the guard fires on chain length.
+    const len = 200 * 2 + 1
+    const packet = Buffer.alloc(len)
+    for (let i = 0; i < 200; i++) {
+      const next = (i + 1) * 2
+      packet[i * 2] = 0xc0 | ((next >> 8) & 0x3f)
+      packet[i * 2 + 1] = next & 0xff
+    }
+    // last pointer (offset 398) points to offset 400 which holds \x00
+    packet[400] = 0
+    assert.throws(() => readWireName(packet, 0), /pointer chain too long/)
+  })
+
+  test('rejects a name longer than 255 bytes', () => {
+    // 5 chained 63-byte labels (5 * 64 = 320 bytes) + terminator
+    const label = Buffer.concat([Buffer.from([63]), Buffer.alloc(63, 0x61)])
+    const packet = Buffer.concat([label, label, label, label, label, Buffer.from([0])])
+    assert.throws(() => readWireName(packet, 0), /name exceeds 255 bytes/)
+  })
+
+  test('rejects a truncated pointer (high byte at end of packet)', () => {
+    // Single 0xc0 byte with no second byte
+    const packet = Buffer.from([0xc0])
+    assert.throws(() => readWireName(packet, 0), /truncated pointer/)
+  })
+
+  test('rejects a pointer whose target is past the packet end', () => {
+    // 0xc0 0x80 → target offset 0x80 = 128, packet is only 2 bytes
+    const packet = Buffer.from([0xc0, 0x80])
+    assert.throws(() => readWireName(packet, 0), /pointer target out of bounds/)
+  })
+
+  test('rejects a truncated label (declared length exceeds packet)', () => {
+    // \x05 with only 2 bytes following — declared label longer than packet
+    const packet = Buffer.from([5, 0x61, 0x61])
+    assert.throws(() => readWireName(packet, 0), /truncated label/)
+  })
+
+  test('rejects an unterminated name (no zero, no pointer)', () => {
+    // \x02 a a — well-formed label, no terminator, no pointer
+    const packet = Buffer.from([2, 0x61, 0x61])
+    assert.throws(() => readWireName(packet, 0), /unterminated name/)
+  })
+
+  test('rejects a reserved label-type code (top two bits = 01 or 10)', () => {
+    // \x40 is binary 01000000 — reserved per RFC 1035 §4.1.4
+    const packet = Buffer.from([0x40, 0, 0])
+    assert.throws(() => readWireName(packet, 0), /reserved label type/)
+  })
+
+  test('rejects offset out of bounds', () => {
+    const packet = Buffer.from([0])
+    assert.throws(() => readWireName(packet, 5), /offset out of bounds/)
+  })
+
+  test('rejects a name whose total wire length equals 256 octets (255 labels + terminator)', () => {
+    // 4 × 63-byte labels: 4 × 64 = 256 octets before the terminator → 257 with it.
+    // Even before adding the terminator, 256 > 255 trips the §3.1 cap.
+    const label = Buffer.concat([Buffer.from([63]), Buffer.alloc(63, 0x61)])
+    const packet = Buffer.concat([label, label, label, label, Buffer.from([0])])
+    assert.throws(() => readWireName(packet, 0), /name exceeds 255 bytes/)
+  })
+})
+
+// ── wirePackDomainCompressed ──────────────────────────────────────────────────
+
+describe('wirePackDomainCompressed', () => {
+  test('first name writes uncompressed and matches wirePackDomain', () => {
+    const dict = new Map()
+    const buf = wirePackDomainCompressed('www.example.com.', dict, 12)
+    assert.deepEqual([...buf], [...wirePackDomain('www.example.com.')])
+  })
+
+  test('second name with shared suffix emits a pointer', () => {
+    const dict = new Map()
+    // First, place "www.example.com." at offset 12.
+    const first = wirePackDomainCompressed('www.example.com.', dict, 12)
+    // Second name shares the "example.com." suffix.
+    const second = wirePackDomainCompressed('mail.example.com.', dict, 12 + first.length)
+    // Second name should be: \x04 m a i l <pointer to "example.com." inside first>
+    // "example.com." starts at offset 12 + 4 (skip "\x03www") = 16.
+    assert.deepEqual([...second.slice(0, 5)], [4, 0x6d, 0x61, 0x69, 0x6c])
+    assert.equal(second[5], 0xc0)
+    assert.equal(second[6], 16)
+    assert.equal(second.length, 7)
+  })
+
+  test('full-name reuse emits only a pointer', () => {
+    const dict = new Map()
+    const first = wirePackDomainCompressed('example.com.', dict, 12)
+    const second = wirePackDomainCompressed('example.com.', dict, 12 + first.length)
+    assert.equal(second.length, 2)
+    assert.equal(second[0], 0xc0)
+    assert.equal(second[1], 12)
+  })
+
+  test('root name (".") encodes as a single zero byte without compression', () => {
+    const dict = new Map([['.', 0]])
+    const buf = wirePackDomainCompressed('.', dict, 50)
+    assert.deepEqual([...buf], [0])
+  })
+
+  test('round-trips through readWireName', () => {
+    const dict = new Map()
+    const a = wirePackDomainCompressed('foo.example.com.', dict, 0)
+    const b = wirePackDomainCompressed('bar.example.com.', dict, a.length)
+    const packet = Buffer.concat([Buffer.from(a), Buffer.from(b)])
+    const read1 = readWireName(packet, 0)
+    const read2 = readWireName(packet, a.length)
+    // Both decoded names should round-trip to the original uncompressed wire form.
+    assert.deepEqual([...read1.bytes], [...wirePackDomain('foo.example.com.')])
+    assert.deepEqual([...read2.bytes], [...wirePackDomain('bar.example.com.')])
   })
 })
 

@@ -49,4 +49,14 @@ describe('SPF record', function () {
       }
     })
   }
+
+  it('toTinydns accepts array-form data (multi-string charstrs)', function () {
+    const r = new SPF({
+      ...defaults,
+      owner: 'example.com.',
+      data: ['v=spf1 ', 'mx -all'],
+    })
+    const line = r.toTinydns()
+    assert.match(line, /v=spf1 mx -all/)
+  })
 })

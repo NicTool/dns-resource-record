@@ -49,13 +49,51 @@ export default class RRSIG extends RR {
     this.set('algorithm', val)
   }
 
+  setLabels(val) {
+    this.setTypedValue('u8', 'labels', val)
+  }
+
+  setOriginalTtl(val) {
+    this.setTypedValue('u32', 'original ttl', val)
+  }
+
+  setSignatureExpiration(val) {
+    this.setTypedValue('u32', 'signature expiration', val)
+  }
+
+  setSignatureInception(val) {
+    this.setTypedValue('u32', 'signature inception', val)
+  }
+
+  setKeyTag(val) {
+    this.setTypedValue('u16', 'key tag', val)
+  }
+
+  setSignersName(val) {
+    this.setTypedValue('fqdn', 'signers name', val)
+  }
+
+  setSignature(val) {
+    this.setTypedValue('str', 'signature', val)
+  }
+
   getAlgorithmOptions() {
+    // IANA DNSSEC Algorithm Numbers
+    // https://www.iana.org/assignments/dns-sec-alg-numbers/
     return new Map([
       [1, 'RSA/MD5'],
       [2, 'DH'],
-      [3, 'RRSIGA/SHA-1'],
+      [3, 'DSA/SHA-1'],
       [4, 'EC'],
       [5, 'RSA/SHA-1'],
+      [6, 'DSA-NSEC3-SHA1'],
+      [7, 'RSASHA1-NSEC3-SHA1'],
+      [8, 'RSA/SHA-256'],
+      [10, 'RSA/SHA-512'],
+      [13, 'ECDSA P-256/SHA-256'],
+      [14, 'ECDSA P-384/SHA-384'],
+      [15, 'Ed25519'],
+      [16, 'Ed448'],
       [253],
       [254],
     ])

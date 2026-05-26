@@ -4,6 +4,19 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.8.0] - 2026-05-25
+
+- lib/wire.js — hardened readWireName()
+  - new wirePackDomainCompressed() for RFC 1035 §4.1.4 name compression
+  - charstrs decoder preserves multi-string boundaries
+- lib/bind.js — fromBind() returns array for charstrs (TXT) when input has multiple quoted strings.
+- rr/rrsig.js — getAlgorithmOptions() extended with DNSSEC algorithms 6, 7, 8, 10, 13, 14, 15, 16.
+- rr/ds.js — setDigestType() now accepts SHA-384 (4)
+- rr/txt.js — getWireRdata() and fromTinydnsGeneric() preserve per-segment boundaries.
+- package.json — engines lowered to >=20
+  - new build:cjs script via Rollup.
+- test/wire.js, test/base.js, test/rr/{rrsig,ds,txt}.js — round-trip + negative tests for each fix.
+
 ### [1.7.0] - 2026-04-20
 
 #### Fixes
@@ -418,3 +431,4 @@ Notable changes to this project are documented in this file.
 [1.6.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.0
 [1.6.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.1
 [1.7.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.7.0
+[1.8.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.0

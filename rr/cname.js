@@ -12,6 +12,11 @@ export default class CNAME extends RR {
     super(opts)
   }
 
+  /****** Resource record specific setters   *******/
+  setCname(val) {
+    this.setTypedValue('fqdn', 'cname', val)
+  }
+
   getDescription() {
     return 'Canonical Name'
   }

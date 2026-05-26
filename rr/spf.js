@@ -55,7 +55,11 @@ export default class SPF extends TXT {
   }
 
   toTinydns() {
-    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('data'))
+    // `data` may be a string or an array of <character-string>s (RFC 1035 §3.3.14).
+    // tinydns generic format stores rdata as a flat byte stream, so join here.
+    let data = this.get('data')
+    if (Array.isArray(data)) data = data.join('')
+    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
     return this.getTinydnsGeneric(rdata)
   }
 }

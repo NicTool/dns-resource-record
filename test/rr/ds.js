@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import DS from '../../rr/ds.js'
@@ -22,7 +23,7 @@ const invalidRecords = [
   {
     ...defaults,
     owner: 'test.example.com.',
-    algorithm: 6,
+    algorithm: 99,
     msg: /algorithm/,
   },
   {
@@ -30,6 +31,13 @@ const invalidRecords = [
     owner: 'test.example.com.',
     'key tag': 65536,
     msg: /must be a 16-bit integer/,
+  },
+  {
+    ...defaults,
+    owner: 'test.example.com.',
+    digest: '00',
+    'digest type': 3,
+    msg: /digest type invalid/,
   },
 ]
 
@@ -51,4 +59,29 @@ describe('DS record', function () {
   base.fromBind(DS, validRecords)
   base.fromTinydns(DS, validRecords)
   base.fromWire(DS, validRecords)
+
+  // RFC 6605: SHA-384 digest type
+  it('accepts digest type 4 (SHA-384)', function () {
+    const r = new DS({
+      ...defaults,
+      owner: 'dskey.example.com.',
+      'digest type': 4,
+      digest:
+        '72D7B62976CE06438E9C0BF319013CF801F09ECC84B8D7E9495F27E305C6A9B0563A9B5F4D288405C3008A946DF983D6',
+    })
+    assert.equal(r.get('digest type'), 4)
+  })
+
+  // Modern DNSSEC algorithms must be accepted (parity with RRSIG)
+  for (const algo of [6, 7, 8, 10, 13, 14, 15, 16]) {
+    it(`accepts DNSSEC algorithm ${algo}`, function () {
+      const r = new DS({
+        ...defaults,
+        owner: 'dskey.example.com.',
+        algorithm: algo,
+        digest: '2BB183AF5F22588179A53B0A98631FAD1A292118',
+      })
+      assert.equal(r.get('algorithm'), algo)
+    })
+  }
 })

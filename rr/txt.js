@@ -62,15 +62,20 @@ export default class TXT extends RR {
     if (n != 16) this.throwHelp('TXT fromTinydns, invalid n')
 
     rdata = TINYDNS.octalToChar(rdata)
-    let s = ''
-    let len = rdata[0].charCodeAt(0)
-    let pos = 1
+    // Walk RFC 1035 §3.3.14 len-prefixed <character-string> segments.
+    const parts = []
+    let pos = 0
     while (pos < rdata.length) {
-      s += rdata.slice(pos, +(len + pos))
-      pos = len + pos
-      len = rdata.charCodeAt(pos + 1)
+      const len = rdata.charCodeAt(pos)
+      pos += 1
+      if (pos + len > rdata.length) {
+        this.throwHelp('TXT fromTinydnsGeneric: truncated character-string in rdata')
+      }
+      parts.push(rdata.slice(pos, pos + len))
+      pos += len
     }
-    return [fqdn, s, ttl, ts, loc]
+    const data = parts.length > 1 ? parts : (parts[0] ?? '')
+    return [fqdn, data, ttl, ts, loc]
   }
 
   /******  EXPORTERS   *******/
@@ -84,8 +89,31 @@ export default class TXT extends RR {
   }
 
   getWireRdata() {
-    let data = this.get('data')
-    if (Array.isArray(data)) data = data.join('')
+    // RFC 1035 §3.3.14: TXT rdata is one or more <character-string>s, each up
+    // to 255 bytes. An array preserves explicit boundaries between strings;
+    // each element MUST be <= 255 UTF-8 bytes, otherwise we would silently
+    // split it and the boundary the caller asked us to preserve would be lost.
+    // A single string is auto-chunked at 255-byte UTF-8 boundaries.
+    const data = this.get('data')
+    if (Array.isArray(data)) {
+      const enc = new TextEncoder()
+      const buffers = data.map((s, i) => {
+        if (enc.encode(s).length > 255) {
+          this.throwHelp(
+            `TXT: array element ${i} exceeds 255 bytes; split it yourself or pass a single string to auto-chunk`,
+          )
+        }
+        return packStringWire(s)
+      })
+      const total = buffers.reduce((n, b) => n + b.length, 0)
+      const out = new Uint8Array(total)
+      let off = 0
+      for (const b of buffers) {
+        out.set(b, off)
+        off += b.length
+      }
+      return out
+    }
     return packStringWire(data)
   }
 
