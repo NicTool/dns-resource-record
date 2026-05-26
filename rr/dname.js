@@ -11,6 +11,11 @@ export default class DNAME extends RR {
     super(opts)
   }
 
+  /****** Resource record specific setters   *******/
+  setTarget(val) {
+    this.setTypedValue('fqdn', 'target', val)
+  }
+
   getDescription() {
     return 'Delegation Name'
   }

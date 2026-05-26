@@ -15,6 +15,14 @@ export default class DS extends RR {
   }
 
   /****** Resource record specific setters   *******/
+  setKeyTag(val) {
+    this.setTypedValue('u16', 'key tag', val)
+  }
+
+  setDigest(val) {
+    this.setTypedValue('str', 'digest', val)
+  }
+
   setAlgorithm(val) {
     if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`DS: algorithm invalid`)
 
@@ -22,19 +30,30 @@ export default class DS extends RR {
   }
 
   getAlgorithmOptions() {
+    // IANA DNSSEC Algorithm Numbers
+    // https://www.iana.org/assignments/dns-sec-alg-numbers/
     return new Map([
       [1, 'RSA/MD5'],
       [2, 'DH'],
       [3, 'DSA/SHA-1'],
       [4, 'EC'],
       [5, 'RSA/SHA-1'],
+      [6, 'DSA-NSEC3-SHA1'],
+      [7, 'RSASHA1-NSEC3-SHA1'],
+      [8, 'RSA/SHA-256'],
+      [10, 'RSA/SHA-512'],
+      [13, 'ECDSA P-256/SHA-256'],
+      [14, 'ECDSA P-384/SHA-384'],
+      [15, 'Ed25519'],
+      [16, 'Ed448'],
       [253, ''],
       [254, ''],
     ])
   }
 
   setDigestType(val) {
-    if (![1, 2].includes(val)) this.throwHelp(`DS: digest type invalid`)
+    // 1=SHA-1 (RFC 4034), 2=SHA-256 (RFC 4509), 4=SHA-384 (RFC 6605)
+    if (![1, 2, 4].includes(val)) this.throwHelp(`DS: digest type invalid`)
 
     this.set('digest type', val)
   }

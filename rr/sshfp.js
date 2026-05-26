@@ -17,6 +17,21 @@ export default class SSHFP extends RR {
     super(opts)
   }
 
+  /****** Resource record specific setters   *******/
+  setAlgorithm(val) {
+    if (!this.getAlgorithmOptions().has(val)) this.throwHelp(`SSHFP: algorithm invalid`)
+    this.setTypedValue('u8', 'algorithm', val)
+  }
+
+  setFptype(val) {
+    if (!this.getFptypeOptions().has(val)) this.throwHelp(`SSHFP: fptype invalid`)
+    this.setTypedValue('u8', 'fptype', val)
+  }
+
+  setFingerprint(val) {
+    this.setTypedValue('hex', 'fingerprint', val)
+  }
+
   getAlgorithmOptions() {
     return new Map([
       [0, 'reserved'],

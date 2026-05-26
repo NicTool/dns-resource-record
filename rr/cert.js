@@ -58,6 +58,14 @@ export default class CERT extends RR {
     this.throwHelp(`CERT: unknown cert type mnemonic: ${val}`)
   }
 
+  setKeyTag(val) {
+    this.setTypedValue('u16', 'key tag', val)
+  }
+
+  setAlgorithm(val) {
+    this.setTypedValue('u8', 'algorithm', val)
+  }
+
   setCertificate(val) {
     // certificate/CRL portion is represented in base 64 [16] and may be
     // divided into any number of white-space-separated substrings

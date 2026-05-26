@@ -23,6 +23,10 @@ export default class MX extends RR {
     this.set('preference', val)
   }
 
+  setExchange(val) {
+    this.setTypedValue('fqdn', 'exchange', val)
+  }
+
   getDescription() {
     return 'Mail Exchanger'
   }

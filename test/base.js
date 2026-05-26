@@ -101,8 +101,14 @@ function checkFromNS(type, validRecords, nsName, nsLineName) {
       for (const f of r.getFields()) {
         if (f === 'class') continue
         let expected = val[f]
-        if (f === 'data' && Array.isArray(expected)) expected = expected.join('') // TXT
-        assert.deepEqual(r.get(f), expected, `${f}: ${r.get(f)} !== ${expected}`)
+        let actual = r.get(f)
+        // TXT can be stored as string or as array of character-strings (RFC 1035 §3.3.14).
+        // Normalize both sides to the joined string for legacy fixtures.
+        if (f === 'data') {
+          if (Array.isArray(expected)) expected = expected.join('')
+          if (Array.isArray(actual)) actual = actual.join('')
+        }
+        assert.deepEqual(actual, expected, `${f}: ${actual} !== ${expected}`)
       }
     })
   }

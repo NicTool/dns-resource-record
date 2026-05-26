@@ -1,11 +1,13 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "DNS Resource Records",
   "main": "index.js",
   "exports": {
     ".": {
       "browser": "./dist/dns-rr.min.js",
+      "import": "./index.js",
+      "require": "./dist/dns-rr.cjs",
       "default": "./index.js"
     }
   },
@@ -18,8 +20,9 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run build:browser",
+    "build": "npm run build:browser && npm run build:cjs",
     "build:browser": "npx rollup -i index.js -o dist/dns-rr.js -f es && esbuild dist/dns-rr.js --minify --sourcemap --outfile=dist/dns-rr.min.js && rm dist/dns-rr.js",
+    "build:cjs": "npx rollup -i index.js -o dist/dns-rr.cjs -f cjs --exports named",
     "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
@@ -58,7 +61,7 @@
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "browserslist": [
     "chrome >= 74",
@@ -68,8 +71,8 @@
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0"
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0"
   },
   "prettier": {
     "printWidth": 110,

@@ -118,4 +118,75 @@ describe('TXT record', function () {
     const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data: 'v=spf1 mx -all' })
     assert.equal(r.toMaraDNS(), "example.com.\t+3600\tTXT\t'v=spf1 mx -all' ~\n")
   })
+
+  // RFC 1035 §3.3.14: multi-string TXT records are wire-distinct from one
+  // concatenated string. Boundaries must round-trip through encode/decode.
+  describe('multi-string boundary preservation', function () {
+    const owner = 'example.com.'
+    const segments = ['hello', 'world']
+
+    it('encodes array as N len-prefixed character-strings on the wire', function () {
+      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: segments })
+      const rdata = r.getWireRdata()
+      // Expect [5, h, e, l, l, o, 5, w, o, r, l, d]
+      assert.deepEqual([...rdata], [5, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 5, 0x77, 0x6f, 0x72, 0x6c, 0x64])
+    })
+
+    it('decodes multi-string wire form back to array', function () {
+      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: segments })
+      const wire = r.toWire()
+      const r2 = TXT.fromWire(wire)
+      assert.deepEqual(r2.get('data'), segments)
+    })
+
+    it('decodes a single-string wire form back to a plain string', function () {
+      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: 'just one' })
+      const r2 = TXT.fromWire(r.toWire())
+      assert.equal(r2.get('data'), 'just one')
+    })
+
+    it('fromBind on "a" "b" returns the array form', function () {
+      const bindline = 'example.com.\t3600\tIN\tTXT\t"hello" "world"\n'
+      const r = TXT.fromBind(bindline)
+      assert.deepEqual(r.get('data'), segments)
+    })
+
+    it('rejects an array element longer than 255 bytes (boundary not preservable)', function () {
+      const r = new TXT({
+        owner,
+        ttl: 3600,
+        class: 'IN',
+        type: 'TXT',
+        data: ['ok', 'x'.repeat(256)],
+      })
+      assert.throws(() => r.getWireRdata(), /exceeds 255 bytes/)
+    })
+
+    it('fromTinydnsGeneric rejects a truncated len-prefixed segment', function () {
+      // tinydns generic with declared length 5 but only 2 trailing bytes.
+      // Use octal escape so the length byte survives the tinydns parser.
+      const truncated = ':example.com:16:\\005ab:3600::\n'
+      assert.throws(() => new TXT(null).fromTinydnsGeneric(truncated), /truncated character-string/)
+    })
+
+    it('fromWire rejects a truncated charstr in rdata', function () {
+      // Hand-craft a wire record whose final character-string length byte
+      // claims more bytes than remain in rdata.
+      // owner = "example.com." (uncompressed), type 16, class 1, ttl 3600,
+      // rdlen 4, then rdata = [\x05 a b c] (declared 5, only 3 follow).
+      const wire = Buffer.concat([
+        Buffer.from([7]),
+        Buffer.from('example'),
+        Buffer.from([3]),
+        Buffer.from('com'),
+        Buffer.from([0]),
+        Buffer.from([0x00, 0x10]), // type 16
+        Buffer.from([0x00, 0x01]), // class 1
+        Buffer.from([0x00, 0x00, 0x0e, 0x10]), // ttl 3600
+        Buffer.from([0x00, 0x04]), // rdlen 4
+        Buffer.from([5, 0x61, 0x62, 0x63]), // declared len 5, only 3 chars
+      ])
+      assert.throws(() => TXT.fromWire(wire), /truncated character-string/)
+    })
+  })
 })

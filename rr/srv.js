@@ -17,6 +17,23 @@ export default class SRV extends RR {
     super(opts)
   }
 
+  /****** Resource record specific setters   *******/
+  setPriority(val) {
+    this.setTypedValue('u16', 'priority', val)
+  }
+
+  setWeight(val) {
+    this.setTypedValue('u16', 'weight', val)
+  }
+
+  setPort(val) {
+    this.setTypedValue('u16', 'port', val)
+  }
+
+  setTarget(val) {
+    this.setTypedValue('fqdn', 'target', val)
+  }
+
   getDescription() {
     return 'Service'
   }

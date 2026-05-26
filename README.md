@@ -43,6 +43,24 @@ This module supports all current DNS RRs in active use on the internet.
 npm install @nictool/dns-resource-record
 ```
 
+### ESM and CommonJS
+
+The package ships both ESM and CJS, selected automatically via the package `exports` map:
+
+```js
+// ESM
+import * as RR from '@nictool/dns-resource-record'
+import RR, { A, TXT } from '@nictool/dns-resource-record'
+```
+
+```js
+// CommonJS
+const RR = require('@nictool/dns-resource-record')
+const { A, TXT } = require('@nictool/dns-resource-record')
+```
+
+The default export (the base `RR` class) is reached as `require('@nictool/dns-resource-record').default` from CommonJS.
+
 ### Validation
 
 Validate an A record:
@@ -57,14 +75,14 @@ const validA = new RR.A({
 })
 
 console.log(validA.toBind())
-// example.com          3600    IN  A   192.0.2.1
+// example.com.	3600	IN	A	192.0.2.1
 ```
 
 Invalid records throw immediately:
 
 ```js
 try {
-  new RR.A({ owner: 'example.com.', address: 'not-an-ip' })
+  new RR.A({ owner: 'example.com.', address: 'not-an-ip', ttl: 3600 })
 } catch (err) {
   console.error(err.message) // Error: A address must be IPv4
 }
@@ -148,7 +166,7 @@ new RR.MX({
   exchange: 'mail.example.com.',
   ttl: 3600,
 }).toBind()
-// example.com          3600    IN  MX  10 mail.example.com.
+// example.com.	3600	IN	MX	10	mail.example.com.
 ```
 
 **When to use:** Generating zone files, displaying records for editing, exporting to BIND nameservers.
@@ -182,7 +200,7 @@ const fromTiny = RR.CAA.fromTinydns(
   ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
 )
 console.log(fromTiny.toBind())
-// ns1.example.com 3600    IN  CAA 0   issue   "http://letsencrypt.org"
+// ns1.example.com.	3600	IN	CAA	0	issue	"http://letsencrypt.org"
 ```
 
 **When to use:** DNS migrations, format conversions, tool interoperability.
@@ -204,7 +222,7 @@ a.setAddress('192.0.2.2')
 a.setTtl(7200)
 
 console.log(a.toBind())
-// example.com          7200    IN  A   192.0.2.2
+// example.com.	7200	IN	A	192.0.2.2
 ```
 
 Setters include validation. Invalid values throw with helpful error messages.
@@ -214,7 +232,7 @@ For a list of available setters, check `getFields('rdata')` for your record type
 ```js
 new RR.SSHFP(null).getFields('rdata')
 // ['algorithm', 'fptype', 'fingerprint']
-// So use: setSshfp(), setFptype(), setFingerprint()
+// So use: setAlgorithm(), setFptype(), setFingerprint()
 ```
 
 ---
@@ -340,9 +358,12 @@ Domain owner names are:
 **Example:**
 
 ```js
-new RR.A({ owner: 'EXAMPLE.COM', address: '192.0.2.1', ttl: 3600 })
-// Automatically normalized to: 'example.com.'
+const r = new RR.A({ owner: 'EXAMPLE.COM.', address: '192.0.2.1', ttl: 3600 })
+r.get('owner') // 'example.com.' — uppercase normalized to lowercase
 ```
+
+Owner names are required to be fully qualified (trailing dot). Unqualified
+names throw at construction; this library does not add the dot for you.
 
 ### Relative vs Absolute Names
 
@@ -350,13 +371,25 @@ Master zone file expansions (relative domain names) are handled by [dns-zone](ht
 
 ### Export Options
 
-The `toBind()` and `toMaraDNS()` methods accept an options object to customize output:
+The `toBind()` method accepts a zone-options object (typically supplied by
+[dns-zone](https://github.com/NicTool/dns-zone) when emitting full zone files)
+to elide redundant per-record output:
 
 ```js
-record.toBind({ suppressTtl: true, suppressClass: true, relativeName: true })
+record.toBind({
+  origin: 'example.com.', // strips matching suffix from owner; emits '@' for an exact match
+  ttl: 3600, // the zone default; lets `hide.ttl` skip records whose TTL matches it
+  previousOwner: 'example.com.', // lets `hide.sameOwner` blank the owner column when it repeats
+  hide: {
+    ttl: true, // omit TTL when it equals the zone default
+    class: true, // omit class column (usually IN)
+    sameOwner: true, // omit owner when it matches `previousOwner`
+    origin: true, // shorten owners relative to `origin`
+  },
+})
 ```
 
-See [dns-zone](https://github.com/NicTool/dns-zone) for full options documentation.
+See [dns-zone](https://github.com/NicTool/dns-zone) for the full per-zone pipeline that supplies these options.
 
 ## Development
 
@@ -368,7 +401,7 @@ No external dependencies. Runs on node.js and modern browsers.
 - `npm run watch` — Run tests in watch mode during development
 - `npm run lint` — Check code with ESLint
 - `npm run format` — Auto-format with Prettier and fix linting issues
-- `npm run build` — Regenerate browser bundle and README
+- `npm run build` — Regenerate the browser and CommonJS bundles in `dist/`
 - `npm run test:coverage` — Generate test coverage report
 
 **Architecture:**

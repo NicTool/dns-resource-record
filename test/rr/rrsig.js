@@ -112,4 +112,16 @@ describe('RRSIG record', function () {
     const r = RRSIG.fromBind(bindline)
     assert.equal(r.get('type covered'), 28)
   })
+
+  // RFC 5155, 5702, 5933, 6605, 8080 — modern DNSSEC algorithms must be accepted
+  for (const algo of [6, 7, 8, 10, 13, 14, 15, 16]) {
+    it(`accepts DNSSEC algorithm ${algo}`, function () {
+      const r = new RRSIG({ ...defaults, 'type covered': 1, algorithm: algo })
+      assert.equal(r.get('algorithm'), algo)
+    })
+  }
+
+  it('rejects an unassigned algorithm', function () {
+    assert.throws(() => new RRSIG({ ...defaults, 'type covered': 1, algorithm: 99 }), /algorithm invalid/i)
+  })
 })
