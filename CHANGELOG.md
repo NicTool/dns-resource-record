@@ -6,6 +6,8 @@ Notable changes to this project are documented in this file.
 
 ### [1.8.1] - 2026-07-25
 
+- rr/bind: merge charstrs
+
 ### [1.8.0] - 2026-05-25
 
 - lib/wire.js — hardened readWireName()
