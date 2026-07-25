@@ -1,6 +1,6 @@
 {
   "name": "@nictool/dns-resource-record",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "DNS Resource Records",
   "main": "index.js",
   "exports": {
@@ -71,8 +71,8 @@
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.4.0",
-    "globals": "^17.6.0"
+    "eslint": "^10.8.0",
+    "globals": "^17.7.0"
   },
   "prettier": {
     "printWidth": 110,

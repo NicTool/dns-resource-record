@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 
 import RR from '../rr.js'
 import A from '../rr/a.js'
+import DS from '../rr/ds.js'
 import KEY from '../rr/key.js'
+import TXT from '../rr/txt.js'
 
 const cases = [
   // { name: 'RR class', obj: RR, expect: [ 'owner', 'ttl', 'class', 'type' ] },
@@ -293,6 +295,20 @@ describe('RR', function () {
       const out = key.toMaraDNS()
       assert.ok(out.startsWith('example.com.\t+3600\tRAW 25\t'))
       assert.ok(out.includes('AQIDBA=='))
+    })
+  })
+
+  describe('fromBind', function () {
+    it('preserves a non-IN class', function () {
+      assert.equal(TXT.fromBind('version.bind. 0 CH TXT "9.18.1"').get('class'), 'CH')
+    })
+
+    it('rejoins opaque rdata split across whitespace', function () {
+      // RFC 4034 §5.4 writes the digest in two whitespace separated halves
+      const ds = DS.fromBind(
+        'dskey.example.com. 86400 IN DS 60485 5 1 2BB183AF5F22588179A53B0A 98631FAD1A292118',
+      )
+      assert.equal(ds.get('digest'), '2BB183AF5F22588179A53B0A98631FAD1A292118')
     })
   })
 })
