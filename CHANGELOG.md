@@ -4,6 +4,10 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.8.1] - 2026-07-25
+
+- rr/bind: merge charstrs for opaque rdata types
+
 ### [1.8.0] - 2026-05-25
 
 - lib/wire.js — hardened readWireName()
@@ -432,3 +436,4 @@ Notable changes to this project are documented in this file.
 [1.6.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.6.1
 [1.7.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.7.0
 [1.8.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.0
+[1.8.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.1

@@ -373,7 +373,7 @@ Master zone file expansions (relative domain names) are handled by [dns-zone](ht
 
 The `toBind()` method accepts a zone-options object (typically supplied by
 [dns-zone](https://github.com/NicTool/dns-zone) when emitting full zone files)
-to elide redundant per-record output:
+to omit redundant per-record output:
 
 ```js
 record.toBind({
