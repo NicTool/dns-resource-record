@@ -1,7 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
-import { DNS_TYPE_IDS } from '../lib/binary.js'
+import { DNS_TYPE_IDS, typeIdToName } from '../lib/binary.js'
 
 export default class NSEC extends RR {
   static typeName = 'NSEC'
@@ -115,7 +115,6 @@ export default class NSEC extends RR {
 const removeParens = (a) => !['(', ')'].includes(a)
 
 function nsecBitmapToTypes(bitmap) {
-  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))
   const types = []
   let pos = 0
   while (pos + 2 <= bitmap.length) {
@@ -127,7 +126,7 @@ function nsecBitmapToTypes(bitmap) {
       for (let bit = 0; bit < 8; bit++) {
         if (byte & (0x80 >> bit)) {
           const typeId = windowNum * 256 + i * 8 + bit
-          types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`)
+          types.push(typeIdToName(typeId))
         }
       }
     }

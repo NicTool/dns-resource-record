@@ -49,6 +49,7 @@ function parseSvcbLikeRdata(rdata, recordType) {
 }
 
 function to(rrInstance) {
+  // the class guard lives in getTinydnsPostamble(), which every line includes
   if (rrInstance.constructor.tinydnsType) {
     const fields = rrInstance.getFields('rdata');
     const rdata = fields
@@ -324,7 +325,8 @@ const DNS_TYPE_IDS = {
   ISDN: 20,
   RT: 21,
   NSAP: 22,
-  NSAP_PTR: 23,
+  NSAP_PTR: 23, // input-only alias; IANA registers the hyphenated form
+  'NSAP-PTR': 23,
   SIG: 24,
   KEY: 25,
   PX: 26,
@@ -392,6 +394,30 @@ const DNS_TYPE_IDS = {
   TA: 32768,
   DLV: 32769,
 };
+
+const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]));
+
+// 'MX' | 'TYPE123' (RFC 3597 §5) | '123' | 123  ->  numeric type id
+function typeNameToId(type) {
+  let id;
+  if (typeof type === 'number') {
+    id = type;
+  } else if (typeof type === 'string') {
+    const t = type.toUpperCase();
+    const typeNN = t.match(/^TYPE(\d+)$/);
+    if (typeNN) id = parseInt(typeNN[1], 10);
+    else if (/^\d+$/.test(t)) id = parseInt(t, 10);
+    else id = DNS_TYPE_IDS[t];
+  }
+  if (!Number.isInteger(id) || id < 0 || id > 65535) throw new Error(`invalid DNS type: ${String(type)}`)
+  return id
+}
+
+// 15 -> 'MX', 731 -> 'TYPE731' (RFC 3597 §5)
+function typeIdToName(id) {
+  if (!Number.isInteger(id) || id < 0 || id > 65535) throw new Error(`invalid DNS type id: ${String(id)}`)
+  return DNS_TYPE_NAMES[id] ?? `TYPE${id}`
+}
 
 // ── Uncompressed domain name decoding ────────────────────────────────────────
 
@@ -463,18 +489,37 @@ function getWireRdata(rrInstance) {
  * Serialize an RR instance to DNS wire format (RFC 1035).
  * Combines owner name, type, class, TTL, and rdata.
  */
-function toWire(rrInstance, RRClasses) {
+function toWire(rrInstance) {
   const rdata = rrInstance.getWireRdata();
   const owner = wirePackDomain(rrInstance.get('owner'));
   const result = new Uint8Array(owner.length + 10 + rdata.length);
   result.set(owner, 0);
   const meta = new DataView(result.buffer, owner.length, 10);
   meta.setUint16(0, rrInstance.getTypeId());
-  meta.setUint16(2, RRClasses[rrInstance.get('class')] ?? 1);
+  meta.setUint16(2, rrInstance.getClassId());
   meta.setUint32(4, rrInstance.get('ttl'));
   meta.setUint16(8, rdata.length);
   result.set(rdata, owner.length + 10);
   return result
+}
+
+/**
+ * RFC 3597 §§3+5: a record decoded from generic (opaque) rdata must re-encode
+ * to exactly the same bytes — anything else means the rdata was misparsed or
+ * would be silently altered (this library stores embedded names lowercase and
+ * cannot preserve their case, so such rdata is rejected, not rewritten).
+ */
+function assertWireRoundTrip(rrInstance, rdata) {
+  const reencoded = rrInstance.getWireRdata();
+  if (reencoded.length === rdata.length && [...reencoded].every((b, i) => b === rdata[i])) return
+  const lower = (b) => (b >= 0x41 && b <= 0x5a ? b + 0x20 : b);
+  const caseOnly =
+    reencoded.length === rdata.length && [...reencoded].every((b, i) => lower(b) === lower(rdata[i]));
+  if (caseOnly)
+    throw new Error(
+      `${rrInstance.get('type')}: cannot preserve rdata case (RFC 3597 §3); this library stores names lowercase`,
+    )
+  throw new Error(`${rrInstance.get('type')}: rdata does not round-trip through wire encoding`)
 }
 
 /**
@@ -485,14 +530,24 @@ function fromWireBytes(RRConstructor, wireBytes, wireUnpackFn) {
   const instance = new RRConstructor(null);
   const bytes = wireBytes instanceof Uint8Array ? wireBytes : new Uint8Array(wireBytes);
   const { fqdn: owner, end } = wireUnpackFn(bytes, 0);
+  if (end + 10 > bytes.length) throw new Error(`${RRConstructor.typeName}: truncated wire record`)
   const view = new DataView(bytes.buffer, bytes.byteOffset);
+  const typeId = view.getUint16(end);
+  if (RRConstructor.typeId !== undefined && typeId !== RRConstructor.typeId)
+    throw new Error(
+      `${RRConstructor.typeName}: wire type id ${typeId} does not match ${RRConstructor.typeId}`,
+    )
   const classNum = view.getUint16(end + 2);
   const RRClasses = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 };
-  const cls = Object.keys(RRClasses).find((k) => RRClasses[k] === classNum) ?? 'IN';
+  const cls = Object.keys(RRClasses).find((k) => RRClasses[k] === classNum) ?? `CLASS${classNum}`; // RFC 3597 §5
   const ttl = view.getUint32(end + 4);
   const rdlen = view.getUint16(end + 8);
+  if (end + 10 + rdlen !== bytes.length)
+    throw new Error(
+      `${RRConstructor.typeName}: RDLENGTH ${rdlen} does not match remaining ${bytes.length - end - 10} bytes`,
+    )
   const rdata = bytes.slice(end + 10, end + 10 + rdlen);
-  return instance.fromWire({ owner, cls, ttl, rdata })
+  return instance.fromWire({ owner, cls, ttl, rdata, typeId })
 }
 
 /**
@@ -794,6 +849,12 @@ function parseBindLine(line, RRClasses) {
       continue
     }
 
+    if (/^CLASS\d+$/.test(token)) {
+      // RFC 3597 §5 unknown-class syntax; setClass validates the number
+      res.class = tokens.shift().toUpperCase();
+      continue
+    }
+
     if (/^\d+$/.test(token)) {
       res.ttl = parseInt(tokens.shift(), 10);
       continue
@@ -810,8 +871,50 @@ function parseBindLine(line, RRClasses) {
   return res
 }
 
+function fieldTypeOf(def) {
+  return Array.isArray(def) ? def[1] : null
+}
+
+// RFC 3597 §5 generic rdata: '\# <length> <hex words>', parens permitted.
+// Every word must contain an even number of hex digits, not just the whole.
+function parseGenericRdata(tokens) {
+  const words = tokens.filter((w) => w !== '(' && w !== ')');
+  if (words[0] !== '\\#') throw new Error(`RFC 3597: generic rdata must begin with \\#`)
+  if (!/^\d+$/.test(words[1] ?? '') || parseInt(words[1], 10) > 65535)
+    throw new Error(`RFC 3597: invalid rdata length: ${words[1]}`)
+  const length = parseInt(words[1], 10);
+  for (const w of words.slice(2)) {
+    if (!/^[0-9a-fA-F]+$/.test(w) || w.length % 2 !== 0)
+      throw new Error(`RFC 3597: each rdata word must be an even number of hex digits: ${w}`)
+  }
+  const hex = words.slice(2).join('').toLowerCase();
+  if (hex.length !== length * 2)
+    throw new Error(`RFC 3597: rdata length mismatch: declared ${length}, got ${hex.length / 2} bytes`)
+  return { length, hex }
+}
+
+// An RR of known type in generic form MUST be processed as the known type
+// (RFC 3597 §5), so the hex is decoded through the class's wire parser.
+function fromBind3597(rrInstance, parsed) {
+  const { hex } = parseGenericRdata(parsed.rdata);
+  const staticId = rrInstance.constructor.typeId;
+  const typeId = typeNameToId(parsed.type); // 'TYPE731', 'AFSDB', ...; garbage throws
+  if (staticId !== undefined && typeId !== staticId)
+    throw new Error(`${rrInstance.constructor.typeName}: ${parsed.type} does not match type id ${staticId}`)
+  const rdata = hexToBytes(hex);
+  const rr = rrInstance.fromWire({
+    owner: parsed.owner,
+    cls: parsed.class,
+    ttl: parsed.ttl,
+    rdata,
+    typeId: typeId ?? staticId,
+  });
+  assertWireRoundTrip(rr, rdata);
+  return rr
+}
+
 function fromBind(rrInstance, opts) {
-  const { owner, ttl, cls, rdata } = opts;
+  const { owner, ttl, class: cls, rdata } = opts;
   const result = {
     owner,
     ttl,
@@ -821,15 +924,23 @@ function fromBind(rrInstance, opts) {
 
   const fields = rrInstance.getFields('rdata');
   const rdataDefs = rrInstance.constructor.rdataFields ?? [];
+  const opaqueTypes = new Set(['str', 'hex', 'base64']);
   for (let i = 0; i < fields.length; i++) {
     const isLastField = i === fields.length - 1;
+
+    // RFC 1035 §5.1: opaque rdata (hex digests, base64 keys) may be split across
+    // whitespace and parenthesized continuations; rejoin it into one value.
+    if (isLastField && opaqueTypes.has(fieldTypeOf(rdataDefs[i]))) {
+      result[fields[i]] = rdata.slice(i).join('');
+      break
+    }
+
     if (isLastField && rrInstance.isQuotedField(fields[i])) {
       // Collect all remaining tokens for TXT/etc
       const tokens = rdata.slice(i).map((s) => s.replace(/^"|"$/g, ''));
       // For `charstrs` (TXT), preserve multi-string boundaries (RFC 1035 §3.3.14).
       // For `qstr`/`qcharstr` (single character-string), join into one string.
-      const def = rdataDefs[i];
-      const fieldType = Array.isArray(def) ? def[1] : null;
+      const fieldType = fieldTypeOf(rdataDefs[i]);
       result[fields[i]] = fieldType === 'charstrs' && tokens.length > 1 ? tokens : tokens.join('');
       break
     }
@@ -897,6 +1008,7 @@ class RR {
     if (opts.default !== undefined) instance.default = opts.default;
     const parsed = this.parseBindLine(line);
     if (!parsed) return null
+    if (parsed.rdata?.[0] === '\\#') return fromBind3597(instance, parsed) // RFC 3597 §5
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 
@@ -969,6 +1081,13 @@ class RR {
     }
     if (RR.CLASSES[c.toUpperCase()]) {
       this.set('class', c.toUpperCase());
+      return
+    }
+    const generic = c.toUpperCase().match(/^CLASS(\d+)$/); // RFC 3597 §5
+    if (generic && parseInt(generic[1], 10) <= 65535) {
+      const id = parseInt(generic[1], 10);
+      const known = Object.keys(RR.CLASSES).find((k) => RR.CLASSES[k] === id);
+      this.set('class', known ?? `CLASS${id}`);
       return
     }
     this.throwHelp(`invalid class ${c}`);
@@ -1125,6 +1244,11 @@ class RR {
     return this.typeId
   }
 
+  getClassId() {
+    const c = this.get('class');
+    return RR.CLASSES[c] ?? parseInt(c.slice(5), 10) // 'CLASS32' -> 32
+  }
+
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type'];
     Object.freeze(commonFields);
@@ -1170,7 +1294,15 @@ class RR {
   }
 
   getTinydnsPostamble() {
+    // every tinydns line ends with this, making it the choke point for the
+    // class guard: tinydns data files have no class field
+    this.assertClassIN('tinydns');
     return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
+  }
+
+  assertClassIN(format) {
+    if (this.get('class') !== 'IN')
+      this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`);
   }
 
   hasValidLabels(hostname) {
@@ -1404,7 +1536,7 @@ class RR {
   }
 
   toWire() {
-    return toWire(this, RR.CLASSES)
+    return toWire(this)
   }
 
   toBind(zone_opts) {
@@ -1438,6 +1570,8 @@ class RR {
   }
 
   toMaraDNS() {
+    // MaraDNS csv2 zone files have no class field either
+    this.assertClassIN('MaraDNS');
     const type = this.get('type');
     const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
       /\s+/g,
@@ -1449,10 +1583,300 @@ class RR {
   }
 
   toMaraGeneric() {
-    // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getFields('rdata')
-      .map((f) => this.getQuoted(f))
-      .join(' ')}' ~\n`
+    // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
+    // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
+    const bytes = this.getWireRdata();
+    const rdata = bytes.length
+      ? [...bytes].map((b) => `\\x${b.toString(16).padStart(2, '0')}`).join('')
+      : `''`;
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
+  }
+}
+
+/**
+ * NicTool 2.x storage columns <-> RFC/IETF resource-record field names.
+ *
+ * NicTool stores every record type in the same handful of columns — `address`
+ * holds the rdata, with `weight`, `priority`, `other` and `description` reused
+ * per type — while this library names fields as the RFCs do. These maps
+ * translate between the two, so a record read straight from the NicTool schema
+ * can be handed to the matching RR class and exported with toBind() or
+ * toTinydns().
+ *
+ * Types whose rdata packs several fields into `address` (NAPTR, NSEC3, SOA...)
+ * are unpacked explicitly in unApplyMap.
+ */
+
+/**
+ * Values are arrays for the packed types, so freeze those too. Freezing makes
+ * the caches safe to share: mutating a map is a TypeError under ESM's strict mode
+ */
+function freezeMap(map) {
+  for (const value of Object.values(map)) {
+    if (Array.isArray(value)) Object.freeze(value);
+  }
+  return Object.freeze(map)
+}
+
+// A zone export maps once per record — millions of them for a large install —
+// so build each type's map, and its entries, once.
+const mapCache = new Map();
+const entriesCache = new WeakMap();
+
+function mapEntries(map) {
+  let entries = entriesCache.get(map);
+  if (entries === undefined) {
+    entries = Object.entries(map);
+    entriesCache.set(map, entries);
+  }
+  return entries
+}
+
+function getMap(rrType) {
+  let map = mapCache.get(rrType);
+  if (map === undefined) {
+    map = freezeMap(mapFor(rrType));
+    mapCache.set(rrType, map);
+  }
+  return map
+}
+
+function mapFor(rrType) {
+  switch (rrType) {
+    case 'CAA':
+      return {
+        weight: 'flags',
+        other: 'tag',
+        address: 'value',
+      }
+    case 'CERT':
+      return {
+        other: 'cert type',
+        priority: 'key tag',
+        weight: 'algorithm',
+        address: 'certificate',
+      }
+    case 'CNAME':
+      return { address: 'cname' }
+    case 'DNAME':
+      return { address: 'target' }
+    case 'DNSKEY':
+      return {
+        address: 'publickey',
+        weight: 'flags',
+        priority: 'protocol',
+        other: 'algorithm',
+      }
+    case 'DS':
+      return {
+        address: 'digest',
+        weight: 'digest type',
+        priority: 'algorithm',
+        other: 'key tag',
+      }
+    case 'HINFO':
+      return { address: 'os', other: 'cpu' }
+    case 'HTTPS':
+      return {
+        address: 'target name',
+        other: 'params',
+      }
+    case 'IPSECKEY':
+      return {
+        address: 'gateway',
+        description: 'publickey',
+        weight: 'precedence',
+        priority: 'gateway type',
+        other: 'algorithm',
+      }
+    case 'KEY':
+      return {
+        address: 'publickey',
+        weight: 'protocol',
+        priority: 'algorithm',
+        other: 'flags',
+      }
+    case 'MX':
+      return { weight: 'preference', address: 'exchange' }
+    case 'NAPTR':
+      return {
+        weight: 'order',
+        priority: 'preference',
+        address: ['flags', 'service', 'regexp'],
+        description: 'replacement',
+      }
+    case 'NS':
+      return { address: 'dname' }
+    case 'NSEC':
+      return {
+        address: 'next domain',
+        description: 'type bit maps',
+      }
+    case 'NSEC3':
+      return {
+        address: ['hash algorithm', 'flags', 'iterations', 'salt', 'type bit maps', 'next hashed owner name'],
+      }
+    case 'NSEC3PARAM':
+      return {
+        address: ['hash algorithm', 'flags', 'iterations', 'salt'],
+      }
+    case 'NXT':
+      return {
+        address: 'next domain',
+        description: 'type bit map',
+      }
+    case 'OPENPGPKEY':
+      return { address: 'public key' }
+    case 'PTR':
+      return { address: 'dname' }
+    case 'SMIMEA':
+      return {
+        address: 'certificate association data',
+        weight: 'matching type',
+        priority: 'selector',
+        other: 'certificate usage',
+      }
+    case 'SOA':
+      return {
+        address: ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'],
+      }
+    case 'SPF':
+      return { address: 'data' }
+    case 'SSHFP':
+      return {
+        address: 'fingerprint',
+        weight: 'algorithm',
+        priority: 'fptype',
+      }
+    case 'SRV':
+      return { address: 'target', other: 'port' }
+    case 'SVCB':
+      return {
+        address: 'target name',
+        other: 'params',
+      }
+    case 'TLSA':
+      return {
+        weight: 'certificate usage',
+        priority: 'selector',
+        address: 'certificate association data',
+        other: 'matching type',
+      }
+    case 'TXT':
+      return { address: 'data' }
+    case 'URI':
+      return { address: 'target' }
+    default:
+      // Types NicTool stores without column overloading need no translation.
+      return {}
+  }
+}
+
+function applyMap(obj, map) {
+  // map dns-r-r (RFC/IETF) field names to NicTool 2.0 DB fields
+
+  for (const [key, value] of mapEntries(map)) {
+    if (Array.isArray(value)) {
+      obj[key] = `'${value.map((a) => obj[a]).join("','")}'`;
+      for (const f of value) {
+        delete obj[f];
+      }
+      // No `delete obj[value]` here: an array key stringifies to
+      // "flags,service,regexp" and would delete an unrelated property.
+      continue
+    }
+
+    obj[key] = obj[value];
+    delete obj[value];
+  }
+}
+
+// Integers on the wire. `certtype` is numeric but also accepts mnemonics
+// ("PKIX"), so a value is converted only when it actually looks numeric —
+// the declared format alone is not enough.
+const NUMERIC_FORMATS = new Set(['u8', 'u16', 'u32', 'certtype']);
+
+/**
+ * type -> the fields that class declares as integers, from its static
+ * rdataFields. NicTool's `other` column is VARCHAR, so MySQL hands back "1"
+ * where the RR setter demands an integer; `weight` and `priority` are SMALLINT
+ * and only arrive as strings from a file store or hand-edited data.
+ *
+ * Keyed on the type because a bare field name is ambiguous: `flags` is u8 in
+ * CAA, u16 in DNSKEY and a character string in NAPTR.
+ *
+ * Populated by index.js, which is where the classes are already enumerated;
+ * importing them here would close an import cycle.
+ */
+const numericFields = new Map();
+
+function registerRdataFormats(classes) {
+  for (const rrClass of classes) {
+    const numeric = new Set();
+    for (const entry of rrClass.rdataFields ?? []) {
+      if (Array.isArray(entry) && NUMERIC_FORMATS.has(entry[1])) numeric.add(entry[0]);
+    }
+    numericFields.set(rrClass.typeName, numeric);
+  }
+}
+
+function unApplyMap(obj, map) {
+  // map NicTool 2.0 DB fields to dns-r-r (RFC/IETF) field names
+  let packed = false;
+
+  if (obj.type === 'NAPTR') {
+    const [flags, service, regexp] = obj.address.slice(1, -1).split("','");
+    obj.flags = flags ?? '';
+    obj.service = service ?? '';
+    obj.regexp = regexp ?? '';
+    delete obj.address;
+    packed = true;
+  }
+  if (obj.type === 'NSEC3') {
+    const [algo, flags, iters, salt, bitmaps, next] = obj.address.slice(1, -1).split("','");
+    obj['hash algorithm'] = /^\d+$/.test(algo) ? parseInt(algo, 10) : (algo ?? '');
+    obj.flags = /^\d+$/.test(flags) ? parseInt(flags, 10) : (flags ?? '');
+    obj.iterations = /^\d+$/.test(iters) ? parseInt(iters, 10) : (iters ?? '');
+    obj.salt = salt;
+    obj['type bit maps'] = bitmaps;
+    obj['next hashed owner name'] = next;
+    delete obj.address;
+    packed = true;
+  }
+  if (obj.type === 'NSEC3PARAM') {
+    const [algo, flags, iters, salt] = obj.address.slice(1, -1).split("','");
+    obj['hash algorithm'] = /^\d+$/.test(algo) ? parseInt(algo, 10) : (algo ?? '');
+    obj.flags = /^\d+$/.test(flags) ? parseInt(flags, 10) : (flags ?? '');
+    obj.iterations = /^\d+$/.test(iters) ? parseInt(iters, 10) : (iters ?? '');
+    obj.salt = salt;
+    delete obj.address;
+    packed = true;
+  }
+  if (obj.type === 'SOA') {
+    const [one, two, three, four, five, six, seven] = obj.address.slice(1, -1).split("','");
+    obj.mname = one;
+    obj.rname = two;
+    obj.serial = parseInt(three, 10);
+    obj.refresh = parseInt(four, 10);
+    obj.retry = parseInt(five, 10);
+    obj.expire = parseInt(six, 10);
+    obj.minimum = parseInt(seven, 10);
+    delete obj.address;
+    packed = true;
+  }
+
+  const numeric = numericFields.get(obj.type);
+
+  for (const [key, value] of mapEntries(map)) {
+    if (packed && key === 'address') continue
+    const stored = obj[key];
+    // Only a string can need converting, and skipping the rest keeps the
+    // numeric columns MySQL already types correctly off this path entirely.
+    obj[value] =
+      typeof stored === 'string' && numeric?.has(value) && /^\d+$/.test(stored)
+        ? parseInt(stored, 10)
+        : stored;
+    delete obj[key];
   }
 }
 
@@ -2441,7 +2865,12 @@ class DS extends RR {
   static typeName = 'DS'
   static typeId = 43
   static RFCs = [4034, 4509, 9619]
-  static rdataFields = [['key tag', 'u16'], 'algorithm', 'digest type', ['digest', 'str']]
+  static rdataFields = [
+    ['key tag', 'u16'],
+    ['algorithm', 'u8'],
+    ['digest type', 'u8'],
+    ['digest', 'str'],
+  ]
   static tags = ['dnssec']
 
   constructor(opts) {
@@ -2957,7 +3386,13 @@ class IPSECKEY extends RR {
   static typeName = 'IPSECKEY'
   static typeId = 45
   static RFCs = [4025]
-  static rdataFields = ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
+  static rdataFields = [
+    ['precedence', 'u8'],
+    ['gateway type', 'u8'],
+    ['algorithm', 'u8'],
+    'gateway',
+    'publickey',
+  ]
   static tags = ['security']
 
   constructor(opts) {
@@ -4122,7 +4557,6 @@ class NSEC extends RR {
 const removeParens$1 = (a) => !['(', ')'].includes(a);
 
 function nsecBitmapToTypes(bitmap) {
-  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]));
   const types = [];
   let pos = 0;
   while (pos + 2 <= bitmap.length) {
@@ -4134,7 +4568,7 @@ function nsecBitmapToTypes(bitmap) {
       for (let bit = 0; bit < 8; bit++) {
         if (byte & (0x80 >> bit)) {
           const typeId = windowNum * 256 + i * 8 + bit;
-          types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`);
+          types.push(typeIdToName(typeId));
         }
       }
     }
@@ -5040,14 +5474,8 @@ class RRSIG extends RR {
   fromBind({ bindline }) {
     // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
     const parts = bindline.trim().split(/\s+/);
-    const typeCoveredStr = parts[4];
     // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
-    const typeNN = typeCoveredStr.match(/^TYPE(\d+)$/i);
-    const typeCovered = /^\d+$/.test(typeCoveredStr)
-      ? parseInt(typeCoveredStr, 10)
-      : typeNN
-        ? parseInt(typeNN[1], 10)
-        : (DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10));
+    const typeCovered = typeNameToId(parts[4]);
     return new RRSIG({
       owner: parts[0],
       ttl: parseInt(parts[1], 10),
@@ -5651,6 +6079,7 @@ class SOA extends RR {
 
   /******  EXPORTERS   *******/
   toMaraDNS() {
+    this.assertClassIN('MaraDNS');
     return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
@@ -5761,7 +6190,12 @@ class TXT extends RR {
   }
 
   toMaraDNS() {
-    const data = asQuotedStrings(this.get('data')).replace(/"/g, "'");
+    this.assertClassIN('MaraDNS');
+    // csv2 quotes with ' and has its own escaping, so the RFC 1035 rules below
+    // are presentation-format only and must not reach the payload. The chunk
+    // delimiter differs too; joining with it beats rewriting quotes after the
+    // fact, which also hit quotes belonging to the payload.
+    const data = asQuotedStrings(this.get('data'), { escape: false, delimiter: "' '" });
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
@@ -5802,19 +6236,25 @@ class TXT extends RR {
   }
 }
 
-function asQuotedStrings(data) {
+// RFC 1035 §5.1: inside a quoted character-string, \ and " are escaped. The
+// 255-byte limit counts wire bytes, so chunk on the unescaped value and escape
+// each chunk afterwards.
+const escapeCharString = (s) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
   // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
   // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
   const enc = new TextEncoder();
+  const esc = escape ? escapeCharString : (s) => s;
 
   if (Array.isArray(data)) {
     const anyTooLong = data.some((s) => enc.encode(s).length > 255);
-    if (!anyTooLong) return data.join('" "')
-    return chunkByBytes(data.join(''), 255).join('" "')
+    if (!anyTooLong) return data.map(esc).join(delimiter)
+    return chunkByBytes(data.join(''), 255).map(esc).join(delimiter)
   }
 
-  if (enc.encode(data).length <= 255) return data
-  return chunkByBytes(data, 255).join('" "')
+  if (enc.encode(data).length <= 255) return esc(data)
+  return chunkByBytes(data, 255).map(esc).join(delimiter)
 }
 
 function chunkByBytes(str, maxBytes) {
@@ -6620,6 +7060,149 @@ class TSIG extends RR {
   }
 }
 
+/**
+ * An RR of unknown type (RFC 3597). The numeric type id lives on the instance
+ * (type: 'TYPE731'), not the class, so UNKNOWN is not in index.js's classes
+ * array / typeMap. Rdata is opaque: a lowercase hex string, '' for zero-length.
+ *
+ * - index.js exports classFor('TYPE731' | 'MX' | 731), which resolves to the
+ *   implementing class and to UNKNOWN for resolvable types without one;
+ *   setType canonicalizes such mnemonics ('AFSDB' -> 'TYPE18')
+ * - UNKNOWN.fromRR(rr) converts any RR to its generic representation;
+ *   unknown.toRR(A) converts back through the class's wire codec
+ * - a known type written in generic form is converted to its class, as
+ *   RFC 3597 §5 requires: RR.A.fromBind('e.example. 3600 IN A \# 4 0a000001')
+ *   returns an A record with address 10.0.0.1
+ * - generic rdata a known class cannot re-encode byte-identically is rejected
+ *   rather than silently altered — including uppercase embedded names, whose
+ *   case this library (which stores names lowercase) cannot preserve
+ * - meta-types (OPT, TSIG, ...) are not blocked from the generic form, though
+ *   RFC 3597 §2 says they should not travel this way
+ * - MaraDNS export is 'RAW nnn' with unquoted \xNN escapes ('' when empty);
+ *   tinydns and MaraDNS exports require class IN
+ */
+class UNKNOWN extends RR {
+  static typeName = 'UNKNOWN'
+  static typeId = undefined // per-instance, see getTypeId()
+  static RFCs = [3597]
+  static rdataFields = [['rdata', 'hex']]
+  static tags = []
+
+  constructor(opts) {
+    if (opts !== null && opts?.type === undefined && opts?.typeId !== undefined)
+      opts = { ...opts, type: `TYPE${opts.typeId}` };
+    super(opts);
+  }
+
+  /****** Resource record specific setters   *******/
+  setType(t) {
+    if (t === undefined) this.throwHelp(`UNKNOWN: type is required (TYPEnnn, a mnemonic, or a numeric id)`);
+    // canonicalize to TYPEnnn, so classFor('AFSDB') -> UNKNOWN can consume 'AFSDB'
+    this.set('type', `TYPE${typeNameToId(t)}`);
+  }
+
+  setRdata(val) {
+    if (val === undefined || val === null)
+      this.throwHelp(`UNKNOWN: rdata is required (a hex string, '' for zero-length)`);
+    if (typeof val !== 'string' || /[^0-9a-fA-F]/.test(val) || val.length % 2 !== 0)
+      this.throwHelp(`UNKNOWN: rdata must be an even-length hex string`);
+    this.set('rdata', val.toLowerCase());
+  }
+
+  getTypeId() {
+    const t = this.get('type');
+    if (t === undefined) this.throwHelp(`UNKNOWN: type is not set`);
+    return parseInt(t.slice(4), 10)
+  }
+
+  getDescription() {
+    return 'Unknown Resource Record (RFC 3597)'
+  }
+
+  getCanonical() {
+    return {
+      owner: 'a.example.',
+      ttl: 3600,
+      class: 'CLASS32',
+      type: 'TYPE731',
+      rdata: 'abcdef012345',
+    }
+  }
+
+  /******  IMPORTERS   *******/
+
+  fromBind() {
+    this.throwHelp(`UNKNOWN: rdata must use the RFC 3597 generic form: \\# <length> <hex>`);
+  }
+
+  fromTinydns({ tinyline }) {
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
+    if (!/^\d+$/.test(typeId ?? '') || parseInt(typeId, 10) > 65535)
+      this.throwHelp(`UNKNOWN: invalid tinydns type id: ${typeId}`);
+    return new UNKNOWN({
+      owner,
+      ttl,
+      timestamp,
+      location,
+      type: `TYPE${parseInt(typeId, 10)}`,
+      rdata: bytesToHex(octalRdataToBytes(rdata ?? '')),
+    })
+  }
+
+  fromWire({ owner, cls, ttl, rdata, typeId }) {
+    return new UNKNOWN({
+      owner,
+      ttl,
+      class: cls,
+      type: `TYPE${typeId}`,
+      rdata: bytesToHex(rdata),
+    })
+  }
+
+  /******  EXPORTERS   *******/
+
+  getWireRdata() {
+    return hexToBytes(this.get('rdata'))
+  }
+
+  toBind(zone_opts) {
+    const hex = this.get('rdata');
+    const len = hex.length / 2;
+    return `${this.getPrefix(zone_opts)}\t\\# ${len}${len ? ' ' + hex : ''}\n`
+  }
+
+  /******  CONVERTERS   *******/
+
+  // any RR instance -> its RFC 3597 generic representation
+  static fromRR(rr) {
+    return new UNKNOWN({
+      owner: rr.get('owner'),
+      ttl: rr.get('ttl'),
+      class: rr.get('class'),
+      timestamp: rr.get('timestamp'),
+      location: rr.get('location'),
+      type: `TYPE${rr.getTypeId()}`,
+      rdata: bytesToHex(rr.getWireRdata()),
+    })
+  }
+
+  // generic representation -> a concrete RR class instance
+  toRR(RRClass) {
+    if (RRClass.typeId !== undefined && RRClass.typeId !== this.getTypeId())
+      this.throwHelp(`UNKNOWN: type id ${this.getTypeId()} does not match ${RRClass.typeName}`);
+    const rdata = hexToBytes(this.get('rdata'));
+    const rr = new RRClass(null).fromWire({
+      owner: this.get('owner'),
+      cls: this.get('class'),
+      ttl: this.get('ttl'),
+      rdata,
+      typeId: this.getTypeId(),
+    });
+    assertWireRoundTrip(rr, rdata);
+    return rr
+  }
+}
+
 class URI extends RR {
   static typeName = 'URI'
   static typeId = 256
@@ -7006,6 +7589,20 @@ for (const c of classes) {
   typeMap[c.typeName] = id;
 }
 
+registerRdataFormats(classes);
+
+// UNKNOWN stays out of the classes array: its type id is per-instance and an
+// undefined static typeId would poison typeMap.
+const classByName = {};
+for (const c of classes) classByName[c.typeName] = c;
+
+// 'MX' | 'TYPE731' (RFC 3597 §5) | 731 -> RR class constructor.
+// Resolvable types without an implemented class (e.g. AFSDB) resolve to
+// UNKNOWN; unresolvable names throw.
+function classFor(type) {
+  return classByName[typeMap[typeNameToId(type)]] ?? UNKNOWN
+}
+
 exports.A = A;
 exports.AAAA = AAAA;
 exports.APL = APL;
@@ -7044,7 +7641,12 @@ exports.SVCB = SVCB;
 exports.TLSA = TLSA;
 exports.TSIG = TSIG;
 exports.TXT = TXT;
+exports.UNKNOWN = UNKNOWN;
 exports.URI = URI;
 exports.WKS = WKS;
+exports.applyMap = applyMap;
+exports.classFor = classFor;
 exports.default = RR;
+exports.getMap = getMap;
 exports.typeMap = typeMap;
+exports.unApplyMap = unApplyMap;

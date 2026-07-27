@@ -84,6 +84,7 @@ export default class TXT extends RR {
   }
 
   toMaraDNS() {
+    this.assertClassIN('MaraDNS')
     // csv2 quotes with ' and has its own escaping, so the RFC 1035 rules below
     // are presentation-format only and must not reach the payload. The chunk
     // delimiter differs too; joining with it beats rewriting quotes after the

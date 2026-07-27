@@ -12,6 +12,7 @@ import {
 import {
   parseBindLine as bindParseLine,
   fromBind as bindFromGeneric,
+  fromBind3597 as bindFrom3597,
   toBind as bindToGeneric,
 } from './lib/bind.js'
 
@@ -56,6 +57,7 @@ export default class RR {
     if (opts.default !== undefined) instance.default = opts.default
     const parsed = this.parseBindLine(line)
     if (!parsed) return null
+    if (parsed.rdata?.[0] === '\\#') return bindFrom3597(instance, parsed) // RFC 3597 §5
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 
@@ -128,6 +130,13 @@ export default class RR {
     }
     if (RR.CLASSES[c.toUpperCase()]) {
       this.set('class', c.toUpperCase())
+      return
+    }
+    const generic = c.toUpperCase().match(/^CLASS(\d+)$/) // RFC 3597 §5
+    if (generic && parseInt(generic[1], 10) <= 65535) {
+      const id = parseInt(generic[1], 10)
+      const known = Object.keys(RR.CLASSES).find((k) => RR.CLASSES[k] === id)
+      this.set('class', known ?? `CLASS${id}`)
       return
     }
     this.throwHelp(`invalid class ${c}`)
@@ -284,6 +293,11 @@ export default class RR {
     return this.typeId
   }
 
+  getClassId() {
+    const c = this.get('class')
+    return RR.CLASSES[c] ?? parseInt(c.slice(5), 10) // 'CLASS32' -> 32
+  }
+
   getFields(arg) {
     const commonFields = ['owner', 'ttl', 'class', 'type']
     Object.freeze(commonFields)
@@ -329,7 +343,15 @@ export default class RR {
   }
 
   getTinydnsPostamble() {
+    // every tinydns line ends with this, making it the choke point for the
+    // class guard: tinydns data files have no class field
+    this.assertClassIN('tinydns')
     return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
+  }
+
+  assertClassIN(format) {
+    if (this.get('class') !== 'IN')
+      this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`)
   }
 
   hasValidLabels(hostname) {
@@ -563,7 +585,7 @@ export default class RR {
   }
 
   toWire() {
-    return wireToWire(this, RR.CLASSES)
+    return wireToWire(this)
   }
 
   toBind(zone_opts) {
@@ -597,6 +619,8 @@ export default class RR {
   }
 
   toMaraDNS() {
+    // MaraDNS csv2 zone files have no class field either
+    this.assertClassIN('MaraDNS')
     const type = this.get('type')
     const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
       /\s+/g,
@@ -608,9 +632,12 @@ export default class RR {
   }
 
   toMaraGeneric() {
-    // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getFields('rdata')
-      .map((f) => this.getQuoted(f))
-      .join(' ')}' ~\n`
+    // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
+    // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
+    const bytes = this.getWireRdata()
+    const rdata = bytes.length
+      ? [...bytes].map((b) => `\\x${b.toString(16).padStart(2, '0')}`).join('')
+      : `''`
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
   }
 }

@@ -126,14 +126,8 @@ export default class RRSIG extends RR {
   fromBind({ bindline }) {
     // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
     const parts = bindline.trim().split(/\s+/)
-    const typeCoveredStr = parts[4]
     // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
-    const typeNN = typeCoveredStr.match(/^TYPE(\d+)$/i)
-    const typeCovered = /^\d+$/.test(typeCoveredStr)
-      ? parseInt(typeCoveredStr, 10)
-      : typeNN
-        ? parseInt(typeNN[1], 10)
-        : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
+    const typeCovered = WIRE.typeNameToId(parts[4])
     return new RRSIG({
       owner: parts[0],
       ttl: parseInt(parts[1], 10),

@@ -34,6 +34,19 @@ This module supports all current DNS RRs in active use on the internet.
 |  _Security_   |        CAA, IPSECKEY, OPENPGPKEY, SMIMEA, SSHFP, TLSA         |
 |   _DNSSEC_    |          DNSKEY, DS, NSEC, NSEC3, NSEC3PARAM, RRSIG           |
 |  _Obsolete_   |              HINFO, KEY, NXT, RP, SIG, SPF, WKS               |
+|   _Generic_   |            UNKNOWN (any TYPEnnn, per [RFC 3597][])            |
+
+[rfc 3597]: https://www.rfc-editor.org/rfc/rfc3597
+
+Types with no implementation here are handled as opaque rdata by the `UNKNOWN`
+class, and `classFor('TYPE731')` resolves a type name or id to its class:
+
+```js
+new RR.UNKNOWN({ owner: 'a.example.', ttl: 3600, typeId: 731, rdata: 'abcdef012345' }).toBind()
+// 'a.example.\t3600\tIN\tTYPE731\t\# 6 abcdef012345\n'
+```
+
+See `rr/unknown.js` for the details.
 
 ## Getting Started
 

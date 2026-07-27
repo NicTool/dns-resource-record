@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 
 import * as base from '../base.js'
 
@@ -76,9 +77,20 @@ describe('TSIG record', function () {
 
   base.toBind(TSIG, validRecords)
   base.toWire(TSIG, validRecords)
-  base.toTinydns(TSIG, validRecords)
 
   base.fromBind(TSIG, validRecords)
   base.fromTinydns(TSIG, validRecords)
   base.fromWire(TSIG, validRecords)
+
+  describe('zone-data exports reject TSIG', function () {
+    // RFC 8945 §§4.1-4.2: TSIG is a dynamically computed meta-RR of class ANY
+    // with no value in storage; tinydns and MaraDNS formats publish class IN
+    it('toTinydns throws', function () {
+      assert.throws(() => new TSIG(validRecords[0]).toTinydns(), /only class IN/)
+    })
+
+    it('toMaraDNS throws', function () {
+      assert.throws(() => new TSIG(validRecords[0]).toMaraDNS(), /only class IN/)
+    })
+  })
 })

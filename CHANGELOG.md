@@ -4,6 +4,18 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- feat(rr/unknown): UNKNOWN class for RFC 3597 unknown RR types, refs #25
+- feat(index): classFor() resolves 'MX' | 'TYPE731' | 731 to an RR class
+- feat(bind): parse `\# <len> <hex>` generic rdata
+- feat(rr): CLASSnnn accepted and preserved
+- feat(binary): typeNameToId/typeIdToName helpers
+- fix(wire): fromWireBytes validates the type id and RDLENGTH
+- fix(rr): tinydns and MaraDNS exports throw for non-IN classes
+- fix(rr): toMaraGeneric emits RAW wire rdata as unquoted \xNN escapes
+- fix(bind): reject generic rdata that cannot be re-encoded byte-identical
+- feat(rr/unknown): unimplemented assigned mnemonics ('AFSDB') canonicalize to TYPEnnn
+- build: invoke esbuild via npx like the other build tools
+
 ### [1.8.2] - 2026-07-27
 
 - lib/nictool: imported getMap,applyMap,unApplyMap

@@ -38,8 +38,10 @@ import SVCB from './rr/svcb.js'
 import TLSA from './rr/tlsa.js'
 import TSIG from './rr/tsig.js'
 import TXT from './rr/txt.js'
+import UNKNOWN from './rr/unknown.js'
 import URI from './rr/uri.js'
 import WKS from './rr/wks.js'
+import { typeNameToId } from './lib/binary.js'
 
 const typeMap = {}
 const classes = [
@@ -93,6 +95,18 @@ for (const c of classes) {
 
 registerRdataFormats(classes)
 
+// UNKNOWN stays out of the classes array: its type id is per-instance and an
+// undefined static typeId would poison typeMap.
+const classByName = {}
+for (const c of classes) classByName[c.typeName] = c
+
+// 'MX' | 'TYPE731' (RFC 3597 §5) | 731 -> RR class constructor.
+// Resolvable types without an implemented class (e.g. AFSDB) resolve to
+// UNKNOWN; unresolvable names throw.
+export function classFor(type) {
+  return classByName[typeMap[typeNameToId(type)]] ?? UNKNOWN
+}
+
 export {
   A,
   AAAA,
@@ -132,6 +146,7 @@ export {
   TLSA,
   TSIG,
   TXT,
+  UNKNOWN,
   URI,
   WKS,
   typeMap,
