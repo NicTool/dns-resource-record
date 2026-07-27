@@ -66,6 +66,37 @@ describe('RR', function () {
         }
       })
     }
+
+    // RFC 3597 §5 CLASSnnn syntax
+    for (const [input, expected] of [
+      ['CLASS1', 'IN'],
+      ['CLASS3', 'CH'],
+      ['class4', 'HS'],
+      ['CLASS32', 'CLASS32'],
+      ['CLASS65535', 'CLASS65535'],
+    ]) {
+      it(`accepts generic class ${input} as ${expected}`, async function () {
+        r.setClass(input)
+        assert.equal(r.get('class'), expected)
+      })
+    }
+
+    it('throws on out of range generic class: CLASS99999', async function () {
+      assert.throws(() => r.setClass('CLASS99999'), /invalid class/)
+    })
+  })
+
+  describe('getClassId', function () {
+    for (const [cls, id] of [
+      ['IN', 1],
+      ['HS', 4],
+      ['CLASS32', 32],
+    ]) {
+      it(`resolves ${cls} to ${id}`, async function () {
+        r.setClass(cls)
+        assert.equal(r.getClassId(), id)
+      })
+    }
   })
 
   describe('fullyQualify', function () {
@@ -295,6 +326,55 @@ describe('RR', function () {
       const out = key.toMaraDNS()
       assert.ok(out.startsWith('example.com.\t+3600\tRAW 25\t'))
       assert.ok(out.includes('AQIDBA=='))
+    })
+
+    it('throws on non-IN class instead of silently dropping it', function () {
+      const a = new A({ owner: 'example.com.', ttl: 3600, class: 'CH', type: 'A', address: '1.2.3.4' })
+      assert.throws(() => a.toMaraDNS(), /only class IN/)
+    })
+  })
+
+  describe('toTinydns class guard', function () {
+    it('throws on non-IN class instead of silently dropping it', function () {
+      const a = new A({ owner: 'example.com.', ttl: 3600, class: 'CH', type: 'A', address: '1.2.3.4' })
+      assert.throws(() => a.toTinydns(), /only class IN/)
+    })
+  })
+
+  describe('fromWire strictness', function () {
+    const a = new A({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'A', address: '10.0.0.1' })
+    const wire = a.toWire()
+
+    it('round-trips a valid record', function () {
+      assert.equal(A.fromWire(wire).get('address'), '10.0.0.1')
+    })
+
+    it('throws on trailing garbage after rdata', function () {
+      const longer = new Uint8Array([...wire, 0xff])
+      assert.throws(() => A.fromWire(longer), /RDLENGTH/)
+    })
+
+    it('throws on truncated rdata', function () {
+      assert.throws(() => A.fromWire(wire.slice(0, wire.length - 2)), /RDLENGTH/)
+    })
+
+    it('throws on a truncated header', function () {
+      assert.throws(() => A.fromWire(wire.slice(0, 20)), /truncated/)
+    })
+
+    it('throws when the wire type id does not match the class', function () {
+      assert.throws(() => TXT.fromWire(wire), /wire type id 1 does not match 16/)
+    })
+
+    it('preserves an unknown class through wire round-trip (RFC 3597)', function () {
+      const c32 = new A({
+        owner: 'example.com.',
+        ttl: 3600,
+        class: 'CLASS32',
+        type: 'A',
+        address: '10.0.0.1',
+      })
+      assert.equal(A.fromWire(c32.toWire()).get('class'), 'CLASS32')
     })
   })
 

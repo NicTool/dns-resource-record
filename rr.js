@@ -130,6 +130,13 @@ export default class RR {
       this.set('class', c.toUpperCase())
       return
     }
+    const generic = c.toUpperCase().match(/^CLASS(\d+)$/) // RFC 3597 §5
+    if (generic && parseInt(generic[1], 10) <= 65535) {
+      const id = parseInt(generic[1], 10)
+      const known = Object.keys(RR.CLASSES).find((k) => RR.CLASSES[k] === id)
+      this.set('class', known ?? `CLASS${id}`)
+      return
+    }
     this.throwHelp(`invalid class ${c}`)
   }
 
@@ -282,6 +289,11 @@ export default class RR {
 
   static getTypeId() {
     return this.typeId
+  }
+
+  getClassId() {
+    const c = this.get('class')
+    return RR.CLASSES[c] ?? parseInt(c.slice(5), 10) // 'CLASS32' -> 32
   }
 
   getFields(arg) {
@@ -563,7 +575,7 @@ export default class RR {
   }
 
   toWire() {
-    return wireToWire(this, RR.CLASSES)
+    return wireToWire(this)
   }
 
   toBind(zone_opts) {
@@ -597,6 +609,8 @@ export default class RR {
   }
 
   toMaraDNS() {
+    // MaraDNS csv2 zone files have no class field; anything but IN would be silently corrupted
+    if (this.get('class') !== 'IN') this.throwHelp(`MaraDNS supports only class IN, got ${this.get('class')}`)
     const type = this.get('type')
     const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
       /\s+/g,
