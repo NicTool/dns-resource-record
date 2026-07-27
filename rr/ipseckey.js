@@ -8,7 +8,13 @@ export default class IPSECKEY extends RR {
   static typeName = 'IPSECKEY'
   static typeId = 45
   static RFCs = [4025]
-  static rdataFields = ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey']
+  static rdataFields = [
+    ['precedence', 'u8'],
+    ['gateway type', 'u8'],
+    ['algorithm', 'u8'],
+    'gateway',
+    'publickey',
+  ]
   static tags = ['security']
 
   constructor(opts) {

@@ -1,4 +1,5 @@
 import RR from './rr.js'
+import { registerRdataFormats } from './lib/nictool.js'
 import A from './rr/a.js'
 import AAAA from './rr/aaaa.js'
 import APL from './rr/apl.js'
@@ -90,6 +91,8 @@ for (const c of classes) {
   typeMap[c.typeName] = id
 }
 
+registerRdataFormats(classes)
+
 export {
   A,
   AAAA,
@@ -133,5 +136,7 @@ export {
   WKS,
   typeMap,
 }
+
+export { getMap, applyMap, unApplyMap } from './lib/nictool.js'
 
 export default RR

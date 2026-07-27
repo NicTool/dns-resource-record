@@ -4,6 +4,11 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.8.2] - 2026-07-27
+
+- lib/nictool: imported getMap,applyMap,unApplyMap
+- rr/bind: quote character strings in presentation format
+
 ### [1.8.1] - 2026-07-25
 
 - rr/bind: merge charstrs for opaque rdata types
@@ -437,3 +442,4 @@ Notable changes to this project are documented in this file.
 [1.7.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.7.0
 [1.8.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.0
 [1.8.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.1
+[1.8.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.2
