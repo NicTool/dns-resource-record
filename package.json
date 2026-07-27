@@ -21,7 +21,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:browser && npm run build:cjs",
-    "build:browser": "npx rollup -i index.js -o dist/dns-rr.js -f es && esbuild dist/dns-rr.js --minify --sourcemap --outfile=dist/dns-rr.min.js && rm dist/dns-rr.js",
+    "build:browser": "npx rollup -i index.js -o dist/dns-rr.js -f es && npx esbuild dist/dns-rr.js --minify --sourcemap --outfile=dist/dns-rr.min.js && rm dist/dns-rr.js",
     "build:cjs": "npx rollup -i index.js -o dist/dns-rr.cjs -f cjs --exports named",
     "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",

@@ -22,6 +22,9 @@ Notable changes to this project are documented in this file.
   (which stores names lowercase) cannot preserve
 - feat(rr/unknown): assigned mnemonics without an implementation ('AFSDB')
   canonicalize to TYPEnnn, so classFor() fallbacks can be constructed
+- build: invoke esbuild via npx like the other build tools; rebuild the
+  committed dist bundles (stale since v1.8.0) so require() and browser
+  consumers receive current exports
 
 ### [1.8.2] - 2026-07-27
 
