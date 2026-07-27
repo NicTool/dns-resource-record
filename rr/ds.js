@@ -7,7 +7,12 @@ export default class DS extends RR {
   static typeName = 'DS'
   static typeId = 43
   static RFCs = [4034, 4509, 9619]
-  static rdataFields = [['key tag', 'u16'], 'algorithm', 'digest type', ['digest', 'str']]
+  static rdataFields = [
+    ['key tag', 'u16'],
+    ['algorithm', 'u8'],
+    ['digest type', 'u8'],
+    ['digest', 'str'],
+  ]
   static tags = ['dnssec']
 
   constructor(opts) {

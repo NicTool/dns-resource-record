@@ -190,3 +190,58 @@ describe('TXT record', function () {
     })
   })
 })
+
+describe('TXT presentation-format escaping', function () {
+  const txt = (data) => new TXT({ owner: 'esc.example.com.', ttl: 300, class: 'IN', data })
+  const rdata = (rr) => rr.toBind().trimEnd().split('\t').slice(4).join('\t')
+
+  it('escapes double quotes inside a character-string', () => {
+    // RFC 1035 §5.1: an unescaped " would end the character-string early,
+    // which BIND and every other parser rejects.
+    assert.equal(rdata(txt('say "hi"')), '"say \\"hi\\""')
+  })
+
+  it('escapes backslashes', () => {
+    assert.equal(rdata(txt('c:\\path\\')), '"c:\\\\path\\\\"')
+  })
+
+  it('escapes both, in order, without double-escaping', () => {
+    assert.equal(rdata(txt('a\\"b')), '"a\\\\\\"b"')
+  })
+
+  it('escapes each chunk of a value past 255 bytes', () => {
+    const rr = txt('"'.repeat(300))
+    const chunks = rdata(rr).slice(1, -1).split('" "')
+
+    assert.equal(chunks.length, 2, 'chunked on the unescaped length')
+    for (const c of chunks) {
+      assert.doesNotMatch(c, /(^|[^\\])"/, 'no bare quote survives in any chunk')
+    }
+  })
+
+  it('leaves ordinary data untouched', () => {
+    assert.equal(rdata(txt('v=spf1 -all')), '"v=spf1 -all"')
+  })
+
+  it('does not apply RFC 1035 escaping to MaraDNS output', () => {
+    // csv2 quotes with ' and has its own rules; escaping here would change the
+    // payload rather than its presentation.
+    const out = txt('has "quotes" and \\ backslash').toMaraDNS()
+
+    assert.match(out, /'has "quotes" and \\ backslash'/)
+    assert.doesNotMatch(out, /\\"/)
+  })
+
+  it('leaves payload quotes alone, quoting only the csv2 chunk delimiter', () => {
+    // Rewriting every " to ' also hit the payload, which both corrupts the
+    // value and unbalances the surrounding '...' quoting.
+    assert.match(txt('a "b" c').toMaraDNS(), /'a "b" c'/)
+  })
+
+  it('joins chunked MaraDNS output with the csv2 delimiter', () => {
+    const out = txt('y'.repeat(400)).toMaraDNS()
+
+    assert.match(out, /' '/, "chunks are separated by ' '")
+    assert.doesNotMatch(out, /"/, 'no RFC 1035 quoting leaks into csv2')
+  })
+})

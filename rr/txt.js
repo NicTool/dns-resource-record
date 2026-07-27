@@ -84,7 +84,11 @@ export default class TXT extends RR {
   }
 
   toMaraDNS() {
-    const data = asQuotedStrings(this.get('data')).replace(/"/g, "'")
+    // csv2 quotes with ' and has its own escaping, so the RFC 1035 rules below
+    // are presentation-format only and must not reach the payload. The chunk
+    // delimiter differs too; joining with it beats rewriting quotes after the
+    // fact, which also hit quotes belonging to the payload.
+    const data = asQuotedStrings(this.get('data'), { escape: false, delimiter: "' '" })
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
   }
 
@@ -130,19 +134,20 @@ export default class TXT extends RR {
 // each chunk afterwards.
 const escapeCharString = (s) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
-function asQuotedStrings(data) {
+function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
   // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
   // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
   const enc = new TextEncoder()
+  const esc = escape ? escapeCharString : (s) => s
 
   if (Array.isArray(data)) {
     const anyTooLong = data.some((s) => enc.encode(s).length > 255)
-    if (!anyTooLong) return data.map(escapeCharString).join('" "')
-    return chunkByBytes(data.join(''), 255).map(escapeCharString).join('" "')
+    if (!anyTooLong) return data.map(esc).join(delimiter)
+    return chunkByBytes(data.join(''), 255).map(esc).join(delimiter)
   }
 
-  if (enc.encode(data).length <= 255) return escapeCharString(data)
-  return chunkByBytes(data, 255).map(escapeCharString).join('" "')
+  if (enc.encode(data).length <= 255) return esc(data)
+  return chunkByBytes(data, 255).map(esc).join(delimiter)
 }
 
 function chunkByBytes(str, maxBytes) {
