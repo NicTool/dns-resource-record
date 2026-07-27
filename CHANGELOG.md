@@ -6,25 +6,15 @@ Notable changes to this project are documented in this file.
 
 - feat(rr/unknown): UNKNOWN class for RFC 3597 unknown RR types, refs #25
 - feat(index): classFor() resolves 'MX' | 'TYPE731' | 731 to an RR class
-- feat(bind): parse `\# <len> <hex>` generic rdata; known types in generic form
-  are converted to their class (RFC 3597 §5)
-- feat(rr): CLASSnnn accepted and preserved (setClass, getClassId, wire, BIND)
-- feat(binary): typeNameToId/typeIdToName helpers; NSAP-PTR is the emitted
-  mnemonic for type 23 (NSAP_PTR remains an input alias)
-- fix(wire): fromWireBytes validates the type id and RDLENGTH against the
-  buffer instead of silently misparsing; unknown class numbers become CLASSnnn
-- fix(rr): tinydns and MaraDNS exports throw for non-IN classes instead of
-  silently emitting them as IN, including TSIG's mandatory class ANY
-- fix(rr): toMaraGeneric emits RAW wire rdata as unquoted \xNN escapes; the
-  previous quoted text-field output was not parseable
-- fix(bind): generic rdata that cannot be re-encoded byte-identically is
-  rejected (RFC 3597 §3), including embedded names whose case this library
-  (which stores names lowercase) cannot preserve
-- feat(rr/unknown): assigned mnemonics without an implementation ('AFSDB')
-  canonicalize to TYPEnnn, so classFor() fallbacks can be constructed
-- build: invoke esbuild via npx like the other build tools; rebuild the
-  committed dist bundles (stale since v1.8.0) so require() and browser
-  consumers receive current exports
+- feat(bind): parse `\# <len> <hex>` generic rdata
+- feat(rr): CLASSnnn accepted and preserved
+- feat(binary): typeNameToId/typeIdToName helpers
+- fix(wire): fromWireBytes validates the type id and RDLENGTH
+- fix(rr): tinydns and MaraDNS exports throw for non-IN classes
+- fix(rr): toMaraGeneric emits RAW wire rdata as unquoted \xNN escapes
+- fix(bind): reject generic rdata that cannot be re-encoded byte-identical
+- feat(rr/unknown): unimplemented assigned mnemonics ('AFSDB') canonicalize to TYPEnnn
+- build: invoke esbuild via npx like the other build tools
 
 ### [1.8.2] - 2026-07-27
 
