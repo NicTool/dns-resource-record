@@ -624,9 +624,12 @@ export default class RR {
   }
 
   toMaraGeneric() {
-    // this.throwHelp(`\nMaraDNS does not support ${type} records yet and this package does not support MaraDNS generic records. Yet.\n`)
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t'${this.getFields('rdata')
-      .map((f) => this.getQuoted(f))
-      .join(' ')}' ~\n`
+    // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
+    // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
+    const bytes = this.getWireRdata()
+    const rdata = bytes.length
+      ? [...bytes].map((b) => `\\x${b.toString(16).padStart(2, '0')}`).join('')
+      : `''`
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
   }
 }

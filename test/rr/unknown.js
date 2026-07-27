@@ -198,6 +198,27 @@ describe('UNKNOWN record', function () {
     })
   })
 
+  describe('toMaraDNS', function () {
+    it('emits unknown types as RAW with unquoted \\xNN escaped rdata', function () {
+      const r = new UNKNOWN(validRecords[2])
+      assert.equal(r.toMaraDNS(), 'unknown.example.com.\t+3600\tRAW 65280\t\\x0a\\x00\\x00\\x01 ~\n')
+    })
+
+    it('escapes the codec octets 00 3a 5c 80 ff', function () {
+      const r = new UNKNOWN(validRecords[3])
+      assert.equal(r.toMaraDNS(), 'codec.example.com.\t+3600\tRAW 65281\t\\x00\\x3a\\x5c\\x80\\xff ~\n')
+    })
+
+    it("emits '' for zero-length rdata", function () {
+      const r = new UNKNOWN({ owner: 'b.example.', ttl: 3600, class: 'IN', typeId: 62347, rdata: '' })
+      assert.equal(r.toMaraDNS(), "b.example.\t+3600\tRAW 62347\t'' ~\n")
+    })
+
+    it('throws for non-IN classes', function () {
+      assert.throws(() => new UNKNOWN(validRecords[0]).toMaraDNS(), /only class IN/)
+    })
+  })
+
   describe('cross-format round-trip', function () {
     it('tinydns -> wire -> instance preserves the record', function () {
       const orig = new UNKNOWN(validRecords[3])

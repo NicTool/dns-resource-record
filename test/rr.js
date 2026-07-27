@@ -324,8 +324,8 @@ describe('RR', function () {
         publickey: 'AQIDBA==',
       })
       const out = key.toMaraDNS()
-      assert.ok(out.startsWith('example.com.\t+3600\tRAW 25\t'))
-      assert.ok(out.includes('AQIDBA=='))
+      // wire rdata (flags, protocol, algorithm, key) as unquoted \xNN escapes
+      assert.equal(out, 'example.com.\t+3600\tRAW 25\t\\x01\\x00\\x03\\x05\\x01\\x02\\x03\\x04 ~\n')
     })
 
     it('throws on non-IN class instead of silently dropping it', function () {
