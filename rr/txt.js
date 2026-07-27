@@ -125,6 +125,11 @@ export default class TXT extends RR {
   }
 }
 
+// RFC 1035 §5.1: inside a quoted character-string, \ and " are escaped. The
+// 255-byte limit counts wire bytes, so chunk on the unescaped value and escape
+// each chunk afterwards.
+const escapeCharString = (s) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+
 function asQuotedStrings(data) {
   // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
   // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
@@ -132,12 +137,12 @@ function asQuotedStrings(data) {
 
   if (Array.isArray(data)) {
     const anyTooLong = data.some((s) => enc.encode(s).length > 255)
-    if (!anyTooLong) return data.join('" "')
-    return chunkByBytes(data.join(''), 255).join('" "')
+    if (!anyTooLong) return data.map(escapeCharString).join('" "')
+    return chunkByBytes(data.join(''), 255).map(escapeCharString).join('" "')
   }
 
-  if (enc.encode(data).length <= 255) return data
-  return chunkByBytes(data, 255).join('" "')
+  if (enc.encode(data).length <= 255) return escapeCharString(data)
+  return chunkByBytes(data, 255).map(escapeCharString).join('" "')
 }
 
 function chunkByBytes(str, maxBytes) {

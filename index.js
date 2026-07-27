@@ -134,4 +134,6 @@ export {
   typeMap,
 }
 
+export { getMap, applyMap, unApplyMap } from './lib/nictool.js'
+
 export default RR
