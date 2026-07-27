@@ -125,6 +125,7 @@ export default class SOA extends RR {
 
   /******  EXPORTERS   *******/
   toMaraDNS() {
+    this.assertClassIN('MaraDNS')
     return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`

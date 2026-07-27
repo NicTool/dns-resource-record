@@ -5,6 +5,8 @@ import RR from '../rr.js'
 import A from '../rr/a.js'
 import DS from '../rr/ds.js'
 import KEY from '../rr/key.js'
+import MX from '../rr/mx.js'
+import SOA from '../rr/soa.js'
 import TXT from '../rr/txt.js'
 
 const cases = [
@@ -332,12 +334,42 @@ describe('RR', function () {
       const a = new A({ owner: 'example.com.', ttl: 3600, class: 'CH', type: 'A', address: '1.2.3.4' })
       assert.throws(() => a.toMaraDNS(), /only class IN/)
     })
+
+    // TXT and SOA override toMaraDNS, so the guard must hold there too
+    it('throws on non-IN class in the TXT override', function () {
+      const t = new TXT({ owner: 'e.example.', ttl: 3600, class: 'CH', type: 'TXT', data: 'x' })
+      assert.throws(() => t.toMaraDNS(), /only class IN/)
+    })
+
+    it('throws on non-IN class in the SOA override', function () {
+      const soa = new SOA({ ...new SOA(null).getCanonical(), class: 'CH' })
+      assert.throws(() => soa.toMaraDNS(), /only class IN/)
+    })
   })
 
   describe('toTinydns class guard', function () {
     it('throws on non-IN class instead of silently dropping it', function () {
       const a = new A({ owner: 'example.com.', ttl: 3600, class: 'CH', type: 'A', address: '1.2.3.4' })
       assert.throws(() => a.toTinydns(), /only class IN/)
+    })
+
+    // MX and TXT override toTinydns with shorthand emitters; the guard sits in
+    // getTinydnsPostamble, which every tinydns line passes through
+    it('throws on non-IN class in the MX override', function () {
+      const mx = new MX({
+        owner: 'e.example.',
+        ttl: 3600,
+        class: 'CH',
+        type: 'MX',
+        preference: 10,
+        exchange: 'mail.example.',
+      })
+      assert.throws(() => mx.toTinydns(), /only class IN/)
+    })
+
+    it('throws on non-IN class in the TXT override', function () {
+      const t = new TXT({ owner: 'e.example.', ttl: 3600, class: 'CH', type: 'TXT', data: 'x' })
+      assert.throws(() => t.toTinydns(), /only class IN/)
     })
   })
 

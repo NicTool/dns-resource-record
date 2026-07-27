@@ -343,7 +343,15 @@ export default class RR {
   }
 
   getTinydnsPostamble() {
+    // every tinydns line ends with this, making it the choke point for the
+    // class guard: tinydns data files have no class field
+    this.assertClassIN('tinydns')
     return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
+  }
+
+  assertClassIN(format) {
+    if (this.get('class') !== 'IN')
+      this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`)
   }
 
   hasValidLabels(hostname) {
@@ -611,8 +619,8 @@ export default class RR {
   }
 
   toMaraDNS() {
-    // MaraDNS csv2 zone files have no class field; anything but IN would be silently corrupted
-    if (this.get('class') !== 'IN') this.throwHelp(`MaraDNS supports only class IN, got ${this.get('class')}`)
+    // MaraDNS csv2 zone files have no class field either
+    this.assertClassIN('MaraDNS')
     const type = this.get('type')
     const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
       /\s+/g,
