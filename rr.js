@@ -12,6 +12,7 @@ import {
 import {
   parseBindLine as bindParseLine,
   fromBind as bindFromGeneric,
+  fromBind3597 as bindFrom3597,
   toBind as bindToGeneric,
 } from './lib/bind.js'
 
@@ -56,6 +57,7 @@ export default class RR {
     if (opts.default !== undefined) instance.default = opts.default
     const parsed = this.parseBindLine(line)
     if (!parsed) return null
+    if (parsed.rdata?.[0] === '\\#') return bindFrom3597(instance, parsed) // RFC 3597 §5
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 

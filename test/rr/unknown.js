@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import UNKNOWN from '../../rr/unknown.js'
 import A from '../../rr/a.js'
+import MX from '../../rr/mx.js'
 import TXT from '../../rr/txt.js'
 import * as INDEX from '../../index.js'
 import * as base from '../base.js'
@@ -62,6 +63,14 @@ const invalidRecords = [
   { tinyline: ':x.example.com:1x:\\012:3600::\n', msg: /invalid tinydns type id/ },
   { tinyline: ':x.example.com::\\012:3600::\n', msg: /invalid tinydns type id/ },
   { tinyline: ':x.example.com:-1:\\012:3600::\n', msg: /invalid tinydns type id/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 3 abcdef01', msg: /length mismatch/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 0 aa', msg: /length mismatch/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 1 gg', msg: /even number of hex digits/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 1 a b', msg: /even number of hex digits/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 1x aa', msg: /invalid rdata length/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# -1 aa', msg: /invalid rdata length/ },
+  { bindline: 'x.example. 3600 IN TYPE731 \\# 70000 aa', msg: /invalid rdata length/ },
+  { bindline: 'x.example. 3600 IN TYPE731 1.2.3.4', msg: /generic form/ },
 ]
 
 describe('UNKNOWN record', function () {
@@ -79,8 +88,46 @@ describe('UNKNOWN record', function () {
   base.toWire(UNKNOWN, validRecords)
   base.toTinydns(UNKNOWN, validRecords)
 
+  base.fromBind(UNKNOWN, validRecords)
   base.fromTinydns(UNKNOWN, validRecords)
   base.fromWire(UNKNOWN, validRecords)
+
+  describe('known types in generic form (RFC 3597 §5)', function () {
+    it('converts generic rdata to the concrete class', function () {
+      const a = A.fromBind('e.example. 86400 IN A \\# 4 0a000001')
+      assert.ok(a instanceof A)
+      assert.equal(a.get('address'), '10.0.0.1')
+    })
+
+    it('accepts parenthesized continuations and uppercase hex', function () {
+      const a = A.fromBind('e.example. 86400 IN A \\# 4 ( 0A 00 00 01 )')
+      assert.equal(a.get('address'), '10.0.0.1')
+    })
+
+    it('decodes rdata with an embedded domain name', function () {
+      const mx = MX.fromBind('f.example. 3600 IN MX \\# 16 000a046d61696c076578616d706c6500')
+      assert.equal(mx.get('preference'), 10)
+      assert.equal(mx.get('exchange'), 'mail.example.')
+    })
+
+    it('parses TYPE1/CLASS1 mnemonics with native rdata', function () {
+      const a = A.fromBind('e.example. 86400 CLASS1 TYPE1 10.0.0.2')
+      assert.equal(a.get('class'), 'IN')
+      assert.equal(a.get('address'), '10.0.0.2')
+    })
+
+    it('throws on a TYPEnnn / class mismatch', function () {
+      assert.throws(() => A.fromBind('e.example. 3600 IN TYPE2 \\# 0'), /TYPE2 does not match type id 1/)
+    })
+
+    it('throws when rdata has extra bytes (no lossy acceptance)', function () {
+      assert.throws(() => A.fromBind('e.example. 3600 IN A \\# 5 0a000001ff'))
+    })
+
+    it('throws when rdata is truncated mid-name', function () {
+      assert.throws(() => MX.fromBind('f.example. 3600 IN MX \\# 3 000a04'))
+    })
+  })
 
   describe('getTypeId', function () {
     // the id lives on the instance, so base.getTypeId (static) does not apply
