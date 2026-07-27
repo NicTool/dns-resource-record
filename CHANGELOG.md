@@ -4,6 +4,20 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- feat(rr/unknown): UNKNOWN class for RFC 3597 unknown RR types, fixes #25
+- feat(index): classFor() resolves 'MX' | 'TYPE731' | 731 to an RR class
+- feat(bind): parse `\# <len> <hex>` generic rdata; known types in generic form
+  are converted to their class (RFC 3597 §5)
+- feat(rr): CLASSnnn accepted and preserved (setClass, getClassId, wire, BIND)
+- feat(binary): typeNameToId/typeIdToName helpers; NSAP-PTR is the emitted
+  mnemonic for type 23 (NSAP_PTR remains an input alias)
+- fix(wire): fromWireBytes validates the type id and RDLENGTH against the
+  buffer instead of silently misparsing; unknown class numbers become CLASSnnn
+- fix(rr): tinydns and MaraDNS exports throw for non-IN classes instead of
+  silently emitting them as IN
+- fix(rr): toMaraGeneric emits RAW wire rdata as unquoted \xNN escapes; the
+  previous quoted text-field output was not parseable
+
 ### [1.8.2] - 2026-07-27
 
 - lib/nictool: imported getMap,applyMap,unApplyMap

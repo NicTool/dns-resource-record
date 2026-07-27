@@ -7,6 +7,20 @@ import { assertWireRoundTrip } from '../lib/wire.js'
  * An RR of unknown type (RFC 3597). The numeric type id lives on the instance
  * (type: 'TYPE731'), not the class, so UNKNOWN is not in index.js's classes
  * array / typeMap. Rdata is opaque: a lowercase hex string, '' for zero-length.
+ *
+ * - index.js exports classFor('TYPE731' | 'MX' | 731), which resolves to the
+ *   implementing class and to UNKNOWN for resolvable types without one
+ * - UNKNOWN.fromRR(rr) converts any RR to its generic representation;
+ *   unknown.toRR(A) converts back through the class's wire codec
+ * - a known type written in generic form is converted to its class, as
+ *   RFC 3597 §5 requires: RR.A.fromBind('e.example. 3600 IN A \# 4 0a000001')
+ *   returns an A record with address 10.0.0.1
+ * - domain names embedded in rdata are normalized to lowercase, like every
+ *   other name this library handles
+ * - meta-types (OPT, TSIG, ...) are not blocked from the generic form, though
+ *   RFC 3597 §2 says they should not travel this way
+ * - MaraDNS export is 'RAW nnn' with unquoted \xNN escapes ('' when empty);
+ *   tinydns and MaraDNS exports require class IN
  */
 export default class UNKNOWN extends RR {
   static typeName = 'UNKNOWN'
