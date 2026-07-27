@@ -52,9 +52,9 @@ const validRecords = [
 ]
 
 const invalidRecords = [
-  { ...validRecords[2], type: 'TYPE70000', msg: /TYPE<0-65535>/ },
-  { ...validRecords[2], type: 'A', msg: /TYPE<0-65535>/ },
-  { ...validRecords[2], type: undefined, msg: /TYPE<0-65535>/ },
+  { ...validRecords[2], type: 'TYPE70000', msg: /invalid DNS type/ },
+  { ...validRecords[2], type: 'BOGUS', msg: /invalid DNS type/ },
+  { ...validRecords[2], type: undefined, msg: /type is required/ },
   { ...validRecords[2], rdata: 'abc', msg: /even-length hex/ },
   { ...validRecords[2], rdata: 'zz', msg: /even-length hex/ },
   { ...validRecords[2], rdata: undefined, msg: /rdata is required/ },
@@ -116,8 +116,20 @@ describe('UNKNOWN record', function () {
       assert.equal(a.get('address'), '10.0.0.2')
     })
 
+    it('rejects rdata whose embedded-name case cannot be preserved (RFC 3597 §3)', function () {
+      // 'MaIl' — this library stores names lowercase and must not rewrite rdata
+      assert.throws(
+        () => MX.fromBind('f.example. 3600 IN MX \\# 16 000a044d61496c076578616d706c6500'),
+        /cannot preserve rdata case/,
+      )
+    })
+
     it('throws on a TYPEnnn / class mismatch', function () {
       assert.throws(() => A.fromBind('e.example. 3600 IN TYPE2 \\# 0'), /TYPE2 does not match type id 1/)
+    })
+
+    it('throws on an unresolvable type mnemonic instead of assuming the class', function () {
+      assert.throws(() => A.fromBind('e.example. 3600 IN BOGUS \\# 4 0a000001'), /invalid DNS type/)
     })
 
     it('throws when rdata has extra bytes (no lossy acceptance)', function () {
@@ -145,6 +157,21 @@ describe('UNKNOWN record', function () {
       const r = new UNKNOWN({ ...validRecords[2], type: undefined, typeId: 65280 })
       assert.equal(r.get('type'), 'TYPE65280')
       assert.equal(r.getTypeId(), 65280)
+    })
+  })
+
+  describe('mnemonic canonicalization', function () {
+    // classFor('AFSDB') falls back to UNKNOWN, so UNKNOWN must consume the
+    // mnemonics that sent it there
+    it('canonicalizes an assigned mnemonic to TYPEnnn', function () {
+      const r = new UNKNOWN({ ...validRecords[2], type: 'AFSDB' })
+      assert.equal(r.get('type'), 'TYPE18')
+    })
+
+    it('parses a BIND line with an unimplemented mnemonic', function () {
+      const r = UNKNOWN.fromBind('x.example. 3600 IN AFSDB \\# 0')
+      assert.equal(r.get('type'), 'TYPE18')
+      assert.equal(r.get('rdata'), '')
     })
   })
 

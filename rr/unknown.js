@@ -1,6 +1,6 @@
 import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
-import { bytesToHex, hexToBytes } from '../lib/binary.js'
+import { bytesToHex, hexToBytes, typeNameToId } from '../lib/binary.js'
 import { assertWireRoundTrip } from '../lib/wire.js'
 
 /**
@@ -9,14 +9,16 @@ import { assertWireRoundTrip } from '../lib/wire.js'
  * array / typeMap. Rdata is opaque: a lowercase hex string, '' for zero-length.
  *
  * - index.js exports classFor('TYPE731' | 'MX' | 731), which resolves to the
- *   implementing class and to UNKNOWN for resolvable types without one
+ *   implementing class and to UNKNOWN for resolvable types without one;
+ *   setType canonicalizes such mnemonics ('AFSDB' -> 'TYPE18')
  * - UNKNOWN.fromRR(rr) converts any RR to its generic representation;
  *   unknown.toRR(A) converts back through the class's wire codec
  * - a known type written in generic form is converted to its class, as
  *   RFC 3597 §5 requires: RR.A.fromBind('e.example. 3600 IN A \# 4 0a000001')
  *   returns an A record with address 10.0.0.1
- * - domain names embedded in rdata are normalized to lowercase, like every
- *   other name this library handles
+ * - generic rdata a known class cannot re-encode byte-identically is rejected
+ *   rather than silently altered — including uppercase embedded names, whose
+ *   case this library (which stores names lowercase) cannot preserve
  * - meta-types (OPT, TSIG, ...) are not blocked from the generic form, though
  *   RFC 3597 §2 says they should not travel this way
  * - MaraDNS export is 'RAW nnn' with unquoted \xNN escapes ('' when empty);
@@ -37,10 +39,9 @@ export default class UNKNOWN extends RR {
 
   /****** Resource record specific setters   *******/
   setType(t) {
-    const generic = /^TYPE(\d+)$/i.exec(t ?? '')
-    if (!generic || parseInt(generic[1], 10) > 65535)
-      this.throwHelp(`UNKNOWN: type must be TYPE<0-65535> (RFC 3597), got: ${t}`)
-    this.set('type', `TYPE${parseInt(generic[1], 10)}`)
+    if (t === undefined) this.throwHelp(`UNKNOWN: type is required (TYPEnnn, a mnemonic, or a numeric id)`)
+    // canonicalize to TYPEnnn, so classFor('AFSDB') -> UNKNOWN can consume 'AFSDB'
+    this.set('type', `TYPE${typeNameToId(t)}`)
   }
 
   setRdata(val) {
