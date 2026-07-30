@@ -200,7 +200,6 @@ export default class RRSIG extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:]/, 'g')
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('type covered')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +

@@ -142,10 +142,9 @@ describe('RRSIG record', function () {
   })
 
   it('round-trips a binary signature through tinydns and bind', function () {
-    const signature = Buffer.from(
-      'f0e1d2c3b4a5968778695a4b3c2d1e0fdeadbeefcafef00dba5eba11',
-      'hex',
-    ).toString('base64')
+    const signature = Buffer.from('f0e1d2c3b4a5968778695a4b3c2d1e0fdeadbeefcafef00dba5eba11', 'hex').toString(
+      'base64',
+    )
     const r = new RRSIG({ ...defaults, 'type covered': 1, signature })
 
     assert.equal(RRSIG.fromTinydns(r.toTinydns().trim()).get('signature'), signature)
