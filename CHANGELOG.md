@@ -4,6 +4,10 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [1.9.0] - 2026-07-30
+
+- fix(rrsig): signature presentation is base64
+- unknown RR type handling, RFC 3597 (#66)
 - feat(rr/unknown): UNKNOWN class for RFC 3597 unknown RR types, refs #25
 - feat(index): classFor() resolves 'MX' | 'TYPE731' | 731 to an RR class
 - feat(bind): parse `\# <len> <hex>` generic rdata
@@ -31,7 +35,7 @@ Notable changes to this project are documented in this file.
   - new wirePackDomainCompressed() for RFC 1035 §4.1.4 name compression
   - charstrs decoder preserves multi-string boundaries
 - lib/bind.js — fromBind() returns array for charstrs (TXT) when input has multiple quoted strings.
-- rr/rrsig.js — getAlgorithmOptions() extended with DNSSEC algorithms 6, 7, 8, 10, 13, 14, 15, 16.
+- rr/rrsig.js — getAlgorithmOptions() extended with DNSSEC algorithms 6, 7, 8, 10, 13, 14, 15, 16.
 - rr/ds.js — setDigestType() now accepts SHA-384 (4)
 - rr/txt.js — getWireRdata() and fromTinydnsGeneric() preserve per-segment boundaries.
 - package.json — engines lowered to >=20
@@ -455,3 +459,4 @@ Notable changes to this project are documented in this file.
 [1.8.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.0
 [1.8.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.1
 [1.8.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.2
+[1.9.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.9.0

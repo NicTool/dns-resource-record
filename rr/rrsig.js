@@ -16,7 +16,7 @@ export default class RRSIG extends RR {
     ['signature inception', 'u32'],
     ['key tag', 'u16'],
     ['signers name', 'fqdn'],
-    ['signature', 'str'],
+    ['signature', 'base64'],
   ]
   static tags = ['dnssec']
 
@@ -74,7 +74,9 @@ export default class RRSIG extends RR {
   }
 
   setSignature(val) {
-    this.setTypedValue('str', 'signature', val)
+    // RFC 4034 §3.2: presentation form is base64; wire form is decoded bytes.
+    this.isBase64('RRSIG', 'signature', String(val).replace(/[\s()]/g, ''))
+    this.set('signature', val)
   }
 
   getAlgorithmOptions() {
@@ -117,7 +119,10 @@ export default class RRSIG extends RR {
       'signature inception': 1042461120,
       'key tag': 12345,
       'signers name': 'example.com.',
-      signature: 'ABCDEF...',
+      signature:
+        'oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h108dUKGMeDPKijVCHX3DDKdfb' +
+        '+v6oB9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3tGNazPwQKkRN20XPXV6nwwfoXmJQb' +
+        'sLNrLfkGJ5D6fwFm8nN+6pBzeDQfsS3Ap3o=',
     }
   }
 
@@ -172,7 +177,7 @@ export default class RRSIG extends RR {
       pos += len
     }
     const signersName = `${labelArr.join('.')}.`
-    const signature = new TextDecoder().decode(bytes.subarray(pos))
+    const signature = WIRE.bytesToBase64(bytes.subarray(pos))
 
     return new RRSIG({
       owner: this.fullyQualify(fqdn),
@@ -195,7 +200,6 @@ export default class RRSIG extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:]/, 'g')
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('type covered')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
@@ -205,13 +209,13 @@ export default class RRSIG extends RR {
         TINYDNS.UInt32toOctal(this.get('signature inception')) +
         TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.packDomainName(this.get('signers name')) +
-        TINYDNS.escapeOctal(dataRe, this.get('signature')),
+        TINYDNS.base64toOctal(this.get('signature').replace(/[\s()]/g, '')),
     )
   }
 
   getWireRdata() {
     const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
-    const sigBytes = new TextEncoder().encode(this.get('signature'))
+    const sigBytes = WIRE.base64ToBytes(this.get('signature').replace(/[\s()]/g, ''))
 
     const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
     const bytes = new Uint8Array(totalLen)
