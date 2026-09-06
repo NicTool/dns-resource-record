@@ -35,3 +35,17 @@ test('malformed quoted strings and escapes fail', () => {
     assert.throws(() => TXT.fromBind('fixture.example. 300 IN TXT ' + data))
   }
 })
+
+test('owner names escape master-file syntax without changing the name', () => {
+  for (const owner of [
+    'two words.example.',
+    'semi;colon.example.',
+    'quote"name.example.',
+    'slash\\name.example.',
+    'paren(name).example.',
+    'wide\u2003space.example.',
+  ]) {
+    const rr = new TXT({ owner, ttl: 300, data: 'fixture' })
+    assert.equal(TXT.fromBind(rr.toBind()).get('owner'), owner)
+  }
+})

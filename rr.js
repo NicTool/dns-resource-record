@@ -1,3 +1,5 @@
+// Copyright (c) 2026, The NicTool Contributors
+
 import * as TINYDNS from './lib/tinydns.js'
 
 const customInspect = Symbol.for('nodejs.util.inspect.custom')
@@ -14,6 +16,7 @@ import {
   fromBind as bindFromGeneric,
   fromBind3597 as bindFrom3597,
   toBind as bindToGeneric,
+  escapeBindName,
 } from './lib/bind.js'
 
 export default class RR {
@@ -237,7 +240,7 @@ export default class RR {
     if (zone_opts.hide?.sameOwner && zone_opts.previousOwner === owner) {
       owner = ''
     } else {
-      owner = this.getFQDN('owner', zone_opts)
+      owner = escapeBindName(this.getFQDN('owner', zone_opts))
     }
 
     return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
