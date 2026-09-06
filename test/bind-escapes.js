@@ -30,6 +30,16 @@ test('quoted decimal escapes decode UTF-8 octets', () => {
   assert.equal(TXT.fromBind('fixture.example. 300 IN TXT "a\\032b\\195\\169"').get('data'), 'a bé')
 })
 
+test('unquoted escaped quotes remain character data', () => {
+  for (const [text, data] of [
+    ['bare\\"', 'bare"'],
+    ['\\"bare', '"bare'],
+    ['\\"bare\\"', '"bare"'],
+  ]) {
+    assert.equal(TXT.fromBind('fixture.example. 300 IN TXT ' + text).get('data'), data)
+  }
+})
+
 test('malformed quoted strings and escapes fail', () => {
   for (const data of ['"unfinished', '"trailing\\', '"\\999"', '"\\255"']) {
     assert.throws(() => TXT.fromBind('fixture.example. 300 IN TXT ' + data))
