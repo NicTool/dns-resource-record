@@ -23,7 +23,7 @@ test('TXT BIND round trips retain quotes, slashes and control characters', () =>
 })
 
 test('quoted semicolons and escaped quotes do not begin comments', () => {
-  assert.equal(TXT.fromBind('fixture.example. 300 IN TXT "a\\\";b" ; comment').get('data'), 'a";b')
+  assert.equal(TXT.fromBind('fixture.example. 300 IN TXT "a\\";b" ; comment').get('data'), 'a";b')
 })
 
 test('quoted decimal escapes decode UTF-8 octets', () => {
