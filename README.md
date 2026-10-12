@@ -351,7 +351,7 @@ Use this module directly in browsers via CDN:
 - **jsdelivr:** `https://cdn.jsdelivr.net/npm/@nictool/dns-resource-record/dist/dns-rr.min.js`
 - **esm.sh:** `https://esm.sh/@nictool/dns-resource-record`
 
-**Live example:** See [nictool.github.io/builder/](https://nictool.github.io/builder/) for an interactive DNS record editor using this library.
+**Live example:** See [nictool.github.io/builder/][builder] for an interactive DNS record editor using this library.
 
 ---
 
@@ -429,9 +429,11 @@ No external dependencies. Runs on node.js and modern browsers.
 - [DNS Terminology (NicTool Dictionary)](https://nictool.github.io/Dictionary)
 - [dns-zone](https://www.npmjs.com/package/@nictool/dns-zone) — Zone file operations
 - [dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver) — Nameserver management
+- [DNS Resource Record Builder][builder]
 
 ---
 
+[builder]: https://nictool.github.io/builder/index.html
 [ci-img]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml
 [cov-img]: https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg
