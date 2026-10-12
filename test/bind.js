@@ -55,11 +55,26 @@ describe('tokenize', function () {
     )
   })
 
+  it('allows trailing blank lines after a record', function () {
+    assert.deepEqual(tokenize('a b\n\n  \n'), [
+      { text: 'a', quoted: false },
+      { text: 'b', quoted: false },
+    ])
+  })
+
   it('ignores ; and parens inside quotes', function () {
     assert.deepEqual(tokenize('"a;(b)" ; c'), [{ text: 'a;(b)', quoted: true }])
   })
 
-  for (const bad of ['"unfinished', '"trailing\\', 'trailing\\', '( unclosed', 'unopened )', '"a\nb"']) {
+  for (const bad of [
+    '"unfinished',
+    '"trailing\\',
+    'trailing\\',
+    '( unclosed',
+    'unopened )',
+    '"a\nb"',
+    'x. TXT "a"\ny. TXT "b"',
+  ]) {
     it(`rejects ${JSON.stringify(bad)}`, function () {
       assert.throws(() => tokenize(bad), /^Error: BIND:/)
     })
@@ -170,6 +185,22 @@ describe('generic rdata', function () {
 
   it('rejects a different type', function () {
     assert.throws(() => RR.A.fromBind('x.example. 300 IN MX 10 mx.example.'), /A: cannot parse a MX record/)
+  })
+
+  it('rejects a different type before a custom importer runs', function () {
+    const rrsig = new RR.RRSIG(new RR.RRSIG(null).getCanonical()).toBind().replace('\tRRSIG\t', '\tSIG\t')
+    assert.throws(() => RR.RRSIG.fromBind(rrsig), /RRSIG: cannot parse a SIG record/)
+  })
+
+  it('rejects surplus tokens for a single character-string', function () {
+    assert.throws(
+      () => RR.CAA.fromBind('x.example. 300 IN CAA 0 issue one two'),
+      /CAA: unexpected rdata: two/,
+    )
+    assert.throws(
+      () => RR.URI.fromBind('x.example. 300 IN URI 1 1 "https://a" "https://b"'),
+      /URI: unexpected rdata: https:\/\/b/,
+    )
   })
 })
 

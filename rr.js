@@ -11,6 +11,7 @@ import {
 } from './lib/wire.js'
 import {
   parseBindLine as bindParseLine,
+  assertType as bindAssertType,
   fromBind as bindFromGeneric,
   fromBind3597 as bindFrom3597,
   toBind as bindToGeneric,
@@ -58,6 +59,7 @@ export default class RR {
     const parsed = this.parseBindLine(line)
     if (!parsed) return null
     if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return bindFrom3597(instance, parsed) // RFC 3597 §5
+    bindAssertType(parsed.type, this)
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 
