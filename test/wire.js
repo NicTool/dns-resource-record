@@ -26,10 +26,8 @@ describe('encodeName', () => {
     assert.deepEqual([...buf], [3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0])
   })
 
-  test('root label produces empty-label + root terminator', () => {
-    // '.' → strip dot → '' → split → [''] → length-0 label + trailing \x00
-    const buf = encodeName('.')
-    assert.deepEqual([...buf], [0, 0])
+  test('root is a lone terminator', () => {
+    assert.deepEqual([...encodeName('.')], [0])
   })
 
   test('strips trailing dot before encoding', () => {

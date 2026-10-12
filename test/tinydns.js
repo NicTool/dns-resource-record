@@ -108,6 +108,26 @@ describe('TINYDNS', function () {
       assert.equal(r[0], 'sipdir.online.lync.com.')
       assert.equal(r[1], 39)
     })
+
+    it('escapes a dot inside a label', function () {
+      assert.equal(TINYDNS.unpackDomainName('\\003a\\056b\\007example\\000')[0], 'a\\.b.example.')
+    })
+  })
+
+  describe('packDomainName', function () {
+    it('packs a \\. as one label', function () {
+      assert.equal(TINYDNS.packDomainName('a\\.b.example.'), '\\003a\\056b\\007example\\000')
+    })
+
+    it('packs \\DDD as one octet', function () {
+      assert.equal(TINYDNS.packDomainName('a\\032b.'), '\\003a\\040b\\000')
+    })
+
+    for (const name of ['a\\.b.example.', 'sp\\032ace.example.', 'x\\195\\169.example.']) {
+      it(`unpacks to the same presentation: ${name}`, function () {
+        assert.equal(TINYDNS.unpackDomainName(TINYDNS.packDomainName(name))[0], name)
+      })
+    }
   })
 
   const cases = {

@@ -1,4 +1,5 @@
 import * as TINYDNS from './lib/tinydns.js'
+import { nameToLabels } from './lib/name.js'
 
 const customInspect = Symbol.for('nodejs.util.inspect.custom')
 import {
@@ -165,8 +166,7 @@ export default class RR {
   setOwner(n) {
     if (n === undefined) this.throwHelp(`owner is required`)
 
-    if (n.length < 1 || n.length > 255)
-      this.throwHelp('Domain names must have 1-255 octets (characters): RFC 2181')
+    if (n === '') this.throwHelp('owner is required')
 
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
@@ -356,16 +356,17 @@ export default class RR {
       this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`)
   }
 
+  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
+  // name 255 octets on the wire, length octets and root included.
   hasValidLabels(hostname) {
-    // RFC  952 defined valid hostnames
-    // RFC 1035 limited domain label chars to letters, digits, and hyphen
-    // RFC 1123 allowed hostnames to start with a digit
-    // RFC 2181 'any binary string can be used as the label'
-    const fq = hostname.endsWith('.') ? hostname.slice(0, -1) : hostname
-    for (const label of fq.split('.')) {
-      if (label.length < 1 || label.length > 63)
-        this.throwHelp('Labels must have 1-63 octets (characters), RFC 2181')
+    let labels
+    try {
+      labels = nameToLabels(hostname)
+    } catch (e) {
+      this.throwHelp(`${e.message}, RFC 2181`)
     }
+    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1)
+    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`)
   }
 
   is8bitInt(type, field, value) {

@@ -2,6 +2,53 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+// RFC 1035 §5.1: in a presentation name, \. is a dot inside a label and
+// \DDD is one octet. Splitting on '.' would break both.
+function nameToLabels(name) {
+  if (name === '.') return []
+  const enc = new TextEncoder();
+  const labels = [];
+  let label = [];
+  for (let i = 0; i < name.length; i++) {
+    const c = name[i];
+    if (c === '.') {
+      if (!label.length) throw new Error(`DNS name has an empty label: ${name}`)
+      labels.push(Uint8Array.from(label));
+      label = [];
+      continue
+    }
+    if (c === '\\') {
+      if (++i === name.length) throw new Error(`DNS name ends in an incomplete escape: ${name}`)
+      const decimal = name.slice(i, i + 3);
+      if (/^[0-9]{3}$/.test(decimal) && Number(decimal) <= 255) {
+        label.push(Number(decimal));
+        i += 2;
+        continue
+      }
+      if (/[0-9]/.test(name[i])) throw new Error(`DNS name has an invalid decimal escape: ${name}`)
+    }
+    const char = String.fromCodePoint(name.codePointAt(i));
+    label.push(...enc.encode(char));
+    i += char.length - 1;
+  }
+  if (label.length) labels.push(Uint8Array.from(label));
+  for (const b of labels) {
+    if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${name}`)
+  }
+  return labels
+}
+
+function labelToPresentation(bytes) {
+  let out = '';
+  for (const b of bytes) {
+    const c = String.fromCharCode(b);
+    if (c === '.' || c === '\\') out += `\\${c}`;
+    else if (/[A-Za-z0-9\-_*/]/.test(c)) out += c;
+    else out += `\\${String(b).padStart(3, '0')}`;
+  }
+  return out
+}
+
 const octalRe = new RegExp(/\\(?:[1-7][0-7]{0,2}|[0-7]{2,3})/, 'g');
 const textDecoder = new TextDecoder();
 
@@ -145,20 +192,15 @@ function unpackString(str) {
 }
 
 function packDomainName(fqdn) {
-  const labelRegEx = new RegExp(/[^A-Za-z0-9-.]/, 'g');
-
-  // RFC 1035, 3.3 Standard RRs
-  // The standard wire format for DNS names. (1 octet length + octets)
   let packed = '';
-  fqdn.split('.').forEach((label) => {
-    if (label === undefined || !label.length) return
-
+  for (const label of nameToLabels(fqdn)) {
     packed += UInt8toOctal(label.length);
-
-    packed += escapeOctal(labelRegEx, label);
-  });
-  packed += '\\000'; // terminates with a zero length label
-  return packed
+    for (const b of label) {
+      const c = String.fromCharCode(b);
+      packed += /[A-Za-z0-9-]/.test(c) ? c : UInt8toOctal(b);
+    }
+  }
+  return packed + '\\000'
 }
 
 function unpackDomainName(escaped) {
@@ -184,13 +226,13 @@ function unpackDomainName(escaped) {
 
   let lengthByte;
   while ((lengthByte = getNextByte()) && lengthByte !== 0) {
-    let label = '';
+    const label = [];
     for (let i = 0; i < lengthByte; i++) {
-      const char = getNextByte();
-      if (char === null) break
-      label += String.fromCharCode(char);
+      const byte = getNextByte();
+      if (byte === null) break
+      label.push(byte);
     }
-    labels.push(label);
+    labels.push(labelToPresentation(label));
   }
 
   return [`${labels.join('.')}.`, pos, binaryLen]
@@ -434,7 +476,7 @@ function wireUnpackDomain(bytes, offset = 0) {
       pos++;
       break
     }
-    labels.push(new TextDecoder().decode(bytes.subarray(pos + 1, pos + 1 + len)));
+    labels.push(labelToPresentation(bytes.subarray(pos + 1, pos + 1 + len)));
     pos += 1 + len;
   }
   return { fqdn: labels.length ? labels.join('.') + '.' : '.', end: pos }
@@ -446,15 +488,7 @@ function wireUnpackDomain(bytes, offset = 0) {
  */
 function wirePackDomain(fqdn) {
   if (fqdn === '.') return new Uint8Array([0])
-  const enc = new TextEncoder();
-  const labels = fqdn
-    .split('.')
-    .filter((p) => p.length > 0)
-    .map((p) => {
-      const b = enc.encode(p);
-      if (b.length > 63) throw new Error(`DNS label exceeds 63 bytes: ${p}`)
-      return b
-    });
+  const labels = nameToLabels(fqdn);
 
   const buf = new Uint8Array(labels.reduce((n, b) => n + b.length + 1, 1));
   let offset = 0;
@@ -812,6 +846,59 @@ function svcParamsFromWire(bytes) {
   return parts.join(' ')
 }
 
+// RFC 1035 §5.1 master-file lexer. Escapes stay in token text because their
+// meaning depends on the field: in a name, `\.` is a dot inside a label.
+// `"`, `(` and `)` delimit tokens even without whitespace, as in BIND.
+function tokenize(line) {
+  const tokens = [];
+  let token = null;
+  let depth = 0;
+  const flush = () => {
+    if (token) tokens.push(token);
+    token = null;
+  };
+
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '\\') {
+      if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
+      token ??= { text: '', quoted: false };
+      token.text += c + line[++i];
+    } else if (c === '"') {
+      flush();
+      token = { text: '', quoted: true };
+      for (i++; line[i] !== '"'; i++) {
+        if (i >= line.length) throw new Error('BIND: unterminated quoted string')
+        if (line[i] === '\n') throw new Error('BIND: newline in quoted string')
+        if (line[i] === '\\') {
+          if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
+          token.text += line[i++];
+        }
+        token.text += line[i];
+      }
+      flush();
+    } else if (c === ';') {
+      flush();
+      while (i + 1 < line.length && line[i + 1] !== '\n') i++;
+    } else if (c === '(' || c === ')') {
+      flush();
+      depth += c === '(' ? 1 : -1;
+      if (depth < 0) throw new Error('BIND: unbalanced parentheses')
+    } else if (c === '\n' && depth === 0) {
+      flush();
+      if (/\S/.test(line.slice(i + 1))) throw new Error('BIND: text after end of record')
+    } else if (/\s/.test(c)) {
+      flush();
+    } else {
+      token ??= { text: '', quoted: false };
+      token.text += c;
+    }
+  }
+  flush();
+  if (depth !== 0) throw new Error('BIND: unbalanced parentheses')
+  return tokens
+}
+
 function parseBindLine(line, RRClasses) {
   const res = {
     class: 'IN',
@@ -819,56 +906,75 @@ function parseBindLine(line, RRClasses) {
     rdata: [],
   };
 
-  // 1. Strip comments (not inside quotes)
-  let cleanLine = '';
-  let inQuote = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') inQuote = !inQuote;
-    if (c === ';' && !inQuote) break
-    cleanLine += c;
-  }
-  cleanLine = cleanLine.trim();
-  if (!cleanLine) return null
-
-  // 2. Tokenize, respecting quoted strings
-  const tokens = cleanLine.match(/(".*?"|\S+)/g) || [];
+  const tokens = tokenize(line);
   if (tokens.length < 1) return null
 
-  // 3. Owner handling
   if (!/^\s/.test(line)) {
-    res.owner = tokens.shift();
+    res.owner = tokens.shift().text;
   }
 
-  // 4. Extract TTL, Class, and Type
   while (tokens.length > 0) {
-    const token = tokens[0].toUpperCase();
+    const token = tokens[0].text.toUpperCase();
 
     if (RRClasses[token]) {
-      res.class = tokens.shift().toUpperCase();
+      res.class = tokens.shift().text.toUpperCase();
       continue
     }
 
     if (/^CLASS\d+$/.test(token)) {
       // RFC 3597 §5 unknown-class syntax; setClass validates the number
-      res.class = tokens.shift().toUpperCase();
+      res.class = tokens.shift().text.toUpperCase();
       continue
     }
 
     if (/^\d+$/.test(token)) {
-      res.ttl = parseInt(tokens.shift(), 10);
+      res.ttl = parseInt(tokens.shift().text, 10);
       continue
     }
 
-    // If it's not a Class or TTL, it must be the RR Type (A, MX, etc.)
-    res.type = tokens.shift().toUpperCase();
+    res.type = tokens.shift().text.toUpperCase();
     break
   }
 
-  // 5. Remaining tokens are RDATA
   res.rdata = tokens;
 
   return res
+}
+
+// RFC 1035 §5.1: \DDD is an octet, \X is X. Octets must form UTF-8
+function decodeCharString(text) {
+  const bytes = [];
+  const encoder = new TextEncoder();
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '\\') {
+      if (++i === text.length) throw new Error('BIND: incomplete escape')
+      if (/[0-9]/.test(text[i])) {
+        const decimal = text.slice(i, i + 3);
+        if (!/^[0-9]{3}$/.test(decimal) || Number(decimal) > 255)
+          throw new Error(`BIND: invalid decimal escape: \\${decimal}`)
+        bytes.push(Number(decimal));
+        i += 2;
+        continue
+      }
+    }
+    const char = String.fromCodePoint(text.codePointAt(i));
+    bytes.push(...encoder.encode(char));
+    i += char.length - 1;
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes))
+  } catch {
+    throw new Error(`BIND: character-string is not UTF-8: ${text}`)
+  }
+}
+
+// Controls are written as \DDD so the quoted string stays on one line.
+function escapeCharString(str) {
+  return Array.from(String(str), (c) => {
+    if (c === '"' || c === '\\') return `\\${c}`
+    const code = c.codePointAt(0);
+    return code < 0x20 || code === 0x7f ? `\\${String(code).padStart(3, '0')}` : c
+  }).join('')
 }
 
 function fieldTypeOf(def) {
@@ -896,7 +1002,7 @@ function parseGenericRdata(tokens) {
 // An RR of known type in generic form MUST be processed as the known type
 // (RFC 3597 §5), so the hex is decoded through the class's wire parser.
 function fromBind3597(rrInstance, parsed) {
-  const { hex } = parseGenericRdata(parsed.rdata);
+  const { hex } = parseGenericRdata(parsed.rdata.map((t) => t.text));
   const staticId = rrInstance.constructor.typeId;
   const typeId = typeNameToId(parsed.type); // 'TYPE731', 'AFSDB', ...; garbage throws
   if (staticId !== undefined && typeId !== staticId)
@@ -913,41 +1019,62 @@ function fromBind3597(rrInstance, parsed) {
   return rr
 }
 
+// UNKNOWN has no static typeId and accepts any TYPEnnn.
+function assertType(type, RRClass) {
+  if (RRClass.typeId === undefined || type === RRClass.typeName) return
+  const typeNN = type.match(/^TYPE(\d+)$/);
+  if (typeNN !== null && Number(typeNN[1]) === RRClass.typeId) return
+  throw new Error(`expected ${RRClass.typeName}, got ${type}`)
+}
+
 function fromBind(rrInstance, opts) {
   const { owner, ttl, class: cls, rdata } = opts;
+  const typeName = rrInstance.constructor.typeName;
   const result = {
     owner,
     ttl,
     class: cls,
-    type: rrInstance.constructor.typeName,
+    type: typeName,
   };
 
   const fields = rrInstance.getFields('rdata');
   const rdataDefs = rrInstance.constructor.rdataFields ?? [];
   const opaqueTypes = new Set(['str', 'hex', 'base64']);
+
+  if (rdata.length < fields.length)
+    throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
+  const lastType = fieldTypeOf(rdataDefs.at(-1));
+  const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs';
+  if (rdata.length > fields.length && !lastIsVariadic)
+    throw new Error(
+      `${typeName}: unexpected rdata: ${rdata
+        .slice(fields.length)
+        .map((t) => t.text)
+        .join(' ')}`,
+    )
   for (let i = 0; i < fields.length; i++) {
     const isLastField = i === fields.length - 1;
 
     // RFC 1035 §5.1: opaque rdata (hex digests, base64 keys) may be split across
     // whitespace and parenthesized continuations; rejoin it into one value.
     if (isLastField && opaqueTypes.has(fieldTypeOf(rdataDefs[i]))) {
-      result[fields[i]] = rdata.slice(i).join('');
+      result[fields[i]] = rdata
+        .slice(i)
+        .map((t) => t.text)
+        .join('');
       break
     }
 
-    if (isLastField && rrInstance.isQuotedField(fields[i])) {
-      // Collect all remaining tokens for TXT/etc
-      const tokens = rdata.slice(i).map((s) => s.replace(/^"|"$/g, ''));
-      // For `charstrs` (TXT), preserve multi-string boundaries (RFC 1035 §3.3.14).
-      // For `qstr`/`qcharstr` (single character-string), join into one string.
-      const fieldType = fieldTypeOf(rdataDefs[i]);
-      result[fields[i]] = fieldType === 'charstrs' && tokens.length > 1 ? tokens : tokens.join('');
+    // RFC 1035 §3.3.14: TXT keeps its character-string boundaries.
+    if (isLastField && fieldTypeOf(rdataDefs[i]) === 'charstrs') {
+      const strings = rdata.slice(i).map((t) => decodeCharString(t.text));
+      result[fields[i]] = strings.length > 1 ? strings : strings[0];
       break
     }
 
-    let val = rdata[i];
+    let val = rdata[i]?.text;
     if (rrInstance.isQuotedField(fields[i])) {
-      val = val?.replace(/^"|"$/g, '');
+      val = val === undefined ? undefined : decodeCharString(val);
     } else if (/^\d+$/.test(val)) {
       val = parseInt(val, 10);
     }
@@ -960,7 +1087,11 @@ function fromBind(rrInstance, opts) {
 function toBind(rrInstance, zone_opts) {
   const fields = rrInstance.getFields('rdata');
   const rdata = fields
-    .map((f) => (rrInstance.isFqdnField(f) ? rrInstance.getFQDN(f, zone_opts) : rrInstance.getQuoted(f)))
+    .map((f) => {
+      if (rrInstance.isFqdnField(f)) return rrInstance.getFQDN(f, zone_opts)
+      if (rrInstance.isQuotedField(f)) return `"${escapeCharString(rrInstance.get(f))}"`
+      return rrInstance.get(f)
+    })
     .join('\t');
   return `${rrInstance.getPrefix(zone_opts)}\t${rdata}\n`
 }
@@ -1008,7 +1139,8 @@ class RR {
     if (opts.default !== undefined) instance.default = opts.default;
     const parsed = this.parseBindLine(line);
     if (!parsed) return null
-    if (parsed.rdata?.[0] === '\\#') return fromBind3597(instance, parsed) // RFC 3597 §5
+    if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return fromBind3597(instance, parsed) // RFC 3597 §5
+    assertType(parsed.type, this);
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 
@@ -1114,8 +1246,7 @@ class RR {
   setOwner(n) {
     if (n === undefined) this.throwHelp(`owner is required`);
 
-    if (n.length < 1 || n.length > 255)
-      this.throwHelp('Domain names must have 1-255 octets (characters): RFC 2181');
+    if (n === '') this.throwHelp('owner is required');
 
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n);
     this.hasValidLabels(n);
@@ -1305,16 +1436,17 @@ class RR {
       this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`);
   }
 
+  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
+  // name 255 octets on the wire, length octets and root included.
   hasValidLabels(hostname) {
-    // RFC  952 defined valid hostnames
-    // RFC 1035 limited domain label chars to letters, digits, and hyphen
-    // RFC 1123 allowed hostnames to start with a digit
-    // RFC 2181 'any binary string can be used as the label'
-    const fq = hostname.endsWith('.') ? hostname.slice(0, -1) : hostname;
-    for (const label of fq.split('.')) {
-      if (label.length < 1 || label.length > 63)
-        this.throwHelp('Labels must have 1-63 octets (characters), RFC 2181');
+    let labels;
+    try {
+      labels = nameToLabels(hostname);
+    } catch (e) {
+      this.throwHelp(`${e.message}, RFC 2181`);
     }
+    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1);
+    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`);
   }
 
   is8bitInt(type, field, value) {
@@ -4306,32 +4438,6 @@ class NAPTR extends RR {
     return new NAPTR(rec)
   }
 
-  fromBind({ bindline }) {
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/;
-
-    const match = bindline.trim().match(regex);
-
-    if (!match) {
-      throw new Error(`Invalid NAPTR BIND line: ${bindline}`)
-    }
-
-    const { owner, ttl, type, order, preference, flags, service, regexp, replacement } = match.groups;
-
-    return new NAPTR({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      class: match.groups.class,
-      type,
-      order: parseInt(order, 10),
-      preference: parseInt(preference, 10),
-      flags,
-      service,
-      regexp,
-      replacement,
-    })
-  }
-
   /******  EXPORTERS   *******/
   toTinydns() {
     let rdata =
@@ -5364,7 +5470,7 @@ class RRSIG extends RR {
     ['signature inception', 'u32'],
     ['key tag', 'u16'],
     ['signers name', 'fqdn'],
-    ['signature', 'str'],
+    ['signature', 'base64'],
   ]
   static tags = ['dnssec']
 
@@ -5422,7 +5528,9 @@ class RRSIG extends RR {
   }
 
   setSignature(val) {
-    this.setTypedValue('str', 'signature', val);
+    // RFC 4034 §3.2: presentation form is base64; wire form is decoded bytes.
+    this.isBase64('RRSIG', 'signature', String(val).replace(/[\s()]/g, ''));
+    this.set('signature', val);
   }
 
   getAlgorithmOptions() {
@@ -5465,7 +5573,10 @@ class RRSIG extends RR {
       'signature inception': 1042461120,
       'key tag': 12345,
       'signers name': 'example.com.',
-      signature: 'ABCDEF...',
+      signature:
+        'oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h108dUKGMeDPKijVCHX3DDKdfb' +
+        '+v6oB9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3tGNazPwQKkRN20XPXV6nwwfoXmJQb' +
+        'sLNrLfkGJ5D6fwFm8nN+6pBzeDQfsS3Ap3o=',
     }
   }
 
@@ -5520,7 +5631,7 @@ class RRSIG extends RR {
       pos += len;
     }
     const signersName = `${labelArr.join('.')}.`;
-    const signature = new TextDecoder().decode(bytes.subarray(pos));
+    const signature = bytesToBase64(bytes.subarray(pos));
 
     return new RRSIG({
       owner: this.fullyQualify(fqdn),
@@ -5543,7 +5654,6 @@ class RRSIG extends RR {
   /******  EXPORTERS   *******/
 
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:]/, 'g');
     return this.getTinydnsGeneric(
       UInt16toOctal(this.get('type covered')) +
         UInt8toOctal(this.get('algorithm')) +
@@ -5553,13 +5663,13 @@ class RRSIG extends RR {
         UInt32toOctal(this.get('signature inception')) +
         UInt16toOctal(this.get('key tag')) +
         packDomainName(this.get('signers name')) +
-        escapeOctal(dataRe, this.get('signature')),
+        base64toOctal(this.get('signature').replace(/[\s()]/g, '')),
     )
   }
 
   getWireRdata() {
     const signerBytes = wirePackDomain(this.get('signers name'));
-    const sigBytes = new TextEncoder().encode(this.get('signature'));
+    const sigBytes = base64ToBytes(this.get('signature').replace(/[\s()]/g, ''));
 
     const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length;
     const bytes = new Uint8Array(totalLen);
@@ -6236,14 +6346,9 @@ class TXT extends RR {
   }
 }
 
-// RFC 1035 §5.1: inside a quoted character-string, \ and " are escaped. The
-// 255-byte limit counts wire bytes, so chunk on the unescaped value and escape
-// each chunk afterwards.
-const escapeCharString = (s) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-
+// RFC 1035 character-strings are 255 bytes max. The limit counts wire bytes,
+// so chunk the unescaped value by UTF-8 bytes and escape each chunk afterwards.
 function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
-  // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
-  // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
   const enc = new TextEncoder();
   const esc = escape ? escapeCharString : (s) => s;
 

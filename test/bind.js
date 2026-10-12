@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 
 import RRBase, * as RR from '../index.js'
 import { tokenize } from '../lib/bind.js'
+import { wirePackDomain, wireUnpackDomain } from '../lib/wire.js'
 
 const adversarial = [
   'quote"value',
@@ -165,6 +166,57 @@ describe('names keep their presentation escapes', function () {
   it('a \\. inside a label is not a label break', function () {
     assert.equal(RR.A.fromBind('a\\.b.example. 300 IN A 192.0.2.1').get('owner'), 'a\\.b.example.')
   })
+
+  it('a \\. is one label on the wire', function () {
+    const rr = RR.A.fromBind('a\\.b.example. 300 IN A 192.0.2.1')
+    assert.deepEqual(
+      [...wirePackDomain(rr.get('owner'))],
+      [3, 0x61, 0x2e, 0x62, 7, ...Buffer.from('example'), 0],
+    )
+    assert.equal(RR.A.fromWire(rr.toWire()).get('owner'), 'a\\.b.example.')
+  })
+
+  it('\\DDD is one octet on the wire', function () {
+    assert.deepEqual([...wirePackDomain('a\\032b.')], [3, 0x61, 0x20, 0x62, 0])
+    assert.deepEqual([...wirePackDomain('\\065.')], [1, 0x41, 0])
+  })
+
+  for (const name of [
+    'a\\.b.example.',
+    'back\\\\slash.example.',
+    'sp\\032ace.example.',
+    'x\\195\\169.example.',
+  ]) {
+    it(`unpacks to the same presentation: ${name}`, function () {
+      assert.equal(wireUnpackDomain(wirePackDomain(name)).fqdn, name)
+    })
+  }
+
+  it('counts label length in octets, not escape characters', function () {
+    const label = '\\065'.repeat(63)
+    assert.equal(
+      RR.A.fromBind(`${label}.example. 300 IN A 192.0.2.1`).get('owner'),
+      `${label}.example.`.toLowerCase(),
+    )
+    assert.throws(() => RR.A.fromBind(`${label}\\065.example. 300 IN A 192.0.2.1`), /exceeds 63 bytes/)
+  })
+
+  it('limits names to 255 octets on the wire', function () {
+    const label = 'a'.repeat(63)
+    const fits = `${label}.${label}.${label}.${'a'.repeat(61)}.`
+    assert.equal(RR.A.fromBind(`${fits} 300 IN A 192.0.2.1`).get('owner'), fits)
+    assert.throws(() => RR.A.fromBind(`a.${fits} 300 IN A 192.0.2.1`), /1-255 octets, got 257/)
+  })
+
+  it('rejects an empty label', function () {
+    assert.throws(() => RR.A.fromBind('a..example. 300 IN A 192.0.2.1'), /empty label/)
+  })
+
+  for (const bad of ['a\\', 'a\\25.', 'a\\256.', 'a..b.']) {
+    it(`rejects ${JSON.stringify(bad)}`, function () {
+      assert.throws(() => wirePackDomain(bad), /DNS name/)
+    })
+  }
 })
 
 describe('generic rdata', function () {
@@ -184,12 +236,12 @@ describe('generic rdata', function () {
   })
 
   it('rejects a different type', function () {
-    assert.throws(() => RR.A.fromBind('x.example. 300 IN MX 10 mx.example.'), /A: cannot parse a MX record/)
+    assert.throws(() => RR.A.fromBind('x.example. 300 IN MX 10 mx.example.'), /expected A, got MX/)
   })
 
   it('rejects a different type before a custom importer runs', function () {
     const rrsig = new RR.RRSIG(new RR.RRSIG(null).getCanonical()).toBind().replace('\tRRSIG\t', '\tSIG\t')
-    assert.throws(() => RR.RRSIG.fromBind(rrsig), /RRSIG: cannot parse a SIG record/)
+    assert.throws(() => RR.RRSIG.fromBind(rrsig), /expected RRSIG, got SIG/)
   })
 
   it('rejects surplus tokens for a single character-string', function () {
