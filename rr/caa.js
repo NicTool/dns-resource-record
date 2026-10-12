@@ -49,15 +49,6 @@ export default class CAA extends RR {
   }
 
   setValue(val) {
-    // either (2) a quoted string or
-    // (1) a contiguous set of characters without interior spaces
-    if (this.isQuoted(val)) {
-      val = val.replace(/^["']|["']$/g, '') // strip quotes
-    } else {
-      // if (/\s/.test(val)) this.throwHelp(`CAA value may not have spaces unless quoted`)
-    }
-
-    // check if val starts with one of iodefSchemes
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:']
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {

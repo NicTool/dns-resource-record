@@ -19,12 +19,12 @@ export default class HINFO extends RR {
   /****** Resource record specific setters   *******/
   setCpu(val) {
     if (val.length > 255) this.throwHelp('HINFO cpu cannot exceed 255 chars')
-    this.set('cpu', val.replace(/^["']|["']$/g, ''))
+    this.set('cpu', val)
   }
 
   setOs(val) {
     if (val.length > 255) this.throwHelp('HINFO os cannot exceed 255 chars')
-    this.set('os', val.replace(/^["']|["']$/g, ''))
+    this.set('os', val)
   }
 
   getDescription() {

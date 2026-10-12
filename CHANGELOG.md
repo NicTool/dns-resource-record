@@ -10,7 +10,9 @@ Notable changes to this project are documented in this file.
 - fix(naptr): import through the generic parser, so regexp escapes decode
 - fix(wire): encodeName('.') is a lone root terminator
 - fix(tinydns): packDomainName/unpackDomainName honor presentation escapes
-- fix(rr): owner label and name lengths count wire octets; empty labels are rejected
+- fix(rr): owner label and name lengths count wire octets; empty labels rejected
+- fix(rr): wildcard check ignores `\*`; a `*` byte inside a label unpacks as `\042`
+- fix(hinfo, caa): setters keep leading and trailing quotes; the BIND lexer owns quoting
 
 ### [1.9.0] - 2026-07-30
 

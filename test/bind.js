@@ -145,6 +145,16 @@ describe('quoted fields round trip', function () {
     })
   }
 
+  for (const value of ['"x', 'x"', '"x"', "'x'"]) {
+    it(`HINFO and CAA keep edge quotes: ${value}`, function () {
+      const { rr } = roundTrip(RR.HINFO, { owner: 'x.example.', ttl: 300, cpu: value, os: value })
+      assert.equal(rr.get('cpu'), value)
+      assert.equal(rr.get('os'), value)
+      const caa = { owner: 'x.example.', ttl: 300, flags: 0, tag: 'issue', value }
+      assert.equal(roundTrip(RR.CAA, caa).rr.get('value'), value)
+    })
+  }
+
   it('NAPTR backreferences survive', function () {
     const regexp = '!^.*$!sip:\\1@example.com!'
     const { bind, rr } = roundTrip(RR.NAPTR, {
@@ -206,6 +216,26 @@ describe('names keep their presentation escapes', function () {
     const fits = `${label}.${label}.${label}.${'a'.repeat(61)}.`
     assert.equal(RR.A.fromBind(`${fits} 300 IN A 192.0.2.1`).get('owner'), fits)
     assert.throws(() => RR.A.fromBind(`a.${fits} 300 IN A 192.0.2.1`), /1-255 octets, got 257/)
+  })
+
+  it('accepts an escaped * inside a label', function () {
+    for (const owner of ['a\\*b.example.', 'a\\042b.example.']) {
+      assert.equal(RR.A.fromBind(`${owner} 300 IN A 192.0.2.1`).get('owner'), owner)
+    }
+  })
+
+  it('rejects a bare * inside a label', function () {
+    assert.throws(() => RR.A.fromBind('a*b.example. 300 IN A 192.0.2.1'), /valid wildcard/)
+  })
+
+  it('round trips * through wire as a wildcard label or an escaped byte', function () {
+    for (const [owner, expected] of [
+      ['*.example.', '*.example.'],
+      ['a\\*b.example.', 'a\\042b.example.'],
+    ]) {
+      const rr = RR.A.fromBind(`${owner} 300 IN A 192.0.2.1`)
+      assert.equal(RR.A.fromWire(rr.toWire()).get('owner'), expected)
+    }
   })
 
   it('rejects an empty label', function () {

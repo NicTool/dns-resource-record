@@ -38,12 +38,14 @@ function nameToLabels(name) {
   return labels
 }
 
+// A bare `*` is the RFC 4592 wildcard label; inside a longer label it is escaped.
 function labelToPresentation(bytes) {
+  if (bytes.length === 1 && bytes[0] === 0x2a) return '*'
   let out = '';
   for (const b of bytes) {
     const c = String.fromCharCode(b);
     if (c === '.' || c === '\\') out += `\\${c}`;
-    else if (/[A-Za-z0-9\-_*/]/.test(c)) out += c;
+    else if (/[A-Za-z0-9\-_/]/.test(c)) out += c;
     else out += `\\${String(b).padStart(3, '0')}`;
   }
   return out
@@ -1244,18 +1246,16 @@ class RR {
   }
 
   setOwner(n) {
-    if (n === undefined) this.throwHelp(`owner is required`);
-
-    if (n === '') this.throwHelp('owner is required');
+    if (n === undefined || n === '') this.throwHelp(`owner is required`);
 
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n);
     this.hasValidLabels(n);
 
-    // wildcard records: RFC 1034, 4592
-    if (/\*/.test(n)) {
-      if (!/^\*\./.test(n) && !/\.\*\./.test(n))
-        this.throwHelp('only *.something or * (by itself) is a valid wildcard');
-    }
+    // RFC 4592: a wildcard is a whole `*` label. An escaped \* or \042 is a
+    // literal byte and may appear anywhere.
+    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_');
+    if (/\*/.test(unescaped) && !/^\*\./.test(unescaped) && !/\.\*\./.test(unescaped))
+      this.throwHelp('only *.something or * (by itself) is a valid wildcard');
 
     this.set('owner', n.toLowerCase());
   }
@@ -2433,13 +2433,6 @@ class CAA extends RR {
   }
 
   setValue(val) {
-    // either (2) a quoted string or
-    // (1) a contiguous set of characters without interior spaces
-    if (this.isQuoted(val)) {
-      val = val.replace(/^["']|["']$/g, ''); // strip quotes
-    }
-
-    // check if val starts with one of iodefSchemes
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:'];
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {
@@ -3146,12 +3139,12 @@ class HINFO extends RR {
   /****** Resource record specific setters   *******/
   setCpu(val) {
     if (val.length > 255) this.throwHelp('HINFO cpu cannot exceed 255 chars');
-    this.set('cpu', val.replace(/^["']|["']$/g, ''));
+    this.set('cpu', val);
   }
 
   setOs(val) {
     if (val.length > 255) this.throwHelp('HINFO os cannot exceed 255 chars');
-    this.set('os', val.replace(/^["']|["']$/g, ''));
+    this.set('os', val);
   }
 
   getDescription() {

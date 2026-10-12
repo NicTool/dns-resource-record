@@ -164,18 +164,16 @@ export default class RR {
   }
 
   setOwner(n) {
-    if (n === undefined) this.throwHelp(`owner is required`)
-
-    if (n === '') this.throwHelp('owner is required')
+    if (n === undefined || n === '') this.throwHelp(`owner is required`)
 
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
 
-    // wildcard records: RFC 1034, 4592
-    if (/\*/.test(n)) {
-      if (!/^\*\./.test(n) && !/\.\*\./.test(n))
-        this.throwHelp('only *.something or * (by itself) is a valid wildcard')
-    }
+    // RFC 4592: a wildcard is a whole `*` label. An escaped \* or \042 is a
+    // literal byte and may appear anywhere.
+    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_')
+    if (/\*/.test(unescaped) && !/^\*\./.test(unescaped) && !/\.\*\./.test(unescaped))
+      this.throwHelp('only *.something or * (by itself) is a valid wildcard')
 
     this.set('owner', n.toLowerCase())
   }

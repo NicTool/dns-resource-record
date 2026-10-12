@@ -147,7 +147,7 @@ describe('CAA record', function () {
   base.fromTinydns(CAA, validRecords)
   base.fromWire(CAA, validRecords)
 
-  it('strips quotes from CAA value when quoted', function () {
+  it('keeps quotes that are part of the value', function () {
     const r = new CAA({
       owner: 'example.com.',
       ttl: 3600,
@@ -157,7 +157,7 @@ describe('CAA record', function () {
       tag: 'issue',
       value: '"letsencrypt.org"',
     })
-    assert.equal(r.get('value'), 'letsencrypt.org')
+    assert.equal(r.get('value'), '"letsencrypt.org"')
   })
 
   it('defaults type to CAA when omitted from constructor', function () {
