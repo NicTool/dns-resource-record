@@ -4,6 +4,11 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- fix(bind): one RFC 1035 §5.1 lexer: escapes, quote-delimited tokens, line-scoped comments, parens
+- fix(bind): quoted fields decode `\X` / `\DDD` on import and escape `\`, `"` and controls on export
+- fix(bind): reject missing or surplus rdata and a type that does not match the class
+- fix(naptr): import through the generic parser, so regexp escapes decode
+
 ### [1.9.0] - 2026-07-30
 
 - fix(rrsig): signature presentation is base64

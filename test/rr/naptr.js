@@ -16,7 +16,8 @@ const validRecords = [
     service: '',
     regexp: '!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i',
     replacement: '.',
-    testB: 'cid.urn.arpa.\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\.]+\\.)(.*)$!\x02!i"\t.\n',
+    testB:
+      'cid.urn.arpa.\t86400\tIN\tNAPTR\t100\t10\t""\t""\t"!^urn:cid:.+@([^\\\\.]+\\\\.)(.*)$!\\002!i"\t.\n',
     testT:
       ':cid.urn.arpa:35:\\000\\144\\000\\012\\000\\000\\040!^urn\\072cid\\072.+@([^\\134.]+\\134.)(.*)$!\x02!i\\001.\\000:86400::\n',
     testW:
@@ -60,6 +61,6 @@ describe('NAPTR record', function () {
   base.fromWire(NAPTR, validRecords)
 
   it('throws on invalid NAPTR BIND line', function () {
-    assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /Invalid NAPTR BIND line/)
+    assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /NAPTR: cannot parse a IS record/)
   })
 })

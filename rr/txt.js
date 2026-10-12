@@ -1,6 +1,7 @@
 import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import { escapeCharString } from '../lib/bind.js'
 
 export default class TXT extends RR {
   static typeName = 'TXT'
@@ -130,14 +131,9 @@ export default class TXT extends RR {
   }
 }
 
-// RFC 1035 §5.1: inside a quoted character-string, \ and " are escaped. The
-// 255-byte limit counts wire bytes, so chunk on the unescaped value and escape
-// each chunk afterwards.
-const escapeCharString = (s) => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-
+// RFC 1035 character-strings are 255 bytes max. The limit counts wire bytes,
+// so chunk the unescaped value by UTF-8 bytes and escape each chunk afterwards.
 function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
-  // RFC 1035 character-strings are 255 bytes max; chunk by UTF-8 bytes,
-  // not JS chars, so non-ASCII TXT data doesn't overflow the 255-byte limit.
   const enc = new TextEncoder()
   const esc = escape ? escapeCharString : (s) => s
 

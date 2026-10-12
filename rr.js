@@ -57,7 +57,7 @@ export default class RR {
     if (opts.default !== undefined) instance.default = opts.default
     const parsed = this.parseBindLine(line)
     if (!parsed) return null
-    if (parsed.rdata?.[0] === '\\#') return bindFrom3597(instance, parsed) // RFC 3597 §5
+    if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return bindFrom3597(instance, parsed) // RFC 3597 §5
     return instance.fromBind({ ...opts, ...parsed, bindline: line })
   }
 

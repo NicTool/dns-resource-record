@@ -114,32 +114,6 @@ export default class NAPTR extends RR {
     return new NAPTR(rec)
   }
 
-  fromBind({ bindline }) {
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<class>\S+)\s+(?<type>NAPTR)\s+(?<order>\d+)\s+(?<preference>\d+)\s+["'](?<flags>[^"']*)["']\s+["'](?<service>[^"']*)["']\s+["'](?<regexp>[^"']*)["']\s+(?<replacement>\S+)$/
-
-    const match = bindline.trim().match(regex)
-
-    if (!match) {
-      throw new Error(`Invalid NAPTR BIND line: ${bindline}`)
-    }
-
-    const { owner, ttl, type, order, preference, flags, service, regexp, replacement } = match.groups
-
-    return new NAPTR({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      class: match.groups.class,
-      type,
-      order: parseInt(order, 10),
-      preference: parseInt(preference, 10),
-      flags,
-      service,
-      regexp,
-      replacement,
-    })
-  }
-
   /******  EXPORTERS   *******/
   toTinydns() {
     let rdata =
