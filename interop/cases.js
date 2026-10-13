@@ -17,8 +17,13 @@ export function buildCases(records) {
     const Type = RR[type]
     const apex = `r${n}.interop.test.`
     const owner = APEX_TYPES.has(type) ? apex : `${rec.owner === '.' ? '' : rec.owner}${apex}`
+    // An RRSIG signer must stay an ancestor of the moved owner.
+    const moved =
+      type === 'RRSIG'
+        ? { 'signers name': `${rec['signers name']}${apex}`, labels: rec.labels + apex.split('.').length - 1 }
+        : {}
     try {
-      const rr = new Type({ ...rec, owner, ttl: rec.ttl ?? 3600 })
+      const rr = new Type({ ...rec, owner, ttl: rec.ttl ?? 3600, ...moved })
       cases.push({
         id,
         n,

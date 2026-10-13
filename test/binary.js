@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { typeNameToId, typeIdToName } from '../lib/binary.js'
+import { bitmapToTypes, typeNameToId, typeIdToName, typesToBitmap } from '../lib/binary.js'
 
 describe('BINARY', function () {
   describe('typeNameToId', function () {
@@ -77,4 +77,23 @@ describe('BINARY', function () {
       })
     }
   })
+})
+
+describe('bitmapToTypes (RFC 4034 §4.1.2)', function () {
+  it('round trips a type list', function () {
+    assert.equal(bitmapToTypes(typesToBitmap('A MX RRSIG NSEC TYPE1234')), 'A MX RRSIG NSEC TYPE1234')
+  })
+
+  for (const [bytes, msg] of [
+    [[0, 2, 0x40], /truncated/],
+    [[0], /inside a block header/],
+    [[0, 0], /length 0 is not 1-32/],
+    [[0, 33, ...Array(33).fill(1)], /length 33 is not 1-32/],
+    [[0, 2, 0x40, 0], /ends in a zero octet/],
+    [[1, 1, 0x40, 0, 1, 0x40], /window 0 is out of order/],
+  ]) {
+    it(`rejects ${JSON.stringify(bytes.slice(0, 6))}`, function () {
+      assert.throws(() => bitmapToTypes(Uint8Array.from(bytes)), msg)
+    })
+  }
 })

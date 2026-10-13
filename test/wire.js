@@ -393,6 +393,34 @@ describe('svcParamsToWire', () => {
     assert.equal(hex.slice(0, 16), '0000000400010003')
   })
 
+  test('rejects values the encoder would otherwise coerce (RFC 9460 §7)', () => {
+    for (const [params, msg] of [
+      ['port=bogus', /port must be 0-65535/],
+      ['port=65536', /port must be 0-65535/],
+      ['ipv4hint=999.2.3.4', /invalid IPv4 address/],
+      ['ipv6hint=::1::2', /invalid IPv6 address/],
+      ['alpn=h2 alpn=h3', /duplicate SvcParamKey/],
+      ['mandatory=mandatory', /may not list itself/],
+      ['no-default-alpn=x', /takes no value/],
+      ['key65535=x', /reserved/],
+      ['ech=AQ', /ech must be base64/],
+    ]) {
+      assert.throws(() => svcParamsToWire(params), msg, params)
+    }
+  })
+
+  test('decoder rejects malformed params instead of truncating them', () => {
+    for (const [hex, msg] of [
+      ['000300', /inside a key header/],
+      ['0003000500', /value is truncated/],
+      ['00030003000102', /invalid length 3/],
+      ['000300021f40000100020268', /out of order or repeated/],
+      ['0001000303683200', /malformed alpn/],
+    ]) {
+      assert.throws(() => svcParamsFromWire(Buffer.from(hex, 'hex')), msg, hex)
+    }
+  })
+
   test('keyNNNN and mandatory round trip through wire', () => {
     for (const params of ['key1234=test', 'key65000=a\\032b', 'mandatory=alpn,key9 alpn="h2" key9=x']) {
       assert.equal(svcParamsFromWire(svcParamsToWire(params)), params)

@@ -113,6 +113,13 @@ describe('NSEC3 record', function () {
     assert.equal(r.get('next hashed owner name'), '2vptu5timamqttgl4luu9kg21e0aor3s')
   })
 
+  it('requires a 20-byte hash for SHA-1 (RFC 5155 §11)', function () {
+    assert.throws(
+      () => NSEC3.fromBind('h.example. 300 IN NSEC3 1 0 0 - ab A'),
+      /SHA-1 'next hashed owner name' is 20 bytes, got 1/,
+    )
+  })
+
   it('rejects a hash that is not base32hex', function () {
     assert.throws(
       () => NSEC3.fromBind('h.example. 300 IN NSEC3 1 1 12 - 2vptu5timamqttgl4luu9kg21e0aor3w A'),

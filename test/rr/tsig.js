@@ -116,10 +116,14 @@ describe('TSIG record', function () {
     assert.throws(() => decode(rdata.subarray(0, rdata.length - 1)), /rdata is truncated/)
   })
 
+  it('joins base64 split before its padding', function () {
+    assert.equal(TSIG.fromBind('t.example. 0 ANY TSIG hmac-sha256. 1 300 2 AAA = 1 0 0').get('mac'), 'AAA=')
+  })
+
   it('rejects a MAC shorter than its size', function () {
     assert.throws(
       () => TSIG.fromBind('test.example. 0 ANY TSIG hmac-sha256. 1 300 8 3q2+7w== 1 0 0'),
-      /TSIG: mac is not 8 bytes of base64/,
+      /TSIG: missing rdata: mac/,
     )
   })
 

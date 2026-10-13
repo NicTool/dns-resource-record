@@ -269,6 +269,10 @@ describe('names keep their presentation escapes', function () {
     })
   }
 
+  it('folds only ASCII letters (RFC 4343)', function () {
+    assert.equal(RR.A.fromBind('ÉCOLE.Example. 300 IN A 192.0.2.1').get('owner'), 'École.example.')
+  })
+
   it('lowercases names but keeps escaped octets as written (RFC 4343)', function () {
     const a = RR.A.fromBind('ABC\\065\\A.Example. 300 IN A 192.0.2.1')
     assert.equal(a.get('owner'), 'abc\\065\\A.example.')

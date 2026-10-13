@@ -65,11 +65,17 @@ export default class RRSIG extends RR {
 
   setSignersName(val) {
     this.setTypedValue('fqdn', 'signers name', val)
-    const signerLabels = nameToLabels(val).length
-    if (signerLabels > this.get('labels'))
+    const signer = nameToLabels(this.get('signers name'))
+    if (signer.length > this.get('labels'))
       this.throwHelp(
-        `RRSIG: signers name has ${signerLabels} labels, more than labels (${this.get('labels')})`,
+        `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
       )
+    // the signer is the owner or an ancestor: its labels end the owner's, ASCII case aside
+    const owner = nameToLabels(this.get('owner'))
+    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase())
+    const offset = owner.length - signer.length
+    if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
+      this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`)
   }
 
   setSignature(val) {

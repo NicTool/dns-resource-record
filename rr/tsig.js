@@ -112,9 +112,11 @@ export default class TSIG extends RR {
       return parseInt(word, 10)
     }
     const base64 = (field, size) => {
+      // padded base64 is exactly 4 characters per started 3 bytes
+      const want = 4 * Math.ceil(size / 3)
       let b64 = ''
-      while (b64.length * 0.75 < size) b64 += next(field)
-      const valid = b64.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(b64)
+      while (b64.length < want) b64 += next(field)
+      const valid = b64.length === want && /^[A-Za-z0-9+/]*={0,2}$/.test(b64)
       if (!valid || BINARY.base64ToBytes(b64).length !== size)
         throw new Error(`TSIG: ${field} is not ${size} bytes of base64`)
       return b64

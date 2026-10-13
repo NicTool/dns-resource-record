@@ -134,6 +134,13 @@ describe('RRSIG record', function () {
     })
   }
 
+  it('requires the signer to be the owner or an ancestor (RFC 4034 §3.1.7)', function () {
+    const rrsig = (owner, signer) =>
+      new RRSIG({ ...defaults, owner, 'type covered': 1, 'signers name': signer })
+    assert.throws(() => rrsig('host.example.com.', 'other.test.'), /not the owner or an ancestor/)
+    assert.equal(rrsig('host.Example.com.', 'example.COM.').get('signers name'), 'example.com.')
+  })
+
   it('rejects labels above the owner count or below the signer count (RFC 4034 §3.1.3)', function () {
     assert.throws(
       () => new RRSIG({ ...defaults, 'type covered': 1, labels: 3 }),

@@ -9,7 +9,7 @@ Notable changes to this project are documented in this file.
 - fix(bind)!: reject missing/surplus rdata and mismatched types
 - fix(rr)!: names honor escapes, count octets, stricter wildcards
 - fix(rr)!: TTL max is 2^31-1 (RFC 2181)
-- fix(rr)!: validate digest lengths, SVCB params, RRSIG labels
+- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC/NSEC3)
 - fix(hinfo, caa)!: keep literal quotes in values
 - fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS encoding
 - fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times

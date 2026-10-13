@@ -74,10 +74,10 @@ function presentationBytes(text) {
   return Uint8Array.from(bytes)
 }
 
-// RFC 4343: ASCII case is insignificant in names, but an escaped octet (\X or
-// \DDD) stands for the exact byte written.
+// RFC 4343: only ASCII A-Z fold, and an escaped octet (\X or \DDD) stands for
+// the exact byte written.
 function lowercaseName(name) {
-  return name.replace(/\\(?:[0-9]{3}|.)|[^\\]+/gs, (m) => (m[0] === '\\' ? m : m.toLowerCase()))
+  return name.replace(/\\(?:[0-9]{3}|.)|[A-Z]+/gs, (m) => (m[0] === '\\' ? m : m.toLowerCase()))
 }
 
 const octalRe = new RegExp(/\\(?:[1-7][0-7]{0,2}|[0-7]{2,3})/, 'g');
@@ -496,12 +496,19 @@ function typesToBitmap(typeNames) {
   return result
 }
 
+// RFC 4034 §4.1.2: blocks of 1-32 octets, windows ascending, no trailing zero octet.
 function bitmapToTypes(bitmap) {
   const types = [];
   let pos = 0;
-  while (pos + 2 <= bitmap.length) {
+  let lastWindow = -1;
+  while (pos < bitmap.length) {
+    if (pos + 2 > bitmap.length) throw new Error('type bit map ends inside a block header')
     const windowNum = bitmap[pos];
     const bitmapLen = bitmap[pos + 1];
+    if (windowNum <= lastWindow) throw new Error(`type bit map window ${windowNum} is out of order`)
+    if (bitmapLen < 1 || bitmapLen > 32) throw new Error(`type bit map block length ${bitmapLen} is not 1-32`)
+    if (pos + 2 + bitmapLen > bitmap.length) throw new Error('type bit map block is truncated')
+    if (bitmap[pos + 1 + bitmapLen] === 0) throw new Error('type bit map block ends in a zero octet')
     pos += 2;
     for (let i = 0; i < bitmapLen; i++) {
       for (let bit = 0; bit < 8; bit++) {
@@ -509,6 +516,7 @@ function bitmapToTypes(bitmap) {
       }
     }
     pos += bitmapLen;
+    lastWindow = windowNum;
   }
   return types.join(' ')
 }
@@ -815,78 +823,89 @@ const SVCPARAM_KEYS = {
 function svcParamsToWire(paramsStr) {
   if (!paramsStr || !paramsStr.trim()) return new Uint8Array(0)
 
-  const parts = [];
+  const parts = new Map();
   // Match: key, key=unquoted, or key="quoted" tokens
   const re = /([^\s=]+)(?:=(?:"([^"]*)"|(\S*)))?(?=\s|$)/g;
   let m;
   while ((m = re.exec(paramsStr.trim())) !== null) {
-    const key = m[1].toLowerCase();
-    const val = m[2] ?? m[3] ?? '';
-    const keyId = svcParamKeyId(key);
-
-    let valBytes;
-    if (keyId === 0) {
-      // mandatory: key ids as u16, ascending (RFC 9460 §8)
-      const ids = val
-        .split(',')
-        .map((k) => svcParamKeyId(k.trim().toLowerCase()))
-        .sort((a, b) => a - b);
-      valBytes = new Uint8Array(ids.length * 2);
-      ids.forEach((id, i) => new DataView(valBytes.buffer).setUint16(i * 2, id));
-    } else if (keyId === 1) {
-      // alpn: comma-separated list, each entry length-prefixed
-      const enc = new TextEncoder();
-      const entries = val.split(',').map((e) => enc.encode(e.trim()));
-      const total = entries.reduce((s, e) => s + 1 + e.length, 0);
-      valBytes = new Uint8Array(total);
-      let p = 0;
-      for (const e of entries) {
-        valBytes[p++] = e.length;
-        valBytes.set(e, p);
-        p += e.length;
-      }
-    } else if (keyId === 2) {
-      // no-default-alpn: no value
-      valBytes = new Uint8Array(0);
-    } else if (keyId === 3) {
-      // port: uint16
-      valBytes = new Uint8Array(2);
-      new DataView(valBytes.buffer).setUint16(0, parseInt(val, 10));
-    } else if (keyId === 4) {
-      // ipv4hint: one or more IPv4 addresses
-      const addrs = val.split(',').map((a) => a.trim().split('.').map(Number));
-      valBytes = new Uint8Array(addrs.length * 4);
-      addrs.forEach((addr, i) => addr.forEach((b, j) => (valBytes[i * 4 + j] = b)));
-    } else if (keyId === 5) {
-      // ech: base64-encoded ECH config
-      valBytes = base64ToBytes(val);
-    } else if (keyId === 6) {
-      // ipv6hint: one or more IPv6 addresses (expand compressed form before encoding)
-      const addrs = val.split(',').map((a) => hexToBytes(expandIPv6(a.trim(), '')));
-      valBytes = new Uint8Array(addrs.length * 16);
-      addrs.forEach((addr, i) => valBytes.set(addr, i * 16));
-    } else {
-      valBytes = presentationBytes(val);
-    }
-
-    const param = new Uint8Array(4 + valBytes.length);
-    new DataView(param.buffer).setUint16(0, keyId);
-    new DataView(param.buffer).setUint16(2, valBytes.length);
-    param.set(valBytes, 4);
-    parts.push(param);
+    const keyId = svcParamKeyId(m[1].toLowerCase());
+    if (parts.has(keyId)) throw new Error(`SVCB: duplicate SvcParamKey: ${m[1]}`)
+    parts.set(keyId, svcParamValue(keyId, m[1], m[2] ?? m[3]));
   }
 
-  // Sort by key ID (SvcParams MUST be in ascending order per RFC 9460)
-  parts.sort((a, b) => new DataView(a.buffer).getUint16(0) - new DataView(b.buffer).getUint16(0));
-
-  const total = parts.reduce((s, p) => s + p.length, 0);
-  const result = new Uint8Array(total);
+  // RFC 9460 §2.2: keys in ascending order
+  const params = [...parts.entries()].sort((a, b) => a[0] - b[0]);
+  const result = new Uint8Array(params.reduce((n, [, v]) => n + 4 + v.length, 0));
+  const dv = new DataView(result.buffer);
   let pos = 0;
-  for (const p of parts) {
-    result.set(p, pos);
-    pos += p.length;
+  for (const [keyId, value] of params) {
+    dv.setUint16(pos, keyId);
+    dv.setUint16(pos + 2, value.length);
+    result.set(value, pos + 4);
+    pos += 4 + value.length;
   }
   return result
+}
+
+const IPV4 = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
+function ipv6Bytes(addr) {
+  const halves = addr.split('::');
+  const groups = halves.map((h) => (h ? h.split(':') : []));
+  const count = groups.reduce((n, g) => n + g.length, 0);
+  const valid =
+    halves.length <= 2 &&
+    groups.flat().every((g) => /^[0-9a-fA-F]{1,4}$/.test(g)) &&
+    (halves.length === 2 ? count < 8 : count === 8);
+  if (!valid) throw new Error(`SVCB: invalid IPv6 address: ${addr}`)
+  const all = halves.length === 2 ? [...groups[0], ...Array(8 - count).fill('0'), ...groups[1]] : groups[0];
+  return hexToBytes(all.map((g) => g.padStart(4, '0')).join(''))
+}
+
+// RFC 9460 §7: the presentation value of each registered key.
+function svcParamValue(keyId, key, val) {
+  const list = () => {
+    if (!val) throw new Error(`SVCB: ${key} requires a value`)
+    return val.split(',').map((e) => e.trim())
+  };
+  switch (keyId) {
+    case 0: {
+      const ids = list().map((k) => svcParamKeyId(k.toLowerCase()));
+      if (ids.includes(0)) throw new Error('SVCB: mandatory may not list itself')
+      if (new Set(ids).size !== ids.length) throw new Error('SVCB: mandatory lists a key twice')
+      const bytes = new Uint8Array(ids.length * 2);
+      ids.sort((a, b) => a - b).forEach((id, i) => new DataView(bytes.buffer).setUint16(i * 2, id));
+      return bytes
+    }
+    case 1: {
+      const entries = list().map((e) => new TextEncoder().encode(e));
+      if (entries.some((e) => e.length < 1 || e.length > 255))
+        throw new Error(`SVCB: alpn ids must be 1-255 bytes: ${val}`)
+      return Uint8Array.from(entries.flatMap((e) => [e.length, ...e]))
+    }
+    case 2:
+      if (val !== undefined) throw new Error('SVCB: no-default-alpn takes no value')
+      return new Uint8Array(0)
+    case 3: {
+      if (!/^\d+$/.test(val ?? '') || Number(val) > 65535)
+        throw new Error(`SVCB: port must be 0-65535: ${val}`)
+      return Uint8Array.from([Number(val) >> 8, Number(val) & 0xff])
+    }
+    case 4: {
+      const addrs = list();
+      const bad = addrs.find((a) => !IPV4.test(a));
+      if (bad !== undefined) throw new Error(`SVCB: invalid IPv4 address: ${bad}`)
+      return Uint8Array.from(addrs.flatMap((a) => a.split('.').map(Number)))
+    }
+    case 5:
+      if (!val || !/^[A-Za-z0-9+/]+={0,2}$/.test(val) || val.length % 4)
+        throw new Error(`SVCB: ech must be base64: ${val}`)
+      return base64ToBytes(val)
+    case 6:
+      return Uint8Array.from(list().flatMap((a) => [...ipv6Bytes(a)]))
+    default:
+      return presentationBytes(val ?? '')
+  }
 }
 
 // The key ids in a params string, in wire order. Throws on a malformed key.
@@ -906,6 +925,7 @@ function svcParamKeyId(key) {
   const generic = key.match(/^key(\d{1,5})$/);
   const id = generic ? Number(generic[1]) : SVCPARAM_KEYS[key];
   if (id === undefined || id > 65535) throw new Error(`SVCB: unknown SvcParamKey: ${key}`)
+  if (id === 65535) throw new Error('SVCB: key65535 is reserved (RFC 9460 §14.3.2)')
   return id
 }
 
@@ -937,12 +957,25 @@ function svcParamsFromWire(bytes) {
   if (!bytes || bytes.length === 0) return ''
   const parts = [];
   let pos = 0;
-  while (pos + 4 <= bytes.length) {
+  let lastKey = -1;
+  while (pos < bytes.length) {
+    if (pos + 4 > bytes.length) throw new Error('SVCB: params end inside a key header')
     const dv = new DataView(bytes.buffer, bytes.byteOffset + pos);
     const keyId = dv.getUint16(0);
     const valLen = dv.getUint16(2);
+    if (keyId <= lastKey) throw new Error(`SVCB: key ${keyId} is out of order or repeated`)
+    if (pos + 4 + valLen > bytes.length) throw new Error(`SVCB: key ${keyId} value is truncated`)
     const val = bytes.subarray(pos + 4, pos + 4 + valLen);
     pos += 4 + valLen;
+    lastKey = keyId;
+    const badLength = {
+      0: valLen === 0 || valLen % 2,
+      2: valLen !== 0,
+      3: valLen !== 2,
+      4: valLen === 0 || valLen % 4,
+      6: valLen === 0 || valLen % 16,
+    }[keyId];
+    if (badLength) throw new Error(`SVCB: key ${keyId} has an invalid length ${valLen}`)
 
     const keyName = SVCPARAM_KEY_NAMES[keyId] ?? `key${keyId}`;
     if (keyId === 0) {
@@ -958,6 +991,7 @@ function svcParamsFromWire(bytes) {
       let p = 0;
       while (p < val.length) {
         const len = val[p++];
+        if (len === 0 || p + len > val.length) throw new Error('SVCB: malformed alpn value')
         entries.push(new TextDecoder().decode(val.subarray(p, p + len)));
         p += len;
       }
@@ -4631,6 +4665,10 @@ class NSEC3 extends RR {
     // RFC 5155 §3.3: unpadded, case-insensitive base32hex.
     if (!val) this.throwHelp(`NSEC3: 'next hashed owner name' is required`);
     if (!/^[0-9a-vA-V]+$/.test(val)) this.throwHelp(`NSEC3: 'next hashed owner name' must be base32hex`);
+    // RFC 5155 §11: algorithm 1 is SHA-1, a 20-byte hash
+    const bytes = base32hexToBytes(val).length;
+    if (this.get('hash algorithm') === 1 && bytes !== 20)
+      this.throwHelp(`NSEC3: a SHA-1 'next hashed owner name' is 20 bytes, got ${bytes}`);
     this.set('next hashed owner name', val.toLowerCase());
   }
 
@@ -5189,11 +5227,17 @@ class RRSIG extends RR {
 
   setSignersName(val) {
     this.setTypedValue('fqdn', 'signers name', val);
-    const signerLabels = nameToLabels(val).length;
-    if (signerLabels > this.get('labels'))
+    const signer = nameToLabels(this.get('signers name'));
+    if (signer.length > this.get('labels'))
       this.throwHelp(
-        `RRSIG: signers name has ${signerLabels} labels, more than labels (${this.get('labels')})`,
+        `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
       );
+    // the signer is the owner or an ancestor: its labels end the owner's, ASCII case aside
+    const owner = nameToLabels(this.get('owner'));
+    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase());
+    const offset = owner.length - signer.length;
+    if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
+      this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`);
   }
 
   setSignature(val) {
@@ -6513,9 +6557,11 @@ class TSIG extends RR {
       return parseInt(word, 10)
     };
     const base64 = (field, size) => {
+      // padded base64 is exactly 4 characters per started 3 bytes
+      const want = 4 * Math.ceil(size / 3);
       let b64 = '';
-      while (b64.length * 0.75 < size) b64 += next(field);
-      const valid = b64.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(b64);
+      while (b64.length < want) b64 += next(field);
+      const valid = b64.length === want && /^[A-Za-z0-9+/]*={0,2}$/.test(b64);
       if (!valid || base64ToBytes(b64).length !== size)
         throw new Error(`TSIG: ${field} is not ${size} bytes of base64`)
       return b64
