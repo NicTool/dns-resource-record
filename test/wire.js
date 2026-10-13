@@ -414,6 +414,24 @@ describe('svcParamsToWire', () => {
     assert.throws(() => svcParamsToWire('alpn="h2"x'), /text after the quoted value of alpn/)
   })
 
+  test('decodes escapes as BIND does (RFC 9460 Appendix A.1)', () => {
+    for (const [params, hex] of [
+      ['alpn=h2\\,draft', '00010009026832056472616674'],
+      ['alpn=h2\\\\,draft', '000100090868322c6472616674'],
+      ['alpn="f\\\\\\\\oo\\\\,bar,h2"', '0001000c08665c6f6f2c626172026832'],
+      ['key1234="a\\"b"', '04d20003612262'],
+      ['key1234=a\\ b', '04d20003612062'],
+    ]) {
+      const wire = svcParamsToWire(params)
+      assert.equal(Buffer.from(wire).toString('hex'), hex, params)
+      assert.deepEqual(svcParamsToWire(svcParamsFromWire(wire)), wire, `${params} round trips`)
+    }
+  })
+
+  test('rejects a value over 65535 bytes', () => {
+    assert.throws(() => svcParamsToWire(`key9=${'a'.repeat(65536)}`), /over 65535/)
+  })
+
   test('tokenizes in linear time', () => {
     const start = Date.now()
     assert.throws(() => svcParamsToWire(`${'!='.repeat(50000)}!`), /unknown SvcParamKey/)

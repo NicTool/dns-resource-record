@@ -827,7 +827,10 @@ function svcParamsToWire(paramsStr) {
   for (const [key, value] of svcParamTokens(paramsStr)) {
     const keyId = svcParamKeyId(key.toLowerCase());
     if (parts.has(keyId)) throw new Error(`SVCB: duplicate SvcParamKey: ${key}`)
-    parts.set(keyId, svcParamValue(keyId, key, value));
+    const bytes = svcParamValue(keyId, key, value);
+    // SvcParamValue length is 16 bits
+    if (bytes.length > 65535) throw new Error(`SVCB: ${key} value is ${bytes.length} bytes, over 65535`)
+    parts.set(keyId, bytes);
   }
 
   // RFC 9460 §2.2: keys in ascending order
@@ -860,15 +863,17 @@ function svcParamTokens(str) {
     if (str[i] === '=') {
       i++;
       if (str[i] === '"') {
-        const close = str.indexOf('"', i + 1);
-        if (close === -1) throw new Error(`SVCB: unterminated quoted value for ${key}`)
+        // an escaped quote (\") belongs to the value
+        let close = i + 1;
+        while (close < str.length && str[close] !== '"') close += str[close] === '\\' ? 2 : 1;
+        if (close >= str.length) throw new Error(`SVCB: unterminated quoted value for ${key}`)
         value = str.slice(i + 1, close);
         i = close + 1;
         if (i < str.length && !isSpace(str[i])) throw new Error(`SVCB: text after the quoted value of ${key}`)
       } else {
         const valueStart = i;
-        while (i < str.length && !isSpace(str[i])) i++;
-        value = str.slice(valueStart, i);
+        while (i < str.length && !isSpace(str[i])) i += str[i] === '\\' ? 2 : 1;
+        value = str.slice(valueStart, Math.min(i, str.length));
       }
     }
     tokens.push([key, value]);
@@ -906,7 +911,8 @@ function svcParamValue(keyId, key, val) {
       return bytes
     }
     case 1: {
-      const entries = list().map((e) => new TextEncoder().encode(e));
+      if (!val) throw new Error('SVCB: alpn requires a value')
+      const entries = splitValueList(presentationBytes(val));
       if (entries.some((e) => e.length < 1 || e.length > 255))
         throw new Error(`SVCB: alpn ids must be 1-255 bytes: ${val}`)
       return Uint8Array.from(entries.flatMap((e) => [e.length, ...e]))
@@ -958,6 +964,34 @@ function svcParamKeyId(key) {
 }
 
 // Unquoted presentation: printable ASCII except delimiters, everything else \DDD.
+// RFC 9460 Appendix A.1: a value list is RFC 1035 decoded first, then split on
+// commas, where `\,` and `\\` stand for a literal comma and backslash.
+function splitValueList(bytes) {
+  const items = [[]];
+  for (let i = 0; i < bytes.length; i++) {
+    if (bytes[i] === 0x5c && i + 1 < bytes.length) items.at(-1).push(bytes[++i]);
+    else if (bytes[i] === 0x2c) items.push([]);
+    else items.at(-1).push(bytes[i]);
+  }
+  return items.map((item) => Uint8Array.from(item))
+}
+
+// The inverse: escape commas and backslashes per item, then RFC 1035 escape for
+// a quoted string.
+function alpnToPresentation(ids) {
+  const listed = ids.map((id) => [...id].flatMap((b) => (b === 0x2c || b === 0x5c ? [0x5c, b] : [b])));
+  return listed
+    .map((id) =>
+      id
+        .map((b) => {
+          if (b === 0x22 || b === 0x5c) return `\\${String.fromCharCode(b)}`
+          return b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : `\\${String(b).padStart(3, '0')}`
+        })
+        .join(''),
+    )
+    .join(',')
+}
+
 function svcValueToPresentation(bytes) {
   return [...bytes]
     .map((b) =>
@@ -1020,10 +1054,10 @@ function svcParamsFromWire(bytes) {
       while (p < val.length) {
         const len = val[p++];
         if (len === 0 || p + len > val.length) throw new Error('SVCB: malformed alpn value')
-        entries.push(new TextDecoder().decode(val.subarray(p, p + len)));
+        entries.push(val.subarray(p, p + len));
         p += len;
       }
-      parts.push(`alpn="${entries.join(',')}"`);
+      parts.push(`alpn="${alpnToPresentation(entries)}"`);
     } else if (keyId === 2) {
       parts.push('no-default-alpn');
     } else if (keyId === 3) {
@@ -3401,17 +3435,6 @@ class HINFO extends RR {
     super(opts);
   }
 
-  /****** Resource record specific setters   *******/
-  setCpu(val) {
-    if (val.length > 255) this.throwHelp('HINFO cpu cannot exceed 255 chars');
-    this.set('cpu', val);
-  }
-
-  setOs(val) {
-    if (val.length > 255) this.throwHelp('HINFO os cannot exceed 255 chars');
-    this.set('os', val);
-  }
-
   getDescription() {
     return 'Host Info'
   }
@@ -4757,13 +4780,18 @@ class NSEC3 extends RR {
 
 function unpackRdata(bytes) {
   const saltLen = bytes[4];
-  const hashStart = 5 + saltLen + 1;
-  const hashLen = bytes[5 + saltLen];
+  const hashLenAt = 5 + saltLen;
+  if (bytes.length < 5 || hashLenAt >= bytes.length)
+    throw new Error('NSEC3: rdata is truncated before the hash')
+  const hashLen = bytes[hashLenAt];
+  const hashStart = hashLenAt + 1;
+  if (hashLen === 0 || hashStart + hashLen > bytes.length)
+    throw new Error('NSEC3: hash length does not fit the rdata')
   return {
     'hash algorithm': bytes[0],
     flags: bytes[1],
     iterations: new DataView(bytes.buffer, bytes.byteOffset).getUint16(2),
-    salt: saltLen ? bytesToHex(bytes.subarray(5, 5 + saltLen)) : '-',
+    salt: saltLen ? bytesToHex(bytes.subarray(5, hashLenAt)) : '-',
     'next hashed owner name': bytesToBase32hex(bytes.subarray(hashStart, hashStart + hashLen)),
     'type bit maps': bitmapToTypes(bytes.subarray(hashStart + hashLen)),
   }
@@ -7118,6 +7146,11 @@ class WKS extends RR {
   }
 
   setBitMap(val) {
+    for (const entry of (val ?? '').trim().split(/\s+/).filter(Boolean)) {
+      const port = portNumber(entry);
+      if (port === undefined || port > 65535)
+        this.throwHelp(`WKS: bit map entry must be a known service or a port 0-65535: ${entry}`);
+    }
     this.set('bit map', val ?? '');
   }
 
@@ -7173,14 +7206,7 @@ class WKS extends RR {
   }
 
   getPorts() {
-    return this.get('bit map')
-      .trim()
-      .split(/\s+/)
-      .map((s) => {
-        if (/^\d+$/.test(s)) return parseInt(s, 10)
-        return WELL_KNOWN_PORTS[s.toLowerCase()]
-      })
-      .filter((p) => p !== undefined)
+    return this.get('bit map').trim().split(/\s+/).filter(Boolean).map(portNumber)
   }
 
   // csv2(5): "IP protocol port,port,...", at most 10 ports, none above 1023.
@@ -7209,6 +7235,10 @@ class WKS extends RR {
     result.set(bitmap, 5);
     return result
   }
+}
+
+function portNumber(entry) {
+  return /^\d+$/.test(entry) ? Number(entry) : WELL_KNOWN_PORTS[entry.toLowerCase()]
 }
 
 const typeMap = {};

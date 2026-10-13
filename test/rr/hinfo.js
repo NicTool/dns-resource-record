@@ -43,7 +43,7 @@ const invalidRecords = [
     ...defaults,
     owner: 'www.example.com.',
     address: '',
-    msg: /Cannot read proper/,
+    msg: /HINFO: cpu is required/,
   },
 ]
 
@@ -78,15 +78,12 @@ describe('HINFO record', function () {
   }
 
   for (const f of ['os', 'cpu']) {
-    it(`rejects ${f} value longer than 255 chars`, async () => {
-      const tooLong =
-        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
-      const r = new HINFO(null)
-      try {
-        assert.fail(r[`set${r.ucFirst(f)}`](tooLong))
-      } catch (e) {
-        assert.ok(/cannot exceed 255 chars/.test(e.message))
-      }
+    it(`rejects ${f} longer than 255 bytes, counting UTF-8`, async () => {
+      const hinfo = (value) =>
+        new HINFO({ owner: 'h.example.', ttl: 60, type: 'HINFO', cpu: 'x', os: 'x', [f]: value })
+      assert.throws(() => hinfo('a'.repeat(256)), /must be <=255 bytes/)
+      assert.throws(() => hinfo('é'.repeat(128)), /must be <=255 bytes/)
+      assert.equal(hinfo('é'.repeat(127)).get(f), 'é'.repeat(127))
     })
   }
 

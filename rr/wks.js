@@ -115,6 +115,11 @@ export default class WKS extends RR {
   }
 
   setBitMap(val) {
+    for (const entry of (val ?? '').trim().split(/\s+/).filter(Boolean)) {
+      const port = portNumber(entry)
+      if (port === undefined || port > 65535)
+        this.throwHelp(`WKS: bit map entry must be a known service or a port 0-65535: ${entry}`)
+    }
     this.set('bit map', val ?? '')
   }
 
@@ -170,14 +175,7 @@ export default class WKS extends RR {
   }
 
   getPorts() {
-    return this.get('bit map')
-      .trim()
-      .split(/\s+/)
-      .map((s) => {
-        if (/^\d+$/.test(s)) return parseInt(s, 10)
-        return WELL_KNOWN_PORTS[s.toLowerCase()]
-      })
-      .filter((p) => p !== undefined)
+    return this.get('bit map').trim().split(/\s+/).filter(Boolean).map(portNumber)
   }
 
   // csv2(5): "IP protocol port,port,...", at most 10 ports, none above 1023.
@@ -206,4 +204,8 @@ export default class WKS extends RR {
     result.set(bitmap, 5)
     return result
   }
+}
+
+function portNumber(entry) {
+  return /^\d+$/.test(entry) ? Number(entry) : WELL_KNOWN_PORTS[entry.toLowerCase()]
 }

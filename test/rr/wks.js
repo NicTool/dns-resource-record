@@ -99,4 +99,19 @@ describe('WKS record', function () {
     assert.match(wks('8080').toMaraDNS(), /\tRAW 11\t/, 'csv2 WKS ports stop at 1023')
     assert.match(wks('').toMaraDNS(), /\tRAW 11\t/)
   })
+
+  it('rejects a bit map entry that is not a known service or a 16-bit port', function () {
+    const wks = (bitMap) =>
+      new WKS({
+        owner: 'h.example.',
+        ttl: 60,
+        type: 'WKS',
+        address: '192.0.2.1',
+        protocol: 'TCP',
+        'bit map': bitMap,
+      })
+    for (const entry of ['-1', '70000', 'nosuchservice'])
+      assert.throws(() => wks(`ftp ${entry}`), /known service or a port 0-65535/, entry)
+    assert.equal(wks('ftp 65535').get('bit map'), 'ftp 65535')
+  })
 })

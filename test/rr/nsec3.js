@@ -120,6 +120,18 @@ describe('NSEC3 record', function () {
     )
   })
 
+  it('rejects wire rdata whose salt or hash length overruns it', function () {
+    const decode = (hex) =>
+      new NSEC3(null).fromWire({
+        owner: 'h.example.',
+        cls: 'IN',
+        ttl: 60,
+        rdata: Uint8Array.from(Buffer.from(hex, 'hex')),
+      })
+    assert.throws(() => decode('020000000002ab'), /hash length does not fit/)
+    assert.throws(() => decode('0200000000'), /truncated before the hash/)
+  })
+
   it('rejects a hash that is not base32hex', function () {
     assert.throws(
       () => NSEC3.fromBind('h.example. 300 IN NSEC3 1 1 12 - 2vptu5timamqttgl4luu9kg21e0aor3w A'),

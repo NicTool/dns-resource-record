@@ -116,13 +116,18 @@ export default class NSEC3 extends RR {
 
 function unpackRdata(bytes) {
   const saltLen = bytes[4]
-  const hashStart = 5 + saltLen + 1
-  const hashLen = bytes[5 + saltLen]
+  const hashLenAt = 5 + saltLen
+  if (bytes.length < 5 || hashLenAt >= bytes.length)
+    throw new Error('NSEC3: rdata is truncated before the hash')
+  const hashLen = bytes[hashLenAt]
+  const hashStart = hashLenAt + 1
+  if (hashLen === 0 || hashStart + hashLen > bytes.length)
+    throw new Error('NSEC3: hash length does not fit the rdata')
   return {
     'hash algorithm': bytes[0],
     flags: bytes[1],
     iterations: new DataView(bytes.buffer, bytes.byteOffset).getUint16(2),
-    salt: saltLen ? BINARY.bytesToHex(bytes.subarray(5, 5 + saltLen)) : '-',
+    salt: saltLen ? BINARY.bytesToHex(bytes.subarray(5, hashLenAt)) : '-',
     'next hashed owner name': BINARY.bytesToBase32hex(bytes.subarray(hashStart, hashStart + hashLen)),
     'type bit maps': BINARY.bitmapToTypes(bytes.subarray(hashStart + hashLen)),
   }
