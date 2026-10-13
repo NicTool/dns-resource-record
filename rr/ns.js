@@ -17,7 +17,7 @@ export default class NS extends RR {
     if (!val) this.throwHelp(`NS: dname is required`)
 
     this.isFullyQualified('NS', 'dname', val)
-    this.isValidHostname('NS', 'dname', val)
+    this.isValidName('NS', 'dname', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', this.lowercaseName(val))

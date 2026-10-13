@@ -190,16 +190,13 @@ export default class RR {
   setOwner(n) {
     if (n === undefined || n === '') this.throwHelp(`owner is required`)
 
-    this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
-    this.hasValidLabels(n)
-
-    // Owners are stored in presentation form, so master-file delimiters
-    // must arrive escaped (\032, \;) or the BIND export splits the name.
-    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_')
-    if (/[\s;"()]/.test(unescaped)) this.throwHelp(`owner has an unescaped delimiter: ${n}`)
+    const typeName = this.constructor.typeName ?? this.constructor.name
+    this.isFullyQualified(typeName, 'owner', n)
+    this.isValidName(typeName, 'owner', n)
 
     // RFC 4592: a wildcard is a leftmost label of exactly `*`. An escaped \* or
     // \042 is a literal byte and may appear anywhere.
+    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_')
     if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
       this.throwHelp('only *.something or * (by itself) is a valid wildcard')
 
@@ -454,7 +451,7 @@ export default class RR {
     if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`${typeName}: ${fieldName} must be a domain name`)
     this.isFullyQualified(typeName, fieldName, val)
-    this.isValidHostname(typeName, fieldName, val)
+    this.isValidName(typeName, fieldName, val)
     this.set(fieldName, lowercaseName(val))
   }
 
@@ -584,12 +581,13 @@ export default class RR {
     this.throwHelp(`${type}: ${field} must be fully qualified`)
   }
 
-  isValidHostname(type, field, hostname) {
-    const allowed = new RegExp(/[^a-zA-Z0-9\-._/\\]/)
-    if (!allowed.test(hostname)) return true
-
-    const matches = allowed.exec(hostname)
-    this.throwHelp(`${type}, ${field} has invalid hostname character (${matches[0]})`)
+  isValidName(type, field, hostname) {
+    this.hasValidLabels(hostname)
+    // Names are stored in presentation form, so master-file delimiters
+    // must arrive escaped (\032, \;) or the BIND export splits the name.
+    if (/[\s;"()]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
+      this.throwHelp(`${type}: ${field} has an unescaped delimiter: ${hostname}`)
+    return true
   }
 
   isIPv4(string) {

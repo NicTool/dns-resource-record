@@ -445,6 +445,8 @@ describe('svcParamsToWire', () => {
       ['00030003000102', /invalid length 3/],
       ['000300021f40000100020268', /out of order or repeated/],
       ['0001000303683200', /malformed alpn/],
+      ['0000000400030001', /mandatory key 1 is out of order/],
+      ['0000000400010001', /mandatory key 1 is out of order or repeated/],
     ]) {
       assert.throws(() => svcParamsFromWire(Buffer.from(hex, 'hex')), msg, hex)
     }

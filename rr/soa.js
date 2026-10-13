@@ -32,7 +32,7 @@ export default class SOA extends RR {
 
   setMname(val) {
     // MNAME (primary NS)
-    this.isValidHostname('SOA', 'MNAME', val)
+    this.isValidName('SOA', 'MNAME', val)
     this.isFullyQualified('SOA', 'MNAME', val)
 
     // RFC 4034: letters in the DNS names are lower cased
@@ -41,7 +41,7 @@ export default class SOA extends RR {
 
   setRname(val) {
     // RNAME (email of admin)  (escape . with \)
-    this.isValidHostname('SOA', 'RNAME', val)
+    this.isValidName('SOA', 'RNAME', val)
     this.isFullyQualified('SOA', 'RNAME', val)
     if (/@/.test(val)) this.throwHelp(`SOA rname replaces @ with a . (dot)`)
 

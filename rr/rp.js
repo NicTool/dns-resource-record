@@ -15,19 +15,11 @@ export default class RP extends RR {
 
   /****** Resource record specific setters   *******/
   setMbox(val) {
-    if (!val) this.throwHelp('RP: mbox is required')
-
-    this.isFullyQualified('RP', 'mbox', val)
-
-    this.set('mbox', this.lowercaseName(val))
+    this.setTypedValue('fqdn', 'mbox', val)
   }
 
   setTxt(val) {
-    if (!val) this.throwHelp('RP: txt is required')
-
-    this.isFullyQualified('RP', 'txt', val)
-
-    this.set('txt', this.lowercaseName(val))
+    this.setTypedValue('fqdn', 'txt', val)
   }
 
   getDescription() {

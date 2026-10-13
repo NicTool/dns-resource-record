@@ -26,7 +26,7 @@ export default class KX extends RR {
     if (!val) this.throwHelp('KX: exchanger is required')
 
     this.isFullyQualified('KX', 'exchanger', val)
-    this.isValidHostname('KX', 'exchanger', val)
+    this.isValidName('KX', 'exchanger', val)
 
     this.set('exchanger', this.lowercaseName(val))
   }

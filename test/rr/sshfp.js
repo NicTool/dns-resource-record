@@ -161,4 +161,10 @@ describe('SSHFP record', function () {
   base.fromBind(SSHFP, validRecords)
   base.fromTinydns(SSHFP, validRecords)
   base.fromWire(SSHFP, validRecords)
+
+  it('revalidates the fingerprint when the fptype changes', function () {
+    const r = new SSHFP(new SSHFP(null).getCanonical())
+    assert.throws(() => r.setFptype(2), /fingerprint must be 32 bytes/)
+    assert.equal(r.get('fptype'), 1)
+  })
 })

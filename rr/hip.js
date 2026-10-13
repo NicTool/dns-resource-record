@@ -8,7 +8,7 @@ export default class HIP extends RR {
   static typeName = 'HIP'
   static typeId = 55
   static RFCs = [8005]
-  static rdataFields = ['pk algorithm', 'hit', 'public key', ['rendezvous servers', 'list']]
+  static rdataFields = [['pk algorithm', 'u8'], 'hit', 'public key', ['rendezvous servers', 'list']]
 
   constructor(opts) {
     super(opts)

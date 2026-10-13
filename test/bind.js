@@ -255,6 +255,38 @@ describe('names keep their presentation escapes', function () {
       assert.equal(RR.TXT.fromBind(rr.toBind()).get('owner'), owner)
       assert.equal(RR.TXT.fromWire(rr.toWire()).get('owner'), fromWire)
     })
+
+    it(`round trips an escaped rdata name: ${owner}`, function () {
+      for (const [type, rdata, field] of [
+        ['CNAME', owner, 'cname'],
+        ['DNAME', owner, 'target'],
+        ['NS', owner, 'dname'],
+        ['SVCB', `1 ${owner}`, 'target name'],
+        ['RP', `${owner} ${owner}`, 'mbox'],
+        ['RP', `${owner} ${owner}`, 'txt'],
+        ['NAPTR', `1 1 "u" "E2U+sip" "" ${owner}`, 'replacement'],
+      ]) {
+        const rr = RR[type].fromBind(`x.example. 300 IN ${type} ${rdata}`)
+        assert.equal(rr.get(field), owner, type)
+        assert.equal(RR[type].fromWire(rr.toWire()).get(field), fromWire, type)
+      }
+    })
+  }
+
+  for (const [type, field] of [
+    ['CNAME', 'cname'],
+    ['RP', 'mbox'],
+    ['RP', 'txt'],
+    ['NAPTR', 'replacement'],
+    ['SIG', 'signers name'],
+  ]) {
+    it(`rejects an unescaped delimiter in ${type} ${field}`, function () {
+      const canonical = new RR[type](null).getCanonical()
+      assert.throws(
+        () => new RR[type]({ ...canonical, [field]: 'a(b.example.' }),
+        new RegExp(`${type}: ${field} has an unescaped delimiter`),
+      )
+    })
   }
 
   for (const owner of [
@@ -351,6 +383,14 @@ describe('generic rdata', function () {
       () => RR.URI.fromBind('x.example. 300 IN URI 1 1 "https://a" "https://b"'),
       /URI: unexpected rdata: https:\/\/b/,
     )
+  })
+
+  it('keeps all-digit tokens as text in non-numeric fields', function () {
+    const nsec3 = RR.NSEC3.fromBind('x.example. 300 IN NSEC3 2 0 0 1234 12345678 A')
+    assert.equal(nsec3.get('salt'), '1234')
+    assert.equal(nsec3.get('next hashed owner name'), '12345678')
+    assert.equal(RR.NSEC3PARAM.fromBind('x.example. 300 IN NSEC3PARAM 1 0 0 1234').get('salt'), '1234')
+    assert.equal(RR.HIP.fromBind('x.example. 300 IN HIP 2 20010010 1234').get('hit'), '20010010')
   })
 })
 

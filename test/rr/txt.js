@@ -94,6 +94,14 @@ describe('TXT record', function () {
     assert.equal(quoted.map((q) => q.slice(1, -1)).join(''), data)
   })
 
+  it('splits wire character-strings on the same UTF-8 boundaries as toBind', function () {
+    const data = `${'a'.repeat(254)}é`
+    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data })
+    const fromWire = TXT.fromWire(r.toWire())
+    assert.deepEqual(fromWire.get('data'), ['a'.repeat(254), 'é'])
+    assert.deepEqual(fromWire.get('data'), TXT.fromBind(r.toBind()).get('data'))
+  })
+
   it(`imports tinydns TXT (generic) record`, async function () {
     const val = {
       owner: 'nov2021._domainkey.example.com.',

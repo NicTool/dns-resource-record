@@ -3,6 +3,9 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 
+// RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
+const DIGEST_BYTES = { 1: 20, 2: 32, 4: 48 }
+
 export default class DS extends RR {
   static typeName = 'DS'
   static typeId = 43
@@ -25,8 +28,7 @@ export default class DS extends RR {
   }
 
   setDigest(val) {
-    // RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
-    this.isHexDigest('digest', val, { 1: 20, 2: 32, 4: 48 }[this.get('digest type')])
+    this.isHexDigest('digest', val, DIGEST_BYTES[this.get('digest type')])
     this.set('digest', val)
   }
 
@@ -59,9 +61,8 @@ export default class DS extends RR {
   }
 
   setDigestType(val) {
-    // 1=SHA-1 (RFC 4034), 2=SHA-256 (RFC 4509), 4=SHA-384 (RFC 6605)
-    if (![1, 2, 4].includes(val)) this.throwHelp(`DS: digest type invalid`)
-
+    if (!Object.hasOwn(DIGEST_BYTES, val)) this.throwHelp(`DS: digest type invalid`)
+    if (this.get('digest') !== undefined) this.isHexDigest('digest', this.get('digest'), DIGEST_BYTES[val])
     this.set('digest type', val)
   }
 

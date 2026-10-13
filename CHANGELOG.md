@@ -8,10 +8,11 @@ Notable changes to this project are documented in this file.
 - fix(bind)!: generic importer for all but TSIG & UNKNOWN, no `bindline`
 - fix(bind)!: reject missing/surplus rdata and mismatched types
 - fix(rr)!: names honor escapes, count octets, stricter wildcards
+- refactor(rr)!: rename isValidHostname -> isValidName
 - fix(rr)!: TTL max is 2^31-1 (RFC 2181)
 - fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HINFO, WKS)
 - fix(hinfo, caa)!: keep literal quotes in values
-- fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS encoding
+- fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT encoding
 - fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
 - fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
 - fix(tinydns): generic lines carry wire rdata

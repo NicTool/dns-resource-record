@@ -7,9 +7,9 @@ export default class NSEC3 extends RR {
   static typeId = 50
   static RFCs = [5155, 9077]
   static rdataFields = [
-    'hash algorithm',
-    'flags',
-    'iterations',
+    ['hash algorithm', 'u8'],
+    ['flags', 'u8'],
+    ['iterations', 'u16'],
     'salt',
     'next hashed owner name',
     ['type bit maps', 'list'],

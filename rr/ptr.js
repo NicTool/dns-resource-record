@@ -15,7 +15,7 @@ export default class PTR extends RR {
   /****** Resource record specific setters   *******/
   setDname(val) {
     this.isFullyQualified('PTR', 'dname', val)
-    this.isValidHostname('PTR', 'dname', val)
+    this.isValidName('PTR', 'dname', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', this.lowercaseName(val))

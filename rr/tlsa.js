@@ -3,6 +3,9 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 
+// RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+const DIGEST_BYTES = { 1: 32, 2: 64 }
+
 export default class TLSA extends RR {
   static typeName = 'TLSA'
   static typeId = 52
@@ -50,7 +53,8 @@ export default class TLSA extends RR {
 
   setMatchingType(val) {
     if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`TLSA: matching type`)
-
+    const data = this.get('certificate association data')
+    if (data !== undefined) this.isHexDigest('certificate association data', data, DIGEST_BYTES[val])
     this.set('matching type', val)
   }
 
@@ -63,8 +67,7 @@ export default class TLSA extends RR {
   }
 
   setCertificateAssociationData(val) {
-    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
-    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')])
+    this.isHexDigest('certificate association data', val, DIGEST_BYTES[this.get('matching type')])
     this.set('certificate association data', val)
   }
 

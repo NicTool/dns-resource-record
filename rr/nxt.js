@@ -19,7 +19,7 @@ export default class NXT extends RR {
     if (!val) this.throwHelp(`NXT: 'next domain' is required`)
 
     this.isFullyQualified('NXT', 'next domain', val)
-    this.isValidHostname('NXT', 'next domain', val)
+    this.isValidName('NXT', 'next domain', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', this.lowercaseName(val))

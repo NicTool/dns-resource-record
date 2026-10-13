@@ -2,6 +2,9 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 
+// RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
+const FINGERPRINT_BYTES = { 1: 20, 2: 32 }
+
 export default class SSHFP extends RR {
   static typeName = 'SSHFP'
   static typeId = 44
@@ -25,12 +28,13 @@ export default class SSHFP extends RR {
 
   setFptype(val) {
     if (!this.getFptypeOptions().has(val)) this.throwHelp(`SSHFP: fptype invalid`)
+    if (this.get('fingerprint') !== undefined)
+      this.isHexDigest('fingerprint', this.get('fingerprint'), FINGERPRINT_BYTES[val])
     this.setTypedValue('u8', 'fptype', val)
   }
 
   setFingerprint(val) {
-    // RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
-    this.isHexDigest('fingerprint', val, { 1: 20, 2: 32 }[this.get('fptype')])
+    this.isHexDigest('fingerprint', val, FINGERPRINT_BYTES[this.get('fptype')])
     this.set('fingerprint', val)
   }
 

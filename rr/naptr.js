@@ -66,7 +66,7 @@ export default class NAPTR extends RR {
   }
 
   setReplacement(val) {
-    this.set('replacement', val)
+    this.setTypedValue('fqdn', 'replacement', val)
   }
 
   /******  IMPORTERS   *******/

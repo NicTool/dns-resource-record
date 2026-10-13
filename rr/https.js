@@ -25,8 +25,9 @@ export default class HTTPS extends RR {
   }
 
   setTargetName(val) {
-    // this.isFullyQualified('HTTPS', 'target name', val)
-    // this.isValidHostname('HTTPS', 'target name', val)
+    if (!val) this.throwHelp('HTTPS: target name is required')
+    this.isFullyQualified('HTTPS', 'target name', val)
+    this.isValidName('HTTPS', 'target name', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('target name', this.lowercaseName(val))

@@ -24,8 +24,9 @@ export default class SVCB extends RR {
   }
 
   setTargetName(val) {
-    // this.isFullyQualified('SVCB', 'target name', val)
-    // this.isValidHostname('SVCB', 'target name', val)
+    if (!val) this.throwHelp('SVCB: target name is required')
+    this.isFullyQualified('SVCB', 'target name', val)
+    this.isValidName('SVCB', 'target name', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('target name', this.lowercaseName(val))

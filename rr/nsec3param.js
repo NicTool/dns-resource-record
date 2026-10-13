@@ -6,7 +6,7 @@ export default class NSEC3PARAM extends RR {
   static typeName = 'NSEC3PARAM'
   static typeId = 51
   static RFCs = [5155]
-  static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt']
+  static rdataFields = [['hash algorithm', 'u8'], ['flags', 'u8'], ['iterations', 'u16'], 'salt']
   static tags = ['dnssec']
 
   constructor(opts) {

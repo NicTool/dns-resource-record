@@ -19,7 +19,7 @@ export default class NSEC extends RR {
     if (!val) this.throwHelp(`NSEC: 'next domain' is required:`)
 
     this.isFullyQualified('NSEC', 'next domain', val)
-    this.isValidHostname('NSEC', 'next domain', val)
+    this.isValidName('NSEC', 'next domain', val)
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', this.lowercaseName(val))

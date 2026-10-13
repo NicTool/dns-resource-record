@@ -1042,8 +1042,12 @@ function svcParamsFromWire(bytes) {
     const keyName = SVCPARAM_KEY_NAMES[keyId] ?? `key${keyId}`;
     if (keyId === 0) {
       const names = [];
+      let lastId = -1;
       for (let i = 0; i + 1 < val.length; i += 2) {
         const id = new DataView(val.buffer, val.byteOffset + i).getUint16(0);
+        // RFC 9460 §8: keys sorted in increasing numeric order, no duplicates
+        if (id <= lastId) throw new Error(`SVCB: mandatory key ${id} is out of order or repeated`)
+        lastId = id;
         names.push(SVCPARAM_KEY_NAMES[id] ?? `key${id}`);
       }
       parts.push(`mandatory=${names.join(',')}`);
@@ -1082,997 +1086,6 @@ function svcParamsFromWire(bytes) {
     }
   }
   return parts.join(' ')
-}
-
-// RFC 1035 §5.1 master-file lexer. Escapes stay in token text because their
-// meaning depends on the field: in a name, `\.` is a dot inside a label.
-// `"`, `(` and `)` delimit tokens even without whitespace, as in BIND. A token
-// that touches the one before it is marked `adjoins`, so SVCB's key="value"
-// survives as one parameter.
-function tokenize(line) {
-  const tokens = [];
-  let token = null;
-  let depth = 0;
-  let separated = true;
-  const start = (quoted) => {
-    token = separated ? { text: '', quoted } : { text: '', quoted, adjoins: true };
-    separated = false;
-  };
-  const flush = () => {
-    if (token) tokens.push(token);
-    token = null;
-  };
-  const separate = () => {
-    flush();
-    separated = true;
-  };
-
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '\\') {
-      if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
-      if (!token) start(false);
-      token.text += c + line[++i];
-    } else if (c === '"') {
-      flush();
-      start(true);
-      for (i++; line[i] !== '"'; i++) {
-        if (i >= line.length) throw new Error('BIND: unterminated quoted string')
-        if (line[i] === '\n') throw new Error('BIND: newline in quoted string')
-        if (line[i] === '\\') {
-          if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
-          token.text += line[i++];
-        }
-        token.text += line[i];
-      }
-      flush();
-    } else if (c === ';') {
-      separate();
-      while (i + 1 < line.length && line[i + 1] !== '\n') i++;
-    } else if (c === '(' || c === ')') {
-      separate();
-      depth += c === '(' ? 1 : -1;
-      if (depth < 0) throw new Error('BIND: unbalanced parentheses')
-    } else if (c === '\n' && depth === 0) {
-      separate();
-      if (/\S/.test(line.slice(i + 1))) throw new Error('BIND: text after end of record')
-    } else if (/\s/.test(c)) {
-      separate();
-    } else {
-      if (!token) start(false);
-      token.text += c;
-    }
-  }
-  flush();
-  if (depth !== 0) throw new Error('BIND: unbalanced parentheses')
-  return tokens
-}
-
-function parseBindLine(line, RRClasses) {
-  const res = {
-    class: 'IN',
-    type: '',
-    rdata: [],
-  };
-
-  const tokens = tokenize(line);
-  if (tokens.length < 1) return null
-
-  if (!/^\s/.test(line)) {
-    res.owner = tokens.shift().text;
-  }
-
-  while (tokens.length > 0) {
-    const token = tokens[0].text.toUpperCase();
-
-    if (RRClasses[token]) {
-      res.class = tokens.shift().text.toUpperCase();
-      continue
-    }
-
-    if (/^CLASS\d+$/.test(token)) {
-      // RFC 3597 §5 unknown-class syntax; setClass validates the number
-      res.class = tokens.shift().text.toUpperCase();
-      continue
-    }
-
-    if (/^\d+$/.test(token)) {
-      res.ttl = parseInt(tokens.shift().text, 10);
-      continue
-    }
-
-    res.type = tokens.shift().text.toUpperCase();
-    break
-  }
-
-  res.rdata = tokens;
-
-  return res
-}
-
-// RFC 1035 §5.1: \DDD is an octet, \X is X. Octets must form UTF-8
-function decodeCharString(text) {
-  let bytes;
-  try {
-    bytes = presentationBytes(text);
-  } catch (e) {
-    throw new Error(`BIND: ${e.message}`, { cause: e })
-  }
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-  } catch {
-    throw new Error(`BIND: character-string is not UTF-8: ${text}`)
-  }
-}
-
-// Controls are written as \DDD so the quoted string stays on one line.
-function escapeCharString(str) {
-  return Array.from(String(str), (c) => {
-    if (c === '"' || c === '\\') return `\\${c}`
-    const code = c.codePointAt(0);
-    return code < 0x20 || code === 0x7f ? `\\${String(code).padStart(3, '0')}` : c
-  }).join('')
-}
-
-// A list field is the rest of the rdata, kept in presentation form for the
-// RR's own setter to parse: type bit maps, APL items, SVCB params.
-const listTypes = new Set(['list', 'svcparams']);
-
-function joinList(tokens) {
-  return tokens
-    .map((t) => (t.adjoins ? '' : ' ') + (t.quoted ? `"${t.text}"` : t.text))
-    .join('')
-    .trimStart()
-}
-
-function fieldTypeOf(def) {
-  return Array.isArray(def) ? def[1] : null
-}
-
-// RFC 3597 §5 generic rdata: '\# <length> <hex words>', parens permitted.
-// Every word must contain an even number of hex digits, not just the whole.
-function parseGenericRdata(tokens) {
-  const words = tokens.filter((w) => w !== '(' && w !== ')');
-  if (words[0] !== '\\#') throw new Error(`RFC 3597: generic rdata must begin with \\#`)
-  if (!/^\d+$/.test(words[1] ?? '') || parseInt(words[1], 10) > 65535)
-    throw new Error(`RFC 3597: invalid rdata length: ${words[1]}`)
-  const length = parseInt(words[1], 10);
-  for (const w of words.slice(2)) {
-    if (!/^[0-9a-fA-F]+$/.test(w) || w.length % 2 !== 0)
-      throw new Error(`RFC 3597: each rdata word must be an even number of hex digits: ${w}`)
-  }
-  const hex = words.slice(2).join('').toLowerCase();
-  if (hex.length !== length * 2)
-    throw new Error(`RFC 3597: rdata length mismatch: declared ${length}, got ${hex.length / 2} bytes`)
-  return { length, hex }
-}
-
-// An RR of known type in generic form MUST be processed as the known type
-// (RFC 3597 §5), so the hex is decoded through the class's wire parser.
-function fromBind3597(rrInstance, parsed) {
-  const { hex } = parseGenericRdata(parsed.rdata.map((t) => t.text));
-  const staticId = rrInstance.constructor.typeId;
-  const typeId = typeNameToId(parsed.type); // 'TYPE731', 'AFSDB', ...; garbage throws
-  if (staticId !== undefined && typeId !== staticId)
-    throw new Error(`${rrInstance.constructor.typeName}: ${parsed.type} does not match type id ${staticId}`)
-  const rdata = hexToBytes(hex);
-  const rr = rrInstance.fromWire({
-    owner: parsed.owner,
-    cls: parsed.class,
-    ttl: parsed.ttl,
-    rdata,
-    typeId: typeId ?? staticId,
-  });
-  assertWireRoundTrip(rr, rdata);
-  return rr
-}
-
-// UNKNOWN has no static typeId and accepts any TYPEnnn.
-function assertType(type, RRClass) {
-  if (RRClass.typeId === undefined || type === RRClass.typeName) return
-  if (!type) throw new Error(`expected ${RRClass.typeName}, got no type`)
-  const typeNN = type.match(/^TYPE(\d+)$/);
-  if (typeNN !== null && Number(typeNN[1]) === RRClass.typeId) return
-  throw new Error(`expected ${RRClass.typeName}, got ${type}`)
-}
-
-function fromBind(rrInstance, opts) {
-  const { owner, ttl, class: cls, rdata } = opts;
-  const typeName = rrInstance.constructor.typeName;
-  const result = {
-    owner,
-    ttl,
-    class: cls,
-    type: typeName,
-  };
-
-  const fields = rrInstance.getFields('rdata');
-  const rdataDefs = rrInstance.constructor.rdataFields ?? [];
-  const opaqueTypes = new Set(['str', 'hex', 'base64']);
-  const lastType = fieldTypeOf(rdataDefs.at(-1));
-  const lastIsList = listTypes.has(lastType);
-
-  const required = lastIsList ? fields.length - 1 : fields.length;
-  if (rdata.length < required)
-    throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
-  const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs' || lastIsList;
-  if (rdata.length > fields.length && !lastIsVariadic)
-    throw new Error(
-      `${typeName}: unexpected rdata: ${rdata
-        .slice(fields.length)
-        .map((t) => t.text)
-        .join(' ')}`,
-    )
-  for (let i = 0; i < fields.length; i++) {
-    const isLastField = i === fields.length - 1;
-
-    // RFC 1035 §5.1: opaque rdata (hex digests, base64 keys) may be split across
-    // whitespace and parenthesized continuations; rejoin it into one value.
-    if (isLastField && opaqueTypes.has(fieldTypeOf(rdataDefs[i]))) {
-      result[fields[i]] = rdata
-        .slice(i)
-        .map((t) => t.text)
-        .join('');
-      break
-    }
-
-    if (isLastField && lastIsList) {
-      result[fields[i]] = joinList(rdata.slice(i));
-      break
-    }
-
-    // RFC 1035 §3.3.14: TXT keeps its character-string boundaries.
-    if (isLastField && fieldTypeOf(rdataDefs[i]) === 'charstrs') {
-      const strings = rdata.slice(i).map((t) => decodeCharString(t.text));
-      result[fields[i]] = strings.length > 1 ? strings : strings[0];
-      break
-    }
-
-    let val = rdata[i]?.text;
-    if (rrInstance.isQuotedField(fields[i])) {
-      val = val === undefined ? undefined : decodeCharString(val);
-    } else if (/^\d+$/.test(val)) {
-      val = parseInt(val, 10);
-    }
-    result[fields[i]] = val;
-  }
-
-  return new rrInstance.constructor(result)
-}
-
-function toBind(rrInstance, zone_opts) {
-  const rdata = (rrInstance.constructor.rdataFields ?? [])
-    .map((def) => {
-      const f = Array.isArray(def) ? def[0] : def;
-      if (rrInstance.isFqdnField(f)) return rrInstance.getFQDN(f, zone_opts)
-      if (rrInstance.isQuotedField(f)) return `"${escapeCharString(rrInstance.get(f))}"`
-      // RFC 4034 §3.2: a type is presented as its mnemonic, or TYPEnnn (RFC 3597).
-      if (fieldTypeOf(def) === 'rrtype') return typeIdToName(rrInstance.get(f))
-      return rrInstance.get(f)
-    })
-    .join('\t');
-  return `${rrInstance.getPrefix(zone_opts)}\t${rdata}\n`
-}
-
-const customInspect = Symbol.for('nodejs.util.inspect.custom');
-
-class RR {
-  static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
-  static typeId
-  static RFCs = []
-  static tags = []
-
-  constructor(opts) {
-    if (opts === null) return
-
-    if (opts?.default) this.default = opts.default;
-
-    // tinydns specific
-    this.setLocation(opts?.location);
-    this.setTimestamp(opts?.timestamp);
-
-    this.setOwner(opts?.owner);
-    this.setType(opts?.type);
-    this.setTtl(opts?.ttl);
-    this.setClass(opts?.class);
-
-    for (const entry of this.constructor.rdataFields ?? []) {
-      const f = RR.fieldName(entry);
-      const fieldType = Array.isArray(entry) ? entry[1] : null;
-      const fnName = `set${this.ucFirst(f)}`;
-      if (typeof this[fnName] === 'function') {
-        this[fnName](opts?.[f]);
-      } else if (fieldType) {
-        this.setTypedValue(fieldType, f, opts?.[f]);
-      } else {
-        this.set(f, opts?.[f]);
-      }
-    }
-
-    if (opts?.comment) this.set('comment', opts.comment);
-  }
-
-  static fromBind(line, opts = {}) {
-    const instance = new this(null);
-    if (opts.default !== undefined) instance.default = opts.default;
-    const parsed = this.parseBindLine(line);
-    if (!parsed) return null
-    if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return fromBind3597(instance, parsed) // RFC 3597 §5
-    assertType(parsed.type, this);
-    return instance.fromBind({ ...opts, ...parsed })
-  }
-
-  fromBind(opts) {
-    return fromBind(this, opts)
-  }
-
-  static parseBindLine(line) {
-    return parseBindLine(line, RR.CLASSES)
-  }
-
-  static fromTinydns(line, opts = {}) {
-    const instance = new this(null);
-    if (opts.default !== undefined) instance.default = opts.default;
-    return instance.fromTinydns({ ...opts, tinyline: line })
-  }
-
-  fromTinydns(opts) {
-    if (this.constructor.tinydnsType) return fromGeneric(this, opts)
-    return this.fromTinydnsWire(opts)
-  }
-
-  // A generic `:` line is the type number and the wire rdata, octal-escaped.
-  fromTinydnsWire({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
-    if (Number(typeId) !== this.getTypeId())
-      this.throwHelp(`${this.constructor.typeName} fromTinydns: type ${typeId} is not ${this.getTypeId()}`);
-    const rr = this.fromWire({
-      owner,
-      cls: 'IN',
-      ttl,
-      rdata: octalRdataToBytes(rdata ?? ''),
-      typeId: Number(typeId),
-    });
-    rr.setTimestamp(timestamp);
-    rr.setLocation(location);
-    return rr
-  }
-
-  static fromWire(wireBytes) {
-    return fromWireBytes(this, wireBytes, wireUnpackDomain)
-  }
-
-  fromWire(opts) {
-    return fromWireGeneric(this, opts)
-  }
-
-  static #reserved = ['__proto__', 'constructor', 'prototype']
-
-  get(key) {
-    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
-    return this[key]
-  }
-
-  set(key, value) {
-    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
-    this[key] = value;
-    return this
-  }
-
-  toJSON() {
-    const fields = [...this.getFields(), 'location', 'timestamp', 'comment'];
-    const obj = {};
-    for (const f of fields) {
-      const v = this.get(f);
-      if (v !== undefined) obj[f] = v;
-    }
-    return obj
-  }
-
-  [customInspect](depth, options, nextInspect) {
-    // Returns a formatted string that looks like: A { ... }
-    return `${this.type} ${nextInspect(this.toJSON(), options)}`
-  }
-
-  ucFirst(str) {
-    if (!str) return str
-    return str
-      .split(/\s/)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join('')
-  }
-
-  setClass(c) {
-    if ([undefined, null, ''].includes(c)) {
-      this.set('class', 'IN');
-      return
-    }
-    if (RR.CLASSES[c.toUpperCase()]) {
-      this.set('class', c.toUpperCase());
-      return
-    }
-    const generic = c.toUpperCase().match(/^CLASS(\d+)$/); // RFC 3597 §5
-    if (generic && parseInt(generic[1], 10) <= 65535) {
-      const id = parseInt(generic[1], 10);
-      const known = Object.keys(RR.CLASSES).find((k) => RR.CLASSES[k] === id);
-      this.set('class', known ?? `CLASS${id}`);
-      return
-    }
-    this.throwHelp(`invalid class ${c}`);
-  }
-
-  setLocation(l) {
-    switch (l) {
-      case undefined:
-        return
-      default:
-        this.set('location', l);
-    }
-  }
-
-  setTimestamp(l) {
-    switch (l) {
-      case undefined:
-        return
-      default:
-        this.set('timestamp', l);
-    }
-  }
-
-  setOwner(n) {
-    if (n === undefined || n === '') this.throwHelp(`owner is required`);
-
-    this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n);
-    this.hasValidLabels(n);
-
-    // Owners are stored in presentation form, so master-file delimiters
-    // must arrive escaped (\032, \;) or the BIND export splits the name.
-    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_');
-    if (/[\s;"()]/.test(unescaped)) this.throwHelp(`owner has an unescaped delimiter: ${n}`);
-
-    // RFC 4592: a wildcard is a leftmost label of exactly `*`. An escaped \* or
-    // \042 is a literal byte and may appear anywhere.
-    if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
-      this.throwHelp('only *.something or * (by itself) is a valid wildcard');
-
-    this.set('owner', lowercaseName(n));
-  }
-
-  setTtl(t) {
-    t = t ?? this.default?.ttl;
-    if (t === undefined) {
-      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
-      this.throwHelp('TTL is required, no default available');
-    }
-
-    if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`);
-
-    // RFC 2181 §8: the high bit is reserved, so a TTL is 0 to 2^31 - 1.
-    if (!Number.isInteger(t) || t < 0 || t > 2147483647)
-      this.throwHelp(`TTL must be an integer from 0 to 2147483647 (RFC 2181 §8)`);
-
-    this.set('ttl', t);
-  }
-
-  setType(t) {
-    if ([undefined, ''].includes(t)) t = this.constructor.typeName;
-
-    if (t === undefined) this.throwHelp(`type is required`);
-
-    if (t.toUpperCase() !== this.constructor.typeName)
-      this.throwHelp(`type ${t} doesn't match ${this.constructor.typeName}`);
-
-    this.set('type', t.toUpperCase());
-  }
-
-  throwHelp(e) {
-    if (!this.constructor.typeName) throw new Error(e)
-
-    const typeName = this.constructor.typeName;
-    const example = this.getCanonical
-      ? `Example ${typeName}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
-      : `${typeName} records have the fields: ${this.getFields().join(', ')}\n\n`;
-
-    throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)
-  }
-
-  citeRFC() {
-    return `see RFC${this.getRFCs().length > 1 ? 's' : ''} ${this.getRFCs()}`
-  }
-
-  fullyQualify(hostname, origin) {
-    if (!hostname) return hostname
-    if (hostname === '@' && origin) hostname = origin;
-    if (hostname.endsWith('.')) return lowercaseName(hostname)
-    if (origin) return lowercaseName(`${hostname}.${origin}`)
-    return `${hostname}.`
-  }
-
-  getPrefix(zone_opts = {}) {
-    const classVal = zone_opts.hide?.class ? '' : this.get('class');
-
-    let rrTTL = this.get('ttl');
-    if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = '';
-
-    let owner = this.get('owner');
-    if (zone_opts.hide?.sameOwner && zone_opts.previousOwner === owner) {
-      owner = '';
-    } else {
-      owner = this.getFQDN('owner', zone_opts);
-    }
-
-    return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
-  }
-
-  getEmpty(prop) {
-    return this.get(prop) ?? ''
-  }
-
-  getComment(prop) {
-    const c = this.get('comment');
-    if (!c || !c[prop]) return ''
-    return c[prop]
-  }
-
-  getQuoted(prop) {
-    if (!this.isQuotedField(prop)) return this.get(prop)
-    return quoteCharString(this.get(prop))
-  }
-
-  static fieldName(entry) {
-    return Array.isArray(entry) ? entry[0] : entry
-  }
-
-  static fieldType(entry) {
-    return Array.isArray(entry) ? entry[1] : null
-  }
-
-  getRdataFields() {
-    return (this.constructor.rdataFields ?? []).map((e) => RR.fieldName(e))
-  }
-
-  getTags() {
-    return this.constructor.tags ?? []
-  }
-
-  getRFCs() {
-    return this.constructor.RFCs ?? []
-  }
-
-  getTypeId() {
-    const typeId = this.constructor.typeId;
-    if (typeId === undefined) this.throwHelp(`${this.constructor.typeName}: missing static typeId`);
-    return typeId
-  }
-
-  static getTypeId() {
-    return this.typeId
-  }
-
-  getClassId() {
-    const c = this.get('class');
-    return RR.CLASSES[c] ?? parseInt(c.slice(5), 10) // 'CLASS32' -> 32
-  }
-
-  getFields(arg) {
-    const commonFields = ['owner', 'ttl', 'class', 'type'];
-    Object.freeze(commonFields);
-
-    const rdataFields = this.getRdataFields();
-
-    switch (arg) {
-      case 'common':
-        return commonFields
-      case 'rdata':
-        return rdataFields
-      default:
-        return commonFields.concat(rdataFields)
-    }
-  }
-
-  getFQDN(field, zone_opts = {}) {
-    let fqdn = this.get(field);
-    if (!fqdn) this.throwHelp(`empty value for field ${field}`);
-    if (!fqdn.endsWith('.')) fqdn += '.';
-
-    if (zone_opts.hide?.origin && zone_opts.origin) {
-      if (fqdn === zone_opts.origin) return '@'
-      if (fqdn.endsWith(zone_opts.origin)) return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
-    }
-
-    return fqdn
-  }
-
-  getTinyFQDN(field) {
-    const val = this.get(field);
-    if (val === '') return val // empty
-    if (val === '.') return val // null MX
-
-    // strip off trailing ., tinydns doesn't require it for FQDN
-    if (val.endsWith('.')) return val.slice(0, -1)
-
-    return val
-  }
-
-  getTinydnsGeneric(rdata) {
-    return `:${this.getTinyFQDN('owner')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
-  }
-
-  getTinydnsPostamble() {
-    // every tinydns line ends with this, making it the choke point for the
-    // class guard: tinydns data files have no class field
-    this.assertClassIN('tinydns');
-    return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
-  }
-
-  assertClassIN(format) {
-    if (this.get('class') !== 'IN')
-      this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`);
-  }
-
-  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
-  // name 255 octets on the wire, length octets and root included.
-  hasValidLabels(hostname) {
-    let labels;
-    try {
-      labels = nameToLabels(hostname);
-    } catch (e) {
-      this.throwHelp(`${e.message}, RFC 2181`);
-    }
-    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1);
-    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`);
-  }
-
-  is8bitInt(type, field, value) {
-    if (Number.isInteger(value) && value >= 0 && value <= 255) return true
-
-    this.throwHelp(`${type} ${field} must be a 8-bit integer (in the range 0-255)`);
-  }
-
-  is16bitInt(type, field, value) {
-    if (Number.isInteger(value) && value >= 0 && value <= 65535) return true
-
-    this.throwHelp(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`);
-  }
-
-  is32bitInt(type, field, value) {
-    if (Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
-
-    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`);
-  }
-
-  // RFC 4034 §3.2: a signature time is epoch seconds or YYYYMMDDHHmmSS in UTC.
-  // Fourteen digits always exceed 32 bits, so the two forms cannot collide.
-  setSignatureTime(field, val) {
-    const date = String(val).match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
-    if (date) {
-      const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6]);
-      if (formatSignatureTime(ms / 1000) !== date[0])
-        this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`);
-      // modulo 2^32, so a date before 1970 wraps into the unsigned range
-      val = (((ms / 1000) % 2 ** 32) + 2 ** 32) % 2 ** 32;
-    }
-    this.is32bitInt(this.constructor.typeName, field, val);
-    this.set(field, val);
-  }
-
-  // Hex octets, of an exact length when the field's algorithm fixes one.
-  isHexDigest(field, value, bytes) {
-    const typeName = this.constructor.typeName;
-    if (typeof value !== 'string' || !/^([0-9a-fA-F]{2})+$/.test(value))
-      this.throwHelp(`${typeName}: ${field} must be hex octets`);
-    if (bytes !== undefined && value.length !== bytes * 2)
-      this.throwHelp(`${typeName}: ${field} must be ${bytes} bytes, got ${value.length / 2}`);
-  }
-
-  isBase64(type, field, value) {
-    if (
-      typeof value === 'string' &&
-      value.length > 0 &&
-      value.length % 4 === 0 &&
-      /^[A-Za-z0-9+/]*={0,2}$/.test(value)
-    )
-      return true
-
-    this.throwHelp(`${type} ${field} must be a valid base64 string`);
-  }
-
-  isQuoted(val) {
-    return /^["']/.test(val) && /["']$/.test(val)
-  }
-
-  setFqdnValue(typeName, fieldName, val) {
-    if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`);
-    if (this.isIPv4(val) || this.isIPv6(val))
-      this.throwHelp(`${typeName}: ${fieldName} must be a domain name`);
-    this.isFullyQualified(typeName, fieldName, val);
-    this.isValidHostname(typeName, fieldName, val);
-    this.set(fieldName, lowercaseName(val));
-  }
-
-  setTypedValue(type, fieldName, val) {
-    const typeName = this.constructor.typeName;
-    switch (type) {
-      case 'u8':
-        this.is8bitInt(typeName, fieldName, val);
-        this.set(fieldName, parseInt(val, 10));
-        break
-      case 'u16':
-        this.is16bitInt(typeName, fieldName, val);
-        this.set(fieldName, parseInt(val, 10));
-        break
-      case 'rrtype':
-        try {
-          this.set(fieldName, typeNameToId(val));
-        } catch {
-          this.throwHelp(`${typeName}: ${fieldName} is not a type name, TYPEnnn, or 0-65535`);
-        }
-        break
-      case 'certtype': {
-        if (val === undefined || val === null || val === '')
-          this.throwHelp(`${typeName}: ${fieldName} is required`);
-        if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
-          const certTypes = this.constructor.CERT_TYPES;
-          if (!certTypes || !Object.hasOwn(certTypes, val)) {
-            this.throwHelp(`${typeName}: unknown cert type mnemonic: ${val}`);
-          }
-          this.set(fieldName, val);
-          break
-        }
-        this.is16bitInt(typeName, fieldName, val);
-        this.set(fieldName, parseInt(val, 10));
-        break
-      }
-      case 'u32':
-        this.is32bitInt(typeName, fieldName, val);
-        this.set(fieldName, parseInt(val, 10));
-        break
-      case 'fqdn':
-        this.setFqdnValue(typeName, fieldName, val);
-        break
-      case 'base64':
-        this.isBase64(typeName, fieldName, val);
-        this.set(fieldName, val);
-        break
-      case 'hex':
-        if (!/^[0-9a-fA-F]*$/.test(val)) this.throwHelp(`${typeName}: ${fieldName} must be hexadecimal`);
-        this.set(fieldName, val);
-        break
-      case 'str':
-        if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        this.set(fieldName, val);
-        break
-      case 'qstr':
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        this.set(fieldName, val);
-        break
-      case 'charstr': {
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        const value = String(val);
-        const byteLen = new TextEncoder().encode(value).length;
-        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`);
-        this.set(fieldName, value);
-        break
-      }
-      case 'qcharstr': {
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        const value = String(val);
-        const byteLen = new TextEncoder().encode(value).length;
-        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`);
-        this.set(fieldName, value);
-        break
-      }
-      case 'charstrs':
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        this.set(fieldName, val);
-        break
-      case 'svcparams':
-        this.setSvcParams(fieldName, val ?? '');
-        break
-      case 'list':
-        this.set(fieldName, val ?? '');
-        break
-      case 'ipv4':
-        if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`);
-        this.set(fieldName, val);
-        break
-      case 'ipv6':
-        if (!this.isIPv6(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv6 address`);
-        this.set(fieldName, this.expandIPv6(val.toLowerCase())); // lower case: RFC 5952
-        break
-    }
-  }
-
-  setSvcParams(fieldName, val) {
-    const typeName = this.constructor.typeName;
-    let keys;
-    try {
-      keys = svcParamKeyIds(val);
-    } catch (e) {
-      this.throwHelp(`${typeName}: ${e.message.replace(/^SVCB: /, '')}`);
-    }
-    // RFC 9460 §2.4.2: BIND rejects params in AliasMode.
-    if (this.get('priority') === 0 && keys.length)
-      this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`);
-    // RFC 9460 §7.1.1
-    if (keys.includes(2) && !keys.includes(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`);
-    // RFC 9460 §8: every mandatory key must be present.
-    const mandatory = val.match(/(?:^|\s)mandatory="?([^"\s]+)/)?.[1];
-    if (mandatory) {
-      const missing = mandatory.split(',').filter((k) => !keys.includes(svcParamKeyId(k.toLowerCase())));
-      if (missing.length) this.throwHelp(`${typeName}: mandatory keys missing: ${missing.join(', ')}`);
-    }
-    // Stored in the form the wire decodes to, so equal params compare equal.
-    this.set(fieldName, svcParamsFromWire(svcParamsToWire(val)));
-  }
-
-  lowercaseName(name) {
-    return lowercaseName(name)
-  }
-
-  isFullyQualified(type, field, hostname) {
-    if (hostname.endsWith('.')) return true
-
-    this.throwHelp(`${type}: ${field} must be fully qualified`);
-  }
-
-  isValidHostname(type, field, hostname) {
-    const allowed = new RegExp(/[^a-zA-Z0-9\-._/\\]/);
-    if (!allowed.test(hostname)) return true
-
-    const matches = allowed.exec(hostname);
-    this.throwHelp(`${type}, ${field} has invalid hostname character (${matches[0]})`);
-  }
-
-  isIPv4(string) {
-    // https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp
-    return /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/.test(string)
-  }
-
-  isIPv6(string) {
-    return /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/gm.test(
-      string,
-    )
-  }
-
-  expandIPv6(val, delimiter) {
-    return expandIPv6(val, delimiter)
-  }
-
-  compressIPv6(val) {
-    //  * RFC 5952
-    //  * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
-    //  * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
-    //  * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
-    //  * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
-    //  * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
-
-    // 4.3 Lowercase and 4.1 remove leading zeros per segment
-    const segments = val
-      .toLowerCase()
-      .split(':')
-      .map((s) => s.replace(/^0+/, '') || '0');
-
-    let bestStart = -1;
-    let bestLen = 0;
-    let curStart = -1;
-    let curLen = 0;
-
-    // 4.2.1 & 4.2.3 Find the longest consecutive run of '0'
-    for (let i = 0; i < segments.length; i++) {
-      if (segments[i] === '0') {
-        if (curStart === -1) curStart = i;
-        curLen++;
-        if (curLen > bestLen) {
-          bestLen = curLen;
-          bestStart = curStart;
-        }
-      } else {
-        curStart = -1;
-        curLen = 0;
-      }
-    }
-
-    // 4.2.2 Don't shorten a single 16-bit 0 field
-    if (bestLen < 2) {
-      return segments.join(':')
-    }
-
-    const head = segments.slice(0, bestStart).join(':');
-    const tail = segments.slice(bestStart + bestLen).join(':');
-
-    return `${head}::${tail}`
-  }
-
-  octalToUint8Array(octalStr) {
-    const str = octalToChar(octalStr);
-    return Uint8Array.from(str, (c) => c.charCodeAt(0))
-  }
-
-  wireUnpackDomain(bytes, offset = 0) {
-    return wireUnpackDomain(bytes, offset)
-  }
-
-  wirePackDomain(fqdn) {
-    return wirePackDomain(fqdn)
-  }
-
-  getWireRdata() {
-    return getWireRdata(this)
-  }
-
-  toWire() {
-    return toWire(this)
-  }
-
-  toBind(zone_opts) {
-    return toBind(this, zone_opts)
-  }
-
-  parseTinydnsLine(tinyline) {
-    const parsed = parseGenericLine(tinyline);
-    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
-  }
-
-  toTinydns() {
-    return to(this)
-  }
-
-  isFqdnField(field) {
-    return (
-      (this.constructor.rdataFields ?? []).some(
-        (entry) => RR.fieldName(entry) === field && RR.fieldType(entry) === 'fqdn',
-      ) || false
-    )
-  }
-
-  isQuotedField(field) {
-    const quotedTypes = new Set(['qstr', 'qcharstr', 'charstrs']);
-    return (
-      (this.constructor.rdataFields ?? []).some(
-        (entry) => RR.fieldName(entry) === field && quotedTypes.has(RR.fieldType(entry)),
-      ) || false
-    )
-  }
-
-  toMaraDNS() {
-    // MaraDNS csv2 zone files have no class field either
-    this.assertClassIN('MaraDNS');
-    const type = this.get('type');
-    const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
-      /\s+/g,
-    );
-    if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    // csv2's MX and NAPTR parsers reject a bare '.' (the root) as a name.
-    const fields = this.getFields('rdata');
-    if (fields.some((f) => this.isFqdnField(f) && this.get(f) === '.')) return this.toMaraGeneric()
-    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
-    const rdata = fields
-      .map((f, i) => {
-        const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t';
-        return sep + this.getQuoted(f)
-      })
-      .join('');
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${rdata} ~\n`
-  }
-
-  toMaraGeneric() {
-    this.assertClassIN('MaraDNS');
-    // csv2 refuses these types even as RAW.
-    if (['A6', 'DNAME', 'OPT'].includes(this.get('type')))
-      this.throwHelp(`MaraDNS does not support ${this.get('type')} records`);
-    // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
-    // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
-    const bytes = this.getWireRdata();
-    const rdata = bytes.length
-      ? [...bytes].map((b) => `\\x${b.toString(16).padStart(2, '0')}`).join('')
-      : `''`;
-    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
-  }
-}
-
-function formatSignatureTime(seconds) {
-  return new Date(seconds * 1000).toISOString().replace(/\D/g, '').slice(0, 14)
 }
 
 /**
@@ -2360,6 +1373,995 @@ function unApplyMap(obj, map) {
         : stored;
     delete obj[key];
   }
+}
+
+// RFC 1035 §5.1 master-file lexer. Escapes stay in token text because their
+// meaning depends on the field: in a name, `\.` is a dot inside a label.
+// `"`, `(` and `)` delimit tokens even without whitespace, as in BIND. A token
+// that touches the one before it is marked `adjoins`, so SVCB's key="value"
+// survives as one parameter.
+function tokenize(line) {
+  const tokens = [];
+  let token = null;
+  let depth = 0;
+  let separated = true;
+  const start = (quoted) => {
+    token = separated ? { text: '', quoted } : { text: '', quoted, adjoins: true };
+    separated = false;
+  };
+  const flush = () => {
+    if (token) tokens.push(token);
+    token = null;
+  };
+  const separate = () => {
+    flush();
+    separated = true;
+  };
+
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '\\') {
+      if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
+      if (!token) start(false);
+      token.text += c + line[++i];
+    } else if (c === '"') {
+      flush();
+      start(true);
+      for (i++; line[i] !== '"'; i++) {
+        if (i >= line.length) throw new Error('BIND: unterminated quoted string')
+        if (line[i] === '\n') throw new Error('BIND: newline in quoted string')
+        if (line[i] === '\\') {
+          if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
+          token.text += line[i++];
+        }
+        token.text += line[i];
+      }
+      flush();
+    } else if (c === ';') {
+      separate();
+      while (i + 1 < line.length && line[i + 1] !== '\n') i++;
+    } else if (c === '(' || c === ')') {
+      separate();
+      depth += c === '(' ? 1 : -1;
+      if (depth < 0) throw new Error('BIND: unbalanced parentheses')
+    } else if (c === '\n' && depth === 0) {
+      separate();
+      if (/\S/.test(line.slice(i + 1))) throw new Error('BIND: text after end of record')
+    } else if (/\s/.test(c)) {
+      separate();
+    } else {
+      if (!token) start(false);
+      token.text += c;
+    }
+  }
+  flush();
+  if (depth !== 0) throw new Error('BIND: unbalanced parentheses')
+  return tokens
+}
+
+function parseBindLine(line, RRClasses) {
+  const res = {
+    class: 'IN',
+    type: '',
+    rdata: [],
+  };
+
+  const tokens = tokenize(line);
+  if (tokens.length < 1) return null
+
+  if (!/^\s/.test(line)) {
+    res.owner = tokens.shift().text;
+  }
+
+  while (tokens.length > 0) {
+    const token = tokens[0].text.toUpperCase();
+
+    if (RRClasses[token]) {
+      res.class = tokens.shift().text.toUpperCase();
+      continue
+    }
+
+    if (/^CLASS\d+$/.test(token)) {
+      // RFC 3597 §5 unknown-class syntax; setClass validates the number
+      res.class = tokens.shift().text.toUpperCase();
+      continue
+    }
+
+    if (/^\d+$/.test(token)) {
+      res.ttl = parseInt(tokens.shift().text, 10);
+      continue
+    }
+
+    res.type = tokens.shift().text.toUpperCase();
+    break
+  }
+
+  res.rdata = tokens;
+
+  return res
+}
+
+// RFC 1035 §5.1: \DDD is an octet, \X is X. Octets must form UTF-8
+function decodeCharString(text) {
+  let bytes;
+  try {
+    bytes = presentationBytes(text);
+  } catch (e) {
+    throw new Error(`BIND: ${e.message}`, { cause: e })
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  } catch {
+    throw new Error(`BIND: character-string is not UTF-8: ${text}`)
+  }
+}
+
+// Controls are written as \DDD so the quoted string stays on one line.
+function escapeCharString(str) {
+  return Array.from(String(str), (c) => {
+    if (c === '"' || c === '\\') return `\\${c}`
+    const code = c.codePointAt(0);
+    return code < 0x20 || code === 0x7f ? `\\${String(code).padStart(3, '0')}` : c
+  }).join('')
+}
+
+// A list field is the rest of the rdata, kept in presentation form for the
+// RR's own setter to parse: type bit maps, APL items, SVCB params.
+const listTypes = new Set(['list', 'svcparams']);
+
+function joinList(tokens) {
+  return tokens
+    .map((t) => (t.adjoins ? '' : ' ') + (t.quoted ? `"${t.text}"` : t.text))
+    .join('')
+    .trimStart()
+}
+
+function fieldTypeOf(def) {
+  return Array.isArray(def) ? def[1] : null
+}
+
+// RFC 3597 §5 generic rdata: '\# <length> <hex words>', parens permitted.
+// Every word must contain an even number of hex digits, not just the whole.
+function parseGenericRdata(tokens) {
+  const words = tokens.filter((w) => w !== '(' && w !== ')');
+  if (words[0] !== '\\#') throw new Error(`RFC 3597: generic rdata must begin with \\#`)
+  if (!/^\d+$/.test(words[1] ?? '') || parseInt(words[1], 10) > 65535)
+    throw new Error(`RFC 3597: invalid rdata length: ${words[1]}`)
+  const length = parseInt(words[1], 10);
+  for (const w of words.slice(2)) {
+    if (!/^[0-9a-fA-F]+$/.test(w) || w.length % 2 !== 0)
+      throw new Error(`RFC 3597: each rdata word must be an even number of hex digits: ${w}`)
+  }
+  const hex = words.slice(2).join('').toLowerCase();
+  if (hex.length !== length * 2)
+    throw new Error(`RFC 3597: rdata length mismatch: declared ${length}, got ${hex.length / 2} bytes`)
+  return { length, hex }
+}
+
+// An RR of known type in generic form MUST be processed as the known type
+// (RFC 3597 §5), so the hex is decoded through the class's wire parser.
+function fromBind3597(rrInstance, parsed) {
+  const { hex } = parseGenericRdata(parsed.rdata.map((t) => t.text));
+  const staticId = rrInstance.constructor.typeId;
+  const typeId = typeNameToId(parsed.type); // 'TYPE731', 'AFSDB', ...; garbage throws
+  if (staticId !== undefined && typeId !== staticId)
+    throw new Error(`${rrInstance.constructor.typeName}: ${parsed.type} does not match type id ${staticId}`)
+  const rdata = hexToBytes(hex);
+  const rr = rrInstance.fromWire({
+    owner: parsed.owner,
+    cls: parsed.class,
+    ttl: parsed.ttl,
+    rdata,
+    typeId: typeId ?? staticId,
+  });
+  assertWireRoundTrip(rr, rdata);
+  return rr
+}
+
+// UNKNOWN has no static typeId and accepts any TYPEnnn.
+function assertType(type, RRClass) {
+  if (RRClass.typeId === undefined || type === RRClass.typeName) return
+  if (!type) throw new Error(`expected ${RRClass.typeName}, got no type`)
+  const typeNN = type.match(/^TYPE(\d+)$/);
+  if (typeNN !== null && Number(typeNN[1]) === RRClass.typeId) return
+  throw new Error(`expected ${RRClass.typeName}, got ${type}`)
+}
+
+function fromBind(rrInstance, opts) {
+  const { owner, ttl, class: cls, rdata } = opts;
+  const typeName = rrInstance.constructor.typeName;
+  const result = {
+    owner,
+    ttl,
+    class: cls,
+    type: typeName,
+  };
+
+  const fields = rrInstance.getFields('rdata');
+  const rdataDefs = rrInstance.constructor.rdataFields ?? [];
+  const opaqueTypes = new Set(['str', 'hex', 'base64']);
+  const lastType = fieldTypeOf(rdataDefs.at(-1));
+  const lastIsList = listTypes.has(lastType);
+
+  const required = lastIsList ? fields.length - 1 : fields.length;
+  if (rdata.length < required)
+    throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
+  const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs' || lastIsList;
+  if (rdata.length > fields.length && !lastIsVariadic)
+    throw new Error(
+      `${typeName}: unexpected rdata: ${rdata
+        .slice(fields.length)
+        .map((t) => t.text)
+        .join(' ')}`,
+    )
+  for (let i = 0; i < fields.length; i++) {
+    const isLastField = i === fields.length - 1;
+
+    // RFC 1035 §5.1: opaque rdata (hex digests, base64 keys) may be split across
+    // whitespace and parenthesized continuations; rejoin it into one value.
+    if (isLastField && opaqueTypes.has(fieldTypeOf(rdataDefs[i]))) {
+      result[fields[i]] = rdata
+        .slice(i)
+        .map((t) => t.text)
+        .join('');
+      break
+    }
+
+    if (isLastField && lastIsList) {
+      result[fields[i]] = joinList(rdata.slice(i));
+      break
+    }
+
+    // RFC 1035 §3.3.14: TXT keeps its character-string boundaries.
+    if (isLastField && fieldTypeOf(rdataDefs[i]) === 'charstrs') {
+      const strings = rdata.slice(i).map((t) => decodeCharString(t.text));
+      result[fields[i]] = strings.length > 1 ? strings : strings[0];
+      break
+    }
+
+    let val = rdata[i]?.text;
+    if (rrInstance.isQuotedField(fields[i])) {
+      val = val === undefined ? undefined : decodeCharString(val);
+    } else if (NUMERIC_FORMATS.has(fieldTypeOf(rdataDefs[i])) && /^\d+$/.test(val)) {
+      val = parseInt(val, 10);
+    }
+    result[fields[i]] = val;
+  }
+
+  return new rrInstance.constructor(result)
+}
+
+function toBind(rrInstance, zone_opts) {
+  const rdata = (rrInstance.constructor.rdataFields ?? [])
+    .map((def) => {
+      const f = Array.isArray(def) ? def[0] : def;
+      if (rrInstance.isFqdnField(f)) return rrInstance.getFQDN(f, zone_opts)
+      if (rrInstance.isQuotedField(f)) return `"${escapeCharString(rrInstance.get(f))}"`
+      // RFC 4034 §3.2: a type is presented as its mnemonic, or TYPEnnn (RFC 3597).
+      if (fieldTypeOf(def) === 'rrtype') return typeIdToName(rrInstance.get(f))
+      return rrInstance.get(f)
+    })
+    .join('\t');
+  return `${rrInstance.getPrefix(zone_opts)}\t${rdata}\n`
+}
+
+const customInspect = Symbol.for('nodejs.util.inspect.custom');
+
+class RR {
+  static CLASSES = { IN: 1, CS: 2, CH: 3, HS: 4, NONE: 254, ANY: 255 }
+  static typeId
+  static RFCs = []
+  static tags = []
+
+  constructor(opts) {
+    if (opts === null) return
+
+    if (opts?.default) this.default = opts.default;
+
+    // tinydns specific
+    this.setLocation(opts?.location);
+    this.setTimestamp(opts?.timestamp);
+
+    this.setOwner(opts?.owner);
+    this.setType(opts?.type);
+    this.setTtl(opts?.ttl);
+    this.setClass(opts?.class);
+
+    for (const entry of this.constructor.rdataFields ?? []) {
+      const f = RR.fieldName(entry);
+      const fieldType = Array.isArray(entry) ? entry[1] : null;
+      const fnName = `set${this.ucFirst(f)}`;
+      if (typeof this[fnName] === 'function') {
+        this[fnName](opts?.[f]);
+      } else if (fieldType) {
+        this.setTypedValue(fieldType, f, opts?.[f]);
+      } else {
+        this.set(f, opts?.[f]);
+      }
+    }
+
+    if (opts?.comment) this.set('comment', opts.comment);
+  }
+
+  static fromBind(line, opts = {}) {
+    const instance = new this(null);
+    if (opts.default !== undefined) instance.default = opts.default;
+    const parsed = this.parseBindLine(line);
+    if (!parsed) return null
+    if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return fromBind3597(instance, parsed) // RFC 3597 §5
+    assertType(parsed.type, this);
+    return instance.fromBind({ ...opts, ...parsed })
+  }
+
+  fromBind(opts) {
+    return fromBind(this, opts)
+  }
+
+  static parseBindLine(line) {
+    return parseBindLine(line, RR.CLASSES)
+  }
+
+  static fromTinydns(line, opts = {}) {
+    const instance = new this(null);
+    if (opts.default !== undefined) instance.default = opts.default;
+    return instance.fromTinydns({ ...opts, tinyline: line })
+  }
+
+  fromTinydns(opts) {
+    if (this.constructor.tinydnsType) return fromGeneric(this, opts)
+    return this.fromTinydnsWire(opts)
+  }
+
+  // A generic `:` line is the type number and the wire rdata, octal-escaped.
+  fromTinydnsWire({ tinyline }) {
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
+    if (Number(typeId) !== this.getTypeId())
+      this.throwHelp(`${this.constructor.typeName} fromTinydns: type ${typeId} is not ${this.getTypeId()}`);
+    const rr = this.fromWire({
+      owner,
+      cls: 'IN',
+      ttl,
+      rdata: octalRdataToBytes(rdata ?? ''),
+      typeId: Number(typeId),
+    });
+    rr.setTimestamp(timestamp);
+    rr.setLocation(location);
+    return rr
+  }
+
+  static fromWire(wireBytes) {
+    return fromWireBytes(this, wireBytes, wireUnpackDomain)
+  }
+
+  fromWire(opts) {
+    return fromWireGeneric(this, opts)
+  }
+
+  static #reserved = ['__proto__', 'constructor', 'prototype']
+
+  get(key) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    return this[key]
+  }
+
+  set(key, value) {
+    if (RR.#reserved.includes(key)) throw new Error(`Invalid field name: ${key}`)
+    this[key] = value;
+    return this
+  }
+
+  toJSON() {
+    const fields = [...this.getFields(), 'location', 'timestamp', 'comment'];
+    const obj = {};
+    for (const f of fields) {
+      const v = this.get(f);
+      if (v !== undefined) obj[f] = v;
+    }
+    return obj
+  }
+
+  [customInspect](depth, options, nextInspect) {
+    // Returns a formatted string that looks like: A { ... }
+    return `${this.type} ${nextInspect(this.toJSON(), options)}`
+  }
+
+  ucFirst(str) {
+    if (!str) return str
+    return str
+      .split(/\s/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join('')
+  }
+
+  setClass(c) {
+    if ([undefined, null, ''].includes(c)) {
+      this.set('class', 'IN');
+      return
+    }
+    if (RR.CLASSES[c.toUpperCase()]) {
+      this.set('class', c.toUpperCase());
+      return
+    }
+    const generic = c.toUpperCase().match(/^CLASS(\d+)$/); // RFC 3597 §5
+    if (generic && parseInt(generic[1], 10) <= 65535) {
+      const id = parseInt(generic[1], 10);
+      const known = Object.keys(RR.CLASSES).find((k) => RR.CLASSES[k] === id);
+      this.set('class', known ?? `CLASS${id}`);
+      return
+    }
+    this.throwHelp(`invalid class ${c}`);
+  }
+
+  setLocation(l) {
+    switch (l) {
+      case undefined:
+        return
+      default:
+        this.set('location', l);
+    }
+  }
+
+  setTimestamp(l) {
+    switch (l) {
+      case undefined:
+        return
+      default:
+        this.set('timestamp', l);
+    }
+  }
+
+  setOwner(n) {
+    if (n === undefined || n === '') this.throwHelp(`owner is required`);
+
+    const typeName = this.constructor.typeName ?? this.constructor.name;
+    this.isFullyQualified(typeName, 'owner', n);
+    this.isValidName(typeName, 'owner', n);
+
+    // RFC 4592: a wildcard is a leftmost label of exactly `*`. An escaped \* or
+    // \042 is a literal byte and may appear anywhere.
+    const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_');
+    if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
+      this.throwHelp('only *.something or * (by itself) is a valid wildcard');
+
+    this.set('owner', lowercaseName(n));
+  }
+
+  setTtl(t) {
+    t = t ?? this.default?.ttl;
+    if (t === undefined) {
+      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
+      this.throwHelp('TTL is required, no default available');
+    }
+
+    if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`);
+
+    // RFC 2181 §8: the high bit is reserved, so a TTL is 0 to 2^31 - 1.
+    if (!Number.isInteger(t) || t < 0 || t > 2147483647)
+      this.throwHelp(`TTL must be an integer from 0 to 2147483647 (RFC 2181 §8)`);
+
+    this.set('ttl', t);
+  }
+
+  setType(t) {
+    if ([undefined, ''].includes(t)) t = this.constructor.typeName;
+
+    if (t === undefined) this.throwHelp(`type is required`);
+
+    if (t.toUpperCase() !== this.constructor.typeName)
+      this.throwHelp(`type ${t} doesn't match ${this.constructor.typeName}`);
+
+    this.set('type', t.toUpperCase());
+  }
+
+  throwHelp(e) {
+    if (!this.constructor.typeName) throw new Error(e)
+
+    const typeName = this.constructor.typeName;
+    const example = this.getCanonical
+      ? `Example ${typeName}:\n${JSON.stringify(this.getCanonical(), null, '\t')}\n\n`
+      : `${typeName} records have the fields: ${this.getFields().join(', ')}\n\n`;
+
+    throw new Error(`${e}\n\n${example}${this.citeRFC()}\n`)
+  }
+
+  citeRFC() {
+    return `see RFC${this.getRFCs().length > 1 ? 's' : ''} ${this.getRFCs()}`
+  }
+
+  fullyQualify(hostname, origin) {
+    if (!hostname) return hostname
+    if (hostname === '@' && origin) hostname = origin;
+    if (hostname.endsWith('.')) return lowercaseName(hostname)
+    if (origin) return lowercaseName(`${hostname}.${origin}`)
+    return `${hostname}.`
+  }
+
+  getPrefix(zone_opts = {}) {
+    const classVal = zone_opts.hide?.class ? '' : this.get('class');
+
+    let rrTTL = this.get('ttl');
+    if (zone_opts.hide?.ttl && rrTTL === zone_opts.ttl) rrTTL = '';
+
+    let owner = this.get('owner');
+    if (zone_opts.hide?.sameOwner && zone_opts.previousOwner === owner) {
+      owner = '';
+    } else {
+      owner = this.getFQDN('owner', zone_opts);
+    }
+
+    return `${owner}\t${rrTTL}\t${classVal}\t${this.get('type')}`
+  }
+
+  getEmpty(prop) {
+    return this.get(prop) ?? ''
+  }
+
+  getComment(prop) {
+    const c = this.get('comment');
+    if (!c || !c[prop]) return ''
+    return c[prop]
+  }
+
+  getQuoted(prop) {
+    if (!this.isQuotedField(prop)) return this.get(prop)
+    return quoteCharString(this.get(prop))
+  }
+
+  static fieldName(entry) {
+    return Array.isArray(entry) ? entry[0] : entry
+  }
+
+  static fieldType(entry) {
+    return Array.isArray(entry) ? entry[1] : null
+  }
+
+  getRdataFields() {
+    return (this.constructor.rdataFields ?? []).map((e) => RR.fieldName(e))
+  }
+
+  getTags() {
+    return this.constructor.tags ?? []
+  }
+
+  getRFCs() {
+    return this.constructor.RFCs ?? []
+  }
+
+  getTypeId() {
+    const typeId = this.constructor.typeId;
+    if (typeId === undefined) this.throwHelp(`${this.constructor.typeName}: missing static typeId`);
+    return typeId
+  }
+
+  static getTypeId() {
+    return this.typeId
+  }
+
+  getClassId() {
+    const c = this.get('class');
+    return RR.CLASSES[c] ?? parseInt(c.slice(5), 10) // 'CLASS32' -> 32
+  }
+
+  getFields(arg) {
+    const commonFields = ['owner', 'ttl', 'class', 'type'];
+    Object.freeze(commonFields);
+
+    const rdataFields = this.getRdataFields();
+
+    switch (arg) {
+      case 'common':
+        return commonFields
+      case 'rdata':
+        return rdataFields
+      default:
+        return commonFields.concat(rdataFields)
+    }
+  }
+
+  getFQDN(field, zone_opts = {}) {
+    let fqdn = this.get(field);
+    if (!fqdn) this.throwHelp(`empty value for field ${field}`);
+    if (!fqdn.endsWith('.')) fqdn += '.';
+
+    if (zone_opts.hide?.origin && zone_opts.origin) {
+      if (fqdn === zone_opts.origin) return '@'
+      if (fqdn.endsWith(zone_opts.origin)) return fqdn.slice(0, fqdn.length - zone_opts.origin.length - 1)
+    }
+
+    return fqdn
+  }
+
+  getTinyFQDN(field) {
+    const val = this.get(field);
+    if (val === '') return val // empty
+    if (val === '.') return val // null MX
+
+    // strip off trailing ., tinydns doesn't require it for FQDN
+    if (val.endsWith('.')) return val.slice(0, -1)
+
+    return val
+  }
+
+  getTinydnsGeneric(rdata) {
+    return `:${this.getTinyFQDN('owner')}:${this.getTypeId()}:${rdata}:${this.getTinydnsPostamble()}\n`
+  }
+
+  getTinydnsPostamble() {
+    // every tinydns line ends with this, making it the choke point for the
+    // class guard: tinydns data files have no class field
+    this.assertClassIN('tinydns');
+    return ['ttl', 'timestamp', 'location'].map((f) => this.getEmpty(f)).join(':')
+  }
+
+  assertClassIN(format) {
+    if (this.get('class') !== 'IN')
+      this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`);
+  }
+
+  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
+  // name 255 octets on the wire, length octets and root included.
+  hasValidLabels(hostname) {
+    let labels;
+    try {
+      labels = nameToLabels(hostname);
+    } catch (e) {
+      this.throwHelp(`${e.message}, RFC 2181`);
+    }
+    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1);
+    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`);
+  }
+
+  is8bitInt(type, field, value) {
+    if (Number.isInteger(value) && value >= 0 && value <= 255) return true
+
+    this.throwHelp(`${type} ${field} must be a 8-bit integer (in the range 0-255)`);
+  }
+
+  is16bitInt(type, field, value) {
+    if (Number.isInteger(value) && value >= 0 && value <= 65535) return true
+
+    this.throwHelp(`${type} ${field} must be a 16-bit integer (in the range 0-65535)`);
+  }
+
+  is32bitInt(type, field, value) {
+    if (Number.isInteger(value) && value >= 0 && value <= 4294967295) return true
+
+    this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`);
+  }
+
+  // RFC 4034 §3.2: a signature time is epoch seconds or YYYYMMDDHHmmSS in UTC.
+  // Fourteen digits always exceed 32 bits, so the two forms cannot collide.
+  setSignatureTime(field, val) {
+    const date = String(val).match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
+    if (date) {
+      const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6]);
+      if (formatSignatureTime(ms / 1000) !== date[0])
+        this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`);
+      // modulo 2^32, so a date before 1970 wraps into the unsigned range
+      val = (((ms / 1000) % 2 ** 32) + 2 ** 32) % 2 ** 32;
+    }
+    this.is32bitInt(this.constructor.typeName, field, val);
+    this.set(field, val);
+  }
+
+  // Hex octets, of an exact length when the field's algorithm fixes one.
+  isHexDigest(field, value, bytes) {
+    const typeName = this.constructor.typeName;
+    if (typeof value !== 'string' || !/^([0-9a-fA-F]{2})+$/.test(value))
+      this.throwHelp(`${typeName}: ${field} must be hex octets`);
+    if (bytes !== undefined && value.length !== bytes * 2)
+      this.throwHelp(`${typeName}: ${field} must be ${bytes} bytes, got ${value.length / 2}`);
+  }
+
+  isBase64(type, field, value) {
+    if (
+      typeof value === 'string' &&
+      value.length > 0 &&
+      value.length % 4 === 0 &&
+      /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+    )
+      return true
+
+    this.throwHelp(`${type} ${field} must be a valid base64 string`);
+  }
+
+  isQuoted(val) {
+    return /^["']/.test(val) && /["']$/.test(val)
+  }
+
+  setFqdnValue(typeName, fieldName, val) {
+    if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`);
+    if (this.isIPv4(val) || this.isIPv6(val))
+      this.throwHelp(`${typeName}: ${fieldName} must be a domain name`);
+    this.isFullyQualified(typeName, fieldName, val);
+    this.isValidName(typeName, fieldName, val);
+    this.set(fieldName, lowercaseName(val));
+  }
+
+  setTypedValue(type, fieldName, val) {
+    const typeName = this.constructor.typeName;
+    switch (type) {
+      case 'u8':
+        this.is8bitInt(typeName, fieldName, val);
+        this.set(fieldName, parseInt(val, 10));
+        break
+      case 'u16':
+        this.is16bitInt(typeName, fieldName, val);
+        this.set(fieldName, parseInt(val, 10));
+        break
+      case 'rrtype':
+        try {
+          this.set(fieldName, typeNameToId(val));
+        } catch {
+          this.throwHelp(`${typeName}: ${fieldName} is not a type name, TYPEnnn, or 0-65535`);
+        }
+        break
+      case 'certtype': {
+        if (val === undefined || val === null || val === '')
+          this.throwHelp(`${typeName}: ${fieldName} is required`);
+        if (typeof val === 'string' && !/^[0-9]+$/.test(val)) {
+          const certTypes = this.constructor.CERT_TYPES;
+          if (!certTypes || !Object.hasOwn(certTypes, val)) {
+            this.throwHelp(`${typeName}: unknown cert type mnemonic: ${val}`);
+          }
+          this.set(fieldName, val);
+          break
+        }
+        this.is16bitInt(typeName, fieldName, val);
+        this.set(fieldName, parseInt(val, 10));
+        break
+      }
+      case 'u32':
+        this.is32bitInt(typeName, fieldName, val);
+        this.set(fieldName, parseInt(val, 10));
+        break
+      case 'fqdn':
+        this.setFqdnValue(typeName, fieldName, val);
+        break
+      case 'base64':
+        this.isBase64(typeName, fieldName, val);
+        this.set(fieldName, val);
+        break
+      case 'hex':
+        if (!/^[0-9a-fA-F]*$/.test(val)) this.throwHelp(`${typeName}: ${fieldName} must be hexadecimal`);
+        this.set(fieldName, val);
+        break
+      case 'str':
+        if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`);
+        this.set(fieldName, val);
+        break
+      case 'qstr':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
+        this.set(fieldName, val);
+        break
+      case 'charstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
+        const value = String(val);
+        const byteLen = new TextEncoder().encode(value).length;
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`);
+        this.set(fieldName, value);
+        break
+      }
+      case 'qcharstr': {
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
+        const value = String(val);
+        const byteLen = new TextEncoder().encode(value).length;
+        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`);
+        this.set(fieldName, value);
+        break
+      }
+      case 'charstrs':
+        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
+        this.set(fieldName, val);
+        break
+      case 'svcparams':
+        this.setSvcParams(fieldName, val ?? '');
+        break
+      case 'list':
+        this.set(fieldName, val ?? '');
+        break
+      case 'ipv4':
+        if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`);
+        this.set(fieldName, val);
+        break
+      case 'ipv6':
+        if (!this.isIPv6(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv6 address`);
+        this.set(fieldName, this.expandIPv6(val.toLowerCase())); // lower case: RFC 5952
+        break
+    }
+  }
+
+  setSvcParams(fieldName, val) {
+    const typeName = this.constructor.typeName;
+    let keys;
+    try {
+      keys = svcParamKeyIds(val);
+    } catch (e) {
+      this.throwHelp(`${typeName}: ${e.message.replace(/^SVCB: /, '')}`);
+    }
+    // RFC 9460 §2.4.2: BIND rejects params in AliasMode.
+    if (this.get('priority') === 0 && keys.length)
+      this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`);
+    // RFC 9460 §7.1.1
+    if (keys.includes(2) && !keys.includes(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`);
+    // RFC 9460 §8: every mandatory key must be present.
+    const mandatory = val.match(/(?:^|\s)mandatory="?([^"\s]+)/)?.[1];
+    if (mandatory) {
+      const missing = mandatory.split(',').filter((k) => !keys.includes(svcParamKeyId(k.toLowerCase())));
+      if (missing.length) this.throwHelp(`${typeName}: mandatory keys missing: ${missing.join(', ')}`);
+    }
+    // Stored in the form the wire decodes to, so equal params compare equal.
+    this.set(fieldName, svcParamsFromWire(svcParamsToWire(val)));
+  }
+
+  lowercaseName(name) {
+    return lowercaseName(name)
+  }
+
+  isFullyQualified(type, field, hostname) {
+    if (hostname.endsWith('.')) return true
+
+    this.throwHelp(`${type}: ${field} must be fully qualified`);
+  }
+
+  isValidName(type, field, hostname) {
+    this.hasValidLabels(hostname);
+    // Names are stored in presentation form, so master-file delimiters
+    // must arrive escaped (\032, \;) or the BIND export splits the name.
+    if (/[\s;"()]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
+      this.throwHelp(`${type}: ${field} has an unescaped delimiter: ${hostname}`);
+    return true
+  }
+
+  isIPv4(string) {
+    // https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp
+    return /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/.test(string)
+  }
+
+  isIPv6(string) {
+    return /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/gm.test(
+      string,
+    )
+  }
+
+  expandIPv6(val, delimiter) {
+    return expandIPv6(val, delimiter)
+  }
+
+  compressIPv6(val) {
+    //  * RFC 5952
+    //  * 4.1. Leading zeros MUST be suppressed...A single 16-bit 0000 field MUST be represented as 0.
+    //  * 4.2.1 The use of the symbol "::" MUST be used to its maximum capability.
+    //  * 4.2.2 The symbol "::" MUST NOT be used to shorten just one 16-bit 0 field.
+    //  * 4.2.3 When choosing placement of a "::", the longest run...MUST be shortened
+    //  * 4.3 The characters a-f in an IPv6 address MUST be represented in lowercase.
+
+    // 4.3 Lowercase and 4.1 remove leading zeros per segment
+    const segments = val
+      .toLowerCase()
+      .split(':')
+      .map((s) => s.replace(/^0+/, '') || '0');
+
+    let bestStart = -1;
+    let bestLen = 0;
+    let curStart = -1;
+    let curLen = 0;
+
+    // 4.2.1 & 4.2.3 Find the longest consecutive run of '0'
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i] === '0') {
+        if (curStart === -1) curStart = i;
+        curLen++;
+        if (curLen > bestLen) {
+          bestLen = curLen;
+          bestStart = curStart;
+        }
+      } else {
+        curStart = -1;
+        curLen = 0;
+      }
+    }
+
+    // 4.2.2 Don't shorten a single 16-bit 0 field
+    if (bestLen < 2) {
+      return segments.join(':')
+    }
+
+    const head = segments.slice(0, bestStart).join(':');
+    const tail = segments.slice(bestStart + bestLen).join(':');
+
+    return `${head}::${tail}`
+  }
+
+  octalToUint8Array(octalStr) {
+    const str = octalToChar(octalStr);
+    return Uint8Array.from(str, (c) => c.charCodeAt(0))
+  }
+
+  wireUnpackDomain(bytes, offset = 0) {
+    return wireUnpackDomain(bytes, offset)
+  }
+
+  wirePackDomain(fqdn) {
+    return wirePackDomain(fqdn)
+  }
+
+  getWireRdata() {
+    return getWireRdata(this)
+  }
+
+  toWire() {
+    return toWire(this)
+  }
+
+  toBind(zone_opts) {
+    return toBind(this, zone_opts)
+  }
+
+  parseTinydnsLine(tinyline) {
+    const parsed = parseGenericLine(tinyline);
+    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
+  }
+
+  toTinydns() {
+    return to(this)
+  }
+
+  isFqdnField(field) {
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && RR.fieldType(entry) === 'fqdn',
+      ) || false
+    )
+  }
+
+  isQuotedField(field) {
+    const quotedTypes = new Set(['qstr', 'qcharstr', 'charstrs']);
+    return (
+      (this.constructor.rdataFields ?? []).some(
+        (entry) => RR.fieldName(entry) === field && quotedTypes.has(RR.fieldType(entry)),
+      ) || false
+    )
+  }
+
+  toMaraDNS() {
+    // MaraDNS csv2 zone files have no class field either
+    this.assertClassIN('MaraDNS');
+    const type = this.get('type');
+    const supportedTypes = 'A PTR MX AAAA SRV NAPTR NS SOA TXT SPF RAW FQDN4 FQDN6 CNAME HINFO WKS LOC'.split(
+      /\s+/g,
+    );
+    if (!supportedTypes.includes(type)) return this.toMaraGeneric()
+    // csv2's MX and NAPTR parsers reject a bare '.' (the root) as a name.
+    const fields = this.getFields('rdata');
+    if (fields.some((f) => this.isFqdnField(f) && this.get(f) === '.')) return this.toMaraGeneric()
+    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
+    const rdata = fields
+      .map((f, i) => {
+        const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t';
+        return sep + this.getQuoted(f)
+      })
+      .join('');
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${rdata} ~\n`
+  }
+
+  toMaraGeneric() {
+    this.assertClassIN('MaraDNS');
+    // csv2 refuses these types even as RAW.
+    if (['A6', 'DNAME', 'OPT'].includes(this.get('type')))
+      this.throwHelp(`MaraDNS does not support ${this.get('type')} records`);
+    // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
+    // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
+    const bytes = this.getWireRdata();
+    const rdata = bytes.length
+      ? [...bytes].map((b) => `\\x${b.toString(16).padStart(2, '0')}`).join('')
+      : `''`;
+    return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
+  }
+}
+
+function formatSignatureTime(seconds) {
+  return new Date(seconds * 1000).toISOString().replace(/\D/g, '').slice(0, 14)
 }
 
 class A extends RR {
@@ -3283,6 +3285,9 @@ class DNSKEY extends RR {
   }
 }
 
+// RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
+const DIGEST_BYTES$2 = { 1: 20, 2: 32, 4: 48 };
+
 class DS extends RR {
   static typeName = 'DS'
   static typeId = 43
@@ -3305,8 +3310,7 @@ class DS extends RR {
   }
 
   setDigest(val) {
-    // RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
-    this.isHexDigest('digest', val, { 1: 20, 2: 32, 4: 48 }[this.get('digest type')]);
+    this.isHexDigest('digest', val, DIGEST_BYTES$2[this.get('digest type')]);
     this.set('digest', val);
   }
 
@@ -3339,9 +3343,8 @@ class DS extends RR {
   }
 
   setDigestType(val) {
-    // 1=SHA-1 (RFC 4034), 2=SHA-256 (RFC 4509), 4=SHA-384 (RFC 6605)
-    if (![1, 2, 4].includes(val)) this.throwHelp(`DS: digest type invalid`);
-
+    if (!Object.hasOwn(DIGEST_BYTES$2, val)) this.throwHelp(`DS: digest type invalid`);
+    if (this.get('digest') !== undefined) this.isHexDigest('digest', this.get('digest'), DIGEST_BYTES$2[val]);
     this.set('digest type', val);
   }
 
@@ -3491,7 +3494,7 @@ class HIP extends RR {
   static typeName = 'HIP'
   static typeId = 55
   static RFCs = [8005]
-  static rdataFields = ['pk algorithm', 'hit', 'public key', ['rendezvous servers', 'list']]
+  static rdataFields = [['pk algorithm', 'u8'], 'hit', 'public key', ['rendezvous servers', 'list']]
 
   constructor(opts) {
     super(opts);
@@ -3686,8 +3689,9 @@ class HTTPS extends RR {
   }
 
   setTargetName(val) {
-    // this.isFullyQualified('HTTPS', 'target name', val)
-    // this.isValidHostname('HTTPS', 'target name', val)
+    if (!val) this.throwHelp('HTTPS: target name is required');
+    this.isFullyQualified('HTTPS', 'target name', val);
+    this.isValidName('HTTPS', 'target name', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('target name', this.lowercaseName(val));
@@ -4059,7 +4063,7 @@ class KX extends RR {
     if (!val) this.throwHelp('KX: exchanger is required');
 
     this.isFullyQualified('KX', 'exchanger', val);
-    this.isValidHostname('KX', 'exchanger', val);
+    this.isValidName('KX', 'exchanger', val);
 
     this.set('exchanger', this.lowercaseName(val));
   }
@@ -4497,7 +4501,7 @@ class NAPTR extends RR {
   }
 
   setReplacement(val) {
-    this.set('replacement', val);
+    this.setTypedValue('fqdn', 'replacement', val);
   }
 
   /******  IMPORTERS   *******/
@@ -4550,7 +4554,7 @@ class NS extends RR {
     if (!val) this.throwHelp(`NS: dname is required`);
 
     this.isFullyQualified('NS', 'dname', val);
-    this.isValidHostname('NS', 'dname', val);
+    this.isValidName('NS', 'dname', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', this.lowercaseName(val));
@@ -4612,7 +4616,7 @@ class NSEC extends RR {
     if (!val) this.throwHelp(`NSEC: 'next domain' is required:`);
 
     this.isFullyQualified('NSEC', 'next domain', val);
-    this.isValidHostname('NSEC', 'next domain', val);
+    this.isValidName('NSEC', 'next domain', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', this.lowercaseName(val));
@@ -4671,9 +4675,9 @@ class NSEC3 extends RR {
   static typeId = 50
   static RFCs = [5155, 9077]
   static rdataFields = [
-    'hash algorithm',
-    'flags',
-    'iterations',
+    ['hash algorithm', 'u8'],
+    ['flags', 'u8'],
+    ['iterations', 'u16'],
     'salt',
     'next hashed owner name',
     ['type bit maps', 'list'],
@@ -4806,7 +4810,7 @@ class NSEC3PARAM extends RR {
   static typeName = 'NSEC3PARAM'
   static typeId = 51
   static RFCs = [5155]
-  static rdataFields = ['hash algorithm', 'flags', 'iterations', 'salt']
+  static rdataFields = [['hash algorithm', 'u8'], ['flags', 'u8'], ['iterations', 'u16'], 'salt']
   static tags = ['dnssec']
 
   constructor(opts) {
@@ -4968,7 +4972,7 @@ class NXT extends RR {
     if (!val) this.throwHelp(`NXT: 'next domain' is required`);
 
     this.isFullyQualified('NXT', 'next domain', val);
-    this.isValidHostname('NXT', 'next domain', val);
+    this.isValidName('NXT', 'next domain', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('next domain', this.lowercaseName(val));
@@ -5120,7 +5124,7 @@ class PTR extends RR {
   /****** Resource record specific setters   *******/
   setDname(val) {
     this.isFullyQualified('PTR', 'dname', val);
-    this.isValidHostname('PTR', 'dname', val);
+    this.isValidName('PTR', 'dname', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('dname', this.lowercaseName(val));
@@ -5159,19 +5163,11 @@ class RP extends RR {
 
   /****** Resource record specific setters   *******/
   setMbox(val) {
-    if (!val) this.throwHelp('RP: mbox is required');
-
-    this.isFullyQualified('RP', 'mbox', val);
-
-    this.set('mbox', this.lowercaseName(val));
+    this.setTypedValue('fqdn', 'mbox', val);
   }
 
   setTxt(val) {
-    if (!val) this.throwHelp('RP: txt is required');
-
-    this.isFullyQualified('RP', 'txt', val);
-
-    this.set('txt', this.lowercaseName(val));
+    this.setTypedValue('fqdn', 'txt', val);
   }
 
   getDescription() {
@@ -5506,10 +5502,7 @@ class SIG extends RR {
   }
 
   setSignersName(val) {
-    // the domain name of the signer generating the SIG RR
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('signers name', this.lowercaseName(val));
+    this.setTypedValue('fqdn', 'signers name', val);
   }
 
   setSignature(val) {
@@ -5640,6 +5633,9 @@ class SIG extends RR {
   }
 }
 
+// RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+const DIGEST_BYTES$1 = { 1: 32, 2: 64 };
+
 class SMIMEA extends RR {
   static typeName = 'SMIMEA'
   static typeId = 53
@@ -5687,7 +5683,8 @@ class SMIMEA extends RR {
 
   setMatchingType(val) {
     if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`SMIMEA: matching type`);
-
+    const data = this.get('certificate association data');
+    if (data !== undefined) this.isHexDigest('certificate association data', data, DIGEST_BYTES$1[val]);
     this.set('matching type', val);
   }
 
@@ -5700,8 +5697,7 @@ class SMIMEA extends RR {
   }
 
   setCertificateAssociationData(val) {
-    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
-    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')]);
+    this.isHexDigest('certificate association data', val, DIGEST_BYTES$1[this.get('matching type')]);
     this.set('certificate association data', val);
   }
 
@@ -5794,7 +5790,7 @@ class SOA extends RR {
 
   setMname(val) {
     // MNAME (primary NS)
-    this.isValidHostname('SOA', 'MNAME', val);
+    this.isValidName('SOA', 'MNAME', val);
     this.isFullyQualified('SOA', 'MNAME', val);
 
     // RFC 4034: letters in the DNS names are lower cased
@@ -5803,7 +5799,7 @@ class SOA extends RR {
 
   setRname(val) {
     // RNAME (email of admin)  (escape . with \)
-    this.isValidHostname('SOA', 'RNAME', val);
+    this.isValidName('SOA', 'RNAME', val);
     this.isFullyQualified('SOA', 'RNAME', val);
     if (/@/.test(val)) this.throwHelp(`SOA rname replaces @ with a . (dot)`);
 
@@ -6053,13 +6049,11 @@ function chunkByBytes(str, maxBytes) {
 }
 
 function packStringWire(str) {
-  const encoded = new TextEncoder().encode(str);
-  if (encoded.length === 0) return new Uint8Array([0])
+  if (str === '') return new Uint8Array([0])
 
-  const chunks = [];
-  for (let i = 0; i < encoded.length; i += 255) chunks.push(encoded.subarray(i, i + 255));
-
-  const buf = new Uint8Array(encoded.length + chunks.length);
+  const enc = new TextEncoder();
+  const chunks = chunkByBytes(str, 255).map((c) => enc.encode(c));
+  const buf = new Uint8Array(chunks.reduce((n, c) => n + 1 + c.length, 0));
   let offset = 0;
   for (const chunk of chunks) {
     buf[offset++] = chunk.length;
@@ -6217,6 +6211,9 @@ class SRV extends RR {
   }
 }
 
+// RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
+const FINGERPRINT_BYTES = { 1: 20, 2: 32 };
+
 class SSHFP extends RR {
   static typeName = 'SSHFP'
   static typeId = 44
@@ -6240,12 +6237,13 @@ class SSHFP extends RR {
 
   setFptype(val) {
     if (!this.getFptypeOptions().has(val)) this.throwHelp(`SSHFP: fptype invalid`);
+    if (this.get('fingerprint') !== undefined)
+      this.isHexDigest('fingerprint', this.get('fingerprint'), FINGERPRINT_BYTES[val]);
     this.setTypedValue('u8', 'fptype', val);
   }
 
   setFingerprint(val) {
-    // RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
-    this.isHexDigest('fingerprint', val, { 1: 20, 2: 32 }[this.get('fptype')]);
+    this.isHexDigest('fingerprint', val, FINGERPRINT_BYTES[this.get('fptype')]);
     this.set('fingerprint', val);
   }
 
@@ -6343,8 +6341,9 @@ class SVCB extends RR {
   }
 
   setTargetName(val) {
-    // this.isFullyQualified('SVCB', 'target name', val)
-    // this.isValidHostname('SVCB', 'target name', val)
+    if (!val) this.throwHelp('SVCB: target name is required');
+    this.isFullyQualified('SVCB', 'target name', val);
+    this.isValidName('SVCB', 'target name', val);
 
     // RFC 4034: letters in the DNS names are lower cased
     this.set('target name', this.lowercaseName(val));
@@ -6384,6 +6383,9 @@ class SVCB extends RR {
     return result
   }
 }
+
+// RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+const DIGEST_BYTES = { 1: 32, 2: 64 };
 
 class TLSA extends RR {
   static typeName = 'TLSA'
@@ -6432,7 +6434,8 @@ class TLSA extends RR {
 
   setMatchingType(val) {
     if (!this.getMatchingTypeOptions().has(val)) this.throwHelp(`TLSA: matching type`);
-
+    const data = this.get('certificate association data');
+    if (data !== undefined) this.isHexDigest('certificate association data', data, DIGEST_BYTES[val]);
     this.set('matching type', val);
   }
 
@@ -6445,8 +6448,7 @@ class TLSA extends RR {
   }
 
   setCertificateAssociationData(val) {
-    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
-    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')]);
+    this.isHexDigest('certificate association data', val, DIGEST_BYTES[this.get('matching type')]);
     this.set('certificate association data', val);
   }
 
@@ -7129,7 +7131,11 @@ class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
   static RFCs = [883, 1035]
-  static rdataFields = ['address', 'protocol', ['bit map', 'list']]
+  static rdataFields = [
+    ['address', 'ipv4'],
+    ['protocol', 'u8'],
+    ['bit map', 'list'],
+  ]
   static tags = ['obsolete']
 
   constructor(opts) {

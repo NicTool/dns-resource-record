@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import SMIMEA from '../../rr/smimea.js'
@@ -52,4 +53,10 @@ describe('SMIMEA record', function () {
   base.fromBind(SMIMEA, validRecords)
   base.fromTinydns(SMIMEA, validRecords)
   base.fromWire(SMIMEA, validRecords)
+
+  it('revalidates the certificate association data when the matching type changes', function () {
+    const r = new SMIMEA(new SMIMEA(null).getCanonical())
+    assert.throws(() => r.setMatchingType(2), /certificate association data must be 64 bytes/)
+    assert.equal(r.get('matching type'), 1)
+  })
 })

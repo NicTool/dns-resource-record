@@ -230,10 +230,17 @@ describe('RR', function () {
     })
   })
 
-  describe('isValidHostname', function () {
-    for (const n of ['x', '2x', '*', '*.something']) {
+  describe('isValidName', function () {
+    for (const n of [
+      'x.',
+      '2x.',
+      '*.something.',
+      'semi\\;colon.example.',
+      'a\\032b.example.',
+      'host@example.',
+    ]) {
       it(`passes name: ${n}`, async function () {
-        assert.deepEqual(r.isValidHostname(n), true)
+        assert.deepEqual(r.isValidName('TEST', 'hostname', n), true)
       })
     }
   })
@@ -304,12 +311,20 @@ describe('RR', function () {
     })
   })
 
-  describe('isValidHostname error path', function () {
-    it('throws on invalid hostname character', function () {
-      const rr = new RR(null)
+  describe('isValidName error path', function () {
+    for (const n of ['semi;colon.example.', 'a b.example.', 'a"b.example.', '(a).example.']) {
+      it(`throws on an unescaped delimiter: ${n}`, function () {
+        assert.throws(
+          () => new RR(null).isValidName('TEST', 'hostname', n),
+          /TEST: hostname has an unescaped delimiter/,
+        )
+      })
+    }
+
+    it('throws on a label over 63 octets', function () {
       assert.throws(
-        () => rr.isValidHostname('TEST', 'hostname', 'host@example.com'),
-        /invalid hostname character/,
+        () => new RR(null).isValidName('TEST', 'hostname', `${'a'.repeat(64)}.example.`),
+        /RFC 2181/,
       )
     })
   })

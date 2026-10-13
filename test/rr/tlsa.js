@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import TLSA from '../../rr/tlsa.js'
@@ -63,4 +64,10 @@ describe('TLSA record', function () {
   base.fromBind(TLSA, validRecords)
   base.fromTinydns(TLSA, validRecords)
   base.fromWire(TLSA, validRecords)
+
+  it('revalidates the certificate association data when the matching type changes', function () {
+    const r = new TLSA(new TLSA(null).getCanonical())
+    assert.throws(() => r.setMatchingType(2), /certificate association data must be 64 bytes/)
+    assert.equal(r.get('matching type'), 1)
+  })
 })

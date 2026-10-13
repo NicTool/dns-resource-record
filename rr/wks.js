@@ -93,7 +93,11 @@ export default class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
   static RFCs = [883, 1035]
-  static rdataFields = ['address', 'protocol', ['bit map', 'list']]
+  static rdataFields = [
+    ['address', 'ipv4'],
+    ['protocol', 'u8'],
+    ['bit map', 'list'],
+  ]
   static tags = ['obsolete']
 
   constructor(opts) {

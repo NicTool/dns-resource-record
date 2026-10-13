@@ -141,13 +141,11 @@ function chunkByBytes(str, maxBytes) {
 }
 
 function packStringWire(str) {
-  const encoded = new TextEncoder().encode(str)
-  if (encoded.length === 0) return new Uint8Array([0])
+  if (str === '') return new Uint8Array([0])
 
-  const chunks = []
-  for (let i = 0; i < encoded.length; i += 255) chunks.push(encoded.subarray(i, i + 255))
-
-  const buf = new Uint8Array(encoded.length + chunks.length)
+  const enc = new TextEncoder()
+  const chunks = chunkByBytes(str, 255).map((c) => enc.encode(c))
+  const buf = new Uint8Array(chunks.reduce((n, c) => n + 1 + c.length, 0))
   let offset = 0
   for (const chunk of chunks) {
     buf[offset++] = chunk.length

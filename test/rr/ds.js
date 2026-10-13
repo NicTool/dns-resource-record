@@ -84,4 +84,9 @@ describe('DS record', function () {
       assert.equal(r.get('algorithm'), algo)
     })
   }
+  it('revalidates the digest when the digest type changes', function () {
+    const r = new DS(new DS(null).getCanonical())
+    assert.throws(() => r.setDigestType(2), /digest must be 32 bytes/)
+    assert.equal(r.get('digest type'), 1)
+  })
 })
