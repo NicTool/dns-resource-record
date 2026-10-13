@@ -132,6 +132,18 @@ describe('NSEC3 record', function () {
     assert.throws(() => decode('0200000000'), /truncated before the hash/)
   })
 
+  it('requires a 1-255 byte hash for any algorithm (RFC 5155 §3.2)', function () {
+    for (const [hash, got] of [
+      ['a', 0],
+      ['a'.repeat(416), 260],
+    ]) {
+      assert.throws(
+        () => NSEC3.fromBind(`h.example. 300 IN NSEC3 2 0 0 - ${hash} A`),
+        new RegExp(`must be 1-255 bytes, got ${got}`),
+      )
+    }
+  })
+
   it('rejects a hash that is not base32hex', function () {
     assert.throws(
       () => NSEC3.fromBind('h.example. 300 IN NSEC3 1 1 12 - 2vptu5timamqttgl4luu9kg21e0aor3w A'),

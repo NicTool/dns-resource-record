@@ -52,8 +52,11 @@ export default class NSEC3 extends RR {
     // RFC 5155 §3.3: unpadded, case-insensitive base32hex.
     if (!val) this.throwHelp(`NSEC3: 'next hashed owner name' is required`)
     if (!/^[0-9a-vA-V]+$/.test(val)) this.throwHelp(`NSEC3: 'next hashed owner name' must be base32hex`)
-    // RFC 5155 §11: algorithm 1 is SHA-1, a 20-byte hash
     const bytes = BINARY.base32hexToBytes(val).length
+    // RFC 5155 §3.2: the Hash Length field is one octet
+    if (bytes < 1 || bytes > 255)
+      this.throwHelp(`NSEC3: 'next hashed owner name' must be 1-255 bytes, got ${bytes}`)
+    // RFC 5155 §11: algorithm 1 is SHA-1, a 20-byte hash
     if (this.get('hash algorithm') === 1 && bytes !== 20)
       this.throwHelp(`NSEC3: a SHA-1 'next hashed owner name' is 20 bytes, got ${bytes}`)
     this.set('next hashed owner name', val.toLowerCase())
