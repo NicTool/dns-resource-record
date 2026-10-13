@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import WKS from '../../rr/wks.js'
@@ -13,7 +14,7 @@ const validRecords = [
     protocol: 'TCP',
     'bit map': 'ftp smtp',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.1\tTCP\tftp smtp\n',
-    testT: ':host.example.com:11:\\300\\000\\002\\001\\006ftp smtp:3600::\n',
+    testT: ':host.example.com:11:\\300\\000\\002\\001\\006\\000\\000\\004@:3600::\n',
     testW: '04686f7374076578616d706c6503636f6d00000b000100000e100009c00002010600000440',
   },
   {
@@ -23,7 +24,7 @@ const validRecords = [
     protocol: 'UDP',
     'bit map': 'domain',
     testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.2\tUDP\tdomain\n',
-    testT: ':host.example.com:11:\\300\\000\\002\\002\\021domain:3600::\n',
+    testT: ':host.example.com:11:\\300\\000\\002\\002\\021\\000\\000\\000\\000\\000\\000\\004:3600::\n',
     testW: '04686f7374076578616d706c6503636f6d00000b000100000e10000cc00002021100000000000004',
   },
   {
@@ -83,4 +84,19 @@ describe('WKS record', function () {
   base.fromBind(WKS, validRecords)
   base.fromTinydns(WKS, validRecords)
   base.fromWire(WKS, validRecords)
+
+  it('exports MaraDNS csv2 as IP, protocol number and port list', function () {
+    const wks = (bitMap) =>
+      new WKS({
+        owner: 'h.example.',
+        ttl: 60,
+        type: 'WKS',
+        address: '192.0.2.1',
+        protocol: 'TCP',
+        'bit map': bitMap,
+      })
+    assert.equal(wks('ftp smtp').toMaraDNS(), 'h.example.\t+60\tWKS\t192.0.2.1 6 21,25 ~\n')
+    assert.match(wks('8080').toMaraDNS(), /\tRAW 11\t/, 'csv2 WKS ports stop at 1023')
+    assert.match(wks('').toMaraDNS(), /\tRAW 11\t/)
+  })
 })

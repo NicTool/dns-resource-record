@@ -22,7 +22,7 @@ const validRecords = [
     address: '42 21 54 N 71 6 18 W -24m 30m',
     testB: 'cambridge-net.kei.com.\t3600\tIN\tLOC\t42 21 54 N 71 6 18 W -24m 30m\n',
     testT:
-      ':cambridge-net.kei.com:29:\\000\\063\\000\\000\\211\\027\\055\\320\\160\\276\\025\\360\\000\\230\\215\\040:3600::\n',
+      ':cambridge-net.kei.com:29:\\000\\063\\026\\023\\211\\027\\055\\320\\160\\276\\025\\360\\000\\230\\215\\040:3600::\n',
   },
   {
     ...defaults,
@@ -30,15 +30,15 @@ const validRecords = [
     address: '42 21 28.764 N 71 0 51.617 W -44m 2000m',
     testB: 'rwy04l.logan-airport.boston.\t3600\tIN\tLOC\t42 21 28.764 N 71 0 51.617 W -44m 2000m\n',
     testT:
-      ':rwy04l.logan-airport.boston:29:\\000\\045\\000\\000\\211\\026\\313\\074\\160\\303\\020\\337\\000\\230\\205\\120:3600::\n',
+      ':rwy04l.logan-airport.boston:29:\\000\\045\\026\\023\\211\\026\\313\\074\\160\\303\\020\\337\\000\\230\\205\\120:3600::\n',
   },
   {
     owner: 'loc.nictool.tnpi.net.',
     ttl: 3600,
     class: 'IN',
     type: 'LOC',
-    address: '37 46 39 N 122 25 9 W 16m 1m 10000m 10m',
-    testB: 'loc.nictool.tnpi.net.\t3600\tIN\tLOC\t37 46 39 N 122 25 9 W 16m 1m 10000m 10m\n',
+    address: '37 46 39 N 122 25 9 W 16m',
+    testB: 'loc.nictool.tnpi.net.\t3600\tIN\tLOC\t37 46 39 N 122 25 9 W 16m\n',
     testT:
       ':loc.nictool.tnpi.net:29:\\000\\022\\026\\023\\210\\033\\056\\030\\145\\273\\120\\170\\000\\230\\234\\300:3600::\n',
     testW: '036c6f63076e6963746f6f6c04746e7069036e657400001d000100000e10001000121613881b2e1865bb507800989cc0',
@@ -90,5 +90,11 @@ describe('LOC record', function () {
   it('arcSecToDMS throws on invalid hemisphere argument', function () {
     const loc = new LOC(validRecords[0])
     assert.throws(() => loc.arcSecToDMS(1000000, 'neither'), /unknown or missing hemisphere/)
+  })
+
+  it('encodes omitted size and precision as 1m, 10000m and 10m (RFC 1876 §2)', function () {
+    const loc = new LOC({ owner: 'a.example.', ttl: 60, type: 'LOC', address: '42 21 54 N 71 6 18 W -24m' })
+    assert.deepEqual([...loc.getWireRdata().subarray(1, 4)], [0x12, 0x16, 0x13])
+    assert.equal(LOC.fromWire(loc.toWire()).get('address'), '42 21 54 N 71 6 18 W -24m')
   })
 })

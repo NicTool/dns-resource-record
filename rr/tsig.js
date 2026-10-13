@@ -126,7 +126,10 @@ export default class TSIG extends RR {
     const mac = base64('mac', int('mac size'))
     const originalId = int('original id')
     const errorWord = next('error')
-    const error = TSIG.errorNames[errorWord.toUpperCase()] ?? parseInt(errorWord, 10)
+    const error =
+      TSIG.errorNames[errorWord.toUpperCase()] ??
+      (/^\d+$/.test(errorWord) ? parseInt(errorWord, 10) : undefined)
+    if (error === undefined) throw new Error(`TSIG: error must be an rcode name or an integer: ${errorWord}`)
     const other = base64('other', int('other len'))
     if (i < words.length) throw new Error(`TSIG: unexpected rdata: ${words.slice(i).join(' ')}`)
 
@@ -264,18 +267,27 @@ export default class TSIG extends RR {
 }
 
 // RFC 8945 §4.2: the rdata after the algorithm name.
+// The MAC and Other Len fields must account for every remaining byte.
 function unpackTail(bytes, dv, pos) {
+  const need = (n) => {
+    if (pos + n > bytes.length) throw new Error(`TSIG: rdata is truncated at byte ${pos}`)
+  }
+  need(10)
   const timeSigned = dv.getUint16(pos) * 2 ** 32 + dv.getUint32(pos + 2)
   pos += 6
   const fudge = dv.getUint16(pos)
   const macSize = dv.getUint16(pos + 2)
   pos += 4
+  need(macSize + 6)
   const mac = BINARY.bytesToBase64(bytes.subarray(pos, pos + macSize))
   pos += macSize
   const originalId = dv.getUint16(pos)
   const error = dv.getUint16(pos + 2)
   const otherLen = dv.getUint16(pos + 4)
   pos += 6
+  need(otherLen)
   const other = BINARY.bytesToBase64(bytes.subarray(pos, pos + otherLen))
+  if (pos + otherLen !== bytes.length)
+    throw new Error(`TSIG: ${bytes.length - pos - otherLen} bytes after Other Data`)
   return { timeSigned, fudge, mac, originalId, error, other }
 }

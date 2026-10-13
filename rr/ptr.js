@@ -18,7 +18,7 @@ export default class PTR extends RR {
     this.isValidHostname('PTR', 'dname', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('dname', val.toLowerCase())
+    this.set('dname', this.lowercaseName(val))
   }
 
   getDescription() {

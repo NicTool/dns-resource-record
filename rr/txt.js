@@ -37,47 +37,25 @@ export default class TXT extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
-    const str = tinyline
-    let fqdn, rdata, s, ttl, ts, loc
-    // 'fqdn:s:ttl:timestamp:lo
-    if (str[0] === "'") {
-      ;[fqdn, s, ttl, ts, loc] = str.slice(1).split(':')
-      rdata = TINYDNS.octalToChar(s)
-    } else {
-      ;[fqdn, rdata, ttl, ts, loc] = this.fromTinydnsGeneric(str)
+    if (tinyline[0] !== "'") return this.fromTinydnsWire({ tinyline })
+
+    // 'fqdn:s:ttl:timestamp:lo, which tinydns-data stores as strings of at most 127 bytes
+    const [fqdn, s, ttl, ts, loc] = tinyline.slice(1).split(':')
+    const bytes = TINYDNS.octalRdataToBytes(s)
+    const utf8 = new TextDecoder('utf-8', { fatal: true })
+    const strings = []
+    for (let i = 0; i < bytes.length; i += TINYDNS_TXT_CHUNK) {
+      strings.push(utf8.decode(bytes.subarray(i, i + TINYDNS_TXT_CHUNK)))
     }
 
     return new this.constructor({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'TXT',
-      data: rdata,
+      data: strings.length > 1 ? strings : (strings[0] ?? ''),
       timestamp: ts,
       location: loc?.trim() || '',
     })
-  }
-
-  fromTinydnsGeneric(str) {
-    // generic: :fqdn:n:rdata:ttl:timestamp:location
-    // eslint-disable-next-line prefer-const
-    let [fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
-    if (n != 16) this.throwHelp('TXT fromTinydns, invalid n')
-
-    rdata = TINYDNS.octalToChar(rdata)
-    // Walk RFC 1035 §3.3.14 len-prefixed <character-string> segments.
-    const parts = []
-    let pos = 0
-    while (pos < rdata.length) {
-      const len = rdata.charCodeAt(pos)
-      pos += 1
-      if (pos + len > rdata.length) {
-        this.throwHelp('TXT fromTinydnsGeneric: truncated character-string in rdata')
-      }
-      parts.push(rdata.slice(pos, pos + len))
-      pos += len
-    }
-    const data = parts.length > 1 ? parts : (parts[0] ?? '')
-    return [fqdn, data, ttl, ts, loc]
   }
 
   /******  EXPORTERS   *******/
@@ -121,11 +99,14 @@ export default class TXT extends RR {
     return packStringWire(data)
   }
 
+  // A ' line can hold only one string of 1 to 127 bytes, since tinydns-data
+  // splits longer text at 127; anything else takes the generic form.
   toTinydns() {
-    let data = this.get('data')
-    if (Array.isArray(data)) data = data.join('')
-    const rdata = TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data)
-    return `'${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
+    const data = this.get('data')
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : null
+    if (!this.constructor.tinydnsType || !bytes?.length || bytes.length > TINYDNS_TXT_CHUNK)
+      return this.getTinydnsGeneric(TINYDNS.bytesToTinydnsText(this.getWireRdata()))
+    return `'${this.getTinyFQDN('owner')}:${TINYDNS.bytesToTinydnsText(bytes)}:${this.getTinydnsPostamble()}\n`
   }
 }
 
@@ -175,3 +156,5 @@ function packStringWire(str) {
   }
   return buf
 }
+
+const TINYDNS_TXT_CHUNK = 127

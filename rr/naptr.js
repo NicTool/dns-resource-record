@@ -1,7 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
-
-const rdataRe = /[\r\n\t:\\/]/
 
 export default class NAPTR extends RR {
   static typeName = 'NAPTR'
@@ -73,68 +70,8 @@ export default class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('NAPTR fromTinydns, invalid n')
-
-    const binRdata = TINYDNS.octalRdataToBytes(rdata)
-    const dv = new DataView(binRdata.buffer, binRdata.byteOffset, binRdata.byteLength)
-
-    const rec = {
-      type: 'NAPTR',
-      owner,
-      ttl,
-      timestamp,
-      location,
-      order: dv.getUint16(0),
-      preference: dv.getUint16(2),
-    }
-
-    let idx = 4
-    const flagsLength = binRdata[idx]
-    idx++
-    rec.flags = new TextDecoder().decode(binRdata.subarray(idx, idx + flagsLength))
-    idx += flagsLength
-
-    const serviceLen = binRdata[idx]
-    idx++
-    rec.service = new TextDecoder().decode(binRdata.subarray(idx, idx + serviceLen))
-    idx += serviceLen
-
-    const regexpLen = binRdata[idx]
-    idx++
-    rec.regexp = new TextDecoder().decode(binRdata.subarray(idx, idx + regexpLen))
-    idx += regexpLen
-
-    const replaceLen = binRdata[idx]
-    idx++
-    rec.replacement = new TextDecoder().decode(binRdata.subarray(idx, idx + replaceLen))
-
-    return new NAPTR(rec)
-  }
 
   /******  EXPORTERS   *******/
-  toTinydns() {
-    let rdata =
-      TINYDNS.UInt16toOctal(this.get('order')) +
-      TINYDNS.UInt16toOctal(this.get('preference')) +
-      TINYDNS.UInt8toOctal(this.get('flags').length) +
-      this.get('flags') +
-      TINYDNS.UInt8toOctal(this.get('service').length) +
-      TINYDNS.escapeOctal(rdataRe, this.get('service')) +
-      TINYDNS.UInt8toOctal(this.get('regexp').length) +
-      TINYDNS.escapeOctal(rdataRe, this.get('regexp'))
-
-    const replacement = this.get('replacement')
-    if (replacement !== '') {
-      rdata += TINYDNS.UInt8toOctal(replacement.length)
-      rdata += TINYDNS.escapeOctal(rdataRe, replacement)
-    }
-    rdata += '\\000'
-
-    return this.getTinydnsGeneric(rdata)
-  }
 
   getWireRdata() {
     const enc = new TextEncoder()

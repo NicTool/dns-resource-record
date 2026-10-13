@@ -15,10 +15,10 @@ const validRecords = [
   {
     ...defaults,
     owner: 'test.example.com.',
-    ttl: 4294967295,
-    testB: 'test.example.com.\t4294967295\tIN\tA\t192.0.2.127\n',
-    testT: '+test.example.com:192.0.2.127:4294967295::\n',
-    testW: '0474657374076578616d706c6503636f6d0000010001ffffffff0004c000027f',
+    ttl: 2147483647,
+    testB: 'test.example.com.\t2147483647\tIN\tA\t192.0.2.127\n',
+    testT: '+test.example.com:192.0.2.127:2147483647::\n',
+    testW: '0474657374076578616d706c6503636f6d00000100017fffffff0004c000027f',
   },
   {
     ...defaults,
@@ -79,8 +79,8 @@ const invalidRecords = [
   { ...defaults, address: '1.x.2.3', msg: /address must be IPv4/ },
   { ...defaults, address: '.1.2.3', msg: /address must be IPv4/ },
   { ...defaults, ttl: '', msg: /TTL must be numeric/ },
-  { ...defaults, ttl: -299, msg: /TTL must be a 32-bit integer/ },
-  { ...defaults, ttl: 4294967296, msg: /TTL must be a 32-bit integer/ },
+  { ...defaults, ttl: -299, msg: /TTL must be an integer from 0 to 2147483647/ },
+  { ...defaults, ttl: 2147483648, msg: /TTL must be an integer from 0 to 2147483647/ },
 ]
 
 // merge invalid properties with properties of a valid object

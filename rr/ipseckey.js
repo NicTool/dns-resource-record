@@ -1,6 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 import * as WIRE from '../lib/wire.js'
 
@@ -13,7 +12,7 @@ export default class IPSECKEY extends RR {
     ['gateway type', 'u8'],
     ['algorithm', 'u8'],
     'gateway',
-    'publickey',
+    ['publickey', 'base64'],
   ]
   static tags = ['security']
 
@@ -69,6 +68,7 @@ export default class IPSECKEY extends RR {
         break
       case 2:
         if (!this.isIPv6(val)) throw gwErr
+        val = this.expandIPv6(val.toLowerCase())
         break
     }
 
@@ -99,49 +99,6 @@ export default class IPSECKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n')
-
-    const precedence = TINYDNS.octalToUInt8(rdata.slice(0, 4))
-    const gwType = TINYDNS.octalToUInt8(rdata.slice(4, 8))
-    const algorithm = TINYDNS.octalToUInt8(rdata.slice(8, 12))
-
-    let len, gateway, octalKey
-
-    switch (gwType) {
-      case 0: // no gateway
-        gateway = rdata.slice(12, 13) // should always be: '.'
-        octalKey = rdata.slice(13)
-        break
-      case 1: // 4-byte IPv4 address
-        gateway = TINYDNS.octalToIPv4(rdata.slice(12, 28))
-        octalKey = rdata.slice(28)
-        break
-      case 2: // 16-byte IPv6
-        gateway = TINYDNS.octalToIPv6(rdata.slice(12, 76))
-        octalKey = rdata.slice(76)
-        break
-      case 3: // wire encoded domain name
-        ;[gateway, len] = TINYDNS.unpackDomainName(rdata.slice(12))
-        octalKey = rdata.slice(12 + len)
-        break
-    }
-
-    return new IPSECKEY({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'IPSECKEY',
-      precedence,
-      'gateway type': gwType,
-      algorithm,
-      gateway,
-      publickey: TINYDNS.octalToBase64(octalKey),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
 
   fromWire({ owner, cls, ttl, rdata }) {
     const precedence = rdata[0]
@@ -187,34 +144,6 @@ export default class IPSECKEY extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
-    let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(this.get('precedence'))
-    rdata += TINYDNS.UInt8toOctal(this.get('gateway type'))
-    rdata += TINYDNS.UInt8toOctal(this.get('algorithm'))
-
-    switch (this.get('gateway type')) {
-      case 0:
-        rdata += TINYDNS.escapeOctal(rdataRe, '.')
-        break
-      case 1:
-        rdata += TINYDNS.ipv4toOctal(this.get('gateway'))
-        break
-      case 2:
-        rdata += TINYDNS.ipv6toOctal(this.get('gateway'))
-        break
-      case 3:
-        rdata += TINYDNS.packDomainName(this.get('gateway'))
-        break
-    }
-
-    rdata += TINYDNS.base64toOctal(this.get('publickey'))
-
-    return this.getTinydnsGeneric(rdata)
-  }
 
   getWireRdata() {
     const pubkeyBytes = BINARY.base64ToBytes(this.get('publickey'))

@@ -28,7 +28,7 @@ export default class KX extends RR {
     this.isFullyQualified('KX', 'exchanger', val)
     this.isValidHostname('KX', 'exchanger', val)
 
-    this.set('exchanger', val.toLowerCase())
+    this.set('exchanger', this.lowercaseName(val))
   }
 
   getDescription() {

@@ -11,14 +11,14 @@ const validRecords = [
     ...defaults,
     owner: '_8443._foo.api.example.com.',
     ttl: 7200,
-    priority: 0,
+    priority: 1,
     'target name': 'svc4.example.net.',
-    params: 'alpn="bar" port="8004"',
-    testB: '_8443._foo.api.example.com.\t7200\tIN\tHTTPS\t0\tsvc4.example.net.\talpn="bar" port="8004"\n',
+    params: 'alpn="bar" port=8004',
+    testB: '_8443._foo.api.example.com.\t7200\tIN\tHTTPS\t1\tsvc4.example.net.\talpn="bar" port=8004\n',
     testT:
-      ':_8443._foo.api.example.com:65:\\000\\000\\004svc4\\007example\\003net\\000alpn="bar" port="8004":7200::\n',
+      ':_8443._foo.api.example.com:65:\\000\\001\\004svc4\\007example\\003net\\000\\000\\001\\000\\004\\003bar\\000\\003\\000\\002\\037D:7200::\n',
     testW:
-      '055f38343433045f666f6f03617069076578616d706c6503636f6d000041000100001c20002200000473766334076578616d706c65036e6574000001000403626172000300021f44',
+      '055f38343433045f666f6f03617069076578616d706c6503636f6d000041000100001c20002200010473766334076578616d706c65036e6574000001000403626172000300021f44',
   },
   {
     ...defaults,
@@ -32,7 +32,7 @@ const validRecords = [
       '055f38303830045f666f6f076578616d706c6503636f6d000041000100000e100016000006666f6f737663076578616d706c65036e657400',
   },
   /*
-  _1234._bar.example.com. 300 IN HTTPS 1 svc1.example.net. ( ech="111..." ipv6hint=2001:db8::1 port=1234 )
+  _1234._bar.example.com. 300 IN HTTPS 1 svc1.example.net. ( ech="111..." ipv6hint=2001:0db8:0000:0000:0000:0000:0000:0001 port=1234 )
                                  HTTPS 2 svc2.example.net. ( ech="222..." ipv6hint=2001:db8::2 port=1234 )
 */
   {
@@ -53,9 +53,10 @@ const validRecords = [
     owner: 'nodefaultalpn.example.com.',
     priority: 1,
     'target name': 'example.com.',
-    params: 'no-default-alpn',
-    testB: 'nodefaultalpn.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tno-default-alpn\n',
-    testT: ':nodefaultalpn.example.com:65:\\000\\001\\007example\\003com\\000no-default-alpn:3600::\n',
+    params: 'alpn="h2" no-default-alpn',
+    testB: 'nodefaultalpn.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\talpn="h2" no-default-alpn\n',
+    testT:
+      ':nodefaultalpn.example.com:65:\\000\\001\\007example\\003com\\000\\000\\001\\000\\003\\002h2\\000\\002\\000\\000:3600::\n',
   },
   {
     ...defaults,
@@ -64,7 +65,8 @@ const validRecords = [
     'target name': 'example.com.',
     params: 'ech=AQIDBA==',
     testB: 'echparam.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tech=AQIDBA==\n',
-    testT: ':echparam.example.com:65:\\000\\001\\007example\\003com\\000ech=AQIDBA==:3600::\n',
+    testT:
+      ':echparam.example.com:65:\\000\\001\\007example\\003com\\000\\000\\005\\000\\004\\001\\002\\003\\004:3600::\n',
     testW:
       '08656368706172616d076578616d706c6503636f6d000041000100000e1000170001076578616d706c6503636f6d000005000401020304',
   },
@@ -73,10 +75,11 @@ const validRecords = [
     owner: 'ipv6hint.example.com.',
     priority: 1,
     'target name': 'example.com.',
-    params: 'ipv6hint=2001:db8::1',
-    testB: 'ipv6hint.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tipv6hint=2001:db8::1\n',
+    params: 'ipv6hint=2001:0db8:0000:0000:0000:0000:0000:0001',
+    testB:
+      'ipv6hint.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tipv6hint=2001:0db8:0000:0000:0000:0000:0000:0001\n',
     testT:
-      ':ipv6hint.example.com:65:\\000\\001\\007example\\003com\\000ipv6hint=2001\\072db8\\072\\0721:3600::\n',
+      ':ipv6hint.example.com:65:\\000\\001\\007example\\003com\\000\\000\\006\\000\\020 \\001\\015\\270\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001:3600::\n',
     testW:
       '086970763668696e74076578616d706c6503636f6d000041000100000e1000230001076578616d706c6503636f6d000006001020010db8000000000000000000000001',
   },
@@ -87,7 +90,7 @@ const validRecords = [
     'target name': 'example.com.',
     params: 'key1234=test',
     testB: 'unknownkey.example.com.\t3600\tIN\tHTTPS\t1\texample.com.\tkey1234=test\n',
-    testT: ':unknownkey.example.com:65:\\000\\001\\007example\\003com\\000key1234=test:3600::\n',
+    testT: ':unknownkey.example.com:65:\\000\\001\\007example\\003com\\000\\004\\322\\000\\004test:3600::\n',
   },
 ]
 
@@ -120,6 +123,6 @@ describe('HTTPS record', function () {
   base.fromWire(HTTPS, validRecords)
 
   it('throws when fromTinydns RDATA is too short', function () {
-    assert.throws(() => HTTPS.fromTinydns(':example.com:65:AB:3600::\n'), /RDATA too short/)
+    assert.throws(() => HTTPS.fromTinydns(':example.com:65:AB:3600::\n'), /wire name runs past the end/)
   })
 })

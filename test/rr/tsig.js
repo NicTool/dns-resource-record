@@ -99,6 +99,23 @@ describe('TSIG record', function () {
     )
   })
 
+  it('rejects an error that is neither an rcode name nor an integer', function () {
+    assert.throws(
+      () => TSIG.fromBind('t.example. 0 ANY TSIG hmac-sha256. 1 300 0 1 18junk 0'),
+      /TSIG: error must be an rcode name or an integer: 18junk/,
+    )
+  })
+
+  it('rejects wire rdata whose lengths do not account for every byte', function () {
+    const tsig = new TSIG({ ...validRecords[1], other: 'AA==' })
+    const rdata = tsig.getWireRdata()
+    const decode = (bytes) =>
+      new TSIG(null).fromWire({ owner: 'test.example.', cls: 'ANY', ttl: 0, rdata: bytes })
+    assert.equal(decode(rdata).get('other'), 'AA==')
+    assert.throws(() => decode(Uint8Array.from([...rdata, 0xff])), /1 bytes after Other Data/)
+    assert.throws(() => decode(rdata.subarray(0, rdata.length - 1)), /rdata is truncated/)
+  })
+
   it('rejects a MAC shorter than its size', function () {
     assert.throws(
       () => TSIG.fromBind('test.example. 0 ANY TSIG hmac-sha256. 1 300 8 3q2+7w== 1 0 0'),

@@ -4,23 +4,20 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-- fix(bind): one RFC 1035 §5.1 lexer: escapes, quote-delimited tokens, line-scoped comments, parens
-- fix(bind): quoted fields decode `\X` / `\DDD` on import and escape `\`, `"` and controls on export
-- fix(bind): reject missing or surplus rdata and a type that does not match the class
-- fix(cert, dnskey, ipseckey, key, naptr, openpgpkey, rrsig, smimea, tlsa): import through the generic parser, so they get the lexer, escapes and rdata-count checks
-- fix(apl, hip, https, loc, nsec, nsec3, nxt, svcb, wks): import through the generic parser; a `list` field takes the rest of the rdata, may be empty, and keeps SVCB `key="value"` intact
-- fix(nsec3): type bit maps are space-joined, matching NSEC
-- fix(hip): the public key is one token (RFC 8005 §6); rendezvous servers must be fully qualified
-- fix(sig): signature is base64 on the wire and in tinydns; type covered accepts mnemonics; BIND export writes times as YYYYMMDDHHmmSS (RFC 2535 §7.2)
-- fix(rrsig, sig): accept YYYYMMDDHHmmSS signature times (RFC 4034 §3.2)
-- fix(tsig): Time Signed is 48 bits and Other Len is encoded (RFC 8945 §4.2); BIND presentation sizes the MAC in bytes, writes MAC and Other as base64, and reads error mnemonics; `mac` and `other` are stored as base64
-- fix(rr): owners reject unescaped whitespace, `;`, `"` and parens; escape them as `\DDD` or `\X`
-- fix(wire): encodeName('.') is a lone root terminator
-- fix(tinydns): packDomainName/unpackDomainName honor presentation escapes
-- fix(rr): owner label and name lengths count wire octets; empty labels rejected
-- fix(rr): `*` is valid only as the whole leftmost label (RFC 4592); `\*` is a literal byte and unpacks as `\042`
-- fix(hinfo, caa): setters keep leading and trailing quotes; the BIND lexer owns quoting
-- fix(maradns): HINFO, NAPTR and TXT export csv2 strings with `'`, `|`, `~`, `#` and controls as `\xNN`, and separate chunks with `;`
+- fix(bind): RFC 1035 lexer (escapes, quotes, comments, parens)
+- fix(bind)!: generic importer for all but TSIG & UNKNOWN, no `bindline`
+- fix(bind)!: reject missing/surplus rdata and mismatched types
+- fix(rr)!: names honor escapes, count octets, stricter wildcards
+- fix(rr)!: TTL max is 2^31-1 (RFC 2181)
+- fix(rr)!: validate digest lengths, SVCB params, RRSIG labels
+- fix(hinfo, caa)!: keep literal quotes in values
+- fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS encoding
+- fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
+- fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
+- fix(tinydns): generic lines carry wire rdata
+- fix(maradns): csv2 quoting, WKS, SOA TTL, root targets
+- feat(rr): `list` and `rrtype` rdata field types
+- test: `npm run interop` checks records against 8 DNS servers
 
 ### [1.9.0] - 2026-07-30
 

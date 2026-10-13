@@ -101,4 +101,9 @@ describe('MX record', function () {
       }
     })
   }
+
+  it('exports a null MX (RFC 7505) to MaraDNS as RAW, since csv2 cannot name the root', function () {
+    const mx = new MX({ owner: 'a.example.', ttl: 60, type: 'MX', preference: 0, exchange: '.' })
+    assert.equal(mx.toMaraDNS(), 'a.example.\t+60\tRAW 15\t\\x00\\x00\\x00 ~\n')
+  })
 })

@@ -8,6 +8,8 @@ import HINFO from '../rr/hinfo.js'
 import KEY from '../rr/key.js'
 import MX from '../rr/mx.js'
 import SOA from '../rr/soa.js'
+import SSHFP from '../rr/sshfp.js'
+import TLSA from '../rr/tlsa.js'
 import TXT from '../rr/txt.js'
 
 const cases = [
@@ -42,14 +44,13 @@ describe('RR', function () {
     const invalid = [-1, -4, -299, 2147483648, undefined]
     for (const i of invalid) {
       it(`throws on invalid TTL: ${i}`, async function () {
-        try {
-          assert.deepEqual(r.setTtl(i), false)
-        } catch (e) {
-          assert.ok(e.message)
-          // console.error(e.message)
-        }
+        assert.throws(() => r.setTtl(i))
       })
     }
+    it('accepts 2147483647 (RFC 2181 §8)', async function () {
+      r.setTtl(2147483647)
+      assert.equal(r.get('ttl'), 2147483647)
+    })
   })
 
   describe('setClass', function () {
@@ -427,5 +428,39 @@ describe('RR', function () {
       )
       assert.equal(ds.get('digest'), '2BB183AF5F22588179A53B0A98631FAD1A292118')
     })
+  })
+})
+
+describe('isHexDigest', function () {
+  const base = { owner: 'a.example.', ttl: 60, class: 'IN' }
+
+  it('DS digest length follows its digest type', function () {
+    const ds = (digestType, digest) =>
+      new DS({ ...base, type: 'DS', 'key tag': 1, algorithm: 13, 'digest type': digestType, digest })
+    assert.throws(() => ds(1, 'ABCDEF123...'), /DS: digest must be hex octets/)
+    assert.throws(() => ds(2, '2BB183AF5F22588179A53B0A98631FAD1A292118'), /must be 32 bytes, got 20/)
+    assert.equal(ds(1, '2BB183AF5F22588179A53B0A98631FAD1A292118').get('digest type'), 1)
+  })
+
+  it('SSHFP fingerprint length follows its fptype', function () {
+    const fp32 = 'ed8c6e16fdae4f633eee6a7b8f64fdd356bbb32841d535565d777014c9ea4c26'
+    assert.throws(
+      () => new SSHFP({ ...base, type: 'SSHFP', algorithm: 1, fptype: 1, fingerprint: fp32 }),
+      /must be 20 bytes, got 32/,
+    )
+  })
+
+  it('TLSA association data length follows its matching type; type 0 takes any length', function () {
+    const tlsa = (matchingType, data) =>
+      new TLSA({
+        ...base,
+        type: 'TLSA',
+        'certificate usage': 3,
+        selector: 1,
+        'matching type': matchingType,
+        'certificate association data': data,
+      })
+    assert.throws(() => tlsa(2, 'aabb'), /must be 64 bytes, got 2/)
+    assert.equal(tlsa(0, 'aabb').get('matching type'), 0)
   })
 })

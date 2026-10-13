@@ -1,6 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
 import { DNS_TYPE_IDS } from '../lib/binary.js'
 
 export default class NXT extends RR {
@@ -23,7 +22,7 @@ export default class NXT extends RR {
     this.isValidHostname('NXT', 'next domain', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('next domain', val.toLowerCase())
+    this.set('next domain', this.lowercaseName(val))
   }
 
   setTypeBitMap(val) {
@@ -49,24 +48,6 @@ export default class NXT extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('NXT fromTinydns, invalid n')
-
-    const binaryRdata = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const [nextDomain, _escapedLen, binaryLen] = TINYDNS.unpackDomainName(rdata)
-
-    return new NXT({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      type: 'NXT',
-      'next domain': nextDomain,
-      'type bit map': new TextDecoder().decode(binaryRdata.subarray(binaryLen)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
     const typeBitMap = nxtBitmapToTypes(rdata.subarray(end))
@@ -81,14 +62,6 @@ export default class NXT extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
-    return this.getTinydnsGeneric(
-      TINYDNS.packDomainName(this.get('next domain')) + TINYDNS.escapeOctal(dataRe, this.get('type bit map')),
-    )
-  }
 
   getWireRdata() {
     const nameBytes = this.wirePackDomain(this.get('next domain'))

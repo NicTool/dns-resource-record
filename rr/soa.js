@@ -36,7 +36,7 @@ export default class SOA extends RR {
     this.isFullyQualified('SOA', 'MNAME', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('mname', val.toLowerCase())
+    this.set('mname', this.lowercaseName(val))
   }
 
   setRname(val) {
@@ -46,7 +46,7 @@ export default class SOA extends RR {
     if (/@/.test(val)) this.throwHelp(`SOA rname replaces @ with a . (dot)`)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('rname', val.toLowerCase())
+    this.set('rname', this.lowercaseName(val))
   }
 
   setSerial(val) {
@@ -126,7 +126,7 @@ export default class SOA extends RR {
   /******  EXPORTERS   *******/
   toMaraDNS() {
     this.assertClassIN('MaraDNS')
-    return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
+    return `${this.get('owner')}\t+${this.get('ttl')}\tSOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
   }

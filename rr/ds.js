@@ -25,7 +25,9 @@ export default class DS extends RR {
   }
 
   setDigest(val) {
-    this.setTypedValue('str', 'digest', val)
+    // RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
+    this.isHexDigest('digest', val, { 1: 20, 2: 32, 4: 48 }[this.get('digest type')])
+    this.set('digest', val)
   }
 
   setAlgorithm(val) {
@@ -73,10 +75,10 @@ export default class DS extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'DS',
-      'key tag': 12345,
+      'key tag': 60485,
       algorithm: 5,
       'digest type': 1,
-      digest: 'ABCDEF123...',
+      digest: '2BB183AF5F22588179A53B0A98631FAD1A292118',
     }
   }
 

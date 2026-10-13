@@ -51,8 +51,36 @@ function labelToPresentation(bytes) {
   return out
 }
 
+// RFC 1035 §5.1: \DDD is one octet and \X is X; other text is UTF-8.
+function presentationBytes(text) {
+  const enc = new TextEncoder();
+  const bytes = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '\\') {
+      if (++i === text.length) throw new Error(`incomplete escape: ${text}`)
+      if (/[0-9]/.test(text[i])) {
+        const decimal = text.slice(i, i + 3);
+        if (!/^[0-9]{3}$/.test(decimal) || Number(decimal) > 255)
+          throw new Error(`invalid decimal escape: \\${decimal}`)
+        bytes.push(Number(decimal));
+        i += 2;
+        continue
+      }
+    }
+    const char = String.fromCodePoint(text.codePointAt(i));
+    bytes.push(...enc.encode(char));
+    i += char.length - 1;
+  }
+  return Uint8Array.from(bytes)
+}
+
+// RFC 4343: ASCII case is insignificant in names, but an escaped octet (\X or
+// \DDD) stands for the exact byte written.
+function lowercaseName(name) {
+  return name.replace(/\\(?:[0-9]{3}|.)|[^\\]+/gs, (m) => (m[0] === '\\' ? m : m.toLowerCase()))
+}
+
 const octalRe = new RegExp(/\\(?:[1-7][0-7]{0,2}|[0-7]{2,3})/, 'g');
-const textDecoder = new TextDecoder();
 
 function parseFields(tinyline, rdataCount) {
   const parts = tinyline.slice(1).split(':');
@@ -72,31 +100,6 @@ function octalRdataToBytes(rdata) {
   return Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0))
 }
 
-function parseSvcbLikeRdata(rdata, recordType) {
-  if (rdata.length < 6) {
-    throw new Error(`${recordType}: RDATA too short: ${rdata}`)
-  }
-
-  const binary = octalRdataToBytes(rdata);
-  const priority = (binary[0] << 8) | binary[1];
-
-  let pos = 2;
-  const labels = [];
-  while (true) {
-    const len = binary[pos];
-    pos += 1;
-    if (len === 0) break
-    labels.push(textDecoder.decode(binary.subarray(pos, pos + len)));
-    pos += len;
-  }
-
-  return {
-    priority,
-    targetName: `${labels.join('.')}.`,
-    params: textDecoder.decode(binary.subarray(pos)),
-  }
-}
-
 function to(rrInstance) {
   // the class guard lives in getTinydnsPostamble(), which every line includes
   if (rrInstance.constructor.tinydnsType) {
@@ -109,7 +112,7 @@ function to(rrInstance) {
       .join(':');
     return `${rrInstance.constructor.tinydnsType}${rrInstance.getTinyFQDN('owner')}:${rdata}:${rrInstance.getTinydnsPostamble()}\n`
   }
-  return rrInstance.getTinydnsGeneric(bytesToOctalString(rrInstance.getWireRdata()))
+  return rrInstance.getTinydnsGeneric(bytesToTinydnsText(rrInstance.getWireRdata()))
 }
 
 function fromGeneric(rrInstance, { tinyline }) {
@@ -278,15 +281,6 @@ function UInt32toOctal(n) {
   )
 }
 
-function ipv4toOctal(ip) {
-  return UInt32toOctal(ip.split`.`.reduce((int, value) => int * 256 + +value))
-}
-
-function octalToIPv4(str) {
-  const asInt = octalToUInt32(str);
-  return [24, 16, 8, 0].map((n) => (asInt >> n) & 0xff).join('.')
-}
-
 function expandIPv6(val, delimiter = ':') {
   const colons = val.match(/:/g);
   if (colons?.length < 7) {
@@ -297,16 +291,6 @@ function expandIPv6(val, delimiter = ':') {
     .map((s) => s.padStart(4, '0'))
     .join(delimiter)
     .toLowerCase()
-}
-
-function ipv6toOctal(ip) {
-  return packHex(expandIPv6(ip, ''))
-}
-
-function octalToIPv6(str) {
-  return octalToHex(str)
-    .match(/(.{4})/g)
-    .join(':')
 }
 
 function base64toOctal(str) {
@@ -323,10 +307,14 @@ function octalToBase64(str) {
   return btoa(octalToChar(str))
 }
 
-function bytesToOctalString(bytes) {
-  let result = '';
-  for (const b of bytes) result += UInt8toOctal(b);
-  return result
+// Printable ASCII stays readable; ':' and '\\' would end or escape a field.
+function bytesToTinydnsText(bytes) {
+  let out = '';
+  for (const b of bytes) {
+    const c = String.fromCharCode(b);
+    out += b >= 0x20 && b < 0x7f && c !== ':' && c !== '\\' ? c : UInt8toOctal(b);
+  }
+  return out
 }
 
 // csv2(5) and csv2_txt(5): text inside '...' is literal, so ', |, ~, # and
@@ -481,25 +469,108 @@ function typeIdToName(id) {
   return DNS_TYPE_NAMES[id] ?? `TYPE${id}`
 }
 
+// RFC 4034 §4.1.2 type bit maps, shared by NSEC and NSEC3.
+function typesToBitmap(typeNames) {
+  const windows = new Map();
+  for (const name of typeNames.trim().split(/\s+/).filter(Boolean)) {
+    const id = typeNameToId(name);
+    const w = Math.floor(id / 256);
+    if (!windows.has(w)) windows.set(w, []);
+    windows.get(w).push(id % 256);
+  }
+
+  const blocks = [];
+  for (const [wNum, bits] of [...windows.entries()].sort((a, b) => a[0] - b[0])) {
+    const bitmapLen = Math.floor(Math.max(...bits) / 8) + 1;
+    const bitmap = new Uint8Array(bitmapLen);
+    for (const b of bits) bitmap[Math.floor(b / 8)] |= 0x80 >> (b % 8);
+    blocks.push(Uint8Array.from([wNum, bitmapLen, ...bitmap]));
+  }
+
+  const result = new Uint8Array(blocks.reduce((s, b) => s + b.length, 0));
+  let pos = 0;
+  for (const b of blocks) {
+    result.set(b, pos);
+    pos += b.length;
+  }
+  return result
+}
+
+function bitmapToTypes(bitmap) {
+  const types = [];
+  let pos = 0;
+  while (pos + 2 <= bitmap.length) {
+    const windowNum = bitmap[pos];
+    const bitmapLen = bitmap[pos + 1];
+    pos += 2;
+    for (let i = 0; i < bitmapLen; i++) {
+      for (let bit = 0; bit < 8; bit++) {
+        if (bitmap[pos + i] & (0x80 >> bit)) types.push(typeIdToName(windowNum * 256 + i * 8 + bit));
+      }
+    }
+    pos += bitmapLen;
+  }
+  return types.join(' ')
+}
+
+// RFC 4648 §7 base32hex, unpadded, as NSEC3 presents hashed owner names.
+const BASE32HEX = '0123456789abcdefghijklmnopqrstuv';
+
+function base32hexToBytes(str) {
+  const bytes = [];
+  let value = 0;
+  let bits = 0;
+  for (const c of str.toLowerCase()) {
+    const v = BASE32HEX.indexOf(c);
+    if (v === -1) throw new Error(`invalid base32hex: ${str}`)
+    value = (value << 5) | v;
+    bits += 5;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((value >> bits) & 0xff);
+      value &= (1 << bits) - 1;
+    }
+  }
+  return Uint8Array.from(bytes)
+}
+
+function bytesToBase32hex(bytes) {
+  let out = '';
+  let value = 0;
+  let bits = 0;
+  for (const b of bytes) {
+    value = (value << 8) | b;
+    bits += 8;
+    while (bits >= 5) {
+      bits -= 5;
+      out += BASE32HEX[(value >> bits) & 31];
+      value &= (1 << bits) - 1;
+    }
+  }
+  if (bits > 0) out += BASE32HEX[(value << (5 - bits)) & 31];
+  return out
+}
+
 // ── Uncompressed domain name decoding ────────────────────────────────────────
 
 /**
  * Decode a length-prefixed (uncompressed) DNS name from a Uint8Array.
  * Returns { fqdn: string, end: number } where end is the offset after the name.
  */
+// Rdata names are uncompressed (RFC 3597 §4), so a length byte above 63 is malformed here.
 function wireUnpackDomain(bytes, offset = 0) {
   const labels = [];
   let pos = offset;
-  while (pos < bytes.length) {
+  for (;;) {
+    if (pos >= bytes.length) throw new Error('wire name runs past the end of the data')
     const len = bytes[pos];
-    if (len === 0) {
-      pos++;
-      break
-    }
+    if (len === 0) break
+    if (len > 63) throw new Error(`wire label length ${len} exceeds 63`)
+    if (pos + 1 + len > bytes.length) throw new Error('wire label runs past the end of the data')
     labels.push(labelToPresentation(bytes.subarray(pos + 1, pos + 1 + len)));
     pos += 1 + len;
   }
-  return { fqdn: labels.length ? labels.join('.') + '.' : '.', end: pos }
+  return { fqdn: labels.length ? labels.join('.') + '.' : '.', end: pos + 1 }
 }
 
 /**
@@ -626,6 +697,7 @@ function fromWireGeneric(rrInstance, { owner, cls, ttl, rdata }) {
         result[fieldName] = rdata[pos++];
         break
       case 'u16':
+      case 'rrtype':
         result[fieldName] = dv.getUint16(pos);
         pos += 2;
         break
@@ -717,6 +789,11 @@ function fromWireGeneric(rrInstance, { owner, cls, ttl, rdata }) {
     }
   }
 
+  if (pos !== rdata.length) {
+    const typeName = rrInstance.constructor.typeName;
+    if (pos > rdata.length) throw new Error(`${typeName}: rdata is truncated`)
+    throw new Error(`${typeName}: ${rdata.length - pos} rdata bytes after the last field`)
+  }
   return new rrInstance.constructor(result)
 }
 
@@ -745,11 +822,18 @@ function svcParamsToWire(paramsStr) {
   while ((m = re.exec(paramsStr.trim())) !== null) {
     const key = m[1].toLowerCase();
     const val = m[2] ?? m[3] ?? '';
-    const keyId = SVCPARAM_KEYS[key];
-    if (keyId === undefined) continue
+    const keyId = svcParamKeyId(key);
 
     let valBytes;
-    if (keyId === 1) {
+    if (keyId === 0) {
+      // mandatory: key ids as u16, ascending (RFC 9460 §8)
+      const ids = val
+        .split(',')
+        .map((k) => svcParamKeyId(k.trim().toLowerCase()))
+        .sort((a, b) => a - b);
+      valBytes = new Uint8Array(ids.length * 2);
+      ids.forEach((id, i) => new DataView(valBytes.buffer).setUint16(i * 2, id));
+    } else if (keyId === 1) {
       // alpn: comma-separated list, each entry length-prefixed
       const enc = new TextEncoder();
       const entries = val.split(',').map((e) => enc.encode(e.trim()));
@@ -782,7 +866,7 @@ function svcParamsToWire(paramsStr) {
       valBytes = new Uint8Array(addrs.length * 16);
       addrs.forEach((addr, i) => valBytes.set(addr, i * 16));
     } else {
-      valBytes = new TextEncoder().encode(val);
+      valBytes = presentationBytes(val);
     }
 
     const param = new Uint8Array(4 + valBytes.length);
@@ -803,6 +887,37 @@ function svcParamsToWire(paramsStr) {
     pos += p.length;
   }
   return result
+}
+
+// The key ids in a params string, in wire order. Throws on a malformed key.
+function svcParamKeyIds(paramsStr) {
+  const bytes = svcParamsToWire(paramsStr);
+  const ids = [];
+  for (let pos = 0; pos + 4 <= bytes.length;) {
+    const dv = new DataView(bytes.buffer, bytes.byteOffset + pos);
+    ids.push(dv.getUint16(0));
+    pos += 4 + dv.getUint16(2);
+  }
+  return ids
+}
+
+// RFC 9460 §2.1: a key is a registered name or keyNNNN.
+function svcParamKeyId(key) {
+  const generic = key.match(/^key(\d{1,5})$/);
+  const id = generic ? Number(generic[1]) : SVCPARAM_KEYS[key];
+  if (id === undefined || id > 65535) throw new Error(`SVCB: unknown SvcParamKey: ${key}`)
+  return id
+}
+
+// Unquoted presentation: printable ASCII except delimiters, everything else \DDD.
+function svcValueToPresentation(bytes) {
+  return [...bytes]
+    .map((b) =>
+      b > 0x20 && b < 0x7f && !'"\\;()'.includes(String.fromCharCode(b))
+        ? String.fromCharCode(b)
+        : `\\${String(b).padStart(3, '0')}`,
+    )
+    .join('')
 }
 
 const SVCPARAM_KEY_NAMES = {
@@ -830,7 +945,14 @@ function svcParamsFromWire(bytes) {
     pos += 4 + valLen;
 
     const keyName = SVCPARAM_KEY_NAMES[keyId] ?? `key${keyId}`;
-    if (keyId === 1) {
+    if (keyId === 0) {
+      const names = [];
+      for (let i = 0; i + 1 < val.length; i += 2) {
+        const id = new DataView(val.buffer, val.byteOffset + i).getUint16(0);
+        names.push(SVCPARAM_KEY_NAMES[id] ?? `key${id}`);
+      }
+      parts.push(`mandatory=${names.join(',')}`);
+    } else if (keyId === 1) {
       // alpn: comma-separated length-prefixed entries
       const entries = [];
       let p = 0;
@@ -860,7 +982,7 @@ function svcParamsFromWire(bytes) {
       }
       parts.push(`ipv6hint=${addrs.join(',')}`);
     } else {
-      parts.push(`${keyName}=${[...val].map((b) => b.toString(16).padStart(2, '0')).join('')}`);
+      parts.push(`${keyName}=${svcValueToPresentation(val)}`);
     }
   }
   return parts.join(' ')
@@ -974,26 +1096,14 @@ function parseBindLine(line, RRClasses) {
 
 // RFC 1035 §5.1: \DDD is an octet, \X is X. Octets must form UTF-8
 function decodeCharString(text) {
-  const bytes = [];
-  const encoder = new TextEncoder();
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === '\\') {
-      if (++i === text.length) throw new Error('BIND: incomplete escape')
-      if (/[0-9]/.test(text[i])) {
-        const decimal = text.slice(i, i + 3);
-        if (!/^[0-9]{3}$/.test(decimal) || Number(decimal) > 255)
-          throw new Error(`BIND: invalid decimal escape: \\${decimal}`)
-        bytes.push(Number(decimal));
-        i += 2;
-        continue
-      }
-    }
-    const char = String.fromCodePoint(text.codePointAt(i));
-    bytes.push(...encoder.encode(char));
-    i += char.length - 1;
+  let bytes;
+  try {
+    bytes = presentationBytes(text);
+  } catch (e) {
+    throw new Error(`BIND: ${e.message}`, { cause: e })
   }
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes))
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
   } catch {
     throw new Error(`BIND: character-string is not UTF-8: ${text}`)
   }
@@ -1135,11 +1245,13 @@ function fromBind(rrInstance, opts) {
 }
 
 function toBind(rrInstance, zone_opts) {
-  const fields = rrInstance.getFields('rdata');
-  const rdata = fields
-    .map((f) => {
+  const rdata = (rrInstance.constructor.rdataFields ?? [])
+    .map((def) => {
+      const f = Array.isArray(def) ? def[0] : def;
       if (rrInstance.isFqdnField(f)) return rrInstance.getFQDN(f, zone_opts)
       if (rrInstance.isQuotedField(f)) return `"${escapeCharString(rrInstance.get(f))}"`
+      // RFC 4034 §3.2: a type is presented as its mnemonic, or TYPEnnn (RFC 3597).
+      if (fieldTypeOf(def) === 'rrtype') return typeIdToName(rrInstance.get(f))
       return rrInstance.get(f)
     })
     .join('\t');
@@ -1191,7 +1303,7 @@ class RR {
     if (!parsed) return null
     if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return fromBind3597(instance, parsed) // RFC 3597 §5
     assertType(parsed.type, this);
-    return instance.fromBind({ ...opts, ...parsed, bindline: line })
+    return instance.fromBind({ ...opts, ...parsed })
   }
 
   fromBind(opts) {
@@ -1209,7 +1321,25 @@ class RR {
   }
 
   fromTinydns(opts) {
-    return fromGeneric(this, opts)
+    if (this.constructor.tinydnsType) return fromGeneric(this, opts)
+    return this.fromTinydnsWire(opts)
+  }
+
+  // A generic `:` line is the type number and the wire rdata, octal-escaped.
+  fromTinydnsWire({ tinyline }) {
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
+    if (Number(typeId) !== this.getTypeId())
+      this.throwHelp(`${this.constructor.typeName} fromTinydns: type ${typeId} is not ${this.getTypeId()}`);
+    const rr = this.fromWire({
+      owner,
+      cls: 'IN',
+      ttl,
+      rdata: octalRdataToBytes(rdata ?? ''),
+      typeId: Number(typeId),
+    });
+    rr.setTimestamp(timestamp);
+    rr.setLocation(location);
+    return rr
   }
 
   static fromWire(wireBytes) {
@@ -1309,7 +1439,7 @@ class RR {
     if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
       this.throwHelp('only *.something or * (by itself) is a valid wildcard');
 
-    this.set('owner', n.toLowerCase());
+    this.set('owner', lowercaseName(n));
   }
 
   setTtl(t) {
@@ -1321,8 +1451,9 @@ class RR {
 
     if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`);
 
-    // RFC 1035, 2181
-    this.is32bitInt(this.get('type'), 'TTL', t);
+    // RFC 2181 §8: the high bit is reserved, so a TTL is 0 to 2^31 - 1.
+    if (!Number.isInteger(t) || t < 0 || t > 2147483647)
+      this.throwHelp(`TTL must be an integer from 0 to 2147483647 (RFC 2181 §8)`);
 
     this.set('ttl', t);
   }
@@ -1356,8 +1487,8 @@ class RR {
   fullyQualify(hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin;
-    if (hostname.endsWith('.')) return hostname.toLowerCase()
-    if (origin) return `${hostname}.${origin}`.toLowerCase()
+    if (hostname.endsWith('.')) return lowercaseName(hostname)
+    if (origin) return lowercaseName(`${hostname}.${origin}`)
     return `${hostname}.`
   }
 
@@ -1522,10 +1653,20 @@ class RR {
       const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6]);
       if (formatSignatureTime(ms / 1000) !== date[0])
         this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`);
-      val = (ms / 1000) % 2 ** 32;
+      // modulo 2^32, so a date before 1970 wraps into the unsigned range
+      val = (((ms / 1000) % 2 ** 32) + 2 ** 32) % 2 ** 32;
     }
     this.is32bitInt(this.constructor.typeName, field, val);
     this.set(field, val);
+  }
+
+  // Hex octets, of an exact length when the field's algorithm fixes one.
+  isHexDigest(field, value, bytes) {
+    const typeName = this.constructor.typeName;
+    if (typeof value !== 'string' || !/^([0-9a-fA-F]{2})+$/.test(value))
+      this.throwHelp(`${typeName}: ${field} must be hex octets`);
+    if (bytes !== undefined && value.length !== bytes * 2)
+      this.throwHelp(`${typeName}: ${field} must be ${bytes} bytes, got ${value.length / 2}`);
   }
 
   isBase64(type, field, value) {
@@ -1550,7 +1691,7 @@ class RR {
       this.throwHelp(`${typeName}: ${fieldName} must be a domain name`);
     this.isFullyQualified(typeName, fieldName, val);
     this.isValidHostname(typeName, fieldName, val);
-    this.set(fieldName, val.toLowerCase());
+    this.set(fieldName, lowercaseName(val));
   }
 
   setTypedValue(type, fieldName, val) {
@@ -1563,6 +1704,13 @@ class RR {
       case 'u16':
         this.is16bitInt(typeName, fieldName, val);
         this.set(fieldName, parseInt(val, 10));
+        break
+      case 'rrtype':
+        try {
+          this.set(fieldName, typeNameToId(val));
+        } catch {
+          this.throwHelp(`${typeName}: ${fieldName} is not a type name, TYPEnnn, or 0-65535`);
+        }
         break
       case 'certtype': {
         if (val === undefined || val === null || val === '')
@@ -1623,6 +1771,8 @@ class RR {
         this.set(fieldName, val);
         break
       case 'svcparams':
+        this.setSvcParams(fieldName, val ?? '');
+        break
       case 'list':
         this.set(fieldName, val ?? '');
         break
@@ -1635,6 +1785,33 @@ class RR {
         this.set(fieldName, this.expandIPv6(val.toLowerCase())); // lower case: RFC 5952
         break
     }
+  }
+
+  setSvcParams(fieldName, val) {
+    const typeName = this.constructor.typeName;
+    let keys;
+    try {
+      keys = svcParamKeyIds(val);
+    } catch (e) {
+      this.throwHelp(`${typeName}: ${e.message.replace(/^SVCB: /, '')}`);
+    }
+    // RFC 9460 §2.4.2: BIND rejects params in AliasMode.
+    if (this.get('priority') === 0 && keys.length)
+      this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`);
+    // RFC 9460 §7.1.1
+    if (keys.includes(2) && !keys.includes(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`);
+    // RFC 9460 §8: every mandatory key must be present.
+    const mandatory = val.match(/(?:^|\s)mandatory="?([^"\s]+)/)?.[1];
+    if (mandatory) {
+      const missing = mandatory.split(',').filter((k) => !keys.includes(svcParamKeyId(k.toLowerCase())));
+      if (missing.length) this.throwHelp(`${typeName}: mandatory keys missing: ${missing.join(', ')}`);
+    }
+    // Stored in the form the wire decodes to, so equal params compare equal.
+    this.set(fieldName, svcParamsFromWire(svcParamsToWire(val)));
+  }
+
+  lowercaseName(name) {
+    return lowercaseName(name)
   }
 
   isFullyQualified(type, field, hostname) {
@@ -1770,8 +1947,10 @@ class RR {
       /\s+/g,
     );
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
+    // csv2's MX and NAPTR parsers reject a bare '.' (the root) as a name.
     const fields = this.getFields('rdata');
+    if (fields.some((f) => this.isFqdnField(f) && this.get(f) === '.')) return this.toMaraGeneric()
+    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
     const rdata = fields
       .map((f, i) => {
         const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t';
@@ -1782,6 +1961,10 @@ class RR {
   }
 
   toMaraGeneric() {
+    this.assertClassIN('MaraDNS');
+    // csv2 refuses these types even as RAW.
+    if (['A6', 'DNAME', 'OPT'].includes(this.get('type')))
+      this.throwHelp(`MaraDNS does not support ${this.get('type')} records`);
     // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
     // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
     const bytes = this.getWireRdata();
@@ -1997,7 +2180,7 @@ function applyMap(obj, map) {
 // Integers on the wire. `certtype` is numeric but also accepts mnemonics
 // ("PKIX"), so a value is converted only when it actually looks numeric —
 // the declared format alone is not enough.
-const NUMERIC_FORMATS = new Set(['u8', 'u16', 'u32', 'certtype']);
+const NUMERIC_FORMATS = new Set(['u8', 'u16', 'u32', 'certtype', 'rrtype']);
 
 /**
  * type -> the fields that class declares as integers, from its static
@@ -2234,7 +2417,7 @@ class APL extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'APL',
-      'apl rdata': '1:192.0.2.1/24 !1:192.0.2.64/28 2:2001:db8::1/128',
+      'apl rdata': '1:192.0.2.0/24 !1:192.0.2.64/28 2:2001:db8::1/128',
     }
   }
 
@@ -3026,7 +3209,9 @@ class DS extends RR {
   }
 
   setDigest(val) {
-    this.setTypedValue('str', 'digest', val);
+    // RFC 4034 §5.1.4, RFC 4509, RFC 6605: SHA-1, SHA-256 and SHA-384 digests.
+    this.isHexDigest('digest', val, { 1: 20, 2: 32, 4: 48 }[this.get('digest type')]);
+    this.set('digest', val);
   }
 
   setAlgorithm(val) {
@@ -3074,10 +3259,10 @@ class DS extends RR {
       ttl: 3600,
       class: 'IN',
       type: 'DS',
-      'key tag': 12345,
+      'key tag': 60485,
       algorithm: 5,
       'digest type': 1,
-      digest: 'ABCDEF123...',
+      digest: '2BB183AF5F22588179A53B0A98631FAD1A292118',
     }
   }
 
@@ -3420,13 +3605,11 @@ class HTTPS extends RR {
     // this.isValidHostname('HTTPS', 'target name', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('target name', val.toLowerCase());
+    this.set('target name', this.lowercaseName(val));
   }
 
   setParams(val) {
-    // if (!val) this.throwHelp(`HTTPS: params is required`)
-
-    this.set('params', val);
+    this.setTypedValue('svcparams', 'params', val);
   }
 
   getDescription() {
@@ -3447,34 +3630,7 @@ class HTTPS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
-    if (typeId != this.getTypeId()) this.throwHelp('HTTPS fromTinydns, invalid n');
-    const { priority, targetName, params } = parseSvcbLikeRdata(rdata, 'HTTPS');
-
-    return new HTTPS({
-      owner,
-      ttl,
-      type: 'HTTPS',
-      priority,
-      'target name': targetName,
-      params,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    return this.getTinydnsGeneric(
-      UInt16toOctal(this.get('priority')) +
-        packDomainName(this.get('target name')) +
-        escapeOctal(dataRe, this.get('params')),
-    )
-  }
 
   getWireRdata() {
     const targetBytes = this.wirePackDomain(this.get('target name'));
@@ -3496,7 +3652,7 @@ class IPSECKEY extends RR {
     ['gateway type', 'u8'],
     ['algorithm', 'u8'],
     'gateway',
-    'publickey',
+    ['publickey', 'base64'],
   ]
   static tags = ['security']
 
@@ -3552,6 +3708,7 @@ class IPSECKEY extends RR {
         break
       case 2:
         if (!this.isIPv6(val)) throw gwErr
+        val = this.expandIPv6(val.toLowerCase());
         break
     }
 
@@ -3582,49 +3739,6 @@ class IPSECKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n');
-
-    const precedence = octalToUInt8(rdata.slice(0, 4));
-    const gwType = octalToUInt8(rdata.slice(4, 8));
-    const algorithm = octalToUInt8(rdata.slice(8, 12));
-
-    let len, gateway, octalKey;
-
-    switch (gwType) {
-      case 0: // no gateway
-        gateway = rdata.slice(12, 13); // should always be: '.'
-        octalKey = rdata.slice(13);
-        break
-      case 1: // 4-byte IPv4 address
-        gateway = octalToIPv4(rdata.slice(12, 28));
-        octalKey = rdata.slice(28);
-        break
-      case 2: // 16-byte IPv6
-        gateway = octalToIPv6(rdata.slice(12, 76));
-        octalKey = rdata.slice(76);
-        break
-      case 3: // wire encoded domain name
-[gateway, len] = unpackDomainName(rdata.slice(12));
-        octalKey = rdata.slice(12 + len);
-        break
-    }
-
-    return new IPSECKEY({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'IPSECKEY',
-      precedence,
-      'gateway type': gwType,
-      algorithm,
-      gateway,
-      publickey: octalToBase64(octalKey),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
 
   fromWire({ owner, cls, ttl, rdata }) {
     const precedence = rdata[0];
@@ -3670,34 +3784,6 @@ class IPSECKEY extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    let rdata = '';
-    rdata += UInt8toOctal(this.get('precedence'));
-    rdata += UInt8toOctal(this.get('gateway type'));
-    rdata += UInt8toOctal(this.get('algorithm'));
-
-    switch (this.get('gateway type')) {
-      case 0:
-        rdata += escapeOctal(rdataRe, '.');
-        break
-      case 1:
-        rdata += ipv4toOctal(this.get('gateway'));
-        break
-      case 2:
-        rdata += ipv6toOctal(this.get('gateway'));
-        break
-      case 3:
-        rdata += packDomainName(this.get('gateway'));
-        break
-    }
-
-    rdata += base64toOctal(this.get('publickey'));
-
-    return this.getTinydnsGeneric(rdata)
-  }
 
   getWireRdata() {
     const pubkeyBytes = base64ToBytes(this.get('publickey'));
@@ -3890,7 +3976,7 @@ class KX extends RR {
     this.isFullyQualified('KX', 'exchanger', val);
     this.isValidHostname('KX', 'exchanger', val);
 
-    this.set('exchanger', val.toLowerCase());
+    this.set('exchanger', this.lowercaseName(val));
   }
 
   getDescription() {
@@ -4019,10 +4105,10 @@ class LOC extends RR {
         hemisphere: r[8].toUpperCase(),
       },
       altitude: r[9] * 100, // m -> cm
-      size: r[10] * 100,
+      size: (r[10] ?? DEFAULT_CM[0] / 100) * 100,
       precision: {
-        horizontal: r[11] * 100,
-        vertical: r[12] * 100,
+        horizontal: (r[11] ?? DEFAULT_CM[1] / 100) * 100,
+        vertical: (r[12] ?? DEFAULT_CM[2] / 100) * 100,
       },
     };
 
@@ -4121,11 +4207,12 @@ class LOC extends RR {
   }
 
   toHuman(obj) {
-    let r = `${obj.latitude} ${obj.longitude} ${obj.altitude / 100}m`;
-    if (obj.size) r += ` ${obj.size / 100}m`;
-    if (obj.precision.horizontal) r += ` ${obj.precision.horizontal / 100}m`;
-    if (obj.precision.vertical) r += ` ${obj.precision.vertical / 100}m`;
-    return r
+    const optional = [obj.size, obj.precision.horizontal, obj.precision.vertical];
+    while (optional.length && optional.at(-1) === DEFAULT_CM[optional.length - 1]) optional.pop();
+    return [
+      `${obj.latitude} ${obj.longitude} ${obj.altitude / 100}m`,
+      ...optional.map((cm) => `${cm / 100}m`),
+    ].join(' ')
   }
 
   fromWire({ owner, cls, ttl, rdata }) {
@@ -4183,6 +4270,9 @@ class LOC extends RR {
     return bytes
   }
 }
+
+// RFC 1876 §2: omitted size, horizontal and vertical precision are 1m, 10000m and 10m.
+const DEFAULT_CM = [100, 1000000, 1000];
 
 class MX extends RR {
   static typeName = 'MX'
@@ -4256,8 +4346,6 @@ class MX extends RR {
   }
 }
 
-const rdataRe = /[\r\n\t:\\/]/;
-
 class NAPTR extends RR {
   static typeName = 'NAPTR'
   static typeId = 35
@@ -4328,68 +4416,8 @@ class NAPTR extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // NAPTR via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
-    if (typeId != this.getTypeId()) this.throwHelp('NAPTR fromTinydns, invalid n');
-
-    const binRdata = octalRdataToBytes(rdata);
-    const dv = new DataView(binRdata.buffer, binRdata.byteOffset, binRdata.byteLength);
-
-    const rec = {
-      type: 'NAPTR',
-      owner,
-      ttl,
-      timestamp,
-      location,
-      order: dv.getUint16(0),
-      preference: dv.getUint16(2),
-    };
-
-    let idx = 4;
-    const flagsLength = binRdata[idx];
-    idx++;
-    rec.flags = new TextDecoder().decode(binRdata.subarray(idx, idx + flagsLength));
-    idx += flagsLength;
-
-    const serviceLen = binRdata[idx];
-    idx++;
-    rec.service = new TextDecoder().decode(binRdata.subarray(idx, idx + serviceLen));
-    idx += serviceLen;
-
-    const regexpLen = binRdata[idx];
-    idx++;
-    rec.regexp = new TextDecoder().decode(binRdata.subarray(idx, idx + regexpLen));
-    idx += regexpLen;
-
-    const replaceLen = binRdata[idx];
-    idx++;
-    rec.replacement = new TextDecoder().decode(binRdata.subarray(idx, idx + replaceLen));
-
-    return new NAPTR(rec)
-  }
 
   /******  EXPORTERS   *******/
-  toTinydns() {
-    let rdata =
-      UInt16toOctal(this.get('order')) +
-      UInt16toOctal(this.get('preference')) +
-      UInt8toOctal(this.get('flags').length) +
-      this.get('flags') +
-      UInt8toOctal(this.get('service').length) +
-      escapeOctal(rdataRe, this.get('service')) +
-      UInt8toOctal(this.get('regexp').length) +
-      escapeOctal(rdataRe, this.get('regexp'));
-
-    const replacement = this.get('replacement');
-    if (replacement !== '') {
-      rdata += UInt8toOctal(replacement.length);
-      rdata += escapeOctal(rdataRe, replacement);
-    }
-    rdata += '\\000';
-
-    return this.getTinydnsGeneric(rdata)
-  }
 
   getWireRdata() {
     const enc = new TextEncoder();
@@ -4440,7 +4468,7 @@ class NS extends RR {
     this.isValidHostname('NS', 'dname', val);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('dname', val.toLowerCase());
+    this.set('dname', this.lowercaseName(val));
   }
 
   getDescription() {
@@ -4502,7 +4530,7 @@ class NSEC extends RR {
     this.isValidHostname('NSEC', 'next domain', val);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('next domain', val.toLowerCase());
+    this.set('next domain', this.lowercaseName(val));
   }
 
   setTypeBitMaps(val) {
@@ -4528,25 +4556,9 @@ class NSEC extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    const binaryRdata = Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0));
-    const [nextDomain, _escapedLen, binaryLen] = unpackDomainName(rdata);
-
-    return new NSEC({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      type: 'NSEC',
-      'next domain': nextDomain,
-      'type bit maps': new TextDecoder().decode(binaryRdata.subarray(binaryLen)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0);
-    const typeBitMaps = nsecBitmapToTypes(rdata.subarray(end));
+    const typeBitMaps = bitmapToTypes(rdata.subarray(end));
     return new NSEC({
       owner,
       ttl,
@@ -4559,80 +4571,14 @@ class NSEC extends RR {
 
   /******  EXPORTERS   *******/
 
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    return this.getTinydnsGeneric(
-      packDomainName(this.get('next domain')) +
-        escapeOctal(dataRe, this.get('type bit maps')),
-    )
-  }
-
   getWireRdata() {
     const nameBytes = this.wirePackDomain(this.get('next domain'));
-    const bitmapBytes = typesToNsecBitmap(this.get('type bit maps'));
+    const bitmapBytes = typesToBitmap(this.get('type bit maps'));
     const result = new Uint8Array(nameBytes.length + bitmapBytes.length);
     result.set(nameBytes);
     result.set(bitmapBytes, nameBytes.length);
     return result
   }
-}
-
-function nsecBitmapToTypes(bitmap) {
-  const types = [];
-  let pos = 0;
-  while (pos + 2 <= bitmap.length) {
-    const windowNum = bitmap[pos];
-    const bitmapLen = bitmap[pos + 1];
-    pos += 2;
-    for (let i = 0; i < bitmapLen; i++) {
-      const byte = bitmap[pos + i];
-      for (let bit = 0; bit < 8; bit++) {
-        if (byte & (0x80 >> bit)) {
-          const typeId = windowNum * 256 + i * 8 + bit;
-          types.push(typeIdToName(typeId));
-        }
-      }
-    }
-    pos += bitmapLen;
-  }
-  return types.join(' ')
-}
-
-function typesToNsecBitmap(typeNamesStr) {
-  const typeIds = typeNamesStr
-    .trim()
-    .split(/\s+/)
-    .map((t) => {
-      if (/^TYPE\d+$/i.test(t)) return parseInt(t.slice(4), 10)
-      return DNS_TYPE_IDS[t.toUpperCase()]
-    })
-    .filter((id) => id !== undefined && id >= 0);
-
-  const windows = new Map();
-  for (const id of typeIds) {
-    const w = Math.floor(id / 256);
-    if (!windows.has(w)) windows.set(w, []);
-    windows.get(w).push(id % 256);
-  }
-
-  const blocks = [];
-  for (const [wNum, bits] of [...windows.entries()].sort((a, b) => a[0] - b[0])) {
-    const maxBit = Math.max(...bits);
-    const bitmapLen = Math.floor(maxBit / 8) + 1;
-    const bitmap = new Uint8Array(bitmapLen);
-    for (const b of bits) bitmap[Math.floor(b / 8)] |= 0x80 >> (b % 8);
-    blocks.push(new Uint8Array([wNum, bitmapLen, ...bitmap]));
-  }
-
-  const total = blocks.reduce((s, b) => s + b.length, 0);
-  const result = new Uint8Array(total);
-  let pos = 0;
-  for (const b of blocks) {
-    result.set(b, pos);
-    pos += b.length;
-  }
-  return result
 }
 
 class NSEC3 extends RR {
@@ -4656,54 +4602,41 @@ class NSEC3 extends RR {
 
   /****** Resource record specific setters   *******/
   setHashAlgorithm(val) {
-    // Hash Algorithm is a single octet.
-    // The Hash Algorithm field is represented as an unsigned decimal integer.
-    if (!val) this.throwHelp(`NSEC3: 'hash algorithm' is required`);
-
+    if (val === undefined) this.throwHelp(`NSEC3: 'hash algorithm' is required`);
     this.is8bitInt('NSEC3', 'hash algorithm', val);
-
     this.set('hash algorithm', val);
   }
 
   setFlags(val) {
-    // The Flags field is represented as an unsigned decimal integer.
-    if (!val) this.throwHelp(`NSEC3: 'flags' is required`);
-
+    if (val === undefined) this.throwHelp(`NSEC3: 'flags' is required`);
     this.is8bitInt('NSEC3', 'flags', val);
-
     this.set('flags', val);
   }
 
   setIterations(val) {
-    // The Iterations field is represented as an unsigned decimal integer. 0-65535
-    if (!val) this.throwHelp(`NSEC3: 'iterations' is required`);
-
-    this.is16bitInt('NSEC3', 'flags', val);
-
+    if (val === undefined) this.throwHelp(`NSEC3: 'iterations' is required`);
+    this.is16bitInt('NSEC3', 'iterations', val);
     this.set('iterations', val);
   }
 
   setSalt(val) {
-    // The Salt field is represented as a sequence of case-insensitive
-    // hexadecimal digits.  Whitespace is not allowed within the
-    // sequence.  The Salt field is represented as "-" (without the
-    // quotes) when the Salt Length field has a value of 0
-    this.set('salt', val);
+    // RFC 5155 §3.3: case-insensitive hex, or "-" for an empty salt.
+    if (val === undefined || val === '') this.throwHelp(`NSEC3: 'salt' is required, "-" when empty`);
+    if (val !== '-' && !/^([0-9a-fA-F]{2}){1,255}$/.test(val))
+      this.throwHelp(`NSEC3: 'salt' must be hex octets or "-"`);
+    this.set('salt', val.toLowerCase());
   }
 
   setNextHashedOwnerName(val) {
-    // The Next Hashed Owner Name field is represented as an unpadded
-    // sequence of case-insensitive base32 digits, without whitespace
+    // RFC 5155 §3.3: unpadded, case-insensitive base32hex.
     if (!val) this.throwHelp(`NSEC3: 'next hashed owner name' is required`);
-
-    this.set('next hashed owner name', val);
+    if (!/^[0-9a-vA-V]+$/.test(val)) this.throwHelp(`NSEC3: 'next hashed owner name' must be base32hex`);
+    this.set('next hashed owner name', val.toLowerCase());
   }
 
   setTypeBitMaps(val) {
-    // The Type Bit Maps field is represented as a sequence of RR type mnemonics.
-    if (!val) this.throwHelp(`NSEC3: 'type bit maps' is required`);
-
-    this.set('type bit maps', val);
+    // RFC 5155 §3.2: an empty non-terminal has no types.
+    this.set('type bit maps', val ?? '');
   }
 
   getDescription() {
@@ -4727,143 +4660,46 @@ class NSEC3 extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    if (n != 50) this.throwHelp('NSEC3 fromTinydns, invalid n');
-
-    const bytes = Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0));
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-
-    const hashAlgorithm = bytes[0];
-    const flags = bytes[1];
-    const iterations = dv.getUint16(2);
-
-    // The remaining bytes in the buffer contain:
-    // Salt Length (1 octet)
-    // Salt (variable length based on Salt Length)
-    // Next Hashed Owner Name (variable length)
-    // Type Bit Maps (variable length)
-    const { salt, nextHashedOwnerName, typeBitMaps } = parseNSEC3Buffer(bytes);
-
-    return new NSEC3({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'NSEC3',
-      'hash algorithm': hashAlgorithm,
-      flags: flags,
-      iterations: iterations,
-      salt: salt,
-      'next hashed owner name': nextHashedOwnerName,
-      'type bit maps': typeBitMaps,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
-    const dv = new DataView(rdata.buffer, rdata.byteOffset);
-    const { salt, nextHashedOwnerName, typeBitMaps } = parseNSEC3Buffer(rdata);
-    return new NSEC3({
-      owner,
-      ttl,
-      class: cls,
-      type: 'NSEC3',
-      'hash algorithm': rdata[0],
-      flags: rdata[1],
-      iterations: dv.getUint16(2),
-      salt,
-      'next hashed owner name': nextHashedOwnerName,
-      'type bit maps': typeBitMaps,
-    })
+    return new NSEC3({ ...unpackRdata(rdata), owner, ttl, class: cls, type: 'NSEC3' })
   }
 
   /******  EXPORTERS   *******/
 
-  toBind(zone_opts) {
-    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	NSEC3${this.getRdataFields()
-      .slice(0, 4)
-      .map((f) => '	' + this.get(f))
-      .join('')}	(${this.getRdataFields()
-      .slice(4)
-      .map((f) => this.get(f))
-      .join('	')})
-`
-  }
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    return this.getTinydnsGeneric(
-      UInt8toOctal(this.get('hash algorithm')) +
-        UInt8toOctal(this.get('flags')) +
-        UInt16toOctal(this.get('iterations')) +
-        escapeOctal(dataRe, this.get('salt')) +
-        escapeOctal(dataRe, this.get('next hashed owner name')) +
-        escapeOctal(dataRe, this.get('type bit maps')),
-    )
-  }
-
+  // RFC 5155 §3.2: the salt and hash are length-prefixed binary.
   getWireRdata() {
-    const tail = `${this.get('salt')}${this.get('next hashed owner name')}${this.get('type bit maps')}`;
-    const tailBytes = new TextEncoder().encode(tail);
+    const salt = this.get('salt') === '-' ? new Uint8Array(0) : hexToBytes(this.get('salt'));
+    const hash = base32hexToBytes(this.get('next hashed owner name'));
+    const bitmap = typesToBitmap(this.get('type bit maps'));
 
-    const totalLen = 4 + tailBytes.length;
-    const bytes = new Uint8Array(totalLen);
-    const dv = new DataView(bytes.buffer, bytes.byteOffset);
-
+    const bytes = new Uint8Array(4 + 1 + salt.length + 1 + hash.length + bitmap.length);
     let pos = 0;
     bytes[pos++] = this.get('hash algorithm');
     bytes[pos++] = this.get('flags');
-    dv.setUint16(pos, this.get('iterations'));
+    new DataView(bytes.buffer).setUint16(pos, this.get('iterations'));
     pos += 2;
-    bytes.set(tailBytes, pos);
-
+    bytes[pos++] = salt.length;
+    bytes.set(salt, pos);
+    pos += salt.length;
+    bytes[pos++] = hash.length;
+    bytes.set(hash, pos);
+    pos += hash.length;
+    bytes.set(bitmap, pos);
     return bytes
   }
 }
 
-function parseNSEC3Buffer(bytes) {
-  // bytes is a Uint8Array containing the full RDATA binary (hash alg, flags, iterations, then ASCII salt + next-hashed + type bit maps)
-  // Start after the first 4 bytes (hash alg, flags, iterations)
-  const rest = new TextDecoder().decode(bytes.subarray(4));
-
-  // determine expected next hashed owner name length from hash algorithm
-  const hashAlgorithm = bytes[0];
-  // common mapping: algorithm 1 => SHA-1 => 20 bytes => base32 length 32
-  const expectedLen = hashAlgorithm === 1 ? 32 : hashAlgorithm === 2 ? 52 : 32;
-
-  // salt length is ambiguous in this representation; try to find a split where
-  // the following segment matches expected base32 length
-  let salt = '';
-  let nextHashedOwnerName = '';
-  let typeBitMaps = '';
-
-  const maxSl = Math.min(64, rest.length);
-  for (let sl = maxSl; sl >= 1; sl--) {
-    const candNext = rest.slice(sl, sl + expectedLen);
-    if (candNext.length !== expectedLen) continue
-    if (!/^[0-9a-z]+$/.test(candNext)) continue
-    // candidate looks like a base32 name; accept and treat remainder as type bit maps
-    const saltCandidate = rest.slice(0, sl);
-    if (!/^[0-9A-Fa-f]+$/.test(saltCandidate)) continue
-    salt = saltCandidate;
-    nextHashedOwnerName = candNext;
-    typeBitMaps = rest.slice(sl + expectedLen);
-    break
-  }
-
-  // fallback: if we couldn't find a split, treat everything up to first non-hex as salt
-  if (!nextHashedOwnerName) {
-    const saltMatch = rest.match(/^([0-9A-Fa-f]*)/);
-    salt = saltMatch ? saltMatch[1] : '';
-    nextHashedOwnerName = rest.slice(salt.length);
-    typeBitMaps = '';
-  }
-
+function unpackRdata(bytes) {
+  const saltLen = bytes[4];
+  const hashStart = 5 + saltLen + 1;
+  const hashLen = bytes[5 + saltLen];
   return {
-    salt,
-    nextHashedOwnerName,
-    typeBitMaps,
+    'hash algorithm': bytes[0],
+    flags: bytes[1],
+    iterations: new DataView(bytes.buffer, bytes.byteOffset).getUint16(2),
+    salt: saltLen ? bytesToHex(bytes.subarray(5, 5 + saltLen)) : '-',
+    'next hashed owner name': bytesToBase32hex(bytes.subarray(hashStart, hashStart + hashLen)),
+    'type bit maps': bitmapToTypes(bytes.subarray(hashStart + hashLen)),
   }
 }
 
@@ -5036,7 +4872,7 @@ class NXT extends RR {
     this.isValidHostname('NXT', 'next domain', val);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('next domain', val.toLowerCase());
+    this.set('next domain', this.lowercaseName(val));
   }
 
   setTypeBitMap(val) {
@@ -5062,24 +4898,6 @@ class NXT extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const [owner, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('NXT fromTinydns, invalid n');
-
-    const binaryRdata = Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0));
-    const [nextDomain, _escapedLen, binaryLen] = unpackDomainName(rdata);
-
-    return new NXT({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      type: 'NXT',
-      'next domain': nextDomain,
-      'type bit map': new TextDecoder().decode(binaryRdata.subarray(binaryLen)),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0);
     const typeBitMap = nxtBitmapToTypes(rdata.subarray(end));
@@ -5094,14 +4912,6 @@ class NXT extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    return this.getTinydnsGeneric(
-      packDomainName(this.get('next domain')) + escapeOctal(dataRe, this.get('type bit map')),
-    )
-  }
 
   getWireRdata() {
     const nameBytes = this.wirePackDomain(this.get('next domain'));
@@ -5214,7 +5024,7 @@ class PTR extends RR {
     this.isValidHostname('PTR', 'dname', val);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('dname', val.toLowerCase());
+    this.set('dname', this.lowercaseName(val));
   }
 
   getDescription() {
@@ -5254,7 +5064,7 @@ class RP extends RR {
 
     this.isFullyQualified('RP', 'mbox', val);
 
-    this.set('mbox', val.toLowerCase());
+    this.set('mbox', this.lowercaseName(val));
   }
 
   setTxt(val) {
@@ -5262,7 +5072,7 @@ class RP extends RR {
 
     this.isFullyQualified('RP', 'txt', val);
 
-    this.set('txt', val.toLowerCase());
+    this.set('txt', this.lowercaseName(val));
   }
 
   getDescription() {
@@ -5323,7 +5133,7 @@ class RRSIG extends RR {
   static typeId = 46
   static RFCs = [4034]
   static rdataFields = [
-    ['type covered', 'u16'],
+    ['type covered', 'rrtype'],
     ['algorithm', 'u8'],
     ['labels', 'u8'],
     ['original ttl', 'u32'],
@@ -5341,20 +5151,8 @@ class RRSIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 16-bit Type Covered field (RFC 4034 §3.1.1)
     if (!val && val !== 0) this.throwHelp(`RRSIG: 'type covered' is required`);
-    if (typeof val === 'string') {
-      const typeNN = val.match(/^TYPE(\d+)$/i);
-      if (typeNN) {
-        val = parseInt(typeNN[1], 10);
-      } else {
-        const id = DNS_TYPE_IDS[val.toUpperCase()];
-        if (id === undefined) this.throwHelp(`RRSIG: 'type covered' is not a recognized type name`);
-        val = id;
-      }
-    }
-    this.is16bitInt('RRSIG', 'type covered', val);
-    this.set('type covered', val);
+    this.setTypedValue('rrtype', 'type covered', val);
   }
 
   setAlgorithm(val) {
@@ -5364,8 +5162,13 @@ class RRSIG extends RR {
     this.set('algorithm', val);
   }
 
+  // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
+  // `*`, and the signer is an ancestor of that owner.
   setLabels(val) {
     this.setTypedValue('u8', 'labels', val);
+    const owner = nameToLabels(this.get('owner'));
+    const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length;
+    if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`);
   }
 
   setOriginalTtl(val) {
@@ -5386,6 +5189,11 @@ class RRSIG extends RR {
 
   setSignersName(val) {
     this.setTypedValue('fqdn', 'signers name', val);
+    const signerLabels = nameToLabels(val).length;
+    if (signerLabels > this.get('labels'))
+      this.throwHelp(
+        `RRSIG: signers name has ${signerLabels} labels, more than labels (${this.get('labels')})`,
+      );
   }
 
   setSignature(val) {
@@ -5428,7 +5236,7 @@ class RRSIG extends RR {
       type: 'RRSIG',
       'type covered': 1,
       algorithm: 5,
-      labels: 3,
+      labels: 2,
       'original ttl': 3600,
       'signature expiration': 1045053120,
       'signature inception': 1042461120,
@@ -5536,7 +5344,7 @@ class SIG extends RR {
   static typeId = 24
   static RFCs = [2535, 3755]
   static rdataFields = [
-    ['type covered', 'u16'],
+    ['type covered', 'rrtype'],
     ['algorithm', 'u8'],
     ['labels', 'u8'],
     ['original ttl', 'u32'],
@@ -5555,13 +5363,7 @@ class SIG extends RR {
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
     if (!val && val !== 0) this.throwHelp(`SIG: 'type covered' is required`);
-    if (typeof val === 'string') {
-      const typeNN = val.match(/^TYPE(\d+)$/i);
-      val = typeNN ? parseInt(typeNN[1], 10) : DNS_TYPE_IDS[val.toUpperCase()];
-      if (val === undefined) this.throwHelp(`SIG: 'type covered' is not a recognized type name`);
-    }
-    this.is16bitInt('SIG', 'type covered', val);
-    this.set('type covered', val);
+    this.setTypedValue('rrtype', 'type covered', val);
   }
 
   setAlgorithm(val) {
@@ -5602,7 +5404,7 @@ class SIG extends RR {
     // the domain name of the signer generating the SIG RR
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('signers name', val.toLowerCase());
+    this.set('signers name', this.lowercaseName(val));
   }
 
   setSignature(val) {
@@ -5726,6 +5528,7 @@ class SIG extends RR {
     const rdata = this.getRdataFields().map((f) => {
       if (f === 'signature expiration' || f === 'signature inception') return formatSignatureTime(this.get(f))
       if (f === 'signers name') return this.getFQDN(f, zone_opts)
+      if (f === 'type covered') return typeIdToName(this.get(f))
       return this.get(f)
     });
     return `${this.getPrefix(zone_opts)}\t${rdata.join('\t')}\n`
@@ -5792,6 +5595,8 @@ class SMIMEA extends RR {
   }
 
   setCertificateAssociationData(val) {
+    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')]);
     this.set('certificate association data', val);
   }
 
@@ -5808,7 +5613,7 @@ class SMIMEA extends RR {
       'certificate usage': 0,
       selector: 0,
       'matching type': 1,
-      'certificate association data': 'ABCDEF...',
+      'certificate association data': 'D2ABDE240D7CD3EE6B4B28C54DF034B97983A1D16E8A410E4561CB106618E971',
     }
   }
 
@@ -5888,7 +5693,7 @@ class SOA extends RR {
     this.isFullyQualified('SOA', 'MNAME', val);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('mname', val.toLowerCase());
+    this.set('mname', this.lowercaseName(val));
   }
 
   setRname(val) {
@@ -5898,7 +5703,7 @@ class SOA extends RR {
     if (/@/.test(val)) this.throwHelp(`SOA rname replaces @ with a . (dot)`);
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('rname', val.toLowerCase());
+    this.set('rname', this.lowercaseName(val));
   }
 
   setSerial(val) {
@@ -5978,7 +5783,7 @@ class SOA extends RR {
   /******  EXPORTERS   *******/
   toMaraDNS() {
     this.assertClassIN('MaraDNS');
-    return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
+    return `${this.get('owner')}\t+${this.get('ttl')}\tSOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
   }
@@ -6039,47 +5844,25 @@ class TXT extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns({ tinyline }) {
-    const str = tinyline;
-    let fqdn, rdata, s, ttl, ts, loc;
-    // 'fqdn:s:ttl:timestamp:lo
-    if (str[0] === "'") {
-[fqdn, s, ttl, ts, loc] = str.slice(1).split(':');
-      rdata = octalToChar(s);
-    } else {
-[fqdn, rdata, ttl, ts, loc] = this.fromTinydnsGeneric(str);
+    if (tinyline[0] !== "'") return this.fromTinydnsWire({ tinyline })
+
+    // 'fqdn:s:ttl:timestamp:lo, which tinydns-data stores as strings of at most 127 bytes
+    const [fqdn, s, ttl, ts, loc] = tinyline.slice(1).split(':');
+    const bytes = octalRdataToBytes(s);
+    const utf8 = new TextDecoder('utf-8', { fatal: true });
+    const strings = [];
+    for (let i = 0; i < bytes.length; i += TINYDNS_TXT_CHUNK) {
+      strings.push(utf8.decode(bytes.subarray(i, i + TINYDNS_TXT_CHUNK)));
     }
 
     return new this.constructor({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'TXT',
-      data: rdata,
+      data: strings.length > 1 ? strings : (strings[0] ?? ''),
       timestamp: ts,
       location: loc?.trim() || '',
     })
-  }
-
-  fromTinydnsGeneric(str) {
-    // generic: :fqdn:n:rdata:ttl:timestamp:location
-    // eslint-disable-next-line prefer-const
-    let [fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':');
-    if (n != 16) this.throwHelp('TXT fromTinydns, invalid n');
-
-    rdata = octalToChar(rdata);
-    // Walk RFC 1035 §3.3.14 len-prefixed <character-string> segments.
-    const parts = [];
-    let pos = 0;
-    while (pos < rdata.length) {
-      const len = rdata.charCodeAt(pos);
-      pos += 1;
-      if (pos + len > rdata.length) {
-        this.throwHelp('TXT fromTinydnsGeneric: truncated character-string in rdata');
-      }
-      parts.push(rdata.slice(pos, pos + len));
-      pos += len;
-    }
-    const data = parts.length > 1 ? parts : (parts[0] ?? '');
-    return [fqdn, data, ttl, ts, loc]
   }
 
   /******  EXPORTERS   *******/
@@ -6123,11 +5906,14 @@ class TXT extends RR {
     return packStringWire(data)
   }
 
+  // A ' line can hold only one string of 1 to 127 bytes, since tinydns-data
+  // splits longer text at 127; anything else takes the generic form.
   toTinydns() {
-    let data = this.get('data');
-    if (Array.isArray(data)) data = data.join('');
-    const rdata = escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data);
-    return `'${this.getTinyFQDN('owner')}:${rdata}:${this.getTinydnsPostamble()}\n`
+    const data = this.get('data');
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : null;
+    if (!this.constructor.tinydnsType || !bytes?.length || bytes.length > TINYDNS_TXT_CHUNK)
+      return this.getTinydnsGeneric(bytesToTinydnsText(this.getWireRdata()))
+    return `'${this.getTinyFQDN('owner')}:${bytesToTinydnsText(bytes)}:${this.getTinydnsPostamble()}\n`
   }
 }
 
@@ -6178,12 +5964,16 @@ function packStringWire(str) {
   return buf
 }
 
+const TINYDNS_TXT_CHUNK = 127;
+
 // obsoleted by RFC 7208
 
 
 class SPF extends TXT {
   static typeName = 'SPF'
   static typeId = 99
+  // tinydns has no SPF line; it takes the generic `:` form.
+  static tinydnsType = undefined
   static RFCs = [4408, 7208]
   static rdataFields = [['data', 'charstrs']]
   static tags = ['obsolete']
@@ -6210,34 +6000,9 @@ class SPF extends TXT {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // SPF via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    if (n != 99) this.throwHelp('SPF fromTinydns, invalid n');
-
-    return new SPF({
-      type: 'SPF',
-      owner: this.fullyQualify(fqdn),
-      data: octalToChar(rdata),
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   /******  EXPORTERS   *******/
   getWireRdata() {
     return super.getWireRdata()
-  }
-
-  toTinydns() {
-    // `data` may be a string or an array of <character-string>s (RFC 1035 §3.3.14).
-    // tinydns generic format stores rdata as a flat byte stream, so join here.
-    let data = this.get('data');
-    if (Array.isArray(data)) data = data.join('');
-    const rdata = escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), data);
-    return this.getTinydnsGeneric(rdata)
   }
 }
 
@@ -6374,7 +6139,9 @@ class SSHFP extends RR {
   }
 
   setFingerprint(val) {
-    this.setTypedValue('hex', 'fingerprint', val);
+    // RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
+    this.isHexDigest('fingerprint', val, { 1: 20, 2: 32 }[this.get('fptype')]);
+    this.set('fingerprint', val);
   }
 
   getAlgorithmOptions() {
@@ -6475,13 +6242,11 @@ class SVCB extends RR {
     // this.isValidHostname('SVCB', 'target name', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('target name', val.toLowerCase());
+    this.set('target name', this.lowercaseName(val));
   }
 
   setParams(val) {
-    // if (!val) throw new Error(`SVCB: params is required`)
-
-    this.set('params', val);
+    this.setTypedValue('svcparams', 'params', val);
   }
 
   getDescription() {
@@ -6502,34 +6267,7 @@ class SVCB extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
-    if (typeId != this.getTypeId()) this.throwHelp('SVCB fromTinydns, invalid n');
-    const { priority, targetName, params } = parseSvcbLikeRdata(rdata, 'SVCB');
-
-    return new SVCB({
-      owner,
-      ttl,
-      type: 'SVCB',
-      priority: priority,
-      'target name': targetName,
-      params: params,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-
-    return this.getTinydnsGeneric(
-      UInt16toOctal(this.get('priority')) +
-        packDomainName(this.get('target name')) +
-        escapeOctal(dataRe, this.get('params')),
-    )
-  }
 
   getWireRdata() {
     const targetBytes = this.wirePackDomain(this.get('target name'));
@@ -6602,6 +6340,8 @@ class TLSA extends RR {
   }
 
   setCertificateAssociationData(val) {
+    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')]);
     this.set('certificate association data', val);
   }
 
@@ -6618,7 +6358,7 @@ class TLSA extends RR {
       'certificate usage': 3,
       selector: 1,
       'matching type': 1,
-      'certificate association data': 'ABCDEF...',
+      'certificate association data': 'D2ABDE240D7CD3EE6B4B28C54DF034B97983A1D16E8A410E4561CB106618E971',
     }
   }
 
@@ -6787,7 +6527,10 @@ class TSIG extends RR {
     const mac = base64('mac', int('mac size'));
     const originalId = int('original id');
     const errorWord = next('error');
-    const error = TSIG.errorNames[errorWord.toUpperCase()] ?? parseInt(errorWord, 10);
+    const error =
+      TSIG.errorNames[errorWord.toUpperCase()] ??
+      (/^\d+$/.test(errorWord) ? parseInt(errorWord, 10) : undefined);
+    if (error === undefined) throw new Error(`TSIG: error must be an rcode name or an integer: ${errorWord}`)
     const other = base64('other', int('other len'));
     if (i < words.length) throw new Error(`TSIG: unexpected rdata: ${words.slice(i).join(' ')}`)
 
@@ -6925,19 +6668,28 @@ class TSIG extends RR {
 }
 
 // RFC 8945 §4.2: the rdata after the algorithm name.
+// The MAC and Other Len fields must account for every remaining byte.
 function unpackTail(bytes, dv, pos) {
+  const need = (n) => {
+    if (pos + n > bytes.length) throw new Error(`TSIG: rdata is truncated at byte ${pos}`)
+  };
+  need(10);
   const timeSigned = dv.getUint16(pos) * 2 ** 32 + dv.getUint32(pos + 2);
   pos += 6;
   const fudge = dv.getUint16(pos);
   const macSize = dv.getUint16(pos + 2);
   pos += 4;
+  need(macSize + 6);
   const mac = bytesToBase64(bytes.subarray(pos, pos + macSize));
   pos += macSize;
   const originalId = dv.getUint16(pos);
   const error = dv.getUint16(pos + 2);
   const otherLen = dv.getUint16(pos + 4);
   pos += 6;
+  need(otherLen);
   const other = bytesToBase64(bytes.subarray(pos, pos + otherLen));
+  if (pos + otherLen !== bytes.length)
+    throw new Error(`TSIG: ${bytes.length - pos - otherLen} bytes after Other Data`)
   return { timeSigned, fudge, mac, originalId, error, other }
 }
 
@@ -7313,28 +7065,6 @@ class WKS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-
-    const binary = Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0));
-    const address = [binary[0], binary[1], binary[2], binary[3]].join('.');
-    const protoNum = binary[4];
-    const protoMap = { 6: 'TCP', 17: 'UDP' };
-    const protocol = protoMap[protoNum] ?? protoNum;
-    const bitmap = new TextDecoder().decode(binary.subarray(5));
-
-    return new WKS({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      type: 'WKS',
-      address,
-      protocol,
-      'bit map': bitmap,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const address = [...rdata.subarray(0, 4)].join('.');
     const protoNum = rdata[4];
@@ -7364,31 +7094,33 @@ class WKS extends RR {
 
   /******  EXPORTERS   *******/
 
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g');
-    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 };
-    const protoNum = protoMap[this.get('protocol')];
-
-    return this.getTinydnsGeneric(
-      ipv4toOctal(this.get('address')) +
-        UInt8toOctal(protoNum) +
-        escapeOctal(dataRe, this.get('bit map')),
-    )
+  getProtocolNumber() {
+    return { TCP: 6, UDP: 17, 6: 6, 17: 17 }[this.get('protocol')]
   }
 
-  getWireRdata() {
-    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 };
-    const addrBytes = this.get('address').split('.').map(Number);
-    const protoNum = protoMap[this.get('protocol')];
-
-    const portNums = this.get('bit map')
+  getPorts() {
+    return this.get('bit map')
       .trim()
       .split(/\s+/)
       .map((s) => {
         if (/^\d+$/.test(s)) return parseInt(s, 10)
         return WELL_KNOWN_PORTS[s.toLowerCase()]
       })
-      .filter((p) => p !== undefined);
+      .filter((p) => p !== undefined)
+  }
+
+  // csv2(5): "IP protocol port,port,...", at most 10 ports, none above 1023.
+  toMaraDNS() {
+    const ports = this.getPorts();
+    if (ports.length === 0 || ports.length > 10 || ports.some((p) => p > 1023)) return this.toMaraGeneric()
+    this.assertClassIN('MaraDNS');
+    return `${this.get('owner')}\t+${this.get('ttl')}\tWKS\t${this.get('address')} ${this.getProtocolNumber()} ${ports.join(',')} ~\n`
+  }
+
+  getWireRdata() {
+    const addrBytes = this.get('address').split('.').map(Number);
+    const protoNum = this.getProtocolNumber();
+    const portNums = this.getPorts();
 
     if (portNums.length === 0) return new Uint8Array([...addrBytes, protoNum])
 

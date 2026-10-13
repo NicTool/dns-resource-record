@@ -12,7 +12,7 @@ const defaults = {
   owner: 'example.com.',
   algorithm: 5,
   'key tag': 12345,
-  labels: 1,
+  labels: 2,
   'original ttl': 3600,
   'signature expiration': 1678886400,
   'signature inception': 1678886400,
@@ -25,11 +25,11 @@ const validRecords = [
     ...defaults,
     'type covered': 1,
     testB:
-      'example.com.\t3600\tIN\tRRSIG\t1\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tZHVtbXlzaWduYXR1cmU=\n',
+      'example.com.\t3600\tIN\tRRSIG\tA\t5\t2\t3600\t1678886400\t1678886400\t12345\texample.com.\tZHVtbXlzaWduYXR1cmU=\n',
     testT:
-      ':example.com:46:\\000\\001\\005\\001\\000\\000\\016\\020\\144\\021\\306\\000\\144\\021\\306\\000\\060\\071\\007example\\003com\\000dummysignature:3600::\n',
+      ':example.com:46:\\000\\001\\005\\002\\000\\000\\016\\020\\144\\021\\306\\000\\144\\021\\306\\000\\060\\071\\007example\\003com\\000dummysignature:3600::\n',
     testW:
-      '076578616d706c6503636f6d00002e000100000e10002d0001050100000e106411c6006411c6003039076578616d706c6503636f6d0064756d6d797369676e6174757265',
+      '076578616d706c6503636f6d00002e000100000e10002d0001050200000e106411c6006411c6003039076578616d706c6503636f6d0064756d6d797369676e6174757265',
   },
 ]
 
@@ -41,17 +41,17 @@ const invalidRecords = [
   {
     ...defaults,
     'type covered': 'NOTATYPE',
-    msg: /not a recognized type name/i,
+    msg: /not a type name, TYPEnnn, or 0-65535/,
   },
   {
     ...defaults,
     'type covered': 99999,
-    msg: /must be a 16-bit integer/i,
+    msg: /not a type name, TYPEnnn, or 0-65535/,
   },
   {
     ...defaults,
     'type covered': -1,
-    msg: /must be a 16-bit integer/i,
+    msg: /not a type name, TYPEnnn, or 0-65535/,
   },
   {
     ...defaults,
@@ -90,6 +90,11 @@ describe('RRSIG record', function () {
   base.fromTinydns(RRSIG, validRecords)
   base.fromWire(RRSIG, validRecords)
 
+  it('wraps a pre-1970 date modulo 2^32 (RFC 4034 §3.2)', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 1, 'signature expiration': 19691231235959 })
+    assert.equal(r.get('signature expiration'), 2 ** 32 - 1)
+  })
+
   it('imports YYYYMMDDHHmmSS times as dnssec-signzone writes them (RFC 4034 §3.2)', function () {
     const r = RRSIG.fromBind(
       'r.example. 3600 IN RRSIG A 5 2 3600 20230315132000 20230315132000 12345 example. AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8no',
@@ -116,7 +121,7 @@ describe('RRSIG record', function () {
 
   it('fromBind resolves TYPEnn in type covered field', function () {
     const bindline =
-      'example.com.\t3600\tIN\tRRSIG\tTYPE28\t5\t1\t3600\t1678886400\t1678886400\t12345\texample.com.\tc2ln\n'
+      'example.com.\t3600\tIN\tRRSIG\tTYPE28\t5\t2\t3600\t1678886400\t1678886400\t12345\texample.com.\tc2ln\n'
     const r = RRSIG.fromBind(bindline)
     assert.equal(r.get('type covered'), 28)
   })
@@ -128,6 +133,16 @@ describe('RRSIG record', function () {
       assert.equal(r.get('algorithm'), algo)
     })
   }
+
+  it('rejects labels above the owner count or below the signer count (RFC 4034 §3.1.3)', function () {
+    assert.throws(
+      () => new RRSIG({ ...defaults, 'type covered': 1, labels: 3 }),
+      /labels \(3\) exceeds the owner's 2/,
+    )
+    assert.throws(() => new RRSIG({ ...defaults, 'type covered': 1, labels: 1 }), /signers name has 2 labels/)
+    const wild = new RRSIG({ ...defaults, owner: '*.example.com.', 'type covered': 1, labels: 2 })
+    assert.equal(wild.get('labels'), 2)
+  })
 
   it('rejects an unassigned algorithm', function () {
     assert.throws(() => new RRSIG({ ...defaults, 'type covered': 1, algorithm: 99 }), /algorithm invalid/i)

@@ -77,10 +77,10 @@ export default class LOC extends RR {
         hemisphere: r[8].toUpperCase(),
       },
       altitude: r[9] * 100, // m -> cm
-      size: r[10] * 100,
+      size: (r[10] ?? DEFAULT_CM[0] / 100) * 100,
       precision: {
-        horizontal: r[11] * 100,
-        vertical: r[12] * 100,
+        horizontal: (r[11] ?? DEFAULT_CM[1] / 100) * 100,
+        vertical: (r[12] ?? DEFAULT_CM[2] / 100) * 100,
       },
     }
 
@@ -179,11 +179,12 @@ export default class LOC extends RR {
   }
 
   toHuman(obj) {
-    let r = `${obj.latitude} ${obj.longitude} ${obj.altitude / 100}m`
-    if (obj.size) r += ` ${obj.size / 100}m`
-    if (obj.precision.horizontal) r += ` ${obj.precision.horizontal / 100}m`
-    if (obj.precision.vertical) r += ` ${obj.precision.vertical / 100}m`
-    return r
+    const optional = [obj.size, obj.precision.horizontal, obj.precision.vertical]
+    while (optional.length && optional.at(-1) === DEFAULT_CM[optional.length - 1]) optional.pop()
+    return [
+      `${obj.latitude} ${obj.longitude} ${obj.altitude / 100}m`,
+      ...optional.map((cm) => `${cm / 100}m`),
+    ].join(' ')
   }
 
   fromWire({ owner, cls, ttl, rdata }) {
@@ -241,3 +242,6 @@ export default class LOC extends RR {
     return bytes
   }
 }
+
+// RFC 1876 §2: omitted size, horizontal and vertical precision are 1m, 10000m and 10m.
+const DEFAULT_CM = [100, 1000000, 1000]

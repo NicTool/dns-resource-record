@@ -416,12 +416,14 @@ No external dependencies. Runs on node.js and modern browsers.
 - `npm run format` — Auto-format with Prettier and fix linting issues
 - `npm run build` — Regenerate the browser and CommonJS bundles in `dist/`
 - `npm run test:coverage` — Generate test coverage report
+- `npm run interop` — Export every test record and check it against the DNS software installed locally: BIND, ldns, Knot, NSD, CoreDNS, PowerDNS, tinydns and MaraDNS parse it, then serve it, and each answer must match `toWire()`. Missing tools are skipped, and the other tools' own limitations are listed in `interop/known.js`. `npm run interop -- bind-parse nsd-serve` runs only the named stages.
 
 **Architecture:**
 
 - **rr.js** — Base class with shared DNS logic and validation
 - **rr/\*.js** — Individual RR type implementations
 - **test/\*.js** — Comprehensive test suite for each RR type
+- **interop/** — The `npm run interop` harness
 
 ## References
 

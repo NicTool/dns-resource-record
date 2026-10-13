@@ -7,6 +7,7 @@ import {
   decompressRdata,
   buildQuery,
   parseResponse,
+  svcParamsFromWire,
   svcParamsToWire,
   wirePackDomain,
   wirePackDomainCompressed,
@@ -378,9 +379,24 @@ describe('svcParamsToWire', () => {
     assert.equal(svcParamsToWire(undefined).length, 0)
   })
 
-  test('unknown key is silently skipped', () => {
-    const result = svcParamsToWire('unknownkey=foo')
-    assert.equal(result.length, 0)
+  test('an unregistered key name throws (RFC 9460 §2.1)', () => {
+    assert.throws(() => svcParamsToWire('unknownkey=foo'), /unknown SvcParamKey: unknownkey/)
+  })
+
+  test('keyNNNN encodes its value bytes, escapes decoded', () => {
+    const hex = Buffer.from(svcParamsToWire('key1234=te\\032st')).toString('hex')
+    assert.equal(hex, '04d200057465207374')
+  })
+
+  test('mandatory encodes key ids ascending', () => {
+    const hex = Buffer.from(svcParamsToWire('mandatory=port,alpn alpn=h2 port=443')).toString('hex')
+    assert.equal(hex.slice(0, 16), '0000000400010003')
+  })
+
+  test('keyNNNN and mandatory round trip through wire', () => {
+    for (const params of ['key1234=test', 'key65000=a\\032b', 'mandatory=alpn,key9 alpn="h2" key9=x']) {
+      assert.equal(svcParamsFromWire(svcParamsToWire(params)), params)
+    }
   })
 
   test('no-default-alpn (key 2) encodes 4-byte header with zero-length value', () => {

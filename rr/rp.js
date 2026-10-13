@@ -19,7 +19,7 @@ export default class RP extends RR {
 
     this.isFullyQualified('RP', 'mbox', val)
 
-    this.set('mbox', val.toLowerCase())
+    this.set('mbox', this.lowercaseName(val))
   }
 
   setTxt(val) {
@@ -27,7 +27,7 @@ export default class RP extends RR {
 
     this.isFullyQualified('RP', 'txt', val)
 
-    this.set('txt', val.toLowerCase())
+    this.set('txt', this.lowercaseName(val))
   }
 
   getDescription() {

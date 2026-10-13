@@ -29,7 +29,9 @@ export default class SSHFP extends RR {
   }
 
   setFingerprint(val) {
-    this.setTypedValue('hex', 'fingerprint', val)
+    // RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
+    this.isHexDigest('fingerprint', val, { 1: 20, 2: 32 }[this.get('fptype')])
+    this.set('fingerprint', val)
   }
 
   getAlgorithmOptions() {

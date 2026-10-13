@@ -9,7 +9,7 @@ export default class SIG extends RR {
   static typeId = 24
   static RFCs = [2535, 3755]
   static rdataFields = [
-    ['type covered', 'u16'],
+    ['type covered', 'rrtype'],
     ['algorithm', 'u8'],
     ['labels', 'u8'],
     ['original ttl', 'u32'],
@@ -28,13 +28,7 @@ export default class SIG extends RR {
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
     if (!val && val !== 0) this.throwHelp(`SIG: 'type covered' is required`)
-    if (typeof val === 'string') {
-      const typeNN = val.match(/^TYPE(\d+)$/i)
-      val = typeNN ? parseInt(typeNN[1], 10) : WIRE.DNS_TYPE_IDS[val.toUpperCase()]
-      if (val === undefined) this.throwHelp(`SIG: 'type covered' is not a recognized type name`)
-    }
-    this.is16bitInt('SIG', 'type covered', val)
-    this.set('type covered', val)
+    this.setTypedValue('rrtype', 'type covered', val)
   }
 
   setAlgorithm(val) {
@@ -75,7 +69,7 @@ export default class SIG extends RR {
     // the domain name of the signer generating the SIG RR
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('signers name', val.toLowerCase())
+    this.set('signers name', this.lowercaseName(val))
   }
 
   setSignature(val) {
@@ -199,6 +193,7 @@ export default class SIG extends RR {
     const rdata = this.getRdataFields().map((f) => {
       if (f === 'signature expiration' || f === 'signature inception') return formatSignatureTime(this.get(f))
       if (f === 'signers name') return this.getFQDN(f, zone_opts)
+      if (f === 'type covered') return WIRE.typeIdToName(this.get(f))
       return this.get(f)
     })
     return `${this.getPrefix(zone_opts)}\t${rdata.join('\t')}\n`

@@ -221,7 +221,7 @@ describe('UNKNOWN record', function () {
 
     it('toRR throws when rdata does not round-trip (RFC 3597 §5)', function () {
       const extra = new UNKNOWN({ owner: 'e.example.', ttl: 3600, typeId: 1, rdata: '0a000001ff' })
-      assert.throws(() => extra.toRR(A), /does not round-trip/)
+      assert.throws(() => extra.toRR(A), /1 rdata bytes after the last field/)
     })
   })
 

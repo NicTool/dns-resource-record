@@ -79,6 +79,7 @@ describe('SOA record', function () {
     assert.ok(out.includes('SOA'))
     assert.ok(out.endsWith('~\n'))
     assert.ok(out.includes(validRecords[0].mname))
+    assert.ok(out.startsWith(`${validRecords[0].owner}\t+${validRecords[0].ttl}\tSOA\t`), 'keeps the TTL')
   })
 
   for (const val of validRecords) {

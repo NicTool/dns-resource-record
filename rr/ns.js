@@ -20,7 +20,7 @@ export default class NS extends RR {
     this.isValidHostname('NS', 'dname', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('dname', val.toLowerCase())
+    this.set('dname', this.lowercaseName(val))
   }
 
   getDescription() {

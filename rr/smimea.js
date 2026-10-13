@@ -63,6 +63,8 @@ export default class SMIMEA extends RR {
   }
 
   setCertificateAssociationData(val) {
+    // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
+    this.isHexDigest('certificate association data', val, { 1: 32, 2: 64 }[this.get('matching type')])
     this.set('certificate association data', val)
   }
 
@@ -79,7 +81,7 @@ export default class SMIMEA extends RR {
       'certificate usage': 0,
       selector: 0,
       'matching type': 1,
-      'certificate association data': 'ABCDEF...',
+      'certificate association data': 'D2ABDE240D7CD3EE6B4B28C54DF034B97983A1D16E8A410E4561CB106618E971',
     }
   }
 

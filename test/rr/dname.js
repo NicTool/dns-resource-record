@@ -64,4 +64,8 @@ describe('DNAME record', function () {
       }
     })
   }
+
+  it('toMaraDNS throws: MaraDNS refuses DNAME, even as RAW', function () {
+    assert.throws(() => new DNAME(validRecords[0]).toMaraDNS(), /MaraDNS does not support DNAME/)
+  })
 })

@@ -269,6 +269,13 @@ describe('names keep their presentation escapes', function () {
     })
   }
 
+  it('lowercases names but keeps escaped octets as written (RFC 4343)', function () {
+    const a = RR.A.fromBind('ABC\\065\\A.Example. 300 IN A 192.0.2.1')
+    assert.equal(a.get('owner'), 'abc\\065\\A.example.')
+    const ns = RR.NS.fromBind('x.example. 300 IN NS Name\\B.Example.')
+    assert.equal(ns.get('dname'), 'name\\B.example.')
+  })
+
   it('accepts an escaped * inside a label', function () {
     for (const owner of ['a\\*b.example.', 'a\\042b.example.']) {
       assert.equal(RR.A.fromBind(`${owner} 300 IN A 192.0.2.1`).get('owner'), owner)
@@ -356,7 +363,7 @@ describe('list rdata', function () {
 
   it('keeps quoted values attached to their keys', function () {
     const rr = RR.SVCB.fromBind('a.example. 300 IN SVCB 1 . ( alpn="h2,h3" ; comment\n port="8004" )')
-    assert.equal(rr.get('params'), 'alpn="h2,h3" port="8004"')
+    assert.equal(rr.get('params'), 'alpn="h2,h3" port=8004')
   })
 
   it('still requires the fields before it', function () {

@@ -1,6 +1,7 @@
 import * as TINYDNS from './lib/tinydns.js'
-import { nameToLabels } from './lib/name.js'
+import { lowercaseName, nameToLabels } from './lib/name.js'
 import * as MARADNS from './lib/maradns.js'
+import { typeNameToId } from './lib/binary.js'
 
 const customInspect = Symbol.for('nodejs.util.inspect.custom')
 import {
@@ -10,6 +11,10 @@ import {
   toWire as wireToWire,
   fromWireBytes,
   fromWireGeneric,
+  svcParamKeyId,
+  svcParamKeyIds,
+  svcParamsFromWire,
+  svcParamsToWire,
 } from './lib/wire.js'
 import {
   parseBindLine as bindParseLine,
@@ -62,7 +67,7 @@ export default class RR {
     if (!parsed) return null
     if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return bindFrom3597(instance, parsed) // RFC 3597 §5
     bindAssertType(parsed.type, this)
-    return instance.fromBind({ ...opts, ...parsed, bindline: line })
+    return instance.fromBind({ ...opts, ...parsed })
   }
 
   fromBind(opts) {
@@ -80,7 +85,25 @@ export default class RR {
   }
 
   fromTinydns(opts) {
-    return TINYDNS.fromGeneric(this, opts)
+    if (this.constructor.tinydnsType) return TINYDNS.fromGeneric(this, opts)
+    return this.fromTinydnsWire(opts)
+  }
+
+  // A generic `:` line is the type number and the wire rdata, octal-escaped.
+  fromTinydnsWire({ tinyline }) {
+    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
+    if (Number(typeId) !== this.getTypeId())
+      this.throwHelp(`${this.constructor.typeName} fromTinydns: type ${typeId} is not ${this.getTypeId()}`)
+    const rr = this.fromWire({
+      owner,
+      cls: 'IN',
+      ttl,
+      rdata: TINYDNS.octalRdataToBytes(rdata ?? ''),
+      typeId: Number(typeId),
+    })
+    rr.setTimestamp(timestamp)
+    rr.setLocation(location)
+    return rr
   }
 
   static fromWire(wireBytes) {
@@ -180,7 +203,7 @@ export default class RR {
     if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
       this.throwHelp('only *.something or * (by itself) is a valid wildcard')
 
-    this.set('owner', n.toLowerCase())
+    this.set('owner', lowercaseName(n))
   }
 
   setTtl(t) {
@@ -192,8 +215,9 @@ export default class RR {
 
     if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`)
 
-    // RFC 1035, 2181
-    this.is32bitInt(this.get('type'), 'TTL', t)
+    // RFC 2181 §8: the high bit is reserved, so a TTL is 0 to 2^31 - 1.
+    if (!Number.isInteger(t) || t < 0 || t > 2147483647)
+      this.throwHelp(`TTL must be an integer from 0 to 2147483647 (RFC 2181 §8)`)
 
     this.set('ttl', t)
   }
@@ -227,8 +251,8 @@ export default class RR {
   fullyQualify(hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin
-    if (hostname.endsWith('.')) return hostname.toLowerCase()
-    if (origin) return `${hostname}.${origin}`.toLowerCase()
+    if (hostname.endsWith('.')) return lowercaseName(hostname)
+    if (origin) return lowercaseName(`${hostname}.${origin}`)
     return `${hostname}.`
   }
 
@@ -393,10 +417,20 @@ export default class RR {
       const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6])
       if (formatSignatureTime(ms / 1000) !== date[0])
         this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`)
-      val = (ms / 1000) % 2 ** 32
+      // modulo 2^32, so a date before 1970 wraps into the unsigned range
+      val = (((ms / 1000) % 2 ** 32) + 2 ** 32) % 2 ** 32
     }
     this.is32bitInt(this.constructor.typeName, field, val)
     this.set(field, val)
+  }
+
+  // Hex octets, of an exact length when the field's algorithm fixes one.
+  isHexDigest(field, value, bytes) {
+    const typeName = this.constructor.typeName
+    if (typeof value !== 'string' || !/^([0-9a-fA-F]{2})+$/.test(value))
+      this.throwHelp(`${typeName}: ${field} must be hex octets`)
+    if (bytes !== undefined && value.length !== bytes * 2)
+      this.throwHelp(`${typeName}: ${field} must be ${bytes} bytes, got ${value.length / 2}`)
   }
 
   isBase64(type, field, value) {
@@ -421,7 +455,7 @@ export default class RR {
       this.throwHelp(`${typeName}: ${fieldName} must be a domain name`)
     this.isFullyQualified(typeName, fieldName, val)
     this.isValidHostname(typeName, fieldName, val)
-    this.set(fieldName, val.toLowerCase())
+    this.set(fieldName, lowercaseName(val))
   }
 
   setTypedValue(type, fieldName, val) {
@@ -434,6 +468,13 @@ export default class RR {
       case 'u16':
         this.is16bitInt(typeName, fieldName, val)
         this.set(fieldName, parseInt(val, 10))
+        break
+      case 'rrtype':
+        try {
+          this.set(fieldName, typeNameToId(val))
+        } catch {
+          this.throwHelp(`${typeName}: ${fieldName} is not a type name, TYPEnnn, or 0-65535`)
+        }
         break
       case 'certtype': {
         if (val === undefined || val === null || val === '')
@@ -494,6 +535,8 @@ export default class RR {
         this.set(fieldName, val)
         break
       case 'svcparams':
+        this.setSvcParams(fieldName, val ?? '')
+        break
       case 'list':
         this.set(fieldName, val ?? '')
         break
@@ -506,6 +549,33 @@ export default class RR {
         this.set(fieldName, this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
         break
     }
+  }
+
+  setSvcParams(fieldName, val) {
+    const typeName = this.constructor.typeName
+    let keys
+    try {
+      keys = svcParamKeyIds(val)
+    } catch (e) {
+      this.throwHelp(`${typeName}: ${e.message.replace(/^SVCB: /, '')}`)
+    }
+    // RFC 9460 §2.4.2: BIND rejects params in AliasMode.
+    if (this.get('priority') === 0 && keys.length)
+      this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`)
+    // RFC 9460 §7.1.1
+    if (keys.includes(2) && !keys.includes(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`)
+    // RFC 9460 §8: every mandatory key must be present.
+    const mandatory = val.match(/(?:^|\s)mandatory="?([^"\s]+)/)?.[1]
+    if (mandatory) {
+      const missing = mandatory.split(',').filter((k) => !keys.includes(svcParamKeyId(k.toLowerCase())))
+      if (missing.length) this.throwHelp(`${typeName}: mandatory keys missing: ${missing.join(', ')}`)
+    }
+    // Stored in the form the wire decodes to, so equal params compare equal.
+    this.set(fieldName, svcParamsFromWire(svcParamsToWire(val)))
+  }
+
+  lowercaseName(name) {
+    return lowercaseName(name)
   }
 
   isFullyQualified(type, field, hostname) {
@@ -641,8 +711,10 @@ export default class RR {
       /\s+/g,
     )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
+    // csv2's MX and NAPTR parsers reject a bare '.' (the root) as a name.
     const fields = this.getFields('rdata')
+    if (fields.some((f) => this.isFqdnField(f) && this.get(f) === '.')) return this.toMaraGeneric()
+    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
     const rdata = fields
       .map((f, i) => {
         const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t'
@@ -653,6 +725,10 @@ export default class RR {
   }
 
   toMaraGeneric() {
+    this.assertClassIN('MaraDNS')
+    // csv2 refuses these types even as RAW.
+    if (['A6', 'DNAME', 'OPT'].includes(this.get('type')))
+      this.throwHelp(`MaraDNS does not support ${this.get('type')} records`)
     // MaraDNS csv2 interprets \xNN escapes only outside quoted text, so every
     // rdata byte is emitted as an unquoted escape. '' is zero-length rdata.
     const bytes = this.getWireRdata()

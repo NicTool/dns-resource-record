@@ -1,6 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/wire.js'
 
 export default class HTTPS extends RR {
@@ -30,13 +29,11 @@ export default class HTTPS extends RR {
     // this.isValidHostname('HTTPS', 'target name', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('target name', val.toLowerCase())
+    this.set('target name', this.lowercaseName(val))
   }
 
   setParams(val) {
-    // if (!val) this.throwHelp(`HTTPS: params is required`)
-
-    this.set('params', val)
+    this.setTypedValue('svcparams', 'params', val)
   }
 
   getDescription() {
@@ -57,34 +54,7 @@ export default class HTTPS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('HTTPS fromTinydns, invalid n')
-    const { priority, targetName, params } = TINYDNS.parseSvcbLikeRdata(rdata, 'HTTPS')
-
-    return new HTTPS({
-      owner,
-      ttl,
-      type: 'HTTPS',
-      priority,
-      'target name': targetName,
-      params,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt16toOctal(this.get('priority')) +
-        TINYDNS.packDomainName(this.get('target name')) +
-        TINYDNS.escapeOctal(dataRe, this.get('params')),
-    )
-  }
 
   getWireRdata() {
     const targetBytes = this.wirePackDomain(this.get('target name'))

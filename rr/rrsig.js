@@ -2,13 +2,14 @@ import RR from '../rr.js'
 import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/binary.js'
 import * as WIRELIB from '../lib/wire.js'
+import { nameToLabels } from '../lib/name.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
   static typeId = 46
   static RFCs = [4034]
   static rdataFields = [
-    ['type covered', 'u16'],
+    ['type covered', 'rrtype'],
     ['algorithm', 'u8'],
     ['labels', 'u8'],
     ['original ttl', 'u32'],
@@ -26,20 +27,8 @@ export default class RRSIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 16-bit Type Covered field (RFC 4034 §3.1.1)
     if (!val && val !== 0) this.throwHelp(`RRSIG: 'type covered' is required`)
-    if (typeof val === 'string') {
-      const typeNN = val.match(/^TYPE(\d+)$/i)
-      if (typeNN) {
-        val = parseInt(typeNN[1], 10)
-      } else {
-        const id = WIRE.DNS_TYPE_IDS[val.toUpperCase()]
-        if (id === undefined) this.throwHelp(`RRSIG: 'type covered' is not a recognized type name`)
-        val = id
-      }
-    }
-    this.is16bitInt('RRSIG', 'type covered', val)
-    this.set('type covered', val)
+    this.setTypedValue('rrtype', 'type covered', val)
   }
 
   setAlgorithm(val) {
@@ -49,8 +38,13 @@ export default class RRSIG extends RR {
     this.set('algorithm', val)
   }
 
+  // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
+  // `*`, and the signer is an ancestor of that owner.
   setLabels(val) {
     this.setTypedValue('u8', 'labels', val)
+    const owner = nameToLabels(this.get('owner'))
+    const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length
+    if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`)
   }
 
   setOriginalTtl(val) {
@@ -71,6 +65,11 @@ export default class RRSIG extends RR {
 
   setSignersName(val) {
     this.setTypedValue('fqdn', 'signers name', val)
+    const signerLabels = nameToLabels(val).length
+    if (signerLabels > this.get('labels'))
+      this.throwHelp(
+        `RRSIG: signers name has ${signerLabels} labels, more than labels (${this.get('labels')})`,
+      )
   }
 
   setSignature(val) {
@@ -113,7 +112,7 @@ export default class RRSIG extends RR {
       type: 'RRSIG',
       'type covered': 1,
       algorithm: 5,
-      labels: 3,
+      labels: 2,
       'original ttl': 3600,
       'signature expiration': 1045053120,
       'signature inception': 1042461120,

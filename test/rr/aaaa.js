@@ -18,12 +18,12 @@ const validRecords = [
   {
     ...defaults,
     owner: 'test.example.com.',
-    ttl: 4294967295,
+    ttl: 2147483647,
     address: '2001:0db8:0020:000a:0000:0000:0000:0004',
-    testB: 'test.example.com.\t4294967295\tIN\tAAAA\t2001:db8:20:a::4\n',
+    testB: 'test.example.com.\t2147483647\tIN\tAAAA\t2001:db8:20:a::4\n',
     testT:
-      ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:4294967295::\n',
-    testW: '0474657374076578616d706c6503636f6d00001c0001ffffffff001020010db80020000a0000000000000004',
+      ':test.example.com:28:\\040\\001\\015\\270\\000\\040\\000\\012\\000\\000\\000\\000\\000\\000\\000\\004:2147483647::\n',
+    testW: '0474657374076578616d706c6503636f6d00001c00017fffffff001020010db80020000a0000000000000004',
   },
   {
     ...defaults,
@@ -78,8 +78,8 @@ const invalidRecords = [
   { ...defaults, address: '', msg: /address is required/ },
   { ...defaults, address: undefined, msg: /address is required/ },
   { ...defaults, ttl: '', msg: /TTL must be numeric/ },
-  { ...defaults, ttl: -299, msg: /TTL must be a 32-bit integer/ },
-  { ...defaults, ttl: 4294967296, msg: /TTL must be a 32-bit integer/ },
+  { ...defaults, ttl: -299, msg: /TTL must be an integer from 0 to 2147483647/ },
+  { ...defaults, ttl: 2147483648, msg: /TTL must be an integer from 0 to 2147483647/ },
 ]
 
 for (let i = 0; i < invalidRecords.length; i++) {
