@@ -61,6 +61,7 @@ export const KNOWN = [
 
 export function knownReason(stage, c) {
   return KNOWN.find(
-    (k) => k.stages.includes(stage) && (!k.types || k.types.includes(c?.type)) && (!k.when || k.when(c)),
+    (k) =>
+      k.stages.includes(stage) && (!k.types || k.types.includes(c?.type)) && (!k.when || (c && k.when(c))),
   )?.reason
 }
