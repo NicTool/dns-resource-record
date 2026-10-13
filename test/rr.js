@@ -312,7 +312,14 @@ describe('RR', function () {
   })
 
   describe('isValidName error path', function () {
-    for (const n of ['semi;colon.example.', 'a b.example.', 'a"b.example.', '(a).example.']) {
+    for (const n of [
+      'semi;colon.example.',
+      'a b.example.',
+      'a"b.example.',
+      '(a).example.',
+      'nul\x00.example.',
+      'del\x7f.example.',
+    ]) {
       it(`throws on an unescaped delimiter: ${n}`, function () {
         assert.throws(
           () => new RR(null).isValidName('TEST', 'hostname', n),

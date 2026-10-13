@@ -97,4 +97,11 @@ describe('LOC record', function () {
     assert.deepEqual([...loc.getWireRdata().subarray(1, 4)], [0x12, 0x16, 0x13])
     assert.equal(LOC.fromWire(loc.toWire()).get('address'), '42 21 54 N 71 6 18 W -24m')
   })
+
+  it('rejects surplus rdata', function () {
+    assert.throws(
+      () => LOC.fromBind('a.example. 60 IN LOC 42 21 54 N 71 6 18 W -24m trailing'),
+      /LOC address: invalid format/,
+    )
+  })
 })

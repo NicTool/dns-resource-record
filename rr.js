@@ -446,12 +446,16 @@ export default class RR {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  setFqdnValue(typeName, fieldName, val) {
+  isFqdnValue(typeName, fieldName, val) {
     if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
     if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`${typeName}: ${fieldName} must be a domain name`)
     this.isFullyQualified(typeName, fieldName, val)
     this.isValidName(typeName, fieldName, val)
+  }
+
+  setFqdnValue(typeName, fieldName, val) {
+    this.isFqdnValue(typeName, fieldName, val)
     this.set(fieldName, lowercaseName(val))
   }
 
@@ -583,10 +587,10 @@ export default class RR {
 
   isValidName(type, field, hostname) {
     this.hasValidLabels(hostname)
-    // Names are stored in presentation form, so master-file delimiters
-    // must arrive escaped (\032, \;) or the BIND export splits the name.
-    if (/[\s;"()]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
-      this.throwHelp(`${type}: ${field} has an unescaped delimiter: ${hostname}`)
+    // Names are stored in presentation form, so master-file delimiters and
+    // controls must arrive escaped (\032, \;, \000) or the BIND export breaks.
+    if (/[\s;"()\x00-\x1f\x7f]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
+      this.throwHelp(`${type}: ${field} has an unescaped delimiter or control: ${hostname}`)
     return true
   }
 

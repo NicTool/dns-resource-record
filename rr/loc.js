@@ -59,7 +59,7 @@ export default class LOC extends RR {
     const alt = '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
 
     // put them all together
-    const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i')
+    const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}$`, 'i')
     const r = string.match(locRe)
     if (!r) this.throwHelp('LOC address: invalid format, see RFC 1876')
 

@@ -41,10 +41,11 @@ export default class RRSIG extends RR {
   // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
   // `*`, and the signer is an ancestor of that owner.
   setLabels(val) {
-    this.setTypedValue('u8', 'labels', val)
+    this.is8bitInt('RRSIG', 'labels', val)
     const owner = nameToLabels(this.get('owner'))
     const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length
     if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`)
+    this.set('labels', val)
   }
 
   setOriginalTtl(val) {
@@ -64,8 +65,8 @@ export default class RRSIG extends RR {
   }
 
   setSignersName(val) {
-    this.setTypedValue('fqdn', 'signers name', val)
-    const signer = nameToLabels(this.get('signers name'))
+    this.isFqdnValue('RRSIG', 'signers name', val)
+    const signer = nameToLabels(val)
     if (signer.length > this.get('labels'))
       this.throwHelp(
         `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
@@ -76,6 +77,7 @@ export default class RRSIG extends RR {
     const offset = owner.length - signer.length
     if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
       this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`)
+    this.set('signers name', this.lowercaseName(val))
   }
 
   setSignature(val) {

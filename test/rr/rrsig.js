@@ -151,6 +151,15 @@ describe('RRSIG record', function () {
     assert.equal(wild.get('labels'), 2)
   })
 
+  it('leaves labels and signer unchanged when a new value is rejected', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 1 })
+    const { labels, 'signers name': signer } = r.toJSON()
+    assert.throws(() => r.setLabels(3), /exceeds the owner's/)
+    assert.throws(() => r.setSignersName('other.test.'), /not the owner or an ancestor/)
+    assert.equal(r.get('labels'), labels)
+    assert.equal(r.get('signers name'), signer)
+  })
+
   it('rejects an unassigned algorithm', function () {
     assert.throws(() => new RRSIG({ ...defaults, 'type covered': 1, algorithm: 99 }), /algorithm invalid/i)
   })

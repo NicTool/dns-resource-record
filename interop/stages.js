@@ -229,9 +229,9 @@ function corefileBlock(c, ctx, port) {
 async function corednsLoads(c, ctx) {
   const conf = path.join(ctx.work, 'Corefile.check')
   fs.writeFileSync(conf, corefileBlock(c, ctx, ctx.port))
-  const proc = startDaemon('coredns', ['-conf', conf], path.join(ctx.work, 'coredns-check.log'))
   const log = path.join(ctx.work, 'coredns-check.log')
-  const before = fs.statSync(log).size
+  const before = fs.existsSync(log) ? fs.statSync(log).size : 0
+  const proc = startDaemon('coredns', ['-conf', conf], log)
   for (let i = 0; i < 40; i++) {
     await sleep(50)
     const out = fs.readFileSync(log, 'utf8').slice(before)

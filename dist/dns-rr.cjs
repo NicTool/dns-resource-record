@@ -2069,12 +2069,16 @@ class RR {
     return /^["']/.test(val) && /["']$/.test(val)
   }
 
-  setFqdnValue(typeName, fieldName, val) {
+  isFqdnValue(typeName, fieldName, val) {
     if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`);
     if (this.isIPv4(val) || this.isIPv6(val))
       this.throwHelp(`${typeName}: ${fieldName} must be a domain name`);
     this.isFullyQualified(typeName, fieldName, val);
     this.isValidName(typeName, fieldName, val);
+  }
+
+  setFqdnValue(typeName, fieldName, val) {
+    this.isFqdnValue(typeName, fieldName, val);
     this.set(fieldName, lowercaseName(val));
   }
 
@@ -2206,10 +2210,10 @@ class RR {
 
   isValidName(type, field, hostname) {
     this.hasValidLabels(hostname);
-    // Names are stored in presentation form, so master-file delimiters
-    // must arrive escaped (\032, \;) or the BIND export splits the name.
-    if (/[\s;"()]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
-      this.throwHelp(`${type}: ${field} has an unescaped delimiter: ${hostname}`);
+    // Names are stored in presentation form, so master-file delimiters and
+    // controls must arrive escaped (\032, \;, \000) or the BIND export breaks.
+    if (/[\s;"()\x00-\x1f\x7f]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
+      this.throwHelp(`${type}: ${field} has an unescaped delimiter or control: ${hostname}`);
     return true
   }
 
@@ -4176,7 +4180,7 @@ class LOC extends RR {
     const alt = '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?';
 
     // put them all together
-    const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}`, 'i');
+    const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}$`, 'i');
     const r = string.match(locRe);
     if (!r) this.throwHelp('LOC address: invalid format, see RFC 1876');
 
@@ -5260,10 +5264,11 @@ class RRSIG extends RR {
   // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
   // `*`, and the signer is an ancestor of that owner.
   setLabels(val) {
-    this.setTypedValue('u8', 'labels', val);
+    this.is8bitInt('RRSIG', 'labels', val);
     const owner = nameToLabels(this.get('owner'));
     const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length;
     if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`);
+    this.set('labels', val);
   }
 
   setOriginalTtl(val) {
@@ -5283,8 +5288,8 @@ class RRSIG extends RR {
   }
 
   setSignersName(val) {
-    this.setTypedValue('fqdn', 'signers name', val);
-    const signer = nameToLabels(this.get('signers name'));
+    this.isFqdnValue('RRSIG', 'signers name', val);
+    const signer = nameToLabels(val);
     if (signer.length > this.get('labels'))
       this.throwHelp(
         `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
@@ -5295,6 +5300,7 @@ class RRSIG extends RR {
     const offset = owner.length - signer.length;
     if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
       this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`);
+    this.set('signers name', this.lowercaseName(val));
   }
 
   setSignature(val) {
