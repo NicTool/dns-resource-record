@@ -409,6 +409,17 @@ describe('svcParamsToWire', () => {
     }
   })
 
+  test('rejects a quoted value that is unterminated or followed by text', () => {
+    assert.throws(() => svcParamsToWire('alpn="h2'), /unterminated quoted value for alpn/)
+    assert.throws(() => svcParamsToWire('alpn="h2"x'), /text after the quoted value of alpn/)
+  })
+
+  test('tokenizes in linear time', () => {
+    const start = Date.now()
+    assert.throws(() => svcParamsToWire(`${'!='.repeat(50000)}!`), /unknown SvcParamKey/)
+    assert.ok(Date.now() - start < 1000)
+  })
+
   test('decoder rejects malformed params instead of truncating them', () => {
     for (const [hex, msg] of [
       ['000300', /inside a key header/],
