@@ -2,6 +2,7 @@ import RR from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 import { escapeCharString } from '../lib/bind.js'
+import { quoteCharString } from '../lib/maradns.js'
 
 export default class TXT extends RR {
   static typeName = 'TXT'
@@ -86,12 +87,9 @@ export default class TXT extends RR {
 
   toMaraDNS() {
     this.assertClassIN('MaraDNS')
-    // csv2 quotes with ' and has its own escaping, so the RFC 1035 rules below
-    // are presentation-format only and must not reach the payload. The chunk
-    // delimiter differs too; joining with it beats rewriting quotes after the
-    // fact, which also hit quotes belonging to the payload.
-    const data = asQuotedStrings(this.get('data'), { escape: false, delimiter: "' '" })
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
+    // csv2_txt(5): an unquoted ';' separates chunks.
+    const data = asQuotedStrings(this.get('data'), { quote: quoteCharString, delimiter: ';' })
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t${data} ~\n`
   }
 
   getWireRdata() {
@@ -133,18 +131,17 @@ export default class TXT extends RR {
 
 // RFC 1035 character-strings are 255 bytes max. The limit counts wire bytes,
 // so chunk the unescaped value by UTF-8 bytes and escape each chunk afterwards.
-function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
+function asQuotedStrings(data, { quote = escapeCharString, delimiter = '" "' } = {}) {
   const enc = new TextEncoder()
-  const esc = escape ? escapeCharString : (s) => s
 
   if (Array.isArray(data)) {
     const anyTooLong = data.some((s) => enc.encode(s).length > 255)
-    if (!anyTooLong) return data.map(esc).join(delimiter)
-    return chunkByBytes(data.join(''), 255).map(esc).join(delimiter)
+    if (!anyTooLong) return data.map(quote).join(delimiter)
+    return chunkByBytes(data.join(''), 255).map(quote).join(delimiter)
   }
 
-  if (enc.encode(data).length <= 255) return esc(data)
-  return chunkByBytes(data, 255).map(esc).join(delimiter)
+  if (enc.encode(data).length <= 255) return quote(data)
+  return chunkByBytes(data, 255).map(quote).join(delimiter)
 }
 
 function chunkByBytes(str, maxBytes) {

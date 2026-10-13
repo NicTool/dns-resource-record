@@ -1,5 +1,6 @@
 import * as TINYDNS from './lib/tinydns.js'
 import { nameToLabels } from './lib/name.js'
+import * as MARADNS from './lib/maradns.js'
 
 const customInspect = Symbol.for('nodejs.util.inspect.custom')
 import {
@@ -169,10 +170,14 @@ export default class RR {
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n)
     this.hasValidLabels(n)
 
-    // RFC 4592: a wildcard is a whole `*` label. An escaped \* or \042 is a
-    // literal byte and may appear anywhere.
+    // Owners are stored in presentation form, so master-file delimiters
+    // must arrive escaped (\032, \;) or the BIND export splits the name.
     const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_')
-    if (/\*/.test(unescaped) && !/^\*\./.test(unescaped) && !/\.\*\./.test(unescaped))
+    if (/[\s;"()]/.test(unescaped)) this.throwHelp(`owner has an unescaped delimiter: ${n}`)
+
+    // RFC 4592: a wildcard is a leftmost label of exactly `*`. An escaped \* or
+    // \042 is a literal byte and may appear anywhere.
+    if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
       this.throwHelp('only *.something or * (by itself) is a valid wildcard')
 
     this.set('owner', n.toLowerCase())
@@ -254,13 +259,8 @@ export default class RR {
   }
 
   getQuoted(prop) {
-    // if prop is not a quoted string field, return bare
     if (!this.isQuotedField(prop)) return this.get(prop)
-
-    // if it's already quoted, return as-is
-    if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
-
-    return `"${this.get(prop)}"` // add double quotes
+    return MARADNS.quoteCharString(this.get(prop))
   }
 
   static fieldName(entry) {
@@ -385,6 +385,20 @@ export default class RR {
     this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`)
   }
 
+  // RFC 4034 §3.2: a signature time is epoch seconds or YYYYMMDDHHmmSS in UTC.
+  // Fourteen digits always exceed 32 bits, so the two forms cannot collide.
+  setSignatureTime(field, val) {
+    const date = String(val).match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/)
+    if (date) {
+      const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6])
+      if (formatSignatureTime(ms / 1000) !== date[0])
+        this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`)
+      val = (ms / 1000) % 2 ** 32
+    }
+    this.is32bitInt(this.constructor.typeName, field, val)
+    this.set(field, val)
+  }
+
   isBase64(type, field, value) {
     if (
       typeof value === 'string' &&
@@ -480,8 +494,8 @@ export default class RR {
         this.set(fieldName, val)
         break
       case 'svcparams':
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
-        this.set(fieldName, val)
+      case 'list':
+        this.set(fieldName, val ?? '')
         break
       case 'ipv4':
         if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`)
@@ -627,9 +641,15 @@ export default class RR {
       /\s+/g,
     )
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getFields('rdata')
-      .map((f) => this.getQuoted(f))
-      .join('\t')} ~\n`
+    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
+    const fields = this.getFields('rdata')
+    const rdata = fields
+      .map((f, i) => {
+        const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t'
+        return sep + this.getQuoted(f)
+      })
+      .join('')
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${rdata} ~\n`
   }
 
   toMaraGeneric() {
@@ -641,4 +661,8 @@ export default class RR {
       : `''`
     return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
   }
+}
+
+export function formatSignatureTime(seconds) {
+  return new Date(seconds * 1000).toISOString().replace(/\D/g, '').slice(0, 14)
 }

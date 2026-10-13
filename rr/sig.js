@@ -1,4 +1,4 @@
-import RR from '../rr.js'
+import RR, { formatSignatureTime } from '../rr.js'
 
 import * as TINYDNS from '../lib/tinydns.js'
 import * as WIRE from '../lib/binary.js'
@@ -17,7 +17,7 @@ export default class SIG extends RR {
     ['signature inception', 'u32'],
     ['key tag', 'u16'],
     ['signers name', 'fqdn'],
-    ['signature', 'str'],
+    ['signature', 'base64'],
   ]
   static tags = ['obsolete']
 
@@ -27,9 +27,13 @@ export default class SIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 2 octet Type Covered field
-    if (!val) this.throwHelp(`SIG: 'type covered' is required`)
-
+    if (!val && val !== 0) this.throwHelp(`SIG: 'type covered' is required`)
+    if (typeof val === 'string') {
+      const typeNN = val.match(/^TYPE(\d+)$/i)
+      val = typeNN ? parseInt(typeNN[1], 10) : WIRE.DNS_TYPE_IDS[val.toUpperCase()]
+      if (val === undefined) this.throwHelp(`SIG: 'type covered' is not a recognized type name`)
+    }
+    this.is16bitInt('SIG', 'type covered', val)
     this.set('type covered', val)
   }
 
@@ -55,13 +59,11 @@ export default class SIG extends RR {
   }
 
   setSignatureExpiration(val) {
-    // a 4 octet Signature Expiration field
-    this.set('signature expiration', val)
+    this.setSignatureTime('signature expiration', val)
   }
 
   setSignatureInception(val) {
-    // a 4 octet Signature Inception field
-    this.set('signature inception', val)
+    this.setSignatureTime('signature inception', val)
   }
 
   setKeyTag(val) {
@@ -77,8 +79,7 @@ export default class SIG extends RR {
   }
 
   setSignature(val) {
-    // the Signature field.
-
+    this.isBase64('SIG', 'signature', val)
     this.set('signature', val)
   }
 
@@ -100,45 +101,12 @@ export default class SIG extends RR {
       'signature inception': 1042461120,
       'key tag': 12345,
       'signers name': 'example.com.',
-      signature: 'ABCDEF...',
+      signature: 'AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8no',
     }
-  }
-
-  /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // example.com. 3600 IN SIG TypeCovered Algorithm Labels OrigTTL SigExpiration SigInception KeyTag SignersName ( Signature )
-    const parts = bindline.trim().split(/\s+/)
-    const typeCoveredStr = parts[4]
-    const typeCovered = /^\d+$/.test(typeCoveredStr)
-      ? parseInt(typeCoveredStr, 10)
-      : (WIRE.DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10))
-
-    return new SIG({
-      owner: parts[0],
-      ttl: parseInt(parts[1], 10),
-      class: parts[2],
-      type: 'SIG',
-      'type covered': typeCovered,
-      algorithm: parseInt(parts[5], 10),
-      labels: parseInt(parts[6], 10),
-      'original ttl': parseInt(parts[7], 10),
-      'signature expiration': parseInt(parts[8], 10),
-      'signature inception': parseInt(parts[9], 10),
-      'key tag': parseInt(parts[10], 10),
-      'signers name': parts[11],
-      signature: parts
-        .slice(12)
-        .filter((a) => a !== '(' && a !== ')')
-        .join(' ')
-        .trim(),
-    })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:]/, 'g')
-
     return this.getTinydnsGeneric(
       TINYDNS.UInt16toOctal(this.get('type covered')) +
         TINYDNS.UInt8toOctal(this.get('algorithm')) +
@@ -148,13 +116,13 @@ export default class SIG extends RR {
         TINYDNS.UInt32toOctal(this.get('signature inception')) +
         TINYDNS.UInt16toOctal(this.get('key tag')) +
         TINYDNS.packDomainName(this.get('signers name')) +
-        TINYDNS.escapeOctal(dataRe, this.get('signature')),
+        TINYDNS.base64toOctal(this.get('signature')),
     )
   }
 
   getWireRdata() {
     const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
-    const sigBytes = new TextEncoder().encode(this.get('signature'))
+    const sigBytes = WIRE.base64ToBytes(this.get('signature'))
 
     const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
     const bytes = new Uint8Array(totalLen)
@@ -206,7 +174,7 @@ export default class SIG extends RR {
     }
     const signersName = `${labelsArr.join('.')}.`
 
-    const signature = new TextDecoder().decode(bytes.subarray(pos))
+    const signature = WIRE.bytesToBase64(bytes.subarray(pos))
 
     return new SIG({
       owner,
@@ -227,12 +195,12 @@ export default class SIG extends RR {
   }
 
   toBind(zone_opts) {
-    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	SIG${this.getRdataFields()
-      .slice(0, 4)
-      .map((f) => '	' + this.get(f))
-      .join('')}	${this.getRdataFields()
-      .slice(4, 8)
-      .map((f) => this.get(f))
-      .join('	')}	( ${this.get('signature')} )`
+    // RFC 2535 §7.2 presents SIG times only as YYYYMMDDHHmmSS; BIND rejects integers.
+    const rdata = this.getRdataFields().map((f) => {
+      if (f === 'signature expiration' || f === 'signature inception') return formatSignatureTime(this.get(f))
+      if (f === 'signers name') return this.getFQDN(f, zone_opts)
+      return this.get(f)
+    })
+    return `${this.getPrefix(zone_opts)}\t${rdata.join('\t')}\n`
   }
 }

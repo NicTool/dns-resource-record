@@ -7,7 +7,7 @@ export default class NXT extends RR {
   static typeName = 'NXT'
   static typeId = 30
   static RFCs = [2065]
-  static rdataFields = ['next domain', 'type bit map']
+  static rdataFields = ['next domain', ['type bit map', 'list']]
   static tags = ['obsolete']
 
   constructor(opts) {
@@ -67,19 +67,6 @@ export default class NXT extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NXT NextDomain TypeBitMap
-    const [owner, ttl, c, type, next] = bindline.split(/\s+/)
-    return new NXT({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'next domain': next,
-      'type bit map': bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
     const typeBitMap = nxtBitmapToTypes(rdata.subarray(end))
@@ -112,8 +99,6 @@ export default class NXT extends RR {
     return result
   }
 }
-
-const removeParens = (a) => !['(', ')'].includes(a)
 
 function nxtBitmapToTypes(bitmap) {
   const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))

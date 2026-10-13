@@ -57,20 +57,6 @@ export default class HTTPS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  HTTPS Priority TargetName Params
-    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/)
-    return new HTTPS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      priority: parseInt(pri, 10),
-      'target name': fqdn,
-      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
     if (typeId != this.getTypeId()) this.throwHelp('HTTPS fromTinydns, invalid n')

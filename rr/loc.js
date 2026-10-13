@@ -17,7 +17,7 @@ export default class LOC extends RR {
   static typeName = 'LOC'
   static typeId = 29
   static RFCs = [1876]
-  static rdataFields = ['address']
+  static rdataFields = [['address', 'list']]
 
   constructor(opts) {
     super(opts)
@@ -113,18 +113,6 @@ export default class LOC extends RR {
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    const [owner, ttl, c, type] = bindline.split(/\s+/)
-
-    return new LOC({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      address: bindline.split(/\s+/).slice(4).join(' ').trim(),
     })
   }
 

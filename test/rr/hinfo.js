@@ -89,4 +89,9 @@ describe('HINFO record', function () {
       }
     })
   }
+
+  it('exports MaraDNS csv2 as two ;-separated chunks, payload quotes intact', function () {
+    const r = new HINFO({ owner: 'h.example.', ttl: 60, type: 'HINFO', cpu: '"x"', os: "it's" })
+    assert.equal(r.toMaraDNS(), `h.example.\t+60\tHINFO\t'"x"';'it'\\x27's' ~\n`)
+  })
 })

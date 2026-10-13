@@ -54,7 +54,7 @@ const invalidRecords = [
   },
   {
     bindline: 'invalid dnskey line',
-    msg: /unable to parse DNSKEY/,
+    msg: /DNSKEY: missing rdata: protocol, algorithm, publickey/,
   },
 ]
 

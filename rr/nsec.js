@@ -7,7 +7,7 @@ export default class NSEC extends RR {
   static typeName = 'NSEC'
   static typeId = 47
   static RFCs = [4034]
-  static rdataFields = ['next domain', 'type bit maps']
+  static rdataFields = ['next domain', ['type bit maps', 'list']]
   static tags = ['dnssec']
 
   constructor(opts) {
@@ -65,19 +65,6 @@ export default class NSEC extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [owner, ttl, c, type, next] = bindline.split(/\s+/)
-    return new NSEC({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'next domain': next,
-      'type bit maps': bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0)
     const typeBitMaps = nsecBitmapToTypes(rdata.subarray(end))
@@ -111,8 +98,6 @@ export default class NSEC extends RR {
     return result
   }
 }
-
-const removeParens = (a) => !['(', ')'].includes(a)
 
 function nsecBitmapToTypes(bitmap) {
   const types = []

@@ -58,11 +58,11 @@ export default class RRSIG extends RR {
   }
 
   setSignatureExpiration(val) {
-    this.setTypedValue('u32', 'signature expiration', val)
+    this.setSignatureTime('signature expiration', val)
   }
 
   setSignatureInception(val) {
-    this.setTypedValue('u32', 'signature inception', val)
+    this.setSignatureTime('signature inception', val)
   }
 
   setKeyTag(val) {
@@ -127,32 +127,6 @@ export default class RRSIG extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
-    const parts = bindline.trim().split(/\s+/)
-    // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
-    const typeCovered = WIRE.typeNameToId(parts[4])
-    return new RRSIG({
-      owner: parts[0],
-      ttl: parseInt(parts[1], 10),
-      class: parts[2],
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm: parseInt(parts[5], 10),
-      labels: parseInt(parts[6], 10),
-      'original ttl': parseInt(parts[7], 10),
-      'signature expiration': parseInt(parts[8], 10),
-      'signature inception': parseInt(parts[9], 10),
-      'key tag': parseInt(parts[10], 10),
-      'signers name': parts[11],
-      signature: parts
-        .slice(12)
-        .filter((a) => a !== '(' && a !== ')')
-        .join(' ')
-        .trim(),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')

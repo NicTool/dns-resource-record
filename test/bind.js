@@ -14,7 +14,15 @@ const adversarial = [
   'two  spaces',
   '',
 ]
-const controls = ['line\nbreak', 'tab\tvalue', 'carriage\rreturn', 'a\u0000b', 'a\u007fb', 'é and 日本']
+const controls = [
+  'line\nbreak',
+  'tab\tvalue',
+  'carriage\rreturn',
+  'a\u0000b',
+  'a\u001ab',
+  'a\u007fb',
+  'é and 日本',
+]
 
 function roundTrip(type, opts) {
   const bind = new type(opts).toBind()
@@ -25,11 +33,20 @@ describe('tokenize', function () {
   it('ends a token at a closing quote', function () {
     assert.deepEqual(tokenize('"a"b'), [
       { text: 'a', quoted: true },
-      { text: 'b', quoted: false },
+      { text: 'b', quoted: false, adjoins: true },
     ])
     assert.deepEqual(tokenize('"a""b"'), [
       { text: 'a', quoted: true },
-      { text: 'b', quoted: true },
+      { text: 'b', quoted: true, adjoins: true },
+    ])
+  })
+
+  it('marks tokens with no whitespace before them', function () {
+    assert.deepEqual(tokenize('k="v" (x)y'), [
+      { text: 'k=', quoted: false },
+      { text: 'v', quoted: true, adjoins: true },
+      { text: 'x', quoted: false },
+      { text: 'y', quoted: false },
     ])
   })
 
@@ -88,9 +105,15 @@ describe('character-string escapes', function () {
     assert.equal(rr.get('data'), 'a";b cé')
   })
 
-  it('decodes unquoted escaped quotes', function () {
-    assert.equal(RR.TXT.fromBind('x.example. 300 IN TXT \\"bare\\"').get('data'), '"bare"')
-  })
+  for (const [text, data] of [
+    ['bare\\"', 'bare"'],
+    ['\\"bare', '"bare'],
+    ['\\"bare\\"', '"bare"'],
+  ]) {
+    it(`decodes unquoted escaped quotes: ${text}`, function () {
+      assert.equal(RR.TXT.fromBind(`x.example. 300 IN TXT ${text}`).get('data'), data)
+    })
+  }
 
   for (const bad of ['"\\999"', '"\\25"', '"\\255"']) {
     it(`rejects ${bad}`, function () {
@@ -218,14 +241,47 @@ describe('names keep their presentation escapes', function () {
     assert.throws(() => RR.A.fromBind(`a.${fits} 300 IN A 192.0.2.1`), /1-255 octets, got 257/)
   })
 
+  // Wire decoding writes delimiters as \DDD, so the second column is the form fromWire returns.
+  for (const [owner, fromWire] of [
+    ['two\\032words.example.', 'two\\032words.example.'],
+    ['semi\\;colon.example.', 'semi\\059colon.example.'],
+    ['quote\\"name.example.', 'quote\\034name.example.'],
+    ['slash\\\\name.example.', 'slash\\\\name.example.'],
+    ['paren\\(name\\).example.', 'paren\\040name\\041.example.'],
+    ['wide\\226\\128\\131space.example.', 'wide\\226\\128\\131space.example.'],
+  ]) {
+    it(`round trips an escaped owner: ${owner}`, function () {
+      const rr = new RR.TXT({ owner, ttl: 300, data: 'fixture' })
+      assert.equal(RR.TXT.fromBind(rr.toBind()).get('owner'), owner)
+      assert.equal(RR.TXT.fromWire(rr.toWire()).get('owner'), fromWire)
+    })
+  }
+
+  for (const owner of [
+    'two words.example.',
+    'semi;colon.example.',
+    'quote"name.example.',
+    'paren(name).example.',
+    'wide\u2003space.example.',
+  ]) {
+    it(`rejects an unescaped delimiter in an owner: ${JSON.stringify(owner)}`, function () {
+      assert.throws(() => new RR.TXT({ owner, ttl: 300, data: 'fixture' }), /unescaped delimiter/)
+    })
+  }
+
   it('accepts an escaped * inside a label', function () {
     for (const owner of ['a\\*b.example.', 'a\\042b.example.']) {
       assert.equal(RR.A.fromBind(`${owner} 300 IN A 192.0.2.1`).get('owner'), owner)
     }
   })
 
-  it('rejects a bare * inside a label', function () {
-    assert.throws(() => RR.A.fromBind('a*b.example. 300 IN A 192.0.2.1'), /valid wildcard/)
+  it('rejects * except as the whole leftmost label (RFC 4592)', function () {
+    for (const owner of ['a*b.example.', '*.a*b.example.', 'a.*.example.', '**.example.'])
+      assert.throws(() => new RR.A({ owner, ttl: 300, type: 'A', address: '192.0.2.1' }), /valid wildcard/)
+    assert.equal(
+      new RR.A({ owner: 'a.\\*.example.', ttl: 300, type: 'A', address: '192.0.2.1' }).get('owner'),
+      'a.\\*.example.',
+    )
   })
 
   it('round trips * through wire as a wildcard label or an escaped byte', function () {
@@ -267,6 +323,7 @@ describe('generic rdata', function () {
 
   it('rejects a different type', function () {
     assert.throws(() => RR.A.fromBind('x.example. 300 IN MX 10 mx.example.'), /expected A, got MX/)
+    assert.throws(() => RR.A.fromBind('x.example. 300 IN'), /expected A, got no type/)
   })
 
   it('rejects a different type before a custom importer runs', function () {
@@ -286,13 +343,32 @@ describe('generic rdata', function () {
   })
 })
 
+describe('list rdata', function () {
+  it('joins the rest of the rdata across parens and comments', function () {
+    const rr = RR.NSEC.fromBind('a.example. 300 IN NSEC b.example. ( A ; addr\n RRSIG )')
+    assert.equal(rr.get('type bit maps'), 'A RRSIG')
+  })
+
+  it('may be empty', function () {
+    const rr = RR.SVCB.fromBind('a.example. 300 IN SVCB 0 b.example.')
+    assert.equal(rr.get('params'), '')
+  })
+
+  it('keeps quoted values attached to their keys', function () {
+    const rr = RR.SVCB.fromBind('a.example. 300 IN SVCB 1 . ( alpn="h2,h3" ; comment\n port="8004" )')
+    assert.equal(rr.get('params'), 'alpn="h2,h3" port="8004"')
+  })
+
+  it('still requires the fields before it', function () {
+    assert.throws(() => RR.WKS.fromBind('a.example. 300 IN WKS 192.0.2.1'), /WKS: missing rdata: protocol/)
+  })
+})
+
 describe('canonical records round trip through BIND', function () {
   for (const type of Object.values(RR).filter(
     (c) => c?.prototype instanceof RRBase && c.typeId !== undefined,
   )) {
-    // NSEC3 stores type bit maps as a space- or tab-joined string depending on the importer
-    const skip = type.typeName === 'NSEC3'
-    it(type.typeName, { skip }, function () {
+    it(type.typeName, function () {
       const canonical = new type(null).getCanonical()
       assert.deepEqual(type.fromBind(new type(canonical).toBind()).toJSON(), new type(canonical).toJSON())
     })

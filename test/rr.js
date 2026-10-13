@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import RR from '../rr.js'
 import A from '../rr/a.js'
 import DS from '../rr/ds.js'
+import HINFO from '../rr/hinfo.js'
 import KEY from '../rr/key.js'
 import MX from '../rr/mx.js'
 import SOA from '../rr/soa.js'
@@ -202,15 +203,19 @@ describe('RR', function () {
   })
 
   describe('getQuoted', function () {
-    it('returns a quoted string', async () => {
-      r.set('cpu', '"already quoted"')
-      assert.equal(r.get('cpu'), '"already quoted"')
-      assert.equal(r.getQuoted('cpu'), '"already quoted"') // doesn't double quote
+    const hinfo = (cpu) => new HINFO({ owner: 'h.example.', ttl: 60, type: 'HINFO', cpu, os: 'os' })
+
+    it('quotes a character-string for MaraDNS csv2', async () => {
+      assert.equal(hinfo('Intel x86').getQuoted('cpu'), "'Intel x86'")
     })
 
-    it("doesn't double quote a quoted string", async () => {
-      r.set('cpu', '"already quoted"')
-      assert.equal(r.getQuoted('cpu'), '"already quoted"')
+    it('keeps payload quotes as data', async () => {
+      assert.equal(hinfo('"x"').getQuoted('cpu'), `'"x"'`)
+      assert.equal(hinfo("'x").getQuoted('cpu'), "\\x27'x'")
+    })
+
+    it('returns other fields bare', async () => {
+      assert.equal(hinfo('x').getQuoted('owner'), 'h.example.')
     })
   })
 

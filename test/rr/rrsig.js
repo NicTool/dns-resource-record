@@ -90,6 +90,14 @@ describe('RRSIG record', function () {
   base.fromTinydns(RRSIG, validRecords)
   base.fromWire(RRSIG, validRecords)
 
+  it('imports YYYYMMDDHHmmSS times as dnssec-signzone writes them (RFC 4034 §3.2)', function () {
+    const r = RRSIG.fromBind(
+      'r.example. 3600 IN RRSIG A 5 2 3600 20230315132000 20230315132000 12345 example. AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8no',
+    )
+    assert.equal(r.get('signature expiration'), 1678886400)
+    assert.equal(r.get('signature inception'), 1678886400)
+  })
+
   // test outside of roundtrip tests b/c mnemonic types are stored as ints
   it('resolves type name string "A" to numeric 1', function () {
     const r = new RRSIG({ ...defaults, 'type covered': 'A' })

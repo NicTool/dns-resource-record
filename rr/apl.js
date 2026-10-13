@@ -6,7 +6,7 @@ export default class APL extends RR {
   static typeName = 'APL'
   static typeId = 42
   static RFCs = [3123]
-  static rdataFields = ['apl rdata']
+  static rdataFields = [['apl rdata', 'list']]
 
   constructor(opts) {
     super(opts)
@@ -78,19 +78,6 @@ export default class APL extends RR {
       'apl rdata': items.join(' '),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  APL  {[!]afi:address/prefix}*
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type] = parts
-    return new APL({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'apl rdata': parts.slice(4).join(' ').trim(),
     })
   }
 

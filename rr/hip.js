@@ -8,7 +8,7 @@ export default class HIP extends RR {
   static typeName = 'HIP'
   static typeId = 55
   static RFCs = [8005]
-  static rdataFields = ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
+  static rdataFields = ['pk algorithm', 'hit', 'public key', ['rendezvous servers', 'list']]
 
   constructor(opts) {
     super(opts)
@@ -32,6 +32,10 @@ export default class HIP extends RR {
   }
 
   setRendezvousServers(val) {
+    for (const name of (val ?? '').split(/\s+/).filter(Boolean)) {
+      this.isFullyQualified('HIP', 'rendezvous servers', name)
+      this.hasValidLabels(name)
+    }
     this.set('rendezvous servers', val ?? '')
   }
 
@@ -89,34 +93,6 @@ export default class HIP extends RR {
       'rendezvous servers': rvsNames.join(' '),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
-    // The public key may be split across multiple lines and joined with spaces
-    // by the zone parser. Base64 chars are [A-Za-z0-9+/=]; domain names contain '.'.
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type, pkAlgorithm, hit] = parts
-    const rest = parts.slice(6)
-    const keyParts = []
-    const rvsParts = []
-    for (const token of rest) {
-      if (/^[A-Za-z0-9+/=]+$/.test(token)) {
-        keyParts.push(token)
-      } else {
-        rvsParts.push(token)
-      }
-    }
-    return new HIP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'pk algorithm': parseInt(pkAlgorithm, 10),
-      hit,
-      'public key': keyParts.join(''),
-      'rendezvous servers': rvsParts.join(' ').trim(),
     })
   }
 

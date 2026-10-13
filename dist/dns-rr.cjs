@@ -329,6 +329,24 @@ function bytesToOctalString(bytes) {
   return result
 }
 
+// csv2(5) and csv2_txt(5): text inside '...' is literal, so ', |, ~, # and
+// controls are written outside the quotes as \xNN escapes.
+function quoteCharString(str) {
+  let out = '';
+  let quoted = false;
+  for (const c of String(str)) {
+    const code = c.codePointAt(0);
+    const escaped = code < 0x20 || code === 0x7f || "'|~#".includes(c);
+    if (escaped === quoted) {
+      out += "'";
+      quoted = !quoted;
+    }
+    out += escaped ? `\\x${code.toString(16).padStart(2, '0')}` : c;
+  }
+  if (quoted) out += "'";
+  return out || "''"
+}
+
 function hexToBytes(hex) {
   return Uint8Array.from({ length: hex.length / 2 }, (_, i) => parseInt(hex.slice(i * 2, i * 2 + 2), 16))
 }
@@ -850,25 +868,36 @@ function svcParamsFromWire(bytes) {
 
 // RFC 1035 §5.1 master-file lexer. Escapes stay in token text because their
 // meaning depends on the field: in a name, `\.` is a dot inside a label.
-// `"`, `(` and `)` delimit tokens even without whitespace, as in BIND.
+// `"`, `(` and `)` delimit tokens even without whitespace, as in BIND. A token
+// that touches the one before it is marked `adjoins`, so SVCB's key="value"
+// survives as one parameter.
 function tokenize(line) {
   const tokens = [];
   let token = null;
   let depth = 0;
+  let separated = true;
+  const start = (quoted) => {
+    token = separated ? { text: '', quoted } : { text: '', quoted, adjoins: true };
+    separated = false;
+  };
   const flush = () => {
     if (token) tokens.push(token);
     token = null;
+  };
+  const separate = () => {
+    flush();
+    separated = true;
   };
 
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
     if (c === '\\') {
       if (i + 1 === line.length) throw new Error('BIND: incomplete escape')
-      token ??= { text: '', quoted: false };
+      if (!token) start(false);
       token.text += c + line[++i];
     } else if (c === '"') {
       flush();
-      token = { text: '', quoted: true };
+      start(true);
       for (i++; line[i] !== '"'; i++) {
         if (i >= line.length) throw new Error('BIND: unterminated quoted string')
         if (line[i] === '\n') throw new Error('BIND: newline in quoted string')
@@ -880,19 +909,19 @@ function tokenize(line) {
       }
       flush();
     } else if (c === ';') {
-      flush();
+      separate();
       while (i + 1 < line.length && line[i + 1] !== '\n') i++;
     } else if (c === '(' || c === ')') {
-      flush();
+      separate();
       depth += c === '(' ? 1 : -1;
       if (depth < 0) throw new Error('BIND: unbalanced parentheses')
     } else if (c === '\n' && depth === 0) {
-      flush();
+      separate();
       if (/\S/.test(line.slice(i + 1))) throw new Error('BIND: text after end of record')
     } else if (/\s/.test(c)) {
-      flush();
+      separate();
     } else {
-      token ??= { text: '', quoted: false };
+      if (!token) start(false);
       token.text += c;
     }
   }
@@ -979,6 +1008,17 @@ function escapeCharString(str) {
   }).join('')
 }
 
+// A list field is the rest of the rdata, kept in presentation form for the
+// RR's own setter to parse: type bit maps, APL items, SVCB params.
+const listTypes = new Set(['list', 'svcparams']);
+
+function joinList(tokens) {
+  return tokens
+    .map((t) => (t.adjoins ? '' : ' ') + (t.quoted ? `"${t.text}"` : t.text))
+    .join('')
+    .trimStart()
+}
+
 function fieldTypeOf(def) {
   return Array.isArray(def) ? def[1] : null
 }
@@ -1024,6 +1064,7 @@ function fromBind3597(rrInstance, parsed) {
 // UNKNOWN has no static typeId and accepts any TYPEnnn.
 function assertType(type, RRClass) {
   if (RRClass.typeId === undefined || type === RRClass.typeName) return
+  if (!type) throw new Error(`expected ${RRClass.typeName}, got no type`)
   const typeNN = type.match(/^TYPE(\d+)$/);
   if (typeNN !== null && Number(typeNN[1]) === RRClass.typeId) return
   throw new Error(`expected ${RRClass.typeName}, got ${type}`)
@@ -1042,11 +1083,13 @@ function fromBind(rrInstance, opts) {
   const fields = rrInstance.getFields('rdata');
   const rdataDefs = rrInstance.constructor.rdataFields ?? [];
   const opaqueTypes = new Set(['str', 'hex', 'base64']);
-
-  if (rdata.length < fields.length)
-    throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
   const lastType = fieldTypeOf(rdataDefs.at(-1));
-  const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs';
+  const lastIsList = listTypes.has(lastType);
+
+  const required = lastIsList ? fields.length - 1 : fields.length;
+  if (rdata.length < required)
+    throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
+  const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs' || lastIsList;
   if (rdata.length > fields.length && !lastIsVariadic)
     throw new Error(
       `${typeName}: unexpected rdata: ${rdata
@@ -1064,6 +1107,11 @@ function fromBind(rrInstance, opts) {
         .slice(i)
         .map((t) => t.text)
         .join('');
+      break
+    }
+
+    if (isLastField && lastIsList) {
+      result[fields[i]] = joinList(rdata.slice(i));
       break
     }
 
@@ -1251,10 +1299,14 @@ class RR {
     this.isFullyQualified(this.constructor.typeName ?? this.constructor.name, 'owner', n);
     this.hasValidLabels(n);
 
-    // RFC 4592: a wildcard is a whole `*` label. An escaped \* or \042 is a
-    // literal byte and may appear anywhere.
+    // Owners are stored in presentation form, so master-file delimiters
+    // must arrive escaped (\032, \;) or the BIND export splits the name.
     const unescaped = n.replace(/\\(?:[0-9]{3}|.)/g, '_');
-    if (/\*/.test(unescaped) && !/^\*\./.test(unescaped) && !/\.\*\./.test(unescaped))
+    if (/[\s;"()]/.test(unescaped)) this.throwHelp(`owner has an unescaped delimiter: ${n}`);
+
+    // RFC 4592: a wildcard is a leftmost label of exactly `*`. An escaped \* or
+    // \042 is a literal byte and may appear anywhere.
+    if (unescaped.split('.').some((label, i) => label.includes('*') && (label !== '*' || i > 0)))
       this.throwHelp('only *.something or * (by itself) is a valid wildcard');
 
     this.set('owner', n.toLowerCase());
@@ -1336,13 +1388,8 @@ class RR {
   }
 
   getQuoted(prop) {
-    // if prop is not a quoted string field, return bare
     if (!this.isQuotedField(prop)) return this.get(prop)
-
-    // if it's already quoted, return as-is
-    if (/['"]/.test(this.get(prop)[0])) return this.get(prop)
-
-    return `"${this.get(prop)}"` // add double quotes
+    return quoteCharString(this.get(prop))
   }
 
   static fieldName(entry) {
@@ -1467,6 +1514,20 @@ class RR {
     this.throwHelp(`${type} ${field} must be a 32-bit integer (in the range 0-4294967295)`);
   }
 
+  // RFC 4034 §3.2: a signature time is epoch seconds or YYYYMMDDHHmmSS in UTC.
+  // Fourteen digits always exceed 32 bits, so the two forms cannot collide.
+  setSignatureTime(field, val) {
+    const date = String(val).match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
+    if (date) {
+      const ms = Date.UTC(date[1], date[2] - 1, date[3], date[4], date[5], date[6]);
+      if (formatSignatureTime(ms / 1000) !== date[0])
+        this.throwHelp(`${this.constructor.typeName} ${field} is not a valid date: ${val}`);
+      val = (ms / 1000) % 2 ** 32;
+    }
+    this.is32bitInt(this.constructor.typeName, field, val);
+    this.set(field, val);
+  }
+
   isBase64(type, field, value) {
     if (
       typeof value === 'string' &&
@@ -1562,8 +1623,8 @@ class RR {
         this.set(fieldName, val);
         break
       case 'svcparams':
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`);
-        this.set(fieldName, val);
+      case 'list':
+        this.set(fieldName, val ?? '');
         break
       case 'ipv4':
         if (!this.isIPv4(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv4 address`);
@@ -1709,9 +1770,15 @@ class RR {
       /\s+/g,
     );
     if (!supportedTypes.includes(type)) return this.toMaraGeneric()
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${this.getFields('rdata')
-      .map((f) => this.getQuoted(f))
-      .join('\t')} ~\n`
+    // csv2 separates adjacent character-strings with ';' (HINFO, NAPTR).
+    const fields = this.getFields('rdata');
+    const rdata = fields
+      .map((f, i) => {
+        const sep = i === 0 ? '' : this.isQuotedField(f) && this.isQuotedField(fields[i - 1]) ? ';' : '\t';
+        return sep + this.getQuoted(f)
+      })
+      .join('');
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${type}\t${rdata} ~\n`
   }
 
   toMaraGeneric() {
@@ -1723,6 +1790,10 @@ class RR {
       : `''`;
     return `${this.get('owner')}\t+${this.get('ttl')}\tRAW ${this.getTypeId()}\t${rdata} ~\n`
   }
+}
+
+function formatSignatureTime(seconds) {
+  return new Date(seconds * 1000).toISOString().replace(/\D/g, '').slice(0, 14)
 }
 
 /**
@@ -2141,7 +2212,7 @@ class APL extends RR {
   static typeName = 'APL'
   static typeId = 42
   static RFCs = [3123]
-  static rdataFields = ['apl rdata']
+  static rdataFields = [['apl rdata', 'list']]
 
   constructor(opts) {
     super(opts);
@@ -2213,19 +2284,6 @@ class APL extends RR {
       'apl rdata': items.join(' '),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  APL  {[!]afi:address/prefix}*
-    const parts = bindline.split(/\s+/);
-    const [owner, ttl, c, type] = parts;
-    return new APL({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'apl rdata': parts.slice(4).join(' ').trim(),
     })
   }
 
@@ -2621,21 +2679,6 @@ class CERT extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
-    const [owner, ttl, c, type, certtype, keytag, algo, certificate] = bindline.split(/\s+/);
-    return new CERT({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'cert type': /^[0-9]+$/.test(certtype) ? parseInt(certtype, 10) : certtype,
-      'key tag': parseInt(keytag, 10),
-      algorithm: parseInt(algo, 10),
-      certificate,
-    })
-  }
-
   /******  EXPORTERS   *******/
 
   toTinydns() {
@@ -2919,31 +2962,6 @@ class DNSKEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>DNSKEY)\s+(?<flags>\d+)\s+(?<protocol>\d+)\s+(?<algorithm>\d+)\s+(?<publickey>\S.*)$/i;
-
-    const match = bindline.trim().match(regex);
-
-    if (!match) {
-      this.throwHelp(`unable to parse DNSKEY: ${bindline}`);
-    }
-
-    const { owner, ttl, c, type, flags, protocol, algorithm, publickey } = match.groups;
-
-    return new DNSKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      flags: parseInt(flags, 10),
-      protocol: parseInt(protocol, 10),
-      algorithm: parseInt(algorithm, 10),
-      publickey: publickey,
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
     if (typeId != this.getTypeId()) this.throwHelp('DNSKEY fromTinydns, invalid n');
@@ -3203,7 +3221,7 @@ class HIP extends RR {
   static typeName = 'HIP'
   static typeId = 55
   static RFCs = [8005]
-  static rdataFields = ['pk algorithm', 'hit', 'public key', 'rendezvous servers']
+  static rdataFields = ['pk algorithm', 'hit', 'public key', ['rendezvous servers', 'list']]
 
   constructor(opts) {
     super(opts);
@@ -3227,6 +3245,10 @@ class HIP extends RR {
   }
 
   setRendezvousServers(val) {
+    for (const name of (val ?? '').split(/\s+/).filter(Boolean)) {
+      this.isFullyQualified('HIP', 'rendezvous servers', name);
+      this.hasValidLabels(name);
+    }
     this.set('rendezvous servers', val ?? '');
   }
 
@@ -3284,34 +3306,6 @@ class HIP extends RR {
       'rendezvous servers': rvsNames.join(' '),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    // owner  ttl  IN  HIP  pk-algorithm HIT public-key [rendezvous-server...]
-    // The public key may be split across multiple lines and joined with spaces
-    // by the zone parser. Base64 chars are [A-Za-z0-9+/=]; domain names contain '.'.
-    const parts = bindline.split(/\s+/);
-    const [owner, ttl, c, type, pkAlgorithm, hit] = parts;
-    const rest = parts.slice(6);
-    const keyParts = [];
-    const rvsParts = [];
-    for (const token of rest) {
-      if (/^[A-Za-z0-9+/=]+$/.test(token)) {
-        keyParts.push(token);
-      } else {
-        rvsParts.push(token);
-      }
-    }
-    return new HIP({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'pk algorithm': parseInt(pkAlgorithm, 10),
-      hit,
-      'public key': keyParts.join(''),
-      'rendezvous servers': rvsParts.join(' ').trim(),
     })
   }
 
@@ -3453,20 +3447,6 @@ class HTTPS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  HTTPS Priority TargetName Params
-    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/);
-    return new HTTPS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      priority: parseInt(pri, 10),
-      'target name': fqdn,
-      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
     if (typeId != this.getTypeId()) this.throwHelp('HTTPS fromTinydns, invalid n');
@@ -3602,21 +3582,6 @@ class IPSECKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline }) {
-    // FQDN TTL CLASS IPSECKEY Precedence GatewayType Algorithm Gateway PublicKey
-    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] = bindline.split(/\s+/);
-    return new IPSECKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      precedence: parseInt(prec, 10),
-      'gateway type': parseInt(gwt, 10),
-      algorithm: parseInt(algo, 10),
-      gateway,
-      publickey,
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
@@ -3857,21 +3822,6 @@ class KEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
-    const [owner, ttl, c, type, flags, protocol, algorithm] = bindline.split(/\s+/);
-    return new KEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      flags: parseInt(flags, 10),
-      protocol: parseInt(protocol, 10),
-      algorithm: parseInt(algorithm, 10),
-      publickey: bindline.split(/\s+/).slice(7).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     // RDATA format: Flags (8 octal chars) + Protocol (4 octal chars) + Algorithm (4 octal chars) + Public Key (escaped data)
     const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
@@ -4009,7 +3959,7 @@ class LOC extends RR {
   static typeName = 'LOC'
   static typeId = 29
   static RFCs = [1876]
-  static rdataFields = ['address']
+  static rdataFields = [['address', 'list']]
 
   constructor(opts) {
     super(opts);
@@ -4105,18 +4055,6 @@ class LOC extends RR {
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
-    })
-  }
-
-  fromBind({ bindline }) {
-    const [owner, ttl, c, type] = bindline.split(/\s+/);
-
-    return new LOC({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      address: bindline.split(/\s+/).slice(4).join(' ').trim(),
     })
   }
 
@@ -4548,7 +4486,7 @@ class NSEC extends RR {
   static typeName = 'NSEC'
   static typeId = 47
   static RFCs = [4034]
-  static rdataFields = ['next domain', 'type bit maps']
+  static rdataFields = ['next domain', ['type bit maps', 'list']]
   static tags = ['dnssec']
 
   constructor(opts) {
@@ -4606,19 +4544,6 @@ class NSEC extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NSEC NextDomain TypeBitMaps
-    const [owner, ttl, c, type, next] = bindline.split(/\s+/);
-    return new NSEC({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'next domain': next,
-      'type bit maps': bindline.split(/\s+/).slice(5).filter(removeParens$1).join(' ').trim(),
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0);
     const typeBitMaps = nsecBitmapToTypes(rdata.subarray(end));
@@ -4652,8 +4577,6 @@ class NSEC extends RR {
     return result
   }
 }
-
-const removeParens$1 = (a) => !['(', ')'].includes(a);
 
 function nsecBitmapToTypes(bitmap) {
   const types = [];
@@ -4722,7 +4645,7 @@ class NSEC3 extends RR {
     'iterations',
     'salt',
     'next hashed owner name',
-    'type bit maps',
+    ['type bit maps', 'list'],
   ]
   static tags = ['dnssec']
 
@@ -4803,28 +4726,6 @@ class NSEC3 extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/);
-    // rdata may be parenthesized or inline
-    const rdataStr = bindline.includes('(')
-      ? bindline.split(/\(|\)/)[1]
-      : bindline.split(/\s+/).slice(8).join(' ');
-
-    return new NSEC3({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'hash algorithm': parseInt(ha, 10),
-      flags: parseInt(flags, 10),
-      iterations: parseInt(iterations, 10),
-      salt,
-      'next hashed owner name': rdataStr.trim().split(/\s+/)[0],
-      'type bit maps': rdataStr.trim().split(/\s+/).slice(1).join('\t'),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
@@ -5119,7 +5020,7 @@ class NXT extends RR {
   static typeName = 'NXT'
   static typeId = 30
   static RFCs = [2065]
-  static rdataFields = ['next domain', 'type bit map']
+  static rdataFields = ['next domain', ['type bit map', 'list']]
   static tags = ['obsolete']
 
   constructor(opts) {
@@ -5179,19 +5080,6 @@ class NXT extends RR {
     })
   }
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  NXT NextDomain TypeBitMap
-    const [owner, ttl, c, type, next] = bindline.split(/\s+/);
-    return new NXT({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'next domain': next,
-      'type bit map': bindline.split(/\s+/).slice(5).filter(removeParens).join(' ').trim(),
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: nextDomain, end } = this.wireUnpackDomain(rdata, 0);
     const typeBitMap = nxtBitmapToTypes(rdata.subarray(end));
@@ -5224,8 +5112,6 @@ class NXT extends RR {
     return result
   }
 }
-
-const removeParens = (a) => !['(', ')'].includes(a);
 
 function nxtBitmapToTypes(bitmap) {
   const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]));
@@ -5286,24 +5172,6 @@ class OPENPGPKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline: bindline }) {
-    // test.example.com  3600  IN  OPENPGPKEY  <base64 public key>
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<class>IN)\s+(?<type>OPENPGPKEY)\s+(?<publickey>\S[\s\S]*)$/i;
-    const match = bindline.trim().match(regex);
-    if (!match) this.throwHelp(`unable to parse OPENPGPKEY: ${bindline}`);
-
-    const { owner, ttl, class: c, type, publickey } = match.groups;
-    const keyStr = publickey.trim().replace(/\s+/g, '');
-
-    return new OPENPGPKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'public key': keyStr,
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
@@ -5505,11 +5373,11 @@ class RRSIG extends RR {
   }
 
   setSignatureExpiration(val) {
-    this.setTypedValue('u32', 'signature expiration', val);
+    this.setSignatureTime('signature expiration', val);
   }
 
   setSignatureInception(val) {
-    this.setTypedValue('u32', 'signature inception', val);
+    this.setSignatureTime('signature inception', val);
   }
 
   setKeyTag(val) {
@@ -5574,32 +5442,6 @@ class RRSIG extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
-    const parts = bindline.trim().split(/\s+/);
-    // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
-    const typeCovered = typeNameToId(parts[4]);
-    return new RRSIG({
-      owner: parts[0],
-      ttl: parseInt(parts[1], 10),
-      class: parts[2],
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm: parseInt(parts[5], 10),
-      labels: parseInt(parts[6], 10),
-      'original ttl': parseInt(parts[7], 10),
-      'signature expiration': parseInt(parts[8], 10),
-      'signature inception': parseInt(parts[9], 10),
-      'key tag': parseInt(parts[10], 10),
-      'signers name': parts[11],
-      signature: parts
-        .slice(12)
-        .filter((a) => a !== '(' && a !== ')')
-        .join(' ')
-        .trim(),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
@@ -5702,7 +5544,7 @@ class SIG extends RR {
     ['signature inception', 'u32'],
     ['key tag', 'u16'],
     ['signers name', 'fqdn'],
-    ['signature', 'str'],
+    ['signature', 'base64'],
   ]
   static tags = ['obsolete']
 
@@ -5712,9 +5554,13 @@ class SIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 2 octet Type Covered field
-    if (!val) this.throwHelp(`SIG: 'type covered' is required`);
-
+    if (!val && val !== 0) this.throwHelp(`SIG: 'type covered' is required`);
+    if (typeof val === 'string') {
+      const typeNN = val.match(/^TYPE(\d+)$/i);
+      val = typeNN ? parseInt(typeNN[1], 10) : DNS_TYPE_IDS[val.toUpperCase()];
+      if (val === undefined) this.throwHelp(`SIG: 'type covered' is not a recognized type name`);
+    }
+    this.is16bitInt('SIG', 'type covered', val);
     this.set('type covered', val);
   }
 
@@ -5740,13 +5586,11 @@ class SIG extends RR {
   }
 
   setSignatureExpiration(val) {
-    // a 4 octet Signature Expiration field
-    this.set('signature expiration', val);
+    this.setSignatureTime('signature expiration', val);
   }
 
   setSignatureInception(val) {
-    // a 4 octet Signature Inception field
-    this.set('signature inception', val);
+    this.setSignatureTime('signature inception', val);
   }
 
   setKeyTag(val) {
@@ -5762,8 +5606,7 @@ class SIG extends RR {
   }
 
   setSignature(val) {
-    // the Signature field.
-
+    this.isBase64('SIG', 'signature', val);
     this.set('signature', val);
   }
 
@@ -5785,45 +5628,12 @@ class SIG extends RR {
       'signature inception': 1042461120,
       'key tag': 12345,
       'signers name': 'example.com.',
-      signature: 'ABCDEF...',
+      signature: 'AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8no',
     }
-  }
-
-  /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // example.com. 3600 IN SIG TypeCovered Algorithm Labels OrigTTL SigExpiration SigInception KeyTag SignersName ( Signature )
-    const parts = bindline.trim().split(/\s+/);
-    const typeCoveredStr = parts[4];
-    const typeCovered = /^\d+$/.test(typeCoveredStr)
-      ? parseInt(typeCoveredStr, 10)
-      : (DNS_TYPE_IDS[typeCoveredStr.toUpperCase()] ?? parseInt(typeCoveredStr, 10));
-
-    return new SIG({
-      owner: parts[0],
-      ttl: parseInt(parts[1], 10),
-      class: parts[2],
-      type: 'SIG',
-      'type covered': typeCovered,
-      algorithm: parseInt(parts[5], 10),
-      labels: parseInt(parts[6], 10),
-      'original ttl': parseInt(parts[7], 10),
-      'signature expiration': parseInt(parts[8], 10),
-      'signature inception': parseInt(parts[9], 10),
-      'key tag': parseInt(parts[10], 10),
-      'signers name': parts[11],
-      signature: parts
-        .slice(12)
-        .filter((a) => a !== '(' && a !== ')')
-        .join(' ')
-        .trim(),
-    })
   }
 
   /******  EXPORTERS   *******/
   toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:]/, 'g');
-
     return this.getTinydnsGeneric(
       UInt16toOctal(this.get('type covered')) +
         UInt8toOctal(this.get('algorithm')) +
@@ -5833,13 +5643,13 @@ class SIG extends RR {
         UInt32toOctal(this.get('signature inception')) +
         UInt16toOctal(this.get('key tag')) +
         packDomainName(this.get('signers name')) +
-        escapeOctal(dataRe, this.get('signature')),
+        base64toOctal(this.get('signature')),
     )
   }
 
   getWireRdata() {
     const signerBytes = wirePackDomain(this.get('signers name'));
-    const sigBytes = new TextEncoder().encode(this.get('signature'));
+    const sigBytes = base64ToBytes(this.get('signature'));
 
     const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length;
     const bytes = new Uint8Array(totalLen);
@@ -5891,7 +5701,7 @@ class SIG extends RR {
     }
     const signersName = `${labelsArr.join('.')}.`;
 
-    const signature = new TextDecoder().decode(bytes.subarray(pos));
+    const signature = bytesToBase64(bytes.subarray(pos));
 
     return new SIG({
       owner,
@@ -5912,13 +5722,13 @@ class SIG extends RR {
   }
 
   toBind(zone_opts) {
-    return `${this.getFQDN('owner', zone_opts)}	${this.get('ttl')}	${this.get('class')}	SIG${this.getRdataFields()
-      .slice(0, 4)
-      .map((f) => '	' + this.get(f))
-      .join('')}	${this.getRdataFields()
-      .slice(4, 8)
-      .map((f) => this.get(f))
-      .join('	')}	( ${this.get('signature')} )`
+    // RFC 2535 §7.2 presents SIG times only as YYYYMMDDHHmmSS; BIND rejects integers.
+    const rdata = this.getRdataFields().map((f) => {
+      if (f === 'signature expiration' || f === 'signature inception') return formatSignatureTime(this.get(f))
+      if (f === 'signers name') return this.getFQDN(f, zone_opts)
+      return this.get(f)
+    });
+    return `${this.getPrefix(zone_opts)}\t${rdata.join('\t')}\n`
   }
 }
 
@@ -6003,21 +5813,6 @@ class SMIMEA extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SMIMEA, usage, selector, match, data
-    const [owner, ttl, c, type, usage, selector, match] = bindline.split(/\s+/);
-    return new SMIMEA({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'certificate usage': parseInt(usage, 10),
-      selector: parseInt(selector, 10),
-      'matching type': parseInt(match, 10),
-      'certificate association data': bindline.split(/\s+/).slice(7).join(' ').trim(),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
@@ -6294,12 +6089,9 @@ class TXT extends RR {
 
   toMaraDNS() {
     this.assertClassIN('MaraDNS');
-    // csv2 quotes with ' and has its own escaping, so the RFC 1035 rules below
-    // are presentation-format only and must not reach the payload. The chunk
-    // delimiter differs too; joining with it beats rewriting quotes after the
-    // fact, which also hit quotes belonging to the payload.
-    const data = asQuotedStrings(this.get('data'), { escape: false, delimiter: "' '" });
-    return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t'${data}' ~\n`
+    // csv2_txt(5): an unquoted ';' separates chunks.
+    const data = asQuotedStrings(this.get('data'), { quote: quoteCharString, delimiter: ';' });
+    return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t${data} ~\n`
   }
 
   getWireRdata() {
@@ -6341,18 +6133,17 @@ class TXT extends RR {
 
 // RFC 1035 character-strings are 255 bytes max. The limit counts wire bytes,
 // so chunk the unescaped value by UTF-8 bytes and escape each chunk afterwards.
-function asQuotedStrings(data, { escape = true, delimiter = '" "' } = {}) {
+function asQuotedStrings(data, { quote = escapeCharString, delimiter = '" "' } = {}) {
   const enc = new TextEncoder();
-  const esc = escape ? escapeCharString : (s) => s;
 
   if (Array.isArray(data)) {
     const anyTooLong = data.some((s) => enc.encode(s).length > 255);
-    if (!anyTooLong) return data.map(esc).join(delimiter)
-    return chunkByBytes(data.join(''), 255).map(esc).join(delimiter)
+    if (!anyTooLong) return data.map(quote).join(delimiter)
+    return chunkByBytes(data.join(''), 255).map(quote).join(delimiter)
   }
 
-  if (enc.encode(data).length <= 255) return esc(data)
-  return chunkByBytes(data, 255).map(esc).join(delimiter)
+  if (enc.encode(data).length <= 255) return quote(data)
+  return chunkByBytes(data, 255).map(quote).join(delimiter)
 }
 
 function chunkByBytes(str, maxBytes) {
@@ -6711,22 +6502,6 @@ class SVCB extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SVCB Priority TargetName Params
-    // _8443._foo.api.example.com. 7200 IN SVCB 0 svc4.example.net.
-    // svc4.example.net.  7200  IN SVCB 3 svc4.example.net. ( alpn="bar" port="8004" )
-    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/);
-    return new SVCB({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      priority: parseInt(pri, 10),
-      'target name': fqdn,
-      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
     if (typeId != this.getTypeId()) this.throwHelp('SVCB fromTinydns, invalid n');
@@ -6849,26 +6624,6 @@ class TLSA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  TLSA, usage, selector, match, data
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d{1,10})\s+(?<cls>IN)\s+(?<type>TLSA)\s+(?<usage>\d+)\s+(?<selector>\d+)\s+(?<matchtype>\d+)\s+(?<cad>\S.*)$/i;
-    const match = bindline.trim().match(regex);
-    if (!match) this.throwHelp(`unable to parse TLSA: ${bindline}`);
-    const { owner, ttl, cls, type, usage, selector, matchtype, cad } = match.groups;
-
-    return new TLSA({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      class: cls.toUpperCase(),
-      type: type.toUpperCase(),
-      'certificate usage': parseInt(usage, 10),
-      selector: parseInt(selector, 10),
-      'matching type': parseInt(matchtype, 10),
-      'certificate association data': cad.trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
     if (typeId != this.getTypeId()) this.throwHelp('TLSA fromTinydns, invalid n');
@@ -6914,6 +6669,17 @@ class TSIG extends RR {
   static typeId = 250
   static RFCs = [2845, 8945]
   static rdataFields = ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
+  static errorNames = {
+    NOERROR: 0,
+    BADSIG: 16,
+    BADKEY: 17,
+    BADTIME: 18,
+    BADMODE: 19,
+    BADNAME: 20,
+    BADALG: 21,
+    BADTRUNC: 22,
+    BADCOOKIE: 23,
+  }
 
   constructor(opts) {
     super(opts);
@@ -6935,7 +6701,7 @@ class TSIG extends RR {
       'algorithm name': 'hmac-sha256.',
       'time signed': 1620650000,
       fudge: 300,
-      mac: 'ABCDEF...',
+      mac: '3q2+7w==',
       'original id': 12345,
       error: 0,
       other: '',
@@ -6958,8 +6724,9 @@ class TSIG extends RR {
   }
 
   setTimeSigned(val) {
-    // a 48-bit unsigned integer, as seconds since the UNIX epoch
     if (val === undefined) this.throwHelp(`TSIG: 'time signed' is required`);
+    if (!Number.isInteger(val) || val < 0 || val >= 2 ** 48)
+      this.throwHelp(`TSIG: 'time signed' must be a 48-bit integer`);
     this.set('time signed', val);
   }
 
@@ -6970,6 +6737,7 @@ class TSIG extends RR {
   }
 
   setMac(val) {
+    if (val) this.isBase64('TSIG', 'mac', val);
     this.set('mac', val ?? '');
   }
 
@@ -6984,28 +6752,57 @@ class TSIG extends RR {
   }
 
   setOther(val) {
+    if (val) this.isBase64('TSIG', 'other', val);
     this.set('other', val ?? '');
   }
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // owner ttl ANY TSIG alg time fudge mac_size mac original_id error other_len
-    const parts = bindline.trimEnd().split('\t');
-    const [owner, ttl, cls, type, alg, time, fudge, , mac, origId, error] = parts;
+  fromBind({ owner, ttl, class: cls, rdata }) {
+    // BIND presentation: alg time fudge mac-size mac original-id error other-len other.
+    // MAC and Other are base64 that may span tokens, sized by the count before them.
+    const words = rdata.map((t) => t.text);
+    let i = 0;
+    const next = (field) => {
+      if (i === words.length) throw new Error(`TSIG: missing rdata: ${field}`)
+      return words[i++]
+    };
+    const int = (field) => {
+      const word = next(field);
+      if (!/^\d+$/.test(word)) throw new Error(`TSIG: ${field} must be an integer: ${word}`)
+      return parseInt(word, 10)
+    };
+    const base64 = (field, size) => {
+      let b64 = '';
+      while (b64.length * 0.75 < size) b64 += next(field);
+      const valid = b64.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(b64);
+      if (!valid || base64ToBytes(b64).length !== size)
+        throw new Error(`TSIG: ${field} is not ${size} bytes of base64`)
+      return b64
+    };
+
+    const algorithmName = next('algorithm name');
+    const timeSigned = int('time signed');
+    const fudge = int('fudge');
+    const mac = base64('mac', int('mac size'));
+    const originalId = int('original id');
+    const errorWord = next('error');
+    const error = TSIG.errorNames[errorWord.toUpperCase()] ?? parseInt(errorWord, 10);
+    const other = base64('other', int('other len'));
+    if (i < words.length) throw new Error(`TSIG: unexpected rdata: ${words.slice(i).join(' ')}`)
 
     return new TSIG({
       owner,
-      ttl: parseInt(ttl, 10),
+      ttl,
       class: cls,
-      type: type.toUpperCase(),
-      'algorithm name': alg,
-      'time signed': parseInt(time, 10),
-      fudge: parseInt(fudge, 10),
-      mac: mac || '',
-      'original id': parseInt(origId, 10),
-      error: parseInt(error, 10),
-      other: '',
+      type: 'TSIG',
+      'algorithm name': algorithmName,
+      'time signed': timeSigned,
+      fudge,
+      mac,
+      'original id': originalId,
+      error,
+      other,
     })
   }
 
@@ -7017,21 +6814,8 @@ class TSIG extends RR {
 
     const bytes = Uint8Array.from(octalToChar(rdata), (c) => c.charCodeAt(0));
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    let bpos = algBinaryLen;
 
-    const timeSigned = dv.getUint32(bpos);
-    bpos += 4;
-    const fudge = dv.getUint16(bpos);
-    bpos += 2;
-    const macSize = dv.getUint16(bpos);
-    bpos += 2;
-    const mac = macSize > 0 ? bytesToHex(bytes.subarray(bpos, bpos + macSize)) : '';
-    bpos += macSize;
-    const originalId = dv.getUint16(bpos);
-    bpos += 2;
-    const error = dv.getUint16(bpos);
-    bpos += 2;
-    const other = bpos < bytes.length ? new TextDecoder().decode(bytes.subarray(bpos)) : '';
+    const { timeSigned, fudge, mac, originalId, error, other } = unpackTail(bytes, dv, algBinaryLen);
 
     return new TSIG({
       owner: this.fullyQualify(owner),
@@ -7052,21 +6836,8 @@ class TSIG extends RR {
 
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: algorithmName, end } = this.wireUnpackDomain(rdata, 0);
-    const dv = new DataView(rdata.buffer, rdata.byteOffset);
-    let pos = end;
-    const timeSigned = dv.getUint32(pos);
-    pos += 4;
-    const fudge = dv.getUint16(pos);
-    pos += 2;
-    const macSize = dv.getUint16(pos);
-    pos += 2;
-    const mac = macSize > 0 ? bytesToHex(rdata.subarray(pos, pos + macSize)) : '';
-    pos += macSize;
-    const originalId = dv.getUint16(pos);
-    pos += 2;
-    const error = dv.getUint16(pos);
-    pos += 2;
-    const other = pos < rdata.length ? new TextDecoder().decode(rdata.subarray(pos)) : '';
+    const dv = new DataView(rdata.buffer, rdata.byteOffset, rdata.byteLength);
+    const { timeSigned, fudge, mac, originalId, error, other } = unpackTail(rdata, dv, end);
     return new TSIG({
       owner,
       ttl: 0,
@@ -7084,78 +6855,90 @@ class TSIG extends RR {
 
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
-    const mac = this.get('mac') ?? '';
-    const macSize = mac.length > 0 ? mac.length : '';
-    const other = this.get('other') ?? '';
-    const otherLen = other.length > 0 ? other.length : 0;
+    const mac = this.get('mac');
+    const other = this.get('other');
     return (
       [
-        this.getFQDN('owner', zone_opts),
-        this.get('ttl'),
-        this.get('class'),
-        this.get('type'),
+        this.getPrefix(zone_opts),
         this.get('algorithm name'),
         this.get('time signed'),
         this.get('fudge'),
-        macSize,
+        base64ToBytes(mac).length,
         mac,
         this.get('original id'),
         this.get('error'),
-        otherLen,
-      ].join('\t') + '\n'
+        base64ToBytes(other).length,
+        other,
+      ]
+        .filter((f) => f !== '')
+        .join('\t') + '\n'
     )
   }
 
   getWireRdata() {
-    const algWire = wirePackDomain(this.get('algorithm name') || '');
-    const mac = this.get('mac') ?? '';
-    const macBytes = mac.length > 0 ? hexToBytes(mac) : new Uint8Array();
-    const other = this.get('other') ?? '';
-    const otherBytes = other.length > 0 ? new TextEncoder().encode(other) : new Uint8Array();
+    const algWire = wirePackDomain(this.get('algorithm name'));
+    const macBytes = base64ToBytes(this.get('mac'));
+    const otherBytes = base64ToBytes(this.get('other'));
 
-    const bytes = new Uint8Array(algWire.length + 4 + 2 + 2 + macBytes.length + 2 + 2 + otherBytes.length);
+    const bytes = new Uint8Array(algWire.length + 6 + 2 + 2 + macBytes.length + 2 + 2 + 2 + otherBytes.length);
     const dv = new DataView(bytes.buffer, bytes.byteOffset);
     let pos = 0;
 
     bytes.set(algWire, pos);
     pos += algWire.length;
-    dv.setUint32(pos, this.get('time signed') ?? 0);
-    pos += 4;
-    dv.setUint16(pos, this.get('fudge') ?? 0);
+    // RFC 8945 §4.2: Time Signed is 48 bits.
+    dv.setUint16(pos, Math.floor(this.get('time signed') / 2 ** 32));
+    dv.setUint32(pos + 2, this.get('time signed') % 2 ** 32);
+    pos += 6;
+    dv.setUint16(pos, this.get('fudge'));
     pos += 2;
     dv.setUint16(pos, macBytes.length);
     pos += 2;
-    if (macBytes.length > 0) {
-      bytes.set(macBytes, pos);
-      pos += macBytes.length;
-    }
-    dv.setUint16(pos, this.get('original id') ?? 0);
+    bytes.set(macBytes, pos);
+    pos += macBytes.length;
+    dv.setUint16(pos, this.get('original id'));
     pos += 2;
-    dv.setUint16(pos, this.get('error') ?? 0);
+    dv.setUint16(pos, this.get('error'));
     pos += 2;
-    if (otherBytes.length > 0) bytes.set(otherBytes, pos);
+    dv.setUint16(pos, otherBytes.length);
+    pos += 2;
+    bytes.set(otherBytes, pos);
 
     return bytes
   }
 
   toTinydns() {
-    const alg = this.get('algorithm name') || '';
-    const mac = this.get('mac') ?? '';
-    const macByteLen = mac.length > 0 ? mac.length / 2 : 0;
-
+    const time = this.get('time signed');
     return this.getTinydnsGeneric(
-      packDomainName(alg) +
-        UInt32toOctal(this.get('time signed') ?? 0) +
+      packDomainName(this.get('algorithm name')) +
+        UInt16toOctal(Math.floor(time / 2 ** 32)) +
+        UInt32toOctal(time % 2 ** 32) +
         UInt16toOctal(this.get('fudge')) +
-        UInt16toOctal(macByteLen) +
-        (macByteLen > 0 ? packHex(mac) : '') +
-        UInt16toOctal(this.get('original id') ?? 0) +
-        UInt16toOctal(this.get('error') ?? 0) +
-        (this.get('other').length > 0
-          ? escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('other'))
-          : ''),
+        UInt16toOctal(base64ToBytes(this.get('mac')).length) +
+        base64toOctal(this.get('mac')) +
+        UInt16toOctal(this.get('original id')) +
+        UInt16toOctal(this.get('error')) +
+        UInt16toOctal(base64ToBytes(this.get('other')).length) +
+        base64toOctal(this.get('other')),
     )
   }
+}
+
+// RFC 8945 §4.2: the rdata after the algorithm name.
+function unpackTail(bytes, dv, pos) {
+  const timeSigned = dv.getUint16(pos) * 2 ** 32 + dv.getUint32(pos + 2);
+  pos += 6;
+  const fudge = dv.getUint16(pos);
+  const macSize = dv.getUint16(pos + 2);
+  pos += 4;
+  const mac = bytesToBase64(bytes.subarray(pos, pos + macSize));
+  pos += macSize;
+  const originalId = dv.getUint16(pos);
+  const error = dv.getUint16(pos + 2);
+  const otherLen = dv.getUint16(pos + 4);
+  pos += 6;
+  const other = bytesToBase64(bytes.subarray(pos, pos + otherLen));
+  return { timeSigned, fudge, mac, originalId, error, other }
 }
 
 /**
@@ -7487,7 +7270,7 @@ class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
   static RFCs = [883, 1035]
-  static rdataFields = ['address', 'protocol', 'bit map']
+  static rdataFields = ['address', 'protocol', ['bit map', 'list']]
   static tags = ['obsolete']
 
   constructor(opts) {
@@ -7529,21 +7312,6 @@ class WKS extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  WKS 192.168.1.1 TCP ftp smtp
-    const parts = bindline.split(/\s+/);
-    const [owner, ttl, c, type, address, protocol] = parts;
-    return new WKS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address,
-      protocol,
-      'bit map': parts.slice(6).join(' ').trim(),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':');

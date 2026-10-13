@@ -79,21 +79,6 @@ export default class KEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  KEY Flags Protocol Algorithm PublicKey
-    const [owner, ttl, c, type, flags, protocol, algorithm] = bindline.split(/\s+/)
-    return new KEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      flags: parseInt(flags, 10),
-      protocol: parseInt(protocol, 10),
-      algorithm: parseInt(algorithm, 10),
-      publickey: bindline.split(/\s+/).slice(7).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     // RDATA format: Flags (8 octal chars) + Protocol (4 octal chars) + Algorithm (4 octal chars) + Public Key (escaped data)
     const { owner, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)

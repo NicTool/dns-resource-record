@@ -56,22 +56,6 @@ export default class SVCB extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  SVCB Priority TargetName Params
-    // _8443._foo.api.example.com. 7200 IN SVCB 0 svc4.example.net.
-    // svc4.example.net.  7200  IN SVCB 3 svc4.example.net. ( alpn="bar" port="8004" )
-    const [owner, ttl, c, type, pri, fqdn] = bindline.split(/\s+/)
-    return new SVCB({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      priority: parseInt(pri, 10),
-      'target name': fqdn,
-      params: bindline.split(/\s+/).slice(6).join(' ').trim(),
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
     if (typeId != this.getTypeId()) this.throwHelp('SVCB fromTinydns, invalid n')

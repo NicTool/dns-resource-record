@@ -97,15 +97,8 @@ describe('HIP record', function () {
   base.fromTinydns(HIP, validRecords)
   base.fromWire(HIP, validRecords)
 
-  test('fromBind reassembles space-joined multi-chunk base64 key and separates RVS', () => {
-    // Simulates the zone parser joining a parenthesized multi-line HIP record.
-    // The public key is split into 3 space-separated tokens; rvs.example.com. is the RVS.
-    const chunk1 = publicKey.slice(0, 40)
-    const chunk2 = publicKey.slice(40, 80)
-    const chunk3 = publicKey.slice(80)
-    const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${chunk1} ${chunk2} ${chunk3} rvs.example.com.`
-    const r = HIP.fromBind(bindline)
-    assert.equal(r.get('public key'), publicKey)
-    assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
+  test('fromBind rejects a public key split by whitespace (RFC 8005 §6)', () => {
+    const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${publicKey.slice(0, 40)} ${publicKey.slice(40)} rvs.example.com.`
+    assert.throws(() => HIP.fromBind(bindline), /rendezvous servers must be fully qualified/)
   })
 })

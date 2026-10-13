@@ -63,4 +63,11 @@ describe('NAPTR record', function () {
   it('throws on invalid NAPTR BIND line', function () {
     assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /expected NAPTR, got IS/)
   })
+
+  it('exports MaraDNS csv2 with ;-separated strings', function () {
+    assert.equal(
+      new NAPTR(validRecords[0]).toMaraDNS(),
+      "cid.urn.arpa.\t+86400\tNAPTR\t100\t10\t'';'';'!^urn:cid:.+@([^\\.]+\\.)(.*)$!'\\x02'!i'\t. ~\n",
+    )
+  })
 })

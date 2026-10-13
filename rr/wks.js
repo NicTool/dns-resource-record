@@ -95,7 +95,7 @@ export default class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
   static RFCs = [883, 1035]
-  static rdataFields = ['address', 'protocol', 'bit map']
+  static rdataFields = ['address', 'protocol', ['bit map', 'list']]
   static tags = ['obsolete']
 
   constructor(opts) {
@@ -137,21 +137,6 @@ export default class WKS extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  WKS 192.168.1.1 TCP ftp smtp
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type, address, protocol] = parts
-    return new WKS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address,
-      protocol,
-      'bit map': parts.slice(6).join(' ').trim(),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')

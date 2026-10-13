@@ -12,7 +12,7 @@ export default class NSEC3 extends RR {
     'iterations',
     'salt',
     'next hashed owner name',
-    'type bit maps',
+    ['type bit maps', 'list'],
   ]
   static tags = ['dnssec']
 
@@ -93,28 +93,6 @@ export default class NSEC3 extends RR {
   }
 
   /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // test.example.com. 3600 IN NSEC3 1 1 12 aabbccdd (2vptu5timamqttgl4luu9kg21e0aor3s A RRSIG)
-    const [owner, ttl, c, type, ha, flags, iterations, salt] = bindline.split(/\s+/)
-    // rdata may be parenthesized or inline
-    const rdataStr = bindline.includes('(')
-      ? bindline.split(/\(|\)/)[1]
-      : bindline.split(/\s+/).slice(8).join(' ')
-
-    return new NSEC3({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      'hash algorithm': parseInt(ha, 10),
-      flags: parseInt(flags, 10),
-      iterations: parseInt(iterations, 10),
-      salt,
-      'next hashed owner name': rdataStr.trim().split(/\s+/)[0],
-      'type bit maps': rdataStr.trim().split(/\s+/).slice(1).join('\t'),
-    })
-  }
 
   fromTinydns({ tinyline }) {
     const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')

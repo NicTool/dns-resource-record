@@ -107,31 +107,6 @@ export default class DNSKEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>DNSKEY)\s+(?<flags>\d+)\s+(?<protocol>\d+)\s+(?<algorithm>\d+)\s+(?<publickey>\S.*)$/i
-
-    const match = bindline.trim().match(regex)
-
-    if (!match) {
-      this.throwHelp(`unable to parse DNSKEY: ${bindline}`)
-    }
-
-    const { owner, ttl, c, type, flags, protocol, algorithm, publickey } = match.groups
-
-    return new DNSKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      flags: parseInt(flags, 10),
-      protocol: parseInt(protocol, 10),
-      algorithm: parseInt(algorithm, 10),
-      publickey: publickey,
-    })
-  }
-
   fromTinydns({ tinyline }) {
     const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
     if (typeId != this.getTypeId()) this.throwHelp('DNSKEY fromTinydns, invalid n')

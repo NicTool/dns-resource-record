@@ -238,10 +238,16 @@ describe('TXT presentation-format escaping', function () {
     assert.match(txt('a "b" c').toMaraDNS(), /'a "b" c'/)
   })
 
-  it('joins chunked MaraDNS output with the csv2 delimiter', () => {
+  it('separates MaraDNS chunks with an unquoted ; (csv2_txt)', () => {
     const out = txt('y'.repeat(400)).toMaraDNS()
 
-    assert.match(out, /' '/, "chunks are separated by ' '")
-    assert.doesNotMatch(out, /"/, 'no RFC 1035 quoting leaks into csv2')
+    assert.ok(out.endsWith(`\tTXT\t'${'y'.repeat(255)}';'${'y'.repeat(145)}' ~\n`))
+  })
+
+  it("writes ', |, ~, # and controls outside csv2 quotes as \\xNN", () => {
+    assert.match(
+      txt("it's #1 ~ a|b\tc").toMaraDNS(),
+      /\t'it'\\x27's '\\x23'1 '\\x7e' a'\\x7c'b'\\x09'c' ~\n$/,
+    )
   })
 })

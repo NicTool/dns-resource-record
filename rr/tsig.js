@@ -8,6 +8,17 @@ export default class TSIG extends RR {
   static typeId = 250
   static RFCs = [2845, 8945]
   static rdataFields = ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other']
+  static errorNames = {
+    NOERROR: 0,
+    BADSIG: 16,
+    BADKEY: 17,
+    BADTIME: 18,
+    BADMODE: 19,
+    BADNAME: 20,
+    BADALG: 21,
+    BADTRUNC: 22,
+    BADCOOKIE: 23,
+  }
 
   constructor(opts) {
     super(opts)
@@ -29,7 +40,7 @@ export default class TSIG extends RR {
       'algorithm name': 'hmac-sha256.',
       'time signed': 1620650000,
       fudge: 300,
-      mac: 'ABCDEF...',
+      mac: '3q2+7w==',
       'original id': 12345,
       error: 0,
       other: '',
@@ -52,8 +63,9 @@ export default class TSIG extends RR {
   }
 
   setTimeSigned(val) {
-    // a 48-bit unsigned integer, as seconds since the UNIX epoch
     if (val === undefined) this.throwHelp(`TSIG: 'time signed' is required`)
+    if (!Number.isInteger(val) || val < 0 || val >= 2 ** 48)
+      this.throwHelp(`TSIG: 'time signed' must be a 48-bit integer`)
     this.set('time signed', val)
   }
 
@@ -64,6 +76,7 @@ export default class TSIG extends RR {
   }
 
   setMac(val) {
+    if (val) this.isBase64('TSIG', 'mac', val)
     this.set('mac', val ?? '')
   }
 
@@ -78,28 +91,57 @@ export default class TSIG extends RR {
   }
 
   setOther(val) {
+    if (val) this.isBase64('TSIG', 'other', val)
     this.set('other', val ?? '')
   }
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // owner ttl ANY TSIG alg time fudge mac_size mac original_id error other_len
-    const parts = bindline.trimEnd().split('\t')
-    const [owner, ttl, cls, type, alg, time, fudge, , mac, origId, error] = parts
+  fromBind({ owner, ttl, class: cls, rdata }) {
+    // BIND presentation: alg time fudge mac-size mac original-id error other-len other.
+    // MAC and Other are base64 that may span tokens, sized by the count before them.
+    const words = rdata.map((t) => t.text)
+    let i = 0
+    const next = (field) => {
+      if (i === words.length) throw new Error(`TSIG: missing rdata: ${field}`)
+      return words[i++]
+    }
+    const int = (field) => {
+      const word = next(field)
+      if (!/^\d+$/.test(word)) throw new Error(`TSIG: ${field} must be an integer: ${word}`)
+      return parseInt(word, 10)
+    }
+    const base64 = (field, size) => {
+      let b64 = ''
+      while (b64.length * 0.75 < size) b64 += next(field)
+      const valid = b64.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(b64)
+      if (!valid || BINARY.base64ToBytes(b64).length !== size)
+        throw new Error(`TSIG: ${field} is not ${size} bytes of base64`)
+      return b64
+    }
+
+    const algorithmName = next('algorithm name')
+    const timeSigned = int('time signed')
+    const fudge = int('fudge')
+    const mac = base64('mac', int('mac size'))
+    const originalId = int('original id')
+    const errorWord = next('error')
+    const error = TSIG.errorNames[errorWord.toUpperCase()] ?? parseInt(errorWord, 10)
+    const other = base64('other', int('other len'))
+    if (i < words.length) throw new Error(`TSIG: unexpected rdata: ${words.slice(i).join(' ')}`)
 
     return new TSIG({
       owner,
-      ttl: parseInt(ttl, 10),
+      ttl,
       class: cls,
-      type: type.toUpperCase(),
-      'algorithm name': alg,
-      'time signed': parseInt(time, 10),
-      fudge: parseInt(fudge, 10),
-      mac: mac || '',
-      'original id': parseInt(origId, 10),
-      error: parseInt(error, 10),
-      other: '',
+      type: 'TSIG',
+      'algorithm name': algorithmName,
+      'time signed': timeSigned,
+      fudge,
+      mac,
+      'original id': originalId,
+      error,
+      other,
     })
   }
 
@@ -111,21 +153,8 @@ export default class TSIG extends RR {
 
     const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    let bpos = algBinaryLen
 
-    const timeSigned = dv.getUint32(bpos)
-    bpos += 4
-    const fudge = dv.getUint16(bpos)
-    bpos += 2
-    const macSize = dv.getUint16(bpos)
-    bpos += 2
-    const mac = macSize > 0 ? BINARY.bytesToHex(bytes.subarray(bpos, bpos + macSize)) : ''
-    bpos += macSize
-    const originalId = dv.getUint16(bpos)
-    bpos += 2
-    const error = dv.getUint16(bpos)
-    bpos += 2
-    const other = bpos < bytes.length ? new TextDecoder().decode(bytes.subarray(bpos)) : ''
+    const { timeSigned, fudge, mac, originalId, error, other } = unpackTail(bytes, dv, algBinaryLen)
 
     return new TSIG({
       owner: this.fullyQualify(owner),
@@ -146,21 +175,8 @@ export default class TSIG extends RR {
 
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: algorithmName, end } = this.wireUnpackDomain(rdata, 0)
-    const dv = new DataView(rdata.buffer, rdata.byteOffset)
-    let pos = end
-    const timeSigned = dv.getUint32(pos)
-    pos += 4
-    const fudge = dv.getUint16(pos)
-    pos += 2
-    const macSize = dv.getUint16(pos)
-    pos += 2
-    const mac = macSize > 0 ? BINARY.bytesToHex(rdata.subarray(pos, pos + macSize)) : ''
-    pos += macSize
-    const originalId = dv.getUint16(pos)
-    pos += 2
-    const error = dv.getUint16(pos)
-    pos += 2
-    const other = pos < rdata.length ? new TextDecoder().decode(rdata.subarray(pos)) : ''
+    const dv = new DataView(rdata.buffer, rdata.byteOffset, rdata.byteLength)
+    const { timeSigned, fudge, mac, originalId, error, other } = unpackTail(rdata, dv, end)
     return new TSIG({
       owner,
       ttl: 0,
@@ -178,76 +194,88 @@ export default class TSIG extends RR {
 
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
-    const mac = this.get('mac') ?? ''
-    const macSize = mac.length > 0 ? mac.length : ''
-    const other = this.get('other') ?? ''
-    const otherLen = other.length > 0 ? other.length : 0
+    const mac = this.get('mac')
+    const other = this.get('other')
     return (
       [
-        this.getFQDN('owner', zone_opts),
-        this.get('ttl'),
-        this.get('class'),
-        this.get('type'),
+        this.getPrefix(zone_opts),
         this.get('algorithm name'),
         this.get('time signed'),
         this.get('fudge'),
-        macSize,
+        BINARY.base64ToBytes(mac).length,
         mac,
         this.get('original id'),
         this.get('error'),
-        otherLen,
-      ].join('\t') + '\n'
+        BINARY.base64ToBytes(other).length,
+        other,
+      ]
+        .filter((f) => f !== '')
+        .join('\t') + '\n'
     )
   }
 
   getWireRdata() {
-    const algWire = WIRE.wirePackDomain(this.get('algorithm name') || '')
-    const mac = this.get('mac') ?? ''
-    const macBytes = mac.length > 0 ? BINARY.hexToBytes(mac) : new Uint8Array()
-    const other = this.get('other') ?? ''
-    const otherBytes = other.length > 0 ? new TextEncoder().encode(other) : new Uint8Array()
+    const algWire = WIRE.wirePackDomain(this.get('algorithm name'))
+    const macBytes = BINARY.base64ToBytes(this.get('mac'))
+    const otherBytes = BINARY.base64ToBytes(this.get('other'))
 
-    const bytes = new Uint8Array(algWire.length + 4 + 2 + 2 + macBytes.length + 2 + 2 + otherBytes.length)
+    const bytes = new Uint8Array(algWire.length + 6 + 2 + 2 + macBytes.length + 2 + 2 + 2 + otherBytes.length)
     const dv = new DataView(bytes.buffer, bytes.byteOffset)
     let pos = 0
 
     bytes.set(algWire, pos)
     pos += algWire.length
-    dv.setUint32(pos, this.get('time signed') ?? 0)
-    pos += 4
-    dv.setUint16(pos, this.get('fudge') ?? 0)
+    // RFC 8945 §4.2: Time Signed is 48 bits.
+    dv.setUint16(pos, Math.floor(this.get('time signed') / 2 ** 32))
+    dv.setUint32(pos + 2, this.get('time signed') % 2 ** 32)
+    pos += 6
+    dv.setUint16(pos, this.get('fudge'))
     pos += 2
     dv.setUint16(pos, macBytes.length)
     pos += 2
-    if (macBytes.length > 0) {
-      bytes.set(macBytes, pos)
-      pos += macBytes.length
-    }
-    dv.setUint16(pos, this.get('original id') ?? 0)
+    bytes.set(macBytes, pos)
+    pos += macBytes.length
+    dv.setUint16(pos, this.get('original id'))
     pos += 2
-    dv.setUint16(pos, this.get('error') ?? 0)
+    dv.setUint16(pos, this.get('error'))
     pos += 2
-    if (otherBytes.length > 0) bytes.set(otherBytes, pos)
+    dv.setUint16(pos, otherBytes.length)
+    pos += 2
+    bytes.set(otherBytes, pos)
 
     return bytes
   }
 
   toTinydns() {
-    const alg = this.get('algorithm name') || ''
-    const mac = this.get('mac') ?? ''
-    const macByteLen = mac.length > 0 ? mac.length / 2 : 0
-
+    const time = this.get('time signed')
     return this.getTinydnsGeneric(
-      TINYDNS.packDomainName(alg) +
-        TINYDNS.UInt32toOctal(this.get('time signed') ?? 0) +
+      TINYDNS.packDomainName(this.get('algorithm name')) +
+        TINYDNS.UInt16toOctal(Math.floor(time / 2 ** 32)) +
+        TINYDNS.UInt32toOctal(time % 2 ** 32) +
         TINYDNS.UInt16toOctal(this.get('fudge')) +
-        TINYDNS.UInt16toOctal(macByteLen) +
-        (macByteLen > 0 ? TINYDNS.packHex(mac) : '') +
-        TINYDNS.UInt16toOctal(this.get('original id') ?? 0) +
-        TINYDNS.UInt16toOctal(this.get('error') ?? 0) +
-        (this.get('other').length > 0
-          ? TINYDNS.escapeOctal(new RegExp(/[\r\n\t:\\/]/, 'g'), this.get('other'))
-          : ''),
+        TINYDNS.UInt16toOctal(BINARY.base64ToBytes(this.get('mac')).length) +
+        TINYDNS.base64toOctal(this.get('mac')) +
+        TINYDNS.UInt16toOctal(this.get('original id')) +
+        TINYDNS.UInt16toOctal(this.get('error')) +
+        TINYDNS.UInt16toOctal(BINARY.base64ToBytes(this.get('other')).length) +
+        TINYDNS.base64toOctal(this.get('other')),
     )
   }
+}
+
+// RFC 8945 §4.2: the rdata after the algorithm name.
+function unpackTail(bytes, dv, pos) {
+  const timeSigned = dv.getUint16(pos) * 2 ** 32 + dv.getUint32(pos + 2)
+  pos += 6
+  const fudge = dv.getUint16(pos)
+  const macSize = dv.getUint16(pos + 2)
+  pos += 4
+  const mac = BINARY.bytesToBase64(bytes.subarray(pos, pos + macSize))
+  pos += macSize
+  const originalId = dv.getUint16(pos)
+  const error = dv.getUint16(pos + 2)
+  const otherLen = dv.getUint16(pos + 4)
+  pos += 6
+  const other = BINARY.bytesToBase64(bytes.subarray(pos, pos + otherLen))
+  return { timeSigned, fudge, mac, originalId, error, other }
 }
