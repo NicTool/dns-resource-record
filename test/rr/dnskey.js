@@ -3,9 +3,9 @@ import * as base from '../base.js'
 
 import DNSKEY from '../../rr/dnskey.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'DNSKEY', flags: 256, protocol: 3, algorithm: 5 }
+const defaults = { flags: 256, protocol: 3, algorithm: 5 }
 
-const validRecords = [
+const valid = [
   {
     ...defaults,
     owner: 'example.com.',
@@ -16,9 +16,6 @@ const validRecords = [
   },
   {
     owner: 'nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'DNSKEY',
     flags: 256,
     protocol: 3,
     algorithm: 5,
@@ -33,7 +30,7 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...defaults,
     owner: 'test.example.com.',
@@ -59,21 +56,10 @@ const invalidRecords = [
 ]
 
 describe('DNSKEY record', function () {
-  base.valid(DNSKEY, validRecords)
-  base.invalid(DNSKEY, invalidRecords)
-
-  base.getDescription(DNSKEY)
-  base.getRFCs(DNSKEY, validRecords[0])
-  base.getFields(DNSKEY, ['flags', 'protocol', 'algorithm', 'publickey'])
-  base.getCanonical(DNSKEY)
-  base.getTypeId(DNSKEY, 48)
-  base.getTags(DNSKEY)
-
-  base.toBind(DNSKEY, validRecords)
-  base.toWire(DNSKEY, validRecords)
-  base.toTinydns(DNSKEY, validRecords)
-
-  base.fromBind(DNSKEY, validRecords)
-  base.fromTinydns(DNSKEY, validRecords)
-  base.fromWire(DNSKEY, validRecords)
+  base.suite(DNSKEY, {
+    typeId: 48,
+    fields: ['flags', 'protocol', 'algorithm', 'publickey'],
+    valid,
+    invalid,
+  })
 })

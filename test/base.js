@@ -3,203 +3,80 @@ import { describe, it } from 'node:test'
 
 import { bytesToHex } from '../lib/binary.js'
 
-export function valid(type, validRecords) {
-  describe('valid', function () {
-    for (const val of validRecords) {
-      // console.log(val)
-      it(`parses record: ${val.owner}`, function () {
-        const r = new type(val)
-        if (process.env.DEBUG) console.dir(r)
+// TXT data may be one string or its character-strings (RFC 1035 §3.3.14).
+const flat = (v) => (Array.isArray(v) ? v.join('') : v)
 
-        for (const k of Object.keys(val)) {
-          if (/^test/.test(k)) continue
-          assert.equal(r.get(k), val[k], `${type.name} ${k} ${r.get(k)} !== ${val[k]}`)
-        }
-      })
-    }
-  })
-}
-
-export function invalid(type, invalidRecords) {
-  const callerErr = new Error() // captured at call site (e.g. test/soa.js)
-  describe('invalid', function () {
-    for (const inv of invalidRecords) {
-      it(`throws on record (${inv.owner ?? inv.bindline ?? inv.tinyline})`, function () {
-        try {
-          let thrower
-          if (inv.bindline !== undefined) {
-            thrower = () => type.fromBind(inv.bindline)
-          } else if (inv.tinyline !== undefined) {
-            thrower = () => type.fromTinydns(inv.tinyline)
-          } else {
-            thrower = () => {
-              new type(inv)
-            }
-          }
-          assert.throws(thrower, { message: inv.msg })
-        } catch (e) {
-          e.stack = `${e.message}\n${callerErr.stack.split('\n').slice(1).join('\n')}`
-          throw e
-        }
-      })
-    }
-  })
-}
-
-export function toBind(type, validRecords) {
-  describe('toBind', function () {
-    for (const val of validRecords) {
-      if (val.testB === undefined) continue
-      it(`exports to BIND: ${val.owner}`, function () {
-        const r = new type(val).toBind()
-        if (process.env.DEBUG) console.dir(r)
-        assert.equal(r, val.testB)
-      })
-    }
-  })
-}
-
-export function toTinydns(type, validRecords) {
-  describe('toTinydns', function () {
-    for (const val of validRecords) {
-      if (val.testT === undefined) continue
-      it(`exports to tinydns: ${val.owner}`, function () {
-        const r = new type(val).toTinydns()
-        if (process.env.DEBUG) console.dir(r)
-        assert.equal(r, val.testT)
-      })
-    }
-  })
-}
-
-export function getDescription(type) {
-  describe('getDescription', function () {
-    const desc = new type(null).getDescription()
-    it(`gets description: ${desc}`, function () {
-      assert.ok(desc)
-    })
-  })
-}
-
-export function getRFCs(type, valid) {
-  describe('getRFCs', function () {
-    const r = new type(null)
-    const rfcs = r.getRFCs()
-    it(`can retrieve RFCs: ${rfcs.join(',')}`, function () {
-      assert.ok(rfcs.length)
-    })
-  })
-}
-
-function checkFromNS(type, validRecords, nsName, nsLineName) {
-  for (const val of validRecords) {
-    const testLine = nsLineName === 'bindline' ? val.testB : val.testT
-    if (testLine == undefined) continue
-    it(`imports ${nsName} record: ${val.owner}`, function () {
-      const r = nsLineName === 'bindline' ? type.fromBind(testLine) : type.fromTinydns(testLine)
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of r.getFields()) {
-        if (f === 'class') continue
-        let expected = val[f]
-        let actual = r.get(f)
-        // TXT can be stored as string or as array of character-strings (RFC 1035 §3.3.14).
-        // Normalize both sides to the joined string for legacy fixtures.
-        if (f === 'data') {
-          if (Array.isArray(expected)) expected = expected.join('')
-          if (Array.isArray(actual)) actual = actual.join('')
-        }
-        assert.deepEqual(actual, expected, `${f}: ${actual} !== ${expected}`)
-      }
-    })
+function assertSameRecord(actual, expected, skip = []) {
+  for (const f of expected.getFields()) {
+    if (!skip.includes(f)) assert.deepEqual(flat(actual.get(f)), flat(expected.get(f)), f)
   }
 }
 
-export function fromTinydns(type, validRecords) {
-  describe('fromTinydns', function () {
-    checkFromNS(type, validRecords, 'tinydns', 'tinyline')
+/**
+ * The checks every RR type shares. Each valid record must store its fields as
+ * given, and match its testB (BIND), testT (tinydns) and testW (wire hex)
+ * fixtures in both directions. Each invalid record must throw its msg.
+ * Records without a ttl get 3600.
+ */
+export function suite(Type, { typeId, fields, valid = [], invalid = [] }) {
+  const callSite = new Error()
+  const withTtl = (rec) => ({ ttl: 3600, ...rec })
+
+  it('describes itself', function () {
+    const r = new Type(null)
+    if (typeId !== undefined) assert.equal(r.getTypeId(), typeId)
+    if (fields) assert.deepEqual(r.getFields(), [...r.getFields('common'), ...fields])
+    assert.ok(r.getDescription())
+    assert.ok(r.getRFCs().length)
+    assert.ok(Array.isArray(r.getTags()))
+    assert.ok(new Type(r.getCanonical()))
   })
-}
 
-export function fromBind(type, validRecords) {
-  describe('fromBind', function () {
-    checkFromNS(type, validRecords, 'BIND', 'bindline')
-  })
-}
-
-export function getRdataFields(type, rdataFields) {
-  describe('getRdataFields', function () {
-    const r = new type(null)
-    it(`can retrieve rdata fields: (${r.getRdataFields('rdata')})`, function () {
-      assert.deepEqual(r.getRdataFields('rdata'), rdataFields)
-    })
-  })
-}
-
-export function getFields(type, rdataFields) {
-  describe('getFields', function () {
-    const r = new type(null)
-    it(`can retrieve record fields`, function () {
-      assert.deepEqual(r.getFields('rdata'), rdataFields)
-      assert.deepEqual(r.getFields(), r.getFields('common').concat(rdataFields))
-    })
-  })
-}
-
-export function getTypeId(type, val) {
-  describe('getTypeId', function () {
-    const r = new type(null)
-    it(`can retrieve record type ID (${r.getTypeId()})`, function () {
-      assert.deepEqual(r.getTypeId(), val)
-    })
-  })
-}
-
-export function getCanonical(type) {
-  describe('getCanonical', function () {
-    it('returns a valid canonical object', function () {
-      const c = new type(null).getCanonical()
-      assert.ok(c)
-      assert.ok(new type(c))
-    })
-  })
-}
-
-export function toWire(type, validRecords) {
-  describe('toWire', function () {
-    for (const val of validRecords) {
-      it(`exports to wire format: ${val.owner}`, function () {
-        const r = new type(val)
-        const wire = r.toWire()
-        assert.ok(wire instanceof Uint8Array)
-        assert.ok(wire.length > 10)
-
-        if (val.testW) {
-          assert.equal(bytesToHex(wire), val.testW)
+  for (const rec of valid.map(withTtl)) {
+    describe(rec.owner, function () {
+      it('stores each field', function () {
+        const r = new Type(rec)
+        for (const [k, v] of Object.entries(rec)) {
+          if (!k.startsWith('test')) assert.deepEqual(r.get(k), v, k)
         }
       })
-    }
-  })
-}
 
-export function getTags(type) {
-  describe('getTags', function () {
-    const r = new type(null)
-    const tags = r.getTags()
-    it(`can retrieve tags: ${tags.join(',')}`, function () {
-      assert.ok(Array.isArray(tags))
-    })
-  })
-}
+      if (rec.testB !== undefined) {
+        it('BIND', function () {
+          const r = new Type(rec)
+          assert.equal(r.toBind(), rec.testB)
+          assertSameRecord(Type.fromBind(rec.testB), r)
+        })
+      }
 
-export function fromWire(type, validRecords) {
-  describe('fromWire', function () {
-    for (const val of validRecords) {
-      it(`round-trips wire: ${val.owner}`, function () {
-        const r = new type(val)
-        const wire = r.toWire()
-        const r2 = type.fromWire(wire)
-        assert.deepEqual(r2.toWire(), wire)
+      if (rec.testT !== undefined) {
+        it('tinydns', function () {
+          const r = new Type(rec)
+          // tinydns serves only class IN
+          if (r.get('class') === 'IN') assert.equal(r.toTinydns(), rec.testT)
+          assertSameRecord(Type.fromTinydns(rec.testT), r, ['class'])
+        })
+      }
+
+      it('wire', function () {
+        const wire = new Type(rec).toWire()
+        if (rec.testW) assert.equal(bytesToHex(wire), rec.testW)
+        assert.deepEqual(Type.fromWire(wire).toWire(), wire)
       })
-    }
-  })
+    })
+  }
+
+  for (const inv of invalid) {
+    it(`rejects ${inv.owner ?? inv.bindline ?? inv.tinyline}`, function () {
+      try {
+        if (inv.bindline !== undefined) assert.throws(() => Type.fromBind(inv.bindline), { message: inv.msg })
+        else if (inv.tinyline !== undefined)
+          assert.throws(() => Type.fromTinydns(inv.tinyline), { message: inv.msg })
+        else assert.throws(() => new Type(withTtl(inv)), { message: inv.msg })
+      } catch (e) {
+        e.stack = `${e.message}\n${callSite.stack.split('\n').slice(1).join('\n')}`
+        throw e
+      }
+    })
+  }
 }

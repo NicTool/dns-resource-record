@@ -4,12 +4,10 @@ import * as base from '../base.js'
 
 import NAPTR from '../../rr/naptr.js'
 
-const validRecords = [
+const valid = [
   {
     owner: 'cid.urn.arpa.',
     ttl: 86400,
-    class: 'IN',
-    type: 'NAPTR',
     order: 100,
     preference: 10,
     flags: '',
@@ -25,12 +23,10 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     owner: 'cid.urn.arpa.',
     ttl: 86400,
-    class: 'IN',
-    type: 'NAPTR',
     order: 100,
     preference: 10,
     flags: 'X',
@@ -39,33 +35,19 @@ const invalidRecords = [
     replacement: '.',
     msg: /flags are invalid/i,
   },
+  { bindline: 'this is not valid naptr\n', msg: /expected NAPTR, got IS/ },
 ]
 
 describe('NAPTR record', function () {
-  base.valid(NAPTR, validRecords)
-  base.invalid(NAPTR, invalidRecords)
-
-  base.getDescription(NAPTR)
-  base.getRFCs(NAPTR, validRecords[0])
-  base.getFields(NAPTR, ['order', 'preference', 'flags', 'service', 'regexp', 'replacement'])
-  base.getCanonical(NAPTR)
-  base.getTypeId(NAPTR, 35)
-  base.getTags(NAPTR)
-
-  base.toBind(NAPTR, validRecords)
-  base.toWire(NAPTR, validRecords)
-  base.toTinydns(NAPTR, validRecords)
-
-  base.fromBind(NAPTR, validRecords)
-  base.fromTinydns(NAPTR, validRecords)
-  base.fromWire(NAPTR, validRecords)
-
-  it('throws on invalid NAPTR BIND line', function () {
-    assert.throws(() => NAPTR.fromBind('this is not valid naptr\n'), /expected NAPTR, got IS/)
+  base.suite(NAPTR, {
+    typeId: 35,
+    fields: ['order', 'preference', 'flags', 'service', 'regexp', 'replacement'],
+    valid,
+    invalid,
   })
 
   it('exports MaraDNS csv2 with ;-separated strings', function () {
-    const r = new NAPTR({ ...validRecords[0], replacement: 'sip.example.com.' })
+    const r = new NAPTR({ ...valid[0], replacement: 'sip.example.com.' })
     assert.equal(
       r.toMaraDNS(),
       "cid.urn.arpa.\t+86400\tNAPTR\t100\t10\t'';'';'!^urn:cid:.+@([^\\.]+\\.)(.*)$!'\\x02'!i'\tsip.example.com. ~\n",
@@ -73,6 +55,6 @@ describe('NAPTR record', function () {
   })
 
   it('exports MaraDNS RAW when the replacement is the root, which csv2 cannot name', function () {
-    assert.match(new NAPTR(validRecords[0]).toMaraDNS(), /\tRAW 35\t/)
+    assert.match(new NAPTR(valid[0]).toMaraDNS(), /\tRAW 35\t/)
   })
 })

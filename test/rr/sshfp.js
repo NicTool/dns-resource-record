@@ -4,9 +4,9 @@ import * as base from '../base.js'
 
 import SSHFP from '../../rr/sshfp.js'
 
-const common = { type: 'SSHFP', ttl: 86400, class: 'IN' }
+const common = { ttl: 86400 }
 
-const validRecords = [
+const valid = [
   {
     ...common,
     owner: 'mail.example.com.',
@@ -48,9 +48,6 @@ const validRecords = [
   },
   {
     owner: 'ssh.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'SSHFP',
     algorithm: 1,
     fptype: 1,
     fingerprint: '546F3801F4159F81643666D97A9F73587000D60D',
@@ -62,9 +59,6 @@ const validRecords = [
   },
   {
     owner: 'ssh.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'SSHFP',
     algorithm: 3,
     fptype: 2,
     fingerprint: 'B0E5A9735D49246603D646B97607755E13583688B58A18357A700F7223644F77',
@@ -77,9 +71,6 @@ const validRecords = [
   },
   {
     owner: 'ssh.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'SSHFP',
     algorithm: 4,
     fptype: 2,
     fingerprint: '11E9A933F7608246F4142646F903745213583688B58A18357A700F7223644F77',
@@ -92,75 +83,37 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
-  {
-    ...common,
-    owner: 'mail.example.com.',
-    algorithm: 256,
-    fptype: 1,
-    fingerprint: 'ED8C6E16FDAE4F633EEE6A7B8F64FDD356BBB32841D535565D777014C9EA4C26',
-    msg: /SSHFP: algorithm invalid/i,
-  },
-  {
-    ...common,
-    owner: 'mail.example.com.',
-    algorithm: 1,
-    fptype: 999,
-    fingerprint: 'ED8C6E16FDAE4F633EEE6A7B8F64FDD356BBB32841D535565D777014C9EA4C26',
-    msg: /SSHFP: fptype invalid/i,
-  },
-  // 5 is in the u8 range but unassigned in the IANA SSHFP Algorithm registry
-  {
-    ...common,
-    owner: 'mail.example.com.',
-    algorithm: 5,
-    fptype: 1,
-    fingerprint: 'ED8C6E16FDAE4F633EEE6A7B8F64FDD356BBB32841D535565D777014C9EA4C26',
-    msg: /SSHFP: algorithm invalid/i,
-  },
-  // 3 is in the u8 range but not in the SSHFP fptype registry
-  {
-    ...common,
-    owner: 'mail.example.com.',
-    algorithm: 1,
-    fptype: 3,
-    fingerprint: 'ED8C6E16FDAE4F633EEE6A7B8F64FDD356BBB32841D535565D777014C9EA4C26',
-    msg: /SSHFP: fptype invalid/i,
-  },
+const sshfp = (algorithm, fptype, msg) => ({
+  ...common,
+  owner: 'mail.example.com.',
+  algorithm,
+  fptype,
+  fingerprint: 'ED8C6E16FDAE4F633EEE6A7B8F64FDD356BBB32841D535565D777014C9EA4C26',
+  msg,
+})
+// 5 and 3 are in the u8 range but unassigned in the IANA SSHFP registries
+const invalid = [
+  sshfp(256, 1, /SSHFP: algorithm invalid/),
+  sshfp(5, 1, /SSHFP: algorithm invalid/),
+  sshfp(1, 999, /SSHFP: fptype invalid/),
+  sshfp(1, 3, /SSHFP: fptype invalid/),
 ]
 
 describe('SSHFP record', function () {
-  base.valid(SSHFP, validRecords)
-  base.invalid(SSHFP, invalidRecords)
-
-  it('getAlgorithmOptions returns a Map of algorithm options', function () {
-    const opts = new SSHFP(null).getAlgorithmOptions()
-    assert.ok(opts instanceof Map)
-    assert.equal(opts.get(1), 'RSA')
-    assert.equal(opts.get(4), 'Ed25519')
+  base.suite(SSHFP, {
+    typeId: 44,
+    fields: ['algorithm', 'fptype', 'fingerprint'],
+    valid,
+    invalid,
   })
 
-  it('getFptypeOptions returns a Map of fingerprint type options', function () {
-    const opts = new SSHFP(null).getFptypeOptions()
-    assert.ok(opts instanceof Map)
-    assert.equal(opts.get(1), 'SHA-1')
-    assert.equal(opts.get(2), 'SHA-256')
+  it('lists algorithm and fingerprint type options', function () {
+    const r = new SSHFP(null)
+    assert.equal(r.getAlgorithmOptions().get(1), 'RSA')
+    assert.equal(r.getAlgorithmOptions().get(4), 'Ed25519')
+    assert.equal(r.getFptypeOptions().get(1), 'SHA-1')
+    assert.equal(r.getFptypeOptions().get(2), 'SHA-256')
   })
-
-  base.getDescription(SSHFP)
-  base.getRFCs(SSHFP, validRecords[0])
-  base.getFields(SSHFP, ['algorithm', 'fptype', 'fingerprint'])
-  base.getCanonical(SSHFP)
-  base.getTypeId(SSHFP, 44)
-  base.getTags(SSHFP)
-
-  base.toBind(SSHFP, validRecords)
-  base.toWire(SSHFP, validRecords)
-  base.toTinydns(SSHFP, validRecords)
-
-  base.fromBind(SSHFP, validRecords)
-  base.fromTinydns(SSHFP, validRecords)
-  base.fromWire(SSHFP, validRecords)
 
   it('revalidates the fingerprint when the fptype changes', function () {
     const r = new SSHFP(new SSHFP(null).getCanonical())

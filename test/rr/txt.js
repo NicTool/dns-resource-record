@@ -5,38 +5,27 @@ import * as base from '../base.js'
 
 import TXT from '../../rr/txt.js'
 
-const validRecords = [
-  {
-    owner: 'oct2021._domainkey.example.com.',
-    ttl: 86400,
-    type: 'TXT',
-    data: 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
-    testB:
-      'oct2021._domainkey.example.com.\t86400\tIN\tTXT\t"v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n',
-    testT:
-      ':oct2021._domainkey.example.com:16:\\377v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob\\2234F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB:86400::\n',
-    testW:
-      '076f6374323032310a5f646f6d61696e6b6579076578616d706c6503636f6d0000100001000151800194ff763d444b494d313b703d4d494942496a414e42676b71686b6947397730424151454641414f43415138414d49494243674b43415145416f79557a474f54534f6d616b5938426378586769306d4e2f6e4665674c425073376161475155746a48666138795572743954326a3647535867646a4c754733523433576a655051763352487a632b6277774f6b64773058444f58697a746e356d68726c61666c62567235504d5354727636342f637046514b4c746751783856677170374468336a773133724c6f6d5254714a46674d724d4864684969625a45613639677475416644716f65586f36514453476b354a7542416552484548323746726948756c67356f62933446346c6d6837664d46567344476b514546366a614956597176526a44797951656433523361544a583366706233517274527176666e2f4c41662b336b7a573538416a73455270734e435354443252717578626e796f522f317764474b623863556c442f45587671747670566e4f7a486553654d45716578336b514938484f4773456568575a6c4b642b477177494441514142',
-  },
-  {
-    owner: 'oct2021._domainkey.example.com.',
-    ttl: 86400,
-    type: 'TXT',
-    data: [
-      'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob',
-      '4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
-    ],
-    testB:
-      'oct2021._domainkey.example.com.\t86400\tIN\tTXT\t"v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n',
-    testT:
-      ':oct2021._domainkey.example.com:16:\\377v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob\\2234F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB:86400::\n',
-    testW:
-      '076f6374323032310a5f646f6d61696e6b6579076578616d706c6503636f6d0000100001000151800194ff763d444b494d313b703d4d494942496a414e42676b71686b6947397730424151454641414f43415138414d49494243674b43415145416f79557a474f54534f6d616b5938426378586769306d4e2f6e4665674c425073376161475155746a48666138795572743954326a3647535867646a4c754733523433576a655051763352487a632b6277774f6b64773058444f58697a746e356d68726c61666c62567235504d5354727636342f637046514b4c746751783856677170374468336a773133724c6f6d5254714a46674d724d4864684969625a45613639677475416644716f65586f36514453476b354a7542416552484548323746726948756c67356f62933446346c6d6837664d46567344476b514546366a614956597176526a44797951656433523361544a583366706233517274527176666e2f4c41662b336b7a573538416a73455270734e435354443252717578626e796f522f317764474b623863556c442f45587671747670566e4f7a486553654d45716578336b514938484f4773456568575a6c4b642b477177494441514142',
-  },
+const DKIM =
+  'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob' +
+  '4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB'
+
+// a string over 255 bytes is two character-strings on the wire
+const dkim = {
+  owner: 'oct2021._domainkey.example.com.',
+  ttl: 86400,
+  data: DKIM,
+  testB: `oct2021._domainkey.example.com.\t86400\tIN\tTXT\t"${DKIM.slice(0, 255)}" "${DKIM.slice(255)}"\n`,
+  testT: `:oct2021._domainkey.example.com:16:\\377${DKIM.slice(0, 255)}\\223${DKIM.slice(255)}:86400::\n`,
+  testW:
+    '076f6374323032310a5f646f6d61696e6b6579076578616d706c6503636f6d0000100001000151800194ff763d444b494d313b703d4d494942496a414e42676b71686b6947397730424151454641414f43415138414d49494243674b43415145416f79557a474f54534f6d616b5938426378586769306d4e2f6e4665674c425073376161475155746a48666138795572743954326a3647535867646a4c754733523433576a655051763352487a632b6277774f6b64773058444f58697a746e356d68726c61666c62567235504d5354727636342f637046514b4c746751783856677170374468336a773133724c6f6d5254714a46674d724d4864684969625a45613639677475416644716f65586f36514453476b354a7542416552484548323746726948756c67356f62933446346c6d6837664d46567344476b514546366a614956597176526a44797951656433523361544a583366706233517274527176666e2f4c41662b336b7a573538416a73455270734e435354443252717578626e796f522f317764474b623863556c442f45587671747670566e4f7a486553654d45716578336b514938484f4773456568575a6c4b642b477177494441514142',
+}
+
+const valid = [
+  dkim,
+  { ...dkim, data: [DKIM.slice(0, 255), DKIM.slice(255)] },
   {
     owner: 'example.com.',
     ttl: 86400,
-    type: 'TXT',
     data: 'v=spf1 mx a include:mx.example.com -all',
     testB: 'example.com.\t86400\tIN\tTXT\t"v=spf1 mx a include:mx.example.com -all"\n',
     testT: "'example.com:v=spf1 mx a include\\072mx.example.com -all:86400::\n",
@@ -45,9 +34,6 @@ const validRecords = [
   },
   {
     owner: 'nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'TXT',
     data: ['v=spf1 mx include:tnpi.net -all'],
     testB: 'nictool.tnpi.net.\t3600\tIN\tTXT\t"v=spf1 mx include:tnpi.net -all"\n',
     testT: ':nictool.tnpi.net:16:\\037v=spf1 mx include\\072tnpi.net -all:3600::\n',
@@ -56,203 +42,86 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = []
+const octal = (s) => [...s].map((c) => `\\${c.charCodeAt(0).toString(8).padStart(3, '0')}`).join('')
+const txt = (data, owner = 'example.com.') => new TXT({ owner, ttl: 3600, data })
 
 describe('TXT record', function () {
-  base.valid(TXT, validRecords)
-  base.invalid(TXT, invalidRecords)
+  base.suite(TXT, { typeId: 16, fields: ['data'], valid })
 
-  base.getDescription(TXT)
-  base.getRFCs(TXT, validRecords[0])
-  base.getFields(TXT, ['data'])
-  base.getCanonical(TXT)
-  base.getTypeId(TXT, 16)
-  base.getTags(TXT)
+  it('chunks BIND and wire character-strings on UTF-8 byte boundaries', function () {
+    const quoted = txt('é'.repeat(200))
+      .toBind()
+      .match(/"([^"]*)"/g)
+    assert.ok(quoted.length > 1)
+    for (const q of quoted) assert.ok(new TextEncoder().encode(q.slice(1, -1)).length <= 255, q)
+    assert.equal(quoted.map((q) => q.slice(1, -1)).join(''), 'é'.repeat(200))
 
-  base.toBind(TXT, validRecords)
-  base.toWire(TXT, validRecords)
-  base.toTinydns(TXT, validRecords)
-
-  base.fromTinydns(TXT, validRecords)
-  base.fromBind(TXT, validRecords)
-  base.fromWire(TXT, validRecords)
-
-  it(`toBind chunks non-ASCII TXT data by UTF-8 bytes, not characters`, function () {
-    // 200 × "é" = 200 chars but 400 UTF-8 bytes → must split into multiple
-    // 255-byte character-strings. Char-based chunking would emit a single
-    // 400-byte token, which BIND named rejects.
-    const data = 'é'.repeat(200)
-    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data }).toBind()
-    const quoted = r.match(/"([^"]*)"/g)
-    assert.ok(quoted.length > 1, `expected multiple quoted chunks, got: ${r}`)
-    for (const q of quoted) {
-      const inner = q.slice(1, -1)
-      const bytes = new TextEncoder().encode(inner).length
-      assert.ok(bytes <= 255, `chunk exceeds 255 bytes (${bytes}): ${inner}`)
-    }
-    // Content round-trips: concatenated chunks equal original data
-    assert.equal(quoted.map((q) => q.slice(1, -1)).join(''), data)
+    const r = txt(`${'a'.repeat(254)}é`)
+    assert.deepEqual(TXT.fromWire(r.toWire()).get('data'), ['a'.repeat(254), 'é'])
+    assert.deepEqual(TXT.fromBind(r.toBind()).get('data'), ['a'.repeat(254), 'é'])
   })
 
-  it('splits wire character-strings on the same UTF-8 boundaries as toBind', function () {
-    const data = `${'a'.repeat(254)}é`
-    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data })
-    const fromWire = TXT.fromWire(r.toWire())
-    assert.deepEqual(fromWire.get('data'), ['a'.repeat(254), 'é'])
-    assert.deepEqual(fromWire.get('data'), TXT.fromBind(r.toBind()).get('data'))
-  })
-
-  it(`imports tinydns TXT (generic) record`, async function () {
-    const val = {
-      owner: 'nov2021._domainkey.example.com.',
-      type: 'TXT',
-      data: 'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
-      ttl: 86400,
-      testB:
-        'nov2021._domainkey.example.com.\t86400\tIN\tTXT\t"v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob" "4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB"\n',
-      testT:
-        ':nov2021._domainkey.example.com:16:\\377\\166\\075\\104\\113\\111\\115\\061\\073\\160\\075\\115\\111\\111\\102\\111\\152\\101\\116\\102\\147\\153\\161\\150\\153\\151\\107\\071\\167\\060\\102\\101\\121\\105\\106\\101\\101\\117\\103\\101\\121\\070\\101\\115\\111\\111\\102\\103\\147\\113\\103\\101\\121\\105\\101\\157\\171\\125\\172\\107\\117\\124\\123\\117\\155\\141\\153\\131\\070\\102\\143\\170\\130\\147\\151\\060\\155\\116\\057\\156\\106\\145\\147\\114\\102\\120\\163\\067\\141\\141\\107\\121\\125\\164\\152\\110\\146\\141\\070\\171\\125\\162\\164\\071\\124\\062\\152\\066\\107\\123\\130\\147\\144\\152\\114\\165\\107\\063\\122\\064\\063\\127\\152\\145\\120\\121\\166\\063\\122\\110\\172\\143\\053\\142\\167\\167\\117\\153\\144\\167\\060\\130\\104\\117\\130\\151\\172\\164\\156\\065\\155\\150\\162\\154\\141\\146\\154\\142\\126\\162\\065\\120\\115\\123\\124\\162\\166\\066\\064\\057\\143\\160\\106\\121\\113\\114\\164\\147\\121\\170\\070\\126\\147\\161\\160\\067\\104\\150\\063\\152\\167\\061\\063\\162\\114\\157\\155\\122\\124\\161\\112\\106\\147\\115\\162\\115\\110\\144\\150\\111\\151\\142\\132\\105\\141\\066\\071\\147\\164\\165\\101\\146\\104\\161\\157\\145\\130\\157\\066\\121\\104\\123\\107\\153\\065\\112\\165\\102\\101\\145\\122\\110\\105\\110\\062\\067\\106\\162\\151\\110\\165\\154\\147\\065\\157\\142\\223\\064\\106\\064\\154\\155\\150\\067\\146\\115\\106\\126\\163\\104\\107\\153\\121\\105\\106\\066\\152\\141\\111\\126\\131\\161\\166\\122\\152\\104\\171\\171\\121\\145\\144\\063\\122\\063\\141\\124\\112\\130\\063\\146\\160\\142\\063\\121\\162\\164\\122\\161\\166\\146\\156\\057\\114\\101\\146\\053\\063\\153\\172\\127\\065\\070\\101\\152\\163\\105\\122\\160\\163\\116\\103\\123\\124\\104\\062\\122\\161\\165\\170\\142\\156\\171\\157\\122\\057\\061\\167\\144\\107\\113\\142\\070\\143\\125\\154\\104\\057\\105\\130\\166\\161\\164\\166\\160\\126\\156\\117\\172\\110\\145\\123\\145\\115\\105\\161\\145\\170\\063\\153\\121\\111\\070\\110\\117\\107\\163\\105\\145\\150\\127\\132\\154\\113\\144\\053\\107\\161\\167\\111\\104\\101\\121\\101\\102:86400::\n',
-    }
-
-    const r = TXT.fromTinydns(val.testT)
-    if (process.env.DEBUG) console.dir(r)
-    for (const f of r.getFields()) {
-      if (f === 'class' || f === 'data') continue
-      assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-    }
-    // a string over 255 bytes is two character-strings on the wire
-    assert.deepEqual(r.get('data'), [val.data.slice(0, 255), val.data.slice(255)])
-  })
-
-  it('exports TXT record in MaraDNS format', function () {
-    const r = new TXT({ owner: 'example.com.', ttl: 3600, class: 'IN', type: 'TXT', data: 'v=spf1 mx -all' })
-    assert.equal(r.toMaraDNS(), "example.com.\t+3600\tTXT\t'v=spf1 mx -all' ~\n")
+  it('imports a generic tinydns line written entirely in octal', function () {
+    const r = TXT.fromTinydns(
+      `:${dkim.owner.slice(0, -1)}:16:\\377${octal(DKIM.slice(0, 255))}\\223${octal(DKIM.slice(255))}:86400::\n`,
+    )
+    assert.deepEqual(r.get('data'), valid[1].data)
+    assert.equal(r.get('owner'), dkim.owner)
   })
 
   // RFC 1035 §3.3.14: multi-string TXT records are wire-distinct from one
-  // concatenated string. Boundaries must round-trip through encode/decode.
-  describe('multi-string boundary preservation', function () {
-    const owner = 'example.com.'
+  // concatenated string, so boundaries must round-trip.
+  it('keeps character-string boundaries', function () {
     const segments = ['hello', 'world']
+    assert.deepEqual(
+      [...txt(segments).getWireRdata()],
+      [5, ...Buffer.from('hello'), 5, ...Buffer.from('world')],
+    )
+    assert.deepEqual(TXT.fromWire(txt(segments).toWire()).get('data'), segments)
+    assert.equal(TXT.fromWire(txt('just one').toWire()).get('data'), 'just one')
+    assert.deepEqual(TXT.fromBind('example.com.\t3600\tIN\tTXT\t"hello" "world"\n').get('data'), segments)
+  })
 
-    it('encodes array as N len-prefixed character-strings on the wire', function () {
-      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: segments })
-      const rdata = r.getWireRdata()
-      // Expect [5, h, e, l, l, o, 5, w, o, r, l, d]
-      assert.deepEqual([...rdata], [5, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 5, 0x77, 0x6f, 0x72, 0x6c, 0x64])
-    })
+  it('rejects data that is not a string or an array of <=255 byte strings', function () {
+    assert.throws(() => txt(['ok', 'x'.repeat(256)]), /each string in a data array must be <=255 bytes/)
+    assert.throws(() => txt([]), /non-empty array of strings/)
+    assert.throws(() => txt(undefined), /must be a string/)
+  })
 
-    it('decodes multi-string wire form back to array', function () {
-      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: segments })
-      const wire = r.toWire()
-      const r2 = TXT.fromWire(wire)
-      assert.deepEqual(r2.get('data'), segments)
-    })
-
-    it('decodes a single-string wire form back to a plain string', function () {
-      const r = new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data: 'just one' })
-      const r2 = TXT.fromWire(r.toWire())
-      assert.equal(r2.get('data'), 'just one')
-    })
-
-    it('fromBind on "a" "b" returns the array form', function () {
-      const bindline = 'example.com.\t3600\tIN\tTXT\t"hello" "world"\n'
-      const r = TXT.fromBind(bindline)
-      assert.deepEqual(r.get('data'), segments)
-    })
-
-    it('rejects an array element longer than 255 bytes (boundary not preservable)', function () {
-      const txt = (data) => new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data })
-      assert.throws(() => txt(['ok', 'x'.repeat(256)]), /each string in a data array must be <=255 bytes/)
-      assert.throws(() => txt([]), /non-empty array of strings/)
-      assert.throws(() => txt(undefined), /must be a string/)
-    })
-
-    it('fromTinydns rejects a truncated len-prefixed segment', function () {
-      // tinydns generic with declared length 5 but only 2 trailing bytes.
-      const truncated = ':example.com:16:\\005ab:3600::\n'
-      assert.throws(() => TXT.fromTinydns(truncated), /TXT: rdata is truncated/)
-    })
-
-    it('fromWire rejects a truncated charstr in rdata', function () {
-      // Hand-craft a wire record whose final character-string length byte
-      // claims more bytes than remain in rdata.
-      // owner = "example.com." (uncompressed), type 16, class 1, ttl 3600,
-      // rdlen 4, then rdata = [\x05 a b c] (declared 5, only 3 follow).
-      const wire = Buffer.concat([
-        Buffer.from([7]),
-        Buffer.from('example'),
-        Buffer.from([3]),
-        Buffer.from('com'),
-        Buffer.from([0]),
-        Buffer.from([0x00, 0x10]), // type 16
-        Buffer.from([0x00, 0x01]), // class 1
-        Buffer.from([0x00, 0x00, 0x0e, 0x10]), // ttl 3600
-        Buffer.from([0x00, 0x04]), // rdlen 4
-        Buffer.from([5, 0x61, 0x62, 0x63]), // declared len 5, only 3 chars
-      ])
-      assert.throws(() => TXT.fromWire(wire), /TXT: rdata is truncated/)
-    })
+  it('rejects a truncated character-string', function () {
+    assert.throws(() => TXT.fromTinydns(':example.com:16:\\005ab:3600::\n'), /TXT: rdata is truncated/)
+    const wire = Buffer.from('076578616d706c6503636f6d0000100001' + '00000e10' + '0004' + '05616263', 'hex')
+    assert.throws(() => TXT.fromWire(wire), /TXT: rdata is truncated/)
   })
 })
 
 describe('TXT presentation-format escaping', function () {
-  const txt = (data) => new TXT({ owner: 'esc.example.com.', ttl: 300, class: 'IN', data })
-  const rdata = (rr) => rr.toBind().trimEnd().split('\t').slice(4).join('\t')
+  const rdata = (data) => txt(data).toBind().trimEnd().split('\t').slice(4).join('\t')
+  const mara = (data) => txt(data).toMaraDNS()
 
-  it('escapes double quotes inside a character-string', () => {
-    // RFC 1035 §5.1: an unescaped " would end the character-string early,
-    // which BIND and every other parser rejects.
-    assert.equal(rdata(txt('say "hi"')), '"say \\"hi\\""')
-  })
-
-  it('escapes backslashes', () => {
-    assert.equal(rdata(txt('c:\\path\\')), '"c:\\\\path\\\\"')
-  })
-
-  it('escapes both, in order, without double-escaping', () => {
-    assert.equal(rdata(txt('a\\"b')), '"a\\\\\\"b"')
-  })
+  // RFC 1035 §5.1: an unescaped " would end the character-string early.
+  for (const [data, expected] of [
+    ['say "hi"', '"say \\"hi\\""'],
+    ['c:\\path\\', '"c:\\\\path\\\\"'],
+    ['a\\"b', '"a\\\\\\"b"'],
+    ['v=spf1 -all', '"v=spf1 -all"'],
+  ]) {
+    it(`BIND: ${data}`, () => assert.equal(rdata(data), expected))
+  }
 
   it('escapes each chunk of a value past 255 bytes', () => {
-    const rr = txt('"'.repeat(300))
-    const chunks = rdata(rr).slice(1, -1).split('" "')
-
+    const chunks = rdata('"'.repeat(300)).slice(1, -1).split('" "')
     assert.equal(chunks.length, 2, 'chunked on the unescaped length')
-    for (const c of chunks) {
-      assert.doesNotMatch(c, /(^|[^\\])"/, 'no bare quote survives in any chunk')
-    }
+    for (const c of chunks) assert.doesNotMatch(c, /(^|[^\\])"/)
   })
 
-  it('leaves ordinary data untouched', () => {
-    assert.equal(rdata(txt('v=spf1 -all')), '"v=spf1 -all"')
-  })
-
-  it('does not apply RFC 1035 escaping to MaraDNS output', () => {
-    // csv2 quotes with ' and has its own rules; escaping here would change the
-    // payload rather than its presentation.
-    const out = txt('has "quotes" and \\ backslash').toMaraDNS()
-
-    assert.match(out, /'has "quotes" and \\ backslash'/)
-    assert.doesNotMatch(out, /\\"/)
-  })
-
-  it('leaves payload quotes alone, quoting only the csv2 chunk delimiter', () => {
-    // Rewriting every " to ' also hit the payload, which both corrupts the
-    // value and unbalances the surrounding '...' quoting.
-    assert.match(txt('a "b" c').toMaraDNS(), /'a "b" c'/)
-  })
-
-  it('separates MaraDNS chunks with an unquoted ; (csv2_txt)', () => {
-    const out = txt('y'.repeat(400)).toMaraDNS()
-
-    assert.ok(out.endsWith(`\tTXT\t'${'y'.repeat(255)}';'${'y'.repeat(145)}' ~\n`))
-  })
-
-  it("writes ', |, ~, # and controls outside csv2 quotes as \\xNN", () => {
-    assert.match(
-      txt("it's #1 ~ a|b\tc").toMaraDNS(),
-      /\t'it'\\x27's '\\x23'1 '\\x7e' a'\\x7c'b'\\x09'c' ~\n$/,
-    )
-  })
+  // csv2 quotes with ' and has its own rules, so payload " and \ stay as written.
+  for (const [data, expected] of [
+    ['v=spf1 mx -all', /^example\.com\.\t\+3600\tTXT\t'v=spf1 mx -all' ~\n$/],
+    ['has "quotes" and \\ backslash', /'has "quotes" and \\ backslash'/],
+    ["it's #1 ~ a|b\tc", /\t'it'\\x27's '\\x23'1 '\\x7e' a'\\x7c'b'\\x09'c' ~\n$/],
+    ['y'.repeat(400), new RegExp(`\\tTXT\\t'${'y'.repeat(255)}';'${'y'.repeat(145)}' ~\\n$`)],
+  ]) {
+    it(`MaraDNS: ${data.slice(0, 30)}`, () => assert.match(mara(data), expected))
+  }
 })

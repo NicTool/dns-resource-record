@@ -4,9 +4,10 @@ import * as base from '../base.js'
 
 import IPSECKEY from '../../rr/ipseckey.js'
 
-const common = { ttl: 7200, class: 'IN', type: 'IPSECKEY' }
+const common = { ttl: 7200 }
+const canonical = new IPSECKEY(null).getCanonical()
 
-const validRecords = [
+const valid = [
   {
     ...common,
     owner: '38.2.0.192.in-addr.arpa.',
@@ -89,9 +90,6 @@ const validRecords = [
   },
   {
     owner: 'ipsec.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'IPSECKEY',
     precedence: 10,
     'gateway type': 1,
     algorithm: 2,
@@ -106,7 +104,7 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...common,
     owner: '0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.1.0.0.0.0.0.2.8.b.d.0.1.0.0.2.ip6.arpa.',
@@ -127,27 +125,18 @@ const invalidRecords = [
     publickey: 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
     msg: /Algorithm invalid/,
   },
+  { ...canonical, 'gateway type': 3, gateway: 'gw;x.example.', msg: /gateway has an unescaped delimiter/ },
+  { ...canonical, 'gateway type': 3, gateway: 'gw.example', msg: /gateway must be fully qualified/ },
+  { ...canonical, publickey: undefined, msg: /publickey must be a valid base64/ },
 ]
 
 describe('IPSECKEY record', function () {
-  base.valid(IPSECKEY, validRecords)
-  base.invalid(IPSECKEY, invalidRecords)
-
-  base.getDescription(IPSECKEY)
-  base.getRFCs(IPSECKEY, validRecords[0])
-  base.getRdataFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
-  base.getFields(IPSECKEY, ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'])
-  base.getCanonical(IPSECKEY)
-  base.getTypeId(IPSECKEY, 45)
-  base.getTags(IPSECKEY)
-
-  base.toBind(IPSECKEY, validRecords)
-  base.toWire(IPSECKEY, validRecords)
-  base.toTinydns(IPSECKEY, validRecords)
-
-  base.fromBind(IPSECKEY, validRecords)
-  base.fromTinydns(IPSECKEY, validRecords)
-  base.fromWire(IPSECKEY, validRecords)
+  base.suite(IPSECKEY, {
+    typeId: 45,
+    fields: ['precedence', 'gateway type', 'algorithm', 'gateway', 'publickey'],
+    valid,
+    invalid,
+  })
 
   it('joins a public key that BIND splits across tokens', function () {
     const r = IPSECKEY.fromBind(
@@ -157,16 +146,7 @@ describe('IPSECKEY record', function () {
   })
 
   it('encodes a compressed IPv6 gateway', function () {
-    const r = new IPSECKEY({
-      owner: 'x.example.',
-      ttl: 60,
-      type: 'IPSECKEY',
-      precedence: 10,
-      'gateway type': 2,
-      algorithm: 2,
-      gateway: '2001:DB8:0:8002::2000:1',
-      publickey: 'AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==',
-    })
+    const r = new IPSECKEY({ ...canonical, 'gateway type': 2, gateway: '2001:DB8:0:8002::2000:1' })
     assert.equal(r.get('gateway'), '2001:0db8:0000:8002:0000:0000:2000:0001')
     assert.equal(
       Buffer.from(r.getWireRdata().subarray(3, 19)).toString('hex'),
@@ -174,23 +154,14 @@ describe('IPSECKEY record', function () {
     )
   })
 
-  it('validates a gateway domain name (type 3)', function () {
-    const canonical = new IPSECKEY(null).getCanonical()
-    const ipseckey = (gateway) => new IPSECKEY({ ...canonical, 'gateway type': 3, gateway })
-    assert.throws(() => ipseckey('gw;x.example.'), /gateway has an unescaped delimiter/)
-    assert.throws(() => ipseckey('gw.example'), /gateway must be fully qualified/)
-    assert.equal(ipseckey('GW.Example.').get('gateway'), 'gw.example.')
-  })
-
   it('accepts the ECDSA and EdDSA algorithms, and no key with algorithm 0', function () {
-    const canonical = new IPSECKEY(null).getCanonical()
     for (const algorithm of [3, 4])
       assert.equal(new IPSECKEY({ ...canonical, algorithm }).get('algorithm'), algorithm)
     const keyless = new IPSECKEY({ ...canonical, algorithm: 0, publickey: undefined })
     assert.equal(IPSECKEY.fromWire(keyless.toWire()).get('publickey'), '')
-    assert.throws(
-      () => new IPSECKEY({ ...canonical, publickey: undefined }),
-      /publickey must be a valid base64/,
+    assert.equal(
+      new IPSECKEY({ ...canonical, 'gateway type': 3, gateway: 'GW.Example.' }).get('gateway'),
+      'gw.example.',
     )
   })
 })

@@ -4,11 +4,8 @@ import * as base from '../base.js'
 
 import SMIMEA from '../../rr/smimea.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'SMIMEA' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: '_443._tcp.www.example.com.',
     'certificate usage': 0,
     selector: 0,
@@ -23,9 +20,8 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
-    ...defaults,
     owner: 'test.example.com.',
     'certificate usage': 0,
     selector: 6, // invalid
@@ -36,23 +32,12 @@ const invalidRecords = [
 ]
 
 describe('SMIMEA record', function () {
-  base.valid(SMIMEA, validRecords)
-  base.invalid(SMIMEA, invalidRecords)
-
-  base.getDescription(SMIMEA)
-  base.getRFCs(SMIMEA, validRecords[0])
-  base.getFields(SMIMEA, ['certificate usage', 'selector', 'matching type', 'certificate association data'])
-  base.getCanonical(SMIMEA)
-  base.getTypeId(SMIMEA, 53)
-  base.getTags(SMIMEA)
-
-  base.toBind(SMIMEA, validRecords)
-  base.toWire(SMIMEA, validRecords)
-  base.toTinydns(SMIMEA, validRecords)
-
-  base.fromBind(SMIMEA, validRecords)
-  base.fromTinydns(SMIMEA, validRecords)
-  base.fromWire(SMIMEA, validRecords)
+  base.suite(SMIMEA, {
+    typeId: 53,
+    fields: ['certificate usage', 'selector', 'matching type', 'certificate association data'],
+    valid,
+    invalid,
+  })
 
   it('revalidates the certificate association data when the matching type changes', function () {
     const r = new SMIMEA(new SMIMEA(null).getCanonical())

@@ -4,11 +4,8 @@ import * as base from '../base.js'
 
 import NSEC3 from '../../rr/nsec3.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'NSEC3' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: 'test.example.com.',
     'hash algorithm': 1,
     flags: 1,
@@ -25,74 +22,32 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
+  ...['hash algorithm', 'flags', 'iterations', 'next hashed owner name'].map((f) => ({
+    ...valid[0],
+    [f]: undefined,
+    msg: new RegExp(`'${f}' is required`, 'i'),
+  })),
+  // RFC 5155 §11
   {
-    ...defaults,
-    owner: 'test.example.com.',
-    flags: 1,
-    iterations: 12,
-    salt: 'aabbccdd',
-    'type bit maps': 'A',
-    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
-    msg: /'hash algorithm' is required/i,
+    bindline: 'h.example. 300 IN NSEC3 1 0 0 - a8 A',
+    msg: /SHA-1 'next hashed owner name' is 20 bytes, got 1/,
   },
-  {
-    ...defaults,
-    owner: 'test.example.com.',
-    'hash algorithm': 1,
-    iterations: 12,
-    salt: 'aabbccdd',
-    'type bit maps': 'A',
-    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
-    msg: /'flags' is required/i,
-  },
-  {
-    ...defaults,
-    owner: 'test.example.com.',
-    'hash algorithm': 1,
-    flags: 1,
-    salt: 'aabbccdd',
-    'type bit maps': 'A',
-    'next hashed owner name': '2vptu5timamqttgl4luu9kg21e0aor3s',
-    msg: /'iterations' is required/i,
-  },
-  {
-    ...defaults,
-    owner: 'test.example.com.',
-    'hash algorithm': 1,
-    flags: 1,
-    iterations: 12,
-    salt: 'aabbccdd',
-    'type bit maps': 'A',
-    msg: /'next hashed owner name' is required/i,
-  },
+  // RFC 5155 §3.2
+  { bindline: `h.example. 300 IN NSEC3 2 0 0 - ${'a'.repeat(416)} A`, msg: /must be <=255 bytes, got 260/ },
+  ...['2vptu5timamqttgl4luu9kg21e0aor3w', 'a', 'abc', 'ab'].map((hash) => ({
+    bindline: `h.example. 300 IN NSEC3 2 1 12 - ${hash} A`,
+    msg: /must be unpadded base32hex/,
+  })),
 ]
 
 describe('NSEC3 record', function () {
-  base.valid(NSEC3, validRecords)
-  base.invalid(NSEC3, invalidRecords, { ttl: 3600 })
-
-  base.getDescription(NSEC3)
-  base.getRFCs(NSEC3, validRecords[0])
-  base.getFields(NSEC3, [
-    'hash algorithm',
-    'flags',
-    'iterations',
-    'salt',
-    'next hashed owner name',
-    'type bit maps',
-  ])
-  base.getCanonical(NSEC3)
-  base.getTypeId(NSEC3, 50)
-  base.getTags(NSEC3)
-
-  base.toBind(NSEC3, validRecords)
-  base.toWire(NSEC3, validRecords)
-  base.toTinydns(NSEC3, validRecords)
-
-  base.fromBind(NSEC3, validRecords)
-  base.fromTinydns(NSEC3, validRecords)
-  base.fromWire(NSEC3, validRecords)
+  base.suite(NSEC3, {
+    typeId: 50,
+    fields: ['hash algorithm', 'flags', 'iterations', 'salt', 'next hashed owner name', 'type bit maps'],
+    valid,
+    invalid,
+  })
 
   it('imports BIND output and encodes the wire as named-rrchecker does (RFC 5155 §3.2)', function () {
     const r = NSEC3.fromBind('h.example. 300 IN NSEC3 1 0 0 - 2T7B4G4VSA5SMI47K61MV5BV1A22BOJR')
@@ -113,38 +68,10 @@ describe('NSEC3 record', function () {
     assert.equal(r.get('next hashed owner name'), '2vptu5timamqttgl4luu9kg21e0aor3s')
   })
 
-  it('requires a 20-byte hash for SHA-1 (RFC 5155 §11)', function () {
-    assert.throws(
-      () => NSEC3.fromBind('h.example. 300 IN NSEC3 1 0 0 - a8 A'),
-      /SHA-1 'next hashed owner name' is 20 bytes, got 1/,
-    )
-  })
-
   it('rejects wire rdata whose salt or hash length overruns it', function () {
     const decode = (hex) =>
-      new NSEC3(null).fromWire({
-        owner: 'h.example.',
-        cls: 'IN',
-        ttl: 60,
-        rdata: Uint8Array.from(Buffer.from(hex, 'hex')),
-      })
+      new NSEC3(null).fromWire({ owner: 'h.example.', cls: 'IN', ttl: 60, rdata: Buffer.from(hex, 'hex') })
     assert.throws(() => decode('020000000002ab'), /hash length does not fit/)
     assert.throws(() => decode('0200000000'), /truncated before the hash/)
-  })
-
-  it('requires a hash of at most 255 bytes (RFC 5155 §3.2)', function () {
-    assert.throws(
-      () => NSEC3.fromBind(`h.example. 300 IN NSEC3 2 0 0 - ${'a'.repeat(416)} A`),
-      /must be <=255 bytes, got 260/,
-    )
-  })
-
-  it('rejects a hash that is not canonical unpadded base32hex', function () {
-    for (const hash of ['2vptu5timamqttgl4luu9kg21e0aor3w', 'a', 'abc', 'ab']) {
-      assert.throws(
-        () => NSEC3.fromBind(`h.example. 300 IN NSEC3 2 1 12 - ${hash} A`),
-        /must be unpadded base32hex/,
-      )
-    }
   })
 })

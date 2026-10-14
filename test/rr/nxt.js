@@ -4,12 +4,10 @@ import * as base from '../base.js'
 
 import NXT from '../../rr/nxt.js'
 
-const validRecords = [
+const valid = [
   {
     owner: 'big.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'NXT',
     'next domain': 'medium.example.com.',
     'type bit map': 'A SIG NXT',
     testB: `big.example.com.\t86400\tIN\tNXT\tmedium.example.com.\tA SIG NXT\n`,
@@ -19,35 +17,23 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
-  // {
-  // },
+// RFC 2535 §5.2
+const invalid = [
+  { ...valid[0], 'type bit map': 'A CAA', msg: /type CAA is outside 1-127/ },
+  { ...valid[0], 'type bit map': 'A BOGUS', msg: /invalid DNS type: BOGUS/ },
 ]
 
 describe('NXT record', function () {
-  base.valid(NXT, validRecords)
-  base.invalid(NXT, invalidRecords, { ttl: 3600 })
+  base.suite(NXT, {
+    typeId: 30,
+    fields: ['next domain', 'type bit map'],
+    valid,
+    invalid,
+  })
 
-  base.getDescription(NXT)
-  base.getRFCs(NXT, validRecords[0])
-  base.getFields(NXT, ['next domain', 'type bit map'])
-  base.getCanonical(NXT)
-  base.getTypeId(NXT, 30)
-  base.getTags(NXT)
-
-  base.toBind(NXT, validRecords)
-  base.toWire(NXT, validRecords)
-  base.toTinydns(NXT, validRecords)
-
-  base.fromBind(NXT, validRecords)
-  base.fromTinydns(NXT, validRecords)
-  base.fromWire(NXT, validRecords)
-
-  it('rejects types the NXT bit map cannot hold (RFC 2535 §5.2)', function () {
+  it('stores the type list in type order', function () {
     const nxt = (types) =>
       new NXT({ owner: 'a.example.', ttl: 60, 'next domain': 'b.example.', 'type bit map': types })
-    assert.throws(() => nxt('A CAA'), /type CAA is outside 1-127/)
-    assert.throws(() => nxt('A BOGUS'), /invalid DNS type: BOGUS/)
     assert.equal(nxt('nxt a').get('type bit map'), 'A NXT')
   })
 })

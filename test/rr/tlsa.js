@@ -4,11 +4,8 @@ import * as base from '../base.js'
 
 import TLSA from '../../rr/tlsa.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'TLSA' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: '_443._tcp.www.example.com.',
     'certificate usage': 0,
     selector: 0,
@@ -22,7 +19,6 @@ const validRecords = [
       '045f343433045f74637003777777076578616d706c6503636f6d000034000100000e100023000001d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971',
   },
   {
-    ...defaults,
     owner: '_443._tcp.www.example.com.',
     'certificate usage': 1,
     selector: 1,
@@ -37,9 +33,8 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
-    ...defaults,
     owner: 'test.example.com.',
     selector: 6, // invalid
     msg: /RFC/,
@@ -47,23 +42,12 @@ const invalidRecords = [
 ]
 
 describe('TLSA record', function () {
-  base.valid(TLSA, validRecords)
-  base.invalid(TLSA, invalidRecords)
-
-  base.getDescription(TLSA)
-  base.getRFCs(TLSA, validRecords[0])
-  base.getFields(TLSA, ['certificate usage', 'selector', 'matching type', 'certificate association data'])
-  base.getCanonical(TLSA)
-  base.getTypeId(TLSA, 52)
-  base.getTags(TLSA)
-
-  base.toBind(TLSA, validRecords)
-  base.toWire(TLSA, validRecords)
-  base.toTinydns(TLSA, validRecords)
-
-  base.fromBind(TLSA, validRecords)
-  base.fromTinydns(TLSA, validRecords)
-  base.fromWire(TLSA, validRecords)
+  base.suite(TLSA, {
+    typeId: 52,
+    fields: ['certificate usage', 'selector', 'matching type', 'certificate association data'],
+    valid,
+    invalid,
+  })
 
   it('revalidates the certificate association data when the matching type changes', function () {
     const r = new TLSA(new TLSA(null).getCanonical())

@@ -5,11 +5,8 @@ import * as base from '../base.js'
 
 import SOA from '../../rr/soa.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'SOA' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: 'example.com.',
     mname: 'ns1.example.com.',
     rname: 'matt.example.com.',
@@ -24,7 +21,6 @@ const validRecords = [
       '076578616d706c6503636f6d000006000100000e100037036e7331076578616d706c6503636f6d00046d617474076578616d706c6503636f6d000000000100001c2000000e100012750000000e10',
   },
   {
-    ...defaults,
     owner: '2.example.com.',
     mname: 'ns2.example.com.',
     rname: 'matt.example.com.',
@@ -40,9 +36,8 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
-    ...defaults,
     owner: 'example.com.',
     mname: 'ns1.example.com.',
     rname: 'matt.example.com.',
@@ -55,40 +50,17 @@ const invalidRecords = [
 ]
 
 describe('SOA record', function () {
-  base.valid(SOA, validRecords)
-  base.invalid(SOA, invalidRecords)
-
-  base.getDescription(SOA)
-  base.getRFCs(SOA, validRecords[0])
-  base.getFields(SOA, ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'])
-  base.getCanonical(SOA)
-  base.getTypeId(SOA, 6)
-  base.getTags(SOA)
-
-  base.toBind(SOA, validRecords)
-  base.toWire(SOA, validRecords)
-  base.toTinydns(SOA, validRecords)
-
-  base.fromBind(SOA, validRecords)
-  base.fromTinydns(SOA, validRecords)
-  base.fromWire(SOA, validRecords)
-
-  it('exports SOA record in MaraDNS format', function () {
-    const soa = new SOA(validRecords[0])
-    const out = soa.toMaraDNS()
-    assert.ok(out.includes('SOA'))
-    assert.ok(out.endsWith('~\n'))
-    assert.ok(out.includes(validRecords[0].mname))
-    assert.ok(out.startsWith(`${validRecords[0].owner}\t+${validRecords[0].ttl}\tSOA\t`), 'keeps the TTL')
+  base.suite(SOA, {
+    typeId: 6,
+    fields: ['mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'minimum'],
+    valid,
+    invalid,
   })
 
-  for (const val of validRecords) {
-    it(`imports tinydns SOA (Z) record (${val.owner})`, async function () {
-      const r = SOA.fromTinydns(val.testT)
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of ['owner', 'mname', 'rname', 'serial', 'refresh', 'retry', 'expire', 'ttl']) {
-        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
+  it('exports MaraDNS, keeping the TTL', function () {
+    assert.equal(
+      new SOA({ ...valid[0], ttl: 3600 }).toMaraDNS(),
+      'example.com.\t+3600\tSOA\tns1.example.com.\tmatt.example.com.\t1\t7200\t3600\t1209600\t3600 ~\n',
+    )
+  })
 })

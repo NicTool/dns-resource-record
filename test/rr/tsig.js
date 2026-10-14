@@ -5,9 +5,9 @@ import * as base from '../base.js'
 
 import TSIG from '../../rr/tsig.js'
 
-const defaults = { class: 'ANY', ttl: 0, type: 'TSIG' }
+const defaults = { class: 'ANY', ttl: 0 }
 
-const validRecords = [
+const valid = [
   {
     ...defaults,
     owner: 'test.example.',
@@ -42,7 +42,7 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...defaults,
     owner: 'test.example.',
@@ -64,25 +64,23 @@ const invalidRecords = [
     'time signed': 853804800,
     msg: /must be fully qualified/i,
   },
+  {
+    bindline: 't.example. 0 ANY TSIG hmac-sha256. 1 300 0 1 18junk 0',
+    msg: /TSIG: error must be an rcode name or an integer: 18junk/,
+  },
+  {
+    bindline: 'test.example. 0 ANY TSIG hmac-sha256. 1 300 8 3q2+7w== 1 0 0',
+    msg: /TSIG: missing rdata: mac/,
+  },
 ]
 
 describe('TSIG record', function () {
-  base.valid(TSIG, validRecords)
-  base.invalid(TSIG, invalidRecords)
-
-  base.getDescription(TSIG)
-  base.getRFCs(TSIG, validRecords[0])
-  base.getFields(TSIG, ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other'])
-  base.getCanonical(TSIG)
-  base.getTypeId(TSIG, 250)
-  base.getTags(TSIG)
-
-  base.toBind(TSIG, validRecords)
-  base.toWire(TSIG, validRecords)
-
-  base.fromBind(TSIG, validRecords)
-  base.fromTinydns(TSIG, validRecords)
-  base.fromWire(TSIG, validRecords)
+  base.suite(TSIG, {
+    typeId: 250,
+    fields: ['algorithm name', 'time signed', 'fudge', 'mac', 'original id', 'error', 'other'],
+    valid,
+    invalid,
+  })
 
   it('imports dig output: error mnemonic and Other Data', function () {
     const r = TSIG.fromBind(
@@ -99,15 +97,8 @@ describe('TSIG record', function () {
     )
   })
 
-  it('rejects an error that is neither an rcode name nor an integer', function () {
-    assert.throws(
-      () => TSIG.fromBind('t.example. 0 ANY TSIG hmac-sha256. 1 300 0 1 18junk 0'),
-      /TSIG: error must be an rcode name or an integer: 18junk/,
-    )
-  })
-
   it('rejects wire rdata whose lengths do not account for every byte', function () {
-    const tsig = new TSIG({ ...validRecords[1], other: 'AA==' })
+    const tsig = new TSIG({ ...valid[1], other: 'AA==' })
     const rdata = tsig.getWireRdata()
     const decode = (bytes) =>
       new TSIG(null).fromWire({ owner: 'test.example.', cls: 'ANY', ttl: 0, rdata: bytes })
@@ -120,22 +111,10 @@ describe('TSIG record', function () {
     assert.equal(TSIG.fromBind('t.example. 0 ANY TSIG hmac-sha256. 1 300 2 AAA = 1 0 0').get('mac'), 'AAA=')
   })
 
-  it('rejects a MAC shorter than its size', function () {
-    assert.throws(
-      () => TSIG.fromBind('test.example. 0 ANY TSIG hmac-sha256. 1 300 8 3q2+7w== 1 0 0'),
-      /TSIG: missing rdata: mac/,
-    )
-  })
-
-  describe('zone-data exports reject TSIG', function () {
-    // RFC 8945 §§4.1-4.2: TSIG is a dynamically computed meta-RR of class ANY
-    // with no value in storage; tinydns and MaraDNS formats publish class IN
-    it('toTinydns throws', function () {
-      assert.throws(() => new TSIG(validRecords[0]).toTinydns(), /only class IN/)
-    })
-
-    it('toMaraDNS throws', function () {
-      assert.throws(() => new TSIG(validRecords[0]).toMaraDNS(), /only class IN/)
-    })
+  // RFC 8945 §§4.1-4.2: TSIG is a computed meta-RR of class ANY, and the
+  // tinydns and MaraDNS formats publish class IN
+  it('refuses zone-data exports', function () {
+    assert.throws(() => new TSIG(valid[0]).toTinydns(), /only class IN/)
+    assert.throws(() => new TSIG(valid[0]).toMaraDNS(), /only class IN/)
   })
 })

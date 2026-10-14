@@ -5,9 +5,9 @@ import * as base from '../base.js'
 
 import MX from '../../rr/mx.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'MX', preference: 0 }
+const defaults = { preference: 0 }
 
-const validRecords = [
+const valid = [
   {
     ...defaults,
     owner: 'test.example.com.',
@@ -29,9 +29,6 @@ const validRecords = [
   },
   {
     owner: 'nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'MX',
     preference: 10,
     exchange: 'mail.nictool.tnpi.net.',
     testB: 'nictool.tnpi.net.\t3600\tIN\tMX\t10\tmail.nictool.tnpi.net.\n',
@@ -41,9 +38,6 @@ const validRecords = [
   },
   {
     owner: 'nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'MX',
     preference: 20,
     exchange: 'mail.tnpi.net.',
     testB: 'nictool.tnpi.net.\t3600\tIN\tMX\t20\tmail.tnpi.net.\n',
@@ -52,7 +46,7 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...defaults,
     owner: 'test.example.com.',
@@ -74,36 +68,15 @@ const invalidRecords = [
 ]
 
 describe('MX record', function () {
-  base.valid(MX, validRecords)
-  base.invalid(MX, invalidRecords)
-
-  base.getDescription(MX)
-  base.getRFCs(MX, validRecords[0])
-  base.getFields(MX, ['preference', 'exchange'])
-  base.getCanonical(MX)
-  base.getTypeId(MX, 15)
-  base.getTags(MX)
-
-  base.toBind(MX, validRecords)
-  base.toWire(MX, validRecords)
-  base.toTinydns(MX, validRecords)
-
-  base.fromBind(MX, validRecords)
-  base.fromTinydns(MX, validRecords)
-  base.fromWire(MX, validRecords)
-
-  for (const val of validRecords) {
-    it(`imports tinydns MX (@) record (${val.owner})`, async function () {
-      const r = MX.fromTinydns(val.testT)
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of ['owner', 'exchange', 'preference', 'ttl']) {
-        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
+  base.suite(MX, {
+    typeId: 15,
+    fields: ['preference', 'exchange'],
+    valid,
+    invalid,
+  })
 
   it('exports a null MX (RFC 7505) to MaraDNS as RAW, since csv2 cannot name the root', function () {
-    const mx = new MX({ owner: 'a.example.', ttl: 60, type: 'MX', preference: 0, exchange: '.' })
+    const mx = new MX({ owner: 'a.example.', ttl: 60, preference: 0, exchange: '.' })
     assert.equal(mx.toMaraDNS(), 'a.example.\t+60\tRAW 15\t\\x00\\x00\\x00 ~\n')
   })
 

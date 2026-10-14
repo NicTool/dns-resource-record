@@ -6,12 +6,9 @@ import OPENPGPKEY from '../../rr/openpgpkey.js'
 const publicKey =
   'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA=='
 
-const validRecords = [
+const valid = [
   {
     owner: 'matt.example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'OPENPGPKEY',
     'public key': publicKey,
     testB: `matt.example.com.\t3600\tIN\tOPENPGPKEY\t${publicKey}\n`,
     testT:
@@ -21,41 +18,19 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     owner: 'matt.example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'OPENPGPKEY',
     'public key': 'not valid base64!',
     msg: /must be a valid base64 string/i,
   },
   {
     owner: 'matt.example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'OPENPGPKEY',
     'public key': 'not-real-key-\u{1F600}',
     msg: /must be a valid base64 string/i,
   },
 ]
 
 describe('OPENPGPKEY record', function () {
-  base.valid(OPENPGPKEY, validRecords)
-  base.invalid(OPENPGPKEY, invalidRecords, { ttl: 3600 })
-
-  base.getDescription(OPENPGPKEY)
-  base.getRFCs(OPENPGPKEY)
-  base.getFields(OPENPGPKEY, ['public key'])
-  base.getCanonical(OPENPGPKEY)
-  base.getTypeId(OPENPGPKEY, 61)
-  base.getTags(OPENPGPKEY)
-
-  base.toBind(OPENPGPKEY, validRecords)
-  base.toWire(OPENPGPKEY, validRecords)
-  base.toTinydns(OPENPGPKEY, validRecords)
-
-  base.fromBind(OPENPGPKEY, validRecords)
-  base.fromTinydns(OPENPGPKEY, validRecords)
-  base.fromWire(OPENPGPKEY, validRecords)
+  base.suite(OPENPGPKEY, { typeId: 61, fields: ['public key'], valid, invalid })
 })

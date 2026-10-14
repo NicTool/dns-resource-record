@@ -5,11 +5,8 @@ import * as base from '../base.js'
 
 import SIG from '../../rr/sig.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'SIG' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: 'example.com.',
     'type covered': 1,
     algorithm: 5,
@@ -30,9 +27,8 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
-    ...defaults,
     owner: 'example.com.',
     algorithm: 5,
     labels: 1,
@@ -44,36 +40,27 @@ const invalidRecords = [
     signature: 'AQPSK==',
     msg: /'type covered' is required/i,
   },
+  { ...valid[0], 'signature expiration': 20230231000000, msg: /signature expiration is not a valid date/ },
+  { ...valid[0], 'key tag': 65536, msg: /key tag must be a 16-bit/ },
 ]
 
 describe('SIG record', function () {
-  base.valid(SIG, validRecords)
-  base.invalid(SIG, invalidRecords)
-
-  base.getDescription(SIG)
-  base.getRFCs(SIG, validRecords[0])
-  base.getFields(SIG, [
-    'type covered',
-    'algorithm',
-    'labels',
-    'original ttl',
-    'signature expiration',
-    'signature inception',
-    'key tag',
-    'signers name',
-    'signature',
-  ])
-  base.getCanonical(SIG)
-  base.getTypeId(SIG, 24)
-  base.getTags(SIG)
-
-  base.toBind(SIG, validRecords)
-  base.toWire(SIG, validRecords)
-  base.toTinydns(SIG, validRecords)
-
-  base.fromBind(SIG, validRecords)
-  base.fromTinydns(SIG, validRecords)
-  base.fromWire(SIG, validRecords)
+  base.suite(SIG, {
+    typeId: 24,
+    fields: [
+      'type covered',
+      'algorithm',
+      'labels',
+      'original ttl',
+      'signature expiration',
+      'signature inception',
+      'key tag',
+      'signers name',
+      'signature',
+    ],
+    valid,
+    invalid,
+  })
 
   it('imports BIND output: type mnemonic, dates, and split base64', function () {
     const r = SIG.fromBind(
@@ -81,20 +68,6 @@ describe('SIG record', function () {
     )
     assert.equal(r.get('type covered'), 1)
     assert.equal(r.get('signature expiration'), 1678886400)
-    assert.equal(r.get('signature'), validRecords[0].signature)
-  })
-
-  it('rejects a date that does not exist', function () {
-    assert.throws(
-      () => new SIG({ ...validRecords[0], 'signature expiration': 20230231000000 }),
-      /signature expiration is not a valid date/,
-    )
-  })
-
-  it('rejects a key tag over 16 bits', function () {
-    assert.throws(
-      () => new SIG({ ...new SIG(null).getCanonical(), 'key tag': 65536 }),
-      /key tag must be a 16-bit/,
-    )
+    assert.equal(r.get('signature'), valid[0].signature)
   })
 })

@@ -1,15 +1,11 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe } from 'node:test'
 import * as base from '../base.js'
 
 import KEY from '../../rr/key.js'
 
-const validRecords = [
+const valid = [
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'KEY',
     flags: 256,
     protocol: 3,
     algorithm: 5,
@@ -23,51 +19,17 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
-  {
-    owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'KEY',
-    flags: 256,
-    protocol: 3,
-    algorithm: 99,
-    publickey: 'AQPSK==',
-    msg: /algorithm invalid/i,
-  },
-  {
-    owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'KEY',
-    flags: 256,
-    protocol: 3,
-    algorithm: 5,
-    publickey: '',
-    msg: /publickey is required/i,
-  },
+const invalid = [
+  { ...valid[0], algorithm: 99, msg: /algorithm invalid/i },
+  { ...valid[0], publickey: '', msg: /publickey is required/i },
+  { tinyline: ':example.com:25:AB:3600::\n', msg: /KEY: rdata is truncated/ },
 ]
 
 describe('KEY record', function () {
-  base.valid(KEY, validRecords)
-  base.invalid(KEY, invalidRecords, { ttl: 3600 })
-
-  it('throws on short RDATA in fromTinydns', function () {
-    assert.throws(() => KEY.fromTinydns(':example.com:25:AB:3600::\n'), /KEY: rdata is truncated/)
+  base.suite(KEY, {
+    typeId: 25,
+    fields: ['flags', 'protocol', 'algorithm', 'publickey'],
+    valid,
+    invalid,
   })
-
-  base.getDescription(KEY)
-  base.getRFCs(KEY, validRecords[0])
-  base.getFields(KEY, ['flags', 'protocol', 'algorithm', 'publickey'])
-  base.getCanonical(KEY)
-  base.getTypeId(KEY, 25)
-  base.getTags(KEY)
-
-  base.toBind(KEY, validRecords)
-  base.toWire(KEY, validRecords)
-  base.toTinydns(KEY, validRecords)
-
-  base.fromBind(KEY, validRecords)
-  base.fromTinydns(KEY, validRecords)
-  base.fromWire(KEY, validRecords)
 })

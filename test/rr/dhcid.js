@@ -3,12 +3,9 @@ import * as base from '../base.js'
 
 import DHCID from '../../rr/dhcid.js'
 
-const validRecords = [
+const valid = [
   {
     owner: 'host.example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'DHCID',
     data: 'AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=',
     testB: 'host.example.com.\t3600\tIN\tDHCID\tAAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=\n',
     testT:
@@ -16,9 +13,6 @@ const validRecords = [
   },
   {
     owner: 'dhcid.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'DHCID',
     data: 'AAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA',
     testB: 'dhcid.nictool.tnpi.net.\t3600\tIN\tDHCID\tAAIBxwkxGO0Jou7NMsGBAAAAAAAAAAAA\n',
     testT:
@@ -28,33 +22,14 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     owner: 'host.example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'DHCID',
     data: '',
     msg: /data is required/,
   },
 ]
 
 describe('DHCID record', function () {
-  base.valid(DHCID, validRecords)
-  base.invalid(DHCID, invalidRecords)
-
-  base.getDescription(DHCID)
-  base.getRFCs(DHCID, validRecords[0])
-  base.getFields(DHCID, ['data'])
-  base.getCanonical(DHCID)
-  base.getTypeId(DHCID, 49)
-  base.getTags(DHCID)
-
-  base.toBind(DHCID, validRecords)
-  base.toWire(DHCID, validRecords)
-  base.toTinydns(DHCID, validRecords)
-
-  base.fromBind(DHCID, validRecords)
-  base.fromTinydns(DHCID, validRecords)
-  base.fromWire(DHCID, validRecords)
+  base.suite(DHCID, { typeId: 49, fields: ['data'], valid, invalid })
 })

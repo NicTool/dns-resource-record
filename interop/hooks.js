@@ -1,6 +1,6 @@
 // Module hooks that load test/rr/*.js for their validRecords without running
 // them: node:test and test/base.js are swapped for stubs, and the base stub's
-// valid() hands each record list to globalThis.__interopRecords.
+// suite() hands each record list to globalThis.__interopRecords.
 import fs from 'node:fs'
 
 const here = new URL('./', import.meta.url).href
@@ -22,10 +22,10 @@ export async function load(url, context, next) {
   const names = [...base.matchAll(/^export function (\w+)/gm)].map((m) => m[1])
   const source = names
     .map((name) =>
-      name === 'valid'
-        ? `export function valid(type, records) {
+      name === 'suite'
+        ? `export function suite(type, { valid = [] }) {
   const all = (globalThis.__interopRecords ??= new Map())
-  all.set(type, [...(all.get(type) ?? []), ...records])
+  all.set(type, [...(all.get(type) ?? []), ...valid])
 }`
         : `export function ${name}() {}`,
     )
