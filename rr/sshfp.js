@@ -1,6 +1,7 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
-import * as BINARY from '../lib/binary.js'
+
+// RFC 4255 §3.1.3, RFC 6594: SHA-1 and SHA-256 fingerprints.
+const FINGERPRINT_BYTES = { 1: 20, 2: 32 }
 
 export default class SSHFP extends RR {
   static typeName = 'SSHFP'
@@ -25,11 +26,14 @@ export default class SSHFP extends RR {
 
   setFptype(val) {
     if (!this.getFptypeOptions().has(val)) this.throwHelp(`SSHFP: fptype invalid`)
+    if (this.get('fingerprint') !== undefined)
+      this.isHexDigest('fingerprint', this.get('fingerprint'), FINGERPRINT_BYTES[val])
     this.setTypedValue('u8', 'fptype', val)
   }
 
   setFingerprint(val) {
-    this.setTypedValue('hex', 'fingerprint', val)
+    this.isHexDigest('fingerprint', val, FINGERPRINT_BYTES[this.get('fptype')])
+    this.set('fingerprint', val.toUpperCase())
   }
 
   getAlgorithmOptions() {
@@ -68,38 +72,6 @@ export default class SSHFP extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // SSHFP via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('SSHFP fromTinydns, invalid n')
-
-    return new SSHFP({
-      owner,
-      ttl,
-      type: 'SSHFP',
-      algorithm: TINYDNS.octalToUInt8(rdata.slice(0, 4)),
-      fptype: TINYDNS.octalToUInt8(rdata.slice(4, 8)),
-      fingerprint: TINYDNS.octalToHex(rdata.slice(8)),
-      timestamp,
-      location,
-    })
-  }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.UInt8toOctal(this.get('fptype')) +
-        TINYDNS.packHex(this.get('fingerprint')),
-    )
-  }
-
-  getWireRdata() {
-    const bytes = new Uint8Array(2 + BINARY.hexToBytes(this.get('fingerprint')).length)
-    bytes[0] = this.get('algorithm')
-    bytes[1] = this.get('fptype')
-    bytes.set(BINARY.hexToBytes(this.get('fingerprint')), 2)
-    return bytes
-  }
 }

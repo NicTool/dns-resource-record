@@ -4,14 +4,10 @@ import * as base from '../base.js'
 
 import CERT from '../../rr/cert.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'CERT' }
-
-const validRecords = [
+const valid = [
   {
     owner: 'mail.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'CERT',
     'cert type': 'PGP',
     'key tag': 0,
     algorithm: 0,
@@ -23,8 +19,6 @@ const validRecords = [
   {
     owner: 'smith.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'CERT',
     'cert type': 'PGP',
     'key tag': 0,
     algorithm: 0,
@@ -36,8 +30,6 @@ const validRecords = [
   {
     owner: 'numeric.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'CERT',
     'cert type': 1,
     'key tag': 0,
     algorithm: 0,
@@ -46,72 +38,21 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
-  {
-    ...defaults,
-    owner: 'mail.example.com.',
-    'cert type': undefined,
-    'key tag': 0,
-    algorithm: 0,
-    certificate: 'AQIDBA==',
-    msg: /cert type is required/i,
-  },
-  {
-    ...defaults,
-    owner: 'mail.example.com.',
-    'cert type': 'INVALID', // not a valid mnemonic
-    'key tag': 0,
-    algorithm: 0,
-    certificate: 'hexidecimalkeystring1',
-    msg: /unknown cert type mnemonic/i,
-  },
-  {
-    ...defaults,
-    owner: 'mail.example.com.',
-    'cert type': 'PGP',
-    'key tag': 70000, // out of 16-bit range
-    algorithm: 0,
-    certificate: 'hexidecimalkeystring1',
-    msg: /16-bit integer/i,
-  },
-  {
-    ...defaults,
-    owner: 'mail.example.com.',
-    'cert type': 'PGP',
-    'key tag': 0,
-    algorithm: 300, // out of 8-bit range
-    certificate: 'hexidecimalkeystring1',
-    msg: /8-bit integer/i,
-  },
-  {
-    ...defaults,
-    owner: 'mail.example.com.',
-    'cert type': 'PGP',
-    'key tag': 0,
-    algorithm: 0,
-    certificate: '', // empty certificate
-    msg: /certificate is required/i,
-  },
-]
+const invalid = [
+  ['cert type', undefined, /cert type is required/i],
+  ['cert type', 'INVALID', /unknown cert type mnemonic/i],
+  ['key tag', 70000, /16-bit integer/i],
+  ['algorithm', 300, /8-bit integer/i],
+  ['certificate', '', /certificate is required/i],
+].map(([f, v, msg]) => ({ ...valid[0], [f]: v, msg }))
 
 describe('CERT record', function () {
-  base.valid(CERT, validRecords)
-  base.invalid(CERT, invalidRecords)
-
-  base.getDescription(CERT)
-  base.getRFCs(CERT, validRecords[0])
-  base.getFields(CERT, ['cert type', 'key tag', 'algorithm', 'certificate'])
-  base.getCanonical(CERT)
-  base.getTypeId(CERT, 37)
-  base.getTags(CERT)
-
-  base.toBind(CERT, validRecords)
-  base.toWire(CERT, validRecords)
-  base.toTinydns(CERT, validRecords)
-
-  base.fromBind(CERT, validRecords)
-  base.fromTinydns(CERT, validRecords)
-  base.fromWire(CERT, validRecords)
+  base.suite(CERT, {
+    typeId: 37,
+    fields: ['cert type', 'key tag', 'algorithm', 'certificate'],
+    valid,
+    invalid,
+  })
 
   it('getCertTypeValue throws for unknown mnemonic', function () {
     assert.throws(() => new CERT(null).getCertTypeValue('DOESNOTEXIST'), /unknown cert type mnemonic/i)

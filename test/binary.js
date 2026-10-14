@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { typeNameToId, typeIdToName } from '../lib/binary.js'
+import { bitmapToTypes, typeNameToId, typeIdToName, typesToBitmap } from '../lib/binary.js'
 
 describe('BINARY', function () {
   describe('typeNameToId', function () {
@@ -17,17 +17,14 @@ describe('BINARY', function () {
       [123, 123],
       [0, 0],
       [65535, 65535],
+      ['NSAP_PTR', 23], // input-only alias
+      ['NSAP-PTR', 23],
     ]
     for (const [input, expected] of valid) {
       it(`resolves ${JSON.stringify(input)} to ${expected}`, function () {
         assert.equal(typeNameToId(input), expected)
       })
     }
-
-    it('resolves the NSAP_PTR input-only alias', function () {
-      assert.equal(typeNameToId('NSAP_PTR'), 23)
-      assert.equal(typeNameToId('NSAP-PTR'), 23)
-    })
 
     const invalid = [
       'BOGUS',
@@ -53,28 +50,36 @@ describe('BINARY', function () {
     }
   })
 
-  describe('typeIdToName', function () {
-    it('resolves 15 to MX', function () {
-      assert.equal(typeIdToName(15), 'MX')
-    })
-
-    it('resolves 1 to A', function () {
-      assert.equal(typeIdToName(1), 'A')
-    })
-
-    it('resolves 23 to the IANA registered mnemonic NSAP-PTR', function () {
-      assert.equal(typeIdToName(23), 'NSAP-PTR')
-    })
-
-    it('falls back to TYPE731 for unassigned ids (RFC 3597)', function () {
-      assert.equal(typeIdToName(731), 'TYPE731')
-    })
-
-    const invalid = [-1, 65536, 1.5, '15', undefined, null]
-    for (const input of invalid) {
-      it(`throws on ${String(input)}`, function () {
-        assert.throws(() => typeIdToName(input), /invalid DNS type id/)
-      })
+  it('typeIdToName', function () {
+    // 23 is IANA's NSAP-PTR; unassigned ids fall back to TYPEnnn (RFC 3597)
+    for (const [id, name] of [
+      [15, 'MX'],
+      [1, 'A'],
+      [23, 'NSAP-PTR'],
+      [731, 'TYPE731'],
+    ]) {
+      assert.equal(typeIdToName(id), name)
     }
+    for (const input of [-1, 65536, 1.5, '15', undefined, null])
+      assert.throws(() => typeIdToName(input), /invalid DNS type id/, String(input))
   })
+})
+
+describe('bitmapToTypes (RFC 4034 §4.1.2)', function () {
+  it('round trips a type list', function () {
+    assert.equal(bitmapToTypes(typesToBitmap('A MX RRSIG NSEC TYPE1234')), 'A MX RRSIG NSEC TYPE1234')
+  })
+
+  for (const [bytes, msg] of [
+    [[0, 2, 0x40], /truncated/],
+    [[0], /inside a block header/],
+    [[0, 0], /length 0 is not 1-32/],
+    [[0, 33, ...Array(33).fill(1)], /length 33 is not 1-32/],
+    [[0, 2, 0x40, 0], /ends in a zero octet/],
+    [[1, 1, 0x40, 0, 1, 0x40], /window 0 is out of order/],
+  ]) {
+    it(`rejects ${JSON.stringify(bytes.slice(0, 6))}`, function () {
+      assert.throws(() => bitmapToTypes(Uint8Array.from(bytes)), msg)
+    })
+  }
 })

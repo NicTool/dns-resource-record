@@ -5,21 +5,18 @@ import * as base from '../base.js'
 
 import DNAME from '../../rr/dname.js'
 
-const defaults = { class: 'IN', ttl: 86400, type: 'DNAME' }
+const defaults = { ttl: 86400 }
 
-const validRecords = [
+const valid = [
   {
     ...defaults,
     owner: '_tcp.example.com.',
     target: '_tcp.example.net.',
     testB: '_tcp.example.com.\t86400\tIN\tDNAME\t_tcp.example.net.\n',
-    testT: ':_tcp.example.com:39:\\004\\137tcp\\007example\\003net\\000:86400::\n',
+    testT: ':_tcp.example.com:39:\\004_tcp\\007example\\003net\\000:86400::\n',
   },
   {
     owner: 'old.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'DNAME',
     target: 'new.tnpi.net.',
     testB: 'old.nictool.tnpi.net.\t3600\tIN\tDNAME\tnew.tnpi.net.\n',
     testT: ':old.nictool.tnpi.net:39:\\003new\\004tnpi\\003net\\000:3600::\n',
@@ -27,7 +24,7 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...defaults,
     owner: 'spf.example.com.',
@@ -37,31 +34,9 @@ const invalidRecords = [
 ]
 
 describe('DNAME record', function () {
-  base.valid(DNAME, validRecords)
-  base.invalid(DNAME, invalidRecords)
+  base.suite(DNAME, { typeId: 39, fields: ['target'], valid, invalid })
 
-  base.getDescription(DNAME)
-  base.getRFCs(DNAME, validRecords[0])
-  base.getFields(DNAME, ['target'])
-  base.getCanonical(DNAME)
-  base.getTypeId(DNAME, 39)
-  base.getTags(DNAME)
-
-  base.toBind(DNAME, validRecords)
-  base.toWire(DNAME, validRecords)
-  base.toTinydns(DNAME, validRecords)
-
-  base.fromBind(DNAME, validRecords)
-  base.fromTinydns(DNAME, validRecords)
-  base.fromWire(DNAME, validRecords)
-
-  for (const val of validRecords) {
-    it(`imports tinydns DNAME (generic) record (${val.owner})`, async function () {
-      const r = DNAME.fromTinydns(val.testT)
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of ['owner', 'target', 'ttl']) {
-        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
+  it('toMaraDNS throws: MaraDNS refuses DNAME, even as RAW', function () {
+    assert.throws(() => new DNAME(valid[0]).toMaraDNS(), /MaraDNS does not support DNAME/)
+  })
 })

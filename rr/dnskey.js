@@ -1,8 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-import * as BINARY from '../lib/binary.js'
-
 export default class DNSKEY extends RR {
   static typeName = 'DNSKEY'
   static typeId = 48
@@ -83,8 +80,10 @@ export default class DNSKEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`DNSKEY: publickey is required`)
-    this.isBase64('DNSKEY', 'publickey', val.replace(/[\s()]/g, ''))
-    this.set('publickey', val)
+    this.isString('DNSKEY', 'publickey', val)
+    const key = val.replace(/[\s()]/g, '')
+    this.isBase64('DNSKEY', 'publickey', key)
+    this.set('publickey', key)
   }
 
   getDescription() {
@@ -107,69 +106,5 @@ export default class DNSKEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  DNSKEY Flags Protocol Algorithm PublicKey
-    const regex =
-      /^(?<owner>\S+)\s+(?<ttl>\d+)\s+(?<cls>\w+)\s+(?<type>DNSKEY)\s+(?<flags>\d+)\s+(?<protocol>\d+)\s+(?<algorithm>\d+)\s+(?<publickey>\S.*)$/i
-
-    const match = bindline.trim().match(regex)
-
-    if (!match) {
-      this.throwHelp(`unable to parse DNSKEY: ${bindline}`)
-    }
-
-    const { owner, ttl, c, type, flags, protocol, algorithm, publickey } = match.groups
-
-    return new DNSKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type: type,
-      flags: parseInt(flags, 10),
-      protocol: parseInt(protocol, 10),
-      algorithm: parseInt(algorithm, 10),
-      publickey: publickey,
-    })
-  }
-
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('DNSKEY fromTinydns, invalid n')
-
-    const bytes = TINYDNS.octalRdataToBytes(rdata)
-
-    return new DNSKEY({
-      owner,
-      ttl,
-      type: 'DNSKEY',
-      flags: (bytes[0] << 8) | bytes[1],
-      protocol: bytes[2],
-      algorithm: bytes[3],
-      publickey: BINARY.bytesToBase64(bytes.subarray(4)),
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt16toOctal(this.get('flags')) +
-        TINYDNS.UInt8toOctal(this.get('protocol')) +
-        TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.base64toOctal(this.get('publickey').replace(/[\s()]/g, '')),
-    )
-  }
-
-  getWireRdata() {
-    const keyBytes = BINARY.base64ToBytes(this.get('publickey').replace(/[\s()]/g, ''))
-    const bytes = new Uint8Array(4 + keyBytes.length)
-    const dv = new DataView(bytes.buffer, bytes.byteOffset)
-    dv.setUint16(0, this.get('flags'))
-    bytes[2] = this.get('protocol')
-    bytes[3] = this.get('algorithm')
-    bytes.set(keyBytes, 4)
-    return bytes
-  }
 }

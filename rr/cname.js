@@ -32,7 +32,4 @@ export default class CNAME extends RR {
   }
 
   /******  EXPORTERS   *******/
-  getWireRdata() {
-    return this.wirePackDomain(this.get('cname'))
-  }
 }

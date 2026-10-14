@@ -209,9 +209,7 @@ Parse from one format, export to another:
 
 ```js
 // tinydns → BIND
-const fromTiny = RR.CAA.fromTinydns(
-  ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
-)
+const fromTiny = RR.CAA.fromTinydns(':ns1.example.com:257:\\000\\005issuehttp\\072//letsencrypt.org:3600::\n')
 console.log(fromTiny.toBind())
 // ns1.example.com.	3600	IN	CAA	0	issue	"http://letsencrypt.org"
 ```
@@ -351,7 +349,7 @@ Use this module directly in browsers via CDN:
 - **jsdelivr:** `https://cdn.jsdelivr.net/npm/@nictool/dns-resource-record/dist/dns-rr.min.js`
 - **esm.sh:** `https://esm.sh/@nictool/dns-resource-record`
 
-**Live example:** See [nictool.github.io/builder/](https://nictool.github.io/builder/) for an interactive DNS record editor using this library.
+**Live example:** See [nictool.github.io/builder/][builder] for an interactive DNS record editor using this library.
 
 ---
 
@@ -416,12 +414,14 @@ No external dependencies. Runs on node.js and modern browsers.
 - `npm run format` — Auto-format with Prettier and fix linting issues
 - `npm run build` — Regenerate the browser and CommonJS bundles in `dist/`
 - `npm run test:coverage` — Generate test coverage report
+- `npm run interop` — Export every test record and check it against the DNS software installed locally: BIND, ldns, Knot, NSD, CoreDNS, PowerDNS, tinydns and MaraDNS parse it, then serve it, and each answer must match `toWire()`. Missing tools are skipped, and the other tools' own limitations are listed in `interop/known.js`. `npm run interop -- bind-parse nsd-serve` runs only the named stages.
 
 **Architecture:**
 
 - **rr.js** — Base class with shared DNS logic and validation
 - **rr/\*.js** — Individual RR type implementations
 - **test/\*.js** — Comprehensive test suite for each RR type
+- **interop/** — The `npm run interop` harness
 
 ## References
 
@@ -429,9 +429,11 @@ No external dependencies. Runs on node.js and modern browsers.
 - [DNS Terminology (NicTool Dictionary)](https://nictool.github.io/Dictionary)
 - [dns-zone](https://www.npmjs.com/package/@nictool/dns-zone) — Zone file operations
 - [dns-nameserver](https://www.npmjs.com/package/@nictool/dns-nameserver) — Nameserver management
+- [DNS Resource Record Builder][builder]
 
 ---
 
+[builder]: https://nictool.github.io/builder/index.html
 [ci-img]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/NicTool/dns-resource-record/actions/workflows/ci.yml
 [cov-img]: https://coveralls.io/repos/github/NicTool/dns-resource-record/badge.svg

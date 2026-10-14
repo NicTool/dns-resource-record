@@ -32,21 +32,21 @@ export default class SOA extends RR {
 
   setMname(val) {
     // MNAME (primary NS)
-    this.isValidHostname('SOA', 'MNAME', val)
+    this.isValidName('SOA', 'MNAME', val)
     this.isFullyQualified('SOA', 'MNAME', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('mname', val.toLowerCase())
+    this.set('mname', this.lowercaseName(val))
   }
 
   setRname(val) {
     // RNAME (email of admin)  (escape . with \)
-    this.isValidHostname('SOA', 'RNAME', val)
+    this.isValidName('SOA', 'RNAME', val)
     this.isFullyQualified('SOA', 'RNAME', val)
     if (/@/.test(val)) this.throwHelp(`SOA rname replaces @ with a . (dot)`)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('rname', val.toLowerCase())
+    this.set('rname', this.lowercaseName(val))
   }
 
   setSerial(val) {
@@ -108,11 +108,11 @@ export default class SOA extends RR {
     const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new SOA({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SOA',
-      mname: this.fullyQualify(mname),
-      rname: this.fullyQualify(rname),
+      mname: this.fromTinyFQDN(mname),
+      rname: this.fromTinyFQDN(rname),
       serial: parseInt(ser ?? this.default?.serial, 10),
       refresh: parseInt(ref, 10) || 16384,
       retry: parseInt(ret, 10) || 2048,
@@ -126,27 +126,9 @@ export default class SOA extends RR {
   /******  EXPORTERS   *******/
   toMaraDNS() {
     this.assertClassIN('MaraDNS')
-    return `${this.get('owner')}\t SOA\t${this.getFields('rdata')
+    return `${this.get('owner')}\t+${this.get('ttl')}\tSOA\t${this.getFields('rdata')
       .map((f) => this.getQuoted(f))
       .join('\t')} ~\n`
-  }
-
-  getWireRdata() {
-    const mname = this.wirePackDomain(this.get('mname'))
-    const rname = this.wirePackDomain(this.get('rname'))
-    const result = new Uint8Array(mname.length + rname.length + 20)
-    let offset = 0
-    result.set(mname, offset)
-    offset += mname.length
-    result.set(rname, offset)
-    offset += rname.length
-    const view = new DataView(result.buffer, offset)
-    view.setUint32(0, this.get('serial'))
-    view.setUint32(4, this.get('refresh'))
-    view.setUint32(8, this.get('retry'))
-    view.setUint32(12, this.get('expire'))
-    view.setUint32(16, this.get('minimum'))
-    return result
   }
 
   toTinydns() {

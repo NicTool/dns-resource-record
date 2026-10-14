@@ -1,6 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 import * as WIRE from '../lib/wire.js'
 
@@ -13,13 +12,9 @@ export default class IPSECKEY extends RR {
     ['gateway type', 'u8'],
     ['algorithm', 'u8'],
     'gateway',
-    'publickey',
+    ['publickey', 'base64'],
   ]
   static tags = ['security']
-
-  constructor(opts) {
-    super(opts)
-  }
 
   /****** Resource record specific setters   *******/
   setPrecedence(val) {
@@ -50,10 +45,14 @@ export default class IPSECKEY extends RR {
     this.set('algorithm', val)
   }
 
+  // IANA IPSECKEY Resource Record Parameters, Algorithm Type Field
   getAlgorithmOptions() {
     return new Map([
-      [1, 'DSA'],
-      [2, 'RSA'],
+      [0, 'No key is present'],
+      [1, 'DSA'], // RFC 4025
+      [2, 'RSA'], // RFC 4025
+      [3, 'ECDSA'], // RFC 8005
+      [4, 'EdDSA'], // RFC 9373
     ])
   }
 
@@ -69,15 +68,21 @@ export default class IPSECKEY extends RR {
         break
       case 2:
         if (!this.isIPv6(val)) throw gwErr
+        val = this.expandIPv6(val.toLowerCase())
+        break
+      case 3:
+        this.isFqdnValue('IPSECKEY', 'gateway', val)
+        val = this.lowercaseName(val)
         break
     }
 
     this.set('gateway', val)
   }
 
+  // RFC 4025 §2.4: algorithm 0 carries no key
   setPublickey(val) {
-    if (val) this.isBase64('IPSECKEY', 'publickey', val)
-    this.set('publickey', val)
+    if (val || this.get('algorithm') !== 0) this.isBase64('IPSECKEY', 'publickey', val)
+    this.set('publickey', val ?? '')
   }
 
   getDescription() {
@@ -99,64 +104,6 @@ export default class IPSECKEY extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromBind({ bindline }) {
-    // FQDN TTL CLASS IPSECKEY Precedence GatewayType Algorithm Gateway PublicKey
-    const [owner, ttl, c, type, prec, gwt, algo, gateway, publickey] = bindline.split(/\s+/)
-    return new IPSECKEY({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      precedence: parseInt(prec, 10),
-      'gateway type': parseInt(gwt, 10),
-      algorithm: parseInt(algo, 10),
-      gateway,
-      publickey,
-    })
-  }
-
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 45) this.throwHelp('IPSECKEY fromTinydns, invalid n')
-
-    const precedence = TINYDNS.octalToUInt8(rdata.slice(0, 4))
-    const gwType = TINYDNS.octalToUInt8(rdata.slice(4, 8))
-    const algorithm = TINYDNS.octalToUInt8(rdata.slice(8, 12))
-
-    let len, gateway, octalKey
-
-    switch (gwType) {
-      case 0: // no gateway
-        gateway = rdata.slice(12, 13) // should always be: '.'
-        octalKey = rdata.slice(13)
-        break
-      case 1: // 4-byte IPv4 address
-        gateway = TINYDNS.octalToIPv4(rdata.slice(12, 28))
-        octalKey = rdata.slice(28)
-        break
-      case 2: // 16-byte IPv6
-        gateway = TINYDNS.octalToIPv6(rdata.slice(12, 76))
-        octalKey = rdata.slice(76)
-        break
-      case 3: // wire encoded domain name
-        ;[gateway, len] = TINYDNS.unpackDomainName(rdata.slice(12))
-        octalKey = rdata.slice(12 + len)
-        break
-    }
-
-    return new IPSECKEY({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'IPSECKEY',
-      precedence,
-      'gateway type': gwType,
-      algorithm,
-      gateway,
-      publickey: TINYDNS.octalToBase64(octalKey),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
 
   fromWire({ owner, cls, ttl, rdata }) {
     const precedence = rdata[0]
@@ -172,14 +119,10 @@ export default class IPSECKEY extends RR {
         gateway = [...rdata.subarray(3, 7)].join('.')
         keyStart = 7
         break
-      case 2: {
-        const dv = new DataView(rdata.buffer, rdata.byteOffset + 3)
-        const groups = []
-        for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
-        gateway = groups.join(':')
+      case 2:
+        gateway = WIRE.ipv6ToPresentation(rdata.subarray(3, 19))
         keyStart = 19
         break
-      }
       case 3: {
         const { fqdn, end } = this.wireUnpackDomain(rdata, 3)
         gateway = fqdn
@@ -187,6 +130,7 @@ export default class IPSECKEY extends RR {
         break
       }
     }
+    if (rdata.length < 3 || keyStart > rdata.length) throw new Error('IPSECKEY: rdata is truncated')
     const publickey = BINARY.bytesToBase64(rdata.subarray(keyStart))
     return new IPSECKEY({
       owner,
@@ -203,34 +147,6 @@ export default class IPSECKEY extends RR {
 
   /******  EXPORTERS   *******/
 
-  toTinydns() {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-
-    let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(this.get('precedence'))
-    rdata += TINYDNS.UInt8toOctal(this.get('gateway type'))
-    rdata += TINYDNS.UInt8toOctal(this.get('algorithm'))
-
-    switch (this.get('gateway type')) {
-      case 0:
-        rdata += TINYDNS.escapeOctal(rdataRe, '.')
-        break
-      case 1:
-        rdata += TINYDNS.ipv4toOctal(this.get('gateway'))
-        break
-      case 2:
-        rdata += TINYDNS.ipv6toOctal(this.get('gateway'))
-        break
-      case 3:
-        rdata += TINYDNS.packDomainName(this.get('gateway'))
-        break
-    }
-
-    rdata += TINYDNS.base64toOctal(this.get('publickey'))
-
-    return this.getTinydnsGeneric(rdata)
-  }
-
   getWireRdata() {
     const pubkeyBytes = BINARY.base64ToBytes(this.get('publickey'))
     const gwType = this.get('gateway type')
@@ -241,25 +157,10 @@ export default class IPSECKEY extends RR {
         gwBytes = new Uint8Array(0)
         break
       case 1:
-        gwBytes = new Uint8Array(4)
-        this.get('gateway')
-          .split('.')
-          .forEach((part, i) => {
-            gwBytes[i] = parseInt(part, 10)
-          })
+        gwBytes = WIRE.ipv4Bytes(this.get('gateway'))
         break
       case 2:
-        gwBytes = new Uint8Array(16)
-        {
-          const parts = this.get('gateway').split(':')
-          let pos = 0
-          for (const part of parts) {
-            if (part === '') continue
-            const val = parseInt(part, 16)
-            gwBytes[pos++] = (val >>> 8) & 0xff
-            gwBytes[pos++] = val & 0xff
-          }
-        }
+        gwBytes = WIRE.ipv6Bytes(this.get('gateway'))
         break
       case 3:
         gwBytes = WIRE.wirePackDomain(this.get('gateway'))

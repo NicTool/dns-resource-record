@@ -26,7 +26,8 @@
     "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
-    "lint": "npx eslint **/*.js --no-warn-ignored",
+    "lint": "npx eslint .",
+    "interop": "node interop/index.js",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --check .",
     "prettier:fix": "npx prettier --write .",
@@ -61,7 +62,7 @@
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "browserslist": [
     "chrome >= 74",
@@ -71,8 +72,8 @@
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.8.0",
-    "globals": "^17.8.0"
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0"
   },
   "prettier": {
     "printWidth": 110,

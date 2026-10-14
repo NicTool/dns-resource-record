@@ -1,14 +1,12 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
-import * as WIRE from '../lib/binary.js'
-import * as WIRELIB from '../lib/wire.js'
+import { nameToLabels } from '../lib/name.js'
 
 export default class RRSIG extends RR {
   static typeName = 'RRSIG'
   static typeId = 46
   static RFCs = [4034]
   static rdataFields = [
-    ['type covered', 'u16'],
+    ['type covered', 'rrtype'],
     ['algorithm', 'u8'],
     ['labels', 'u8'],
     ['original ttl', 'u32'],
@@ -26,20 +24,8 @@ export default class RRSIG extends RR {
 
   /****** Resource record specific setters   *******/
   setTypeCovered(val) {
-    // a 16-bit Type Covered field (RFC 4034 §3.1.1)
     if (!val && val !== 0) this.throwHelp(`RRSIG: 'type covered' is required`)
-    if (typeof val === 'string') {
-      const typeNN = val.match(/^TYPE(\d+)$/i)
-      if (typeNN) {
-        val = parseInt(typeNN[1], 10)
-      } else {
-        const id = WIRE.DNS_TYPE_IDS[val.toUpperCase()]
-        if (id === undefined) this.throwHelp(`RRSIG: 'type covered' is not a recognized type name`)
-        val = id
-      }
-    }
-    this.is16bitInt('RRSIG', 'type covered', val)
-    this.set('type covered', val)
+    this.setTypedValue('rrtype', 'type covered', val)
   }
 
   setAlgorithm(val) {
@@ -49,8 +35,15 @@ export default class RRSIG extends RR {
     this.set('algorithm', val)
   }
 
+  setOwner(n) {
+    if (this.get('labels') !== undefined) this.checkNames({ owner: n })
+    super.setOwner(n)
+  }
+
   setLabels(val) {
-    this.setTypedValue('u8', 'labels', val)
+    this.is8bitInt('RRSIG', 'labels', val)
+    this.checkNames({ labels: val })
+    this.set('labels', val)
   }
 
   setOriginalTtl(val) {
@@ -58,11 +51,11 @@ export default class RRSIG extends RR {
   }
 
   setSignatureExpiration(val) {
-    this.setTypedValue('u32', 'signature expiration', val)
+    this.setSignatureTime('signature expiration', val)
   }
 
   setSignatureInception(val) {
-    this.setTypedValue('u32', 'signature inception', val)
+    this.setSignatureTime('signature inception', val)
   }
 
   setKeyTag(val) {
@@ -70,13 +63,35 @@ export default class RRSIG extends RR {
   }
 
   setSignersName(val) {
-    this.setTypedValue('fqdn', 'signers name', val)
+    this.isFqdnValue('RRSIG', 'signers name', val)
+    this.checkNames({ signer: val })
+    this.set('signers name', this.lowercaseName(val))
   }
 
+  // RFC 4034 §3.1.3, §3.1.7: labels counts the owner's labels, less a leading
+  // `*`, and is at least the signer's, which is the owner or an ancestor.
+  checkNames({ owner = this.get('owner'), labels = this.get('labels'), signer = this.get('signers name') }) {
+    if (owner === undefined) return
+    const ownerLabels = nameToLabels(owner)
+    const wildcard = ownerLabels[0]?.length === 1 && ownerLabels[0][0] === 0x2a
+    const max = ownerLabels.length - (wildcard ? 1 : 0)
+    if (labels > max) this.throwHelp(`RRSIG: labels (${labels}) exceeds the owner's ${max}`)
+    if (signer === undefined) return
+
+    const signerLabels = nameToLabels(signer)
+    if (signerLabels.length > labels)
+      this.throwHelp(`RRSIG: signers name has ${signerLabels.length} labels, more than labels (${labels})`)
+    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase())
+    const offset = ownerLabels.length - signerLabels.length
+    if (offset < 0 || signerLabels.some((label, i) => fold(label) !== fold(ownerLabels[offset + i])))
+      this.throwHelp(`RRSIG: signers name ${signer} is not the owner or an ancestor of it`)
+  }
+
+  // RFC 4034 §3.2: base64, which a master file may split with whitespace
   setSignature(val) {
-    // RFC 4034 §3.2: presentation form is base64; wire form is decoded bytes.
-    this.isBase64('RRSIG', 'signature', String(val).replace(/[\s()]/g, ''))
-    this.set('signature', val)
+    const signature = String(val).replace(/[\s()]/g, '')
+    this.isBase64('RRSIG', 'signature', signature)
+    this.set('signature', signature)
   }
 
   getAlgorithmOptions() {
@@ -113,7 +128,7 @@ export default class RRSIG extends RR {
       type: 'RRSIG',
       'type covered': 1,
       algorithm: 5,
-      labels: 3,
+      labels: 2,
       'original ttl': 3600,
       'signature expiration': 1045053120,
       'signature inception': 1042461120,
@@ -126,118 +141,5 @@ export default class RRSIG extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-
-  fromBind({ bindline }) {
-    // example.com. 3600 IN RRSIG typecovered algorithm labels origttl sigexp siginc keytag signersname ( signature )
-    const parts = bindline.trim().split(/\s+/)
-    // type covered may be a type name ('A', 'MX'), TYPEnn (RFC 3597), or a numeric ID
-    const typeCovered = WIRE.typeNameToId(parts[4])
-    return new RRSIG({
-      owner: parts[0],
-      ttl: parseInt(parts[1], 10),
-      class: parts[2],
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm: parseInt(parts[5], 10),
-      labels: parseInt(parts[6], 10),
-      'original ttl': parseInt(parts[7], 10),
-      'signature expiration': parseInt(parts[8], 10),
-      'signature inception': parseInt(parts[9], 10),
-      'key tag': parseInt(parts[10], 10),
-      'signers name': parts[11],
-      signature: parts
-        .slice(12)
-        .filter((a) => a !== '(' && a !== ')')
-        .join(' ')
-        .trim(),
-    })
-  }
-
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('RRSIG fromTinydns, invalid n')
-
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    const typeCovered = dv.getUint16(0)
-    const algorithm = bytes[2]
-    const labels = bytes[3]
-    const originalTtl = dv.getUint32(4)
-    const signatureExpiration = dv.getUint32(8)
-    const signatureInception = dv.getUint32(12)
-    const keyTag = dv.getUint16(16)
-
-    let pos = 18
-    const labelArr = []
-    while (pos < bytes.length) {
-      const len = bytes[pos++]
-      if (len === 0) break
-      labelArr.push(new TextDecoder().decode(bytes.subarray(pos, pos + len)))
-      pos += len
-    }
-    const signersName = `${labelArr.join('.')}.`
-    const signature = WIRE.bytesToBase64(bytes.subarray(pos))
-
-    return new RRSIG({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm,
-      labels,
-      'original ttl': originalTtl,
-      'signature expiration': signatureExpiration,
-      'signature inception': signatureInception,
-      'key tag': keyTag,
-      'signers name': signersName,
-      signature,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt16toOctal(this.get('type covered')) +
-        TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.UInt8toOctal(this.get('labels')) +
-        TINYDNS.UInt32toOctal(this.get('original ttl')) +
-        TINYDNS.UInt32toOctal(this.get('signature expiration')) +
-        TINYDNS.UInt32toOctal(this.get('signature inception')) +
-        TINYDNS.UInt16toOctal(this.get('key tag')) +
-        TINYDNS.packDomainName(this.get('signers name')) +
-        TINYDNS.base64toOctal(this.get('signature').replace(/[\s()]/g, '')),
-    )
-  }
-
-  getWireRdata() {
-    const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
-    const sigBytes = WIRE.base64ToBytes(this.get('signature').replace(/[\s()]/g, ''))
-
-    const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
-    const bytes = new Uint8Array(totalLen)
-    const dv = new DataView(bytes.buffer, bytes.byteOffset)
-
-    let pos = 0
-    dv.setUint16(pos, this.get('type covered'))
-    pos += 2
-    bytes[pos++] = this.get('algorithm')
-    bytes[pos++] = this.get('labels')
-    dv.setUint32(pos, this.get('original ttl'))
-    pos += 4
-    dv.setUint32(pos, this.get('signature expiration'))
-    pos += 4
-    dv.setUint32(pos, this.get('signature inception'))
-    pos += 4
-    dv.setUint16(pos, this.get('key tag'))
-    pos += 2
-    bytes.set(signerBytes, pos)
-    pos += signerBytes.length
-    bytes.set(sigBytes, pos)
-
-    return bytes
-  }
 }

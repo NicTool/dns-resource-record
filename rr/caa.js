@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
   static typeName = 'CAA'
@@ -49,15 +48,7 @@ export default class CAA extends RR {
   }
 
   setValue(val) {
-    // either (2) a quoted string or
-    // (1) a contiguous set of characters without interior spaces
-    if (this.isQuoted(val)) {
-      val = val.replace(/^["']|["']$/g, '') // strip quotes
-    } else {
-      // if (/\s/.test(val)) this.throwHelp(`CAA value may not have spaces unless quoted`)
-    }
-
-    // check if val starts with one of iodefSchemes
+    this.isString('CAA', 'value', val)
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:']
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {
@@ -84,50 +75,5 @@ export default class CAA extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('CAA fromTinydns, invalid typeId')
-
-    const flags = TINYDNS.octalToUInt8(rdata.slice(0, 4))
-    const taglen = TINYDNS.octalToUInt8(rdata.slice(4, 8))
-
-    const unescaped = TINYDNS.octalToChar(rdata.slice(8))
-    const tag = unescaped.slice(0, taglen)
-    const fingerprint = unescaped.slice(taglen)
-
-    return new CAA({
-      owner,
-      ttl,
-      type: 'CAA',
-      flags,
-      tag,
-      value: fingerprint,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    const tag = new TextEncoder().encode(this.get('tag'))
-    const value = new TextEncoder().encode(this.get('value'))
-    const result = new Uint8Array(2 + tag.length + value.length)
-    result[0] = this.get('flags')
-    result[1] = tag.length
-    result.set(tag, 2)
-    result.set(value, 2 + tag.length)
-    return result
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt8toOctal(this.get('flags')) +
-        TINYDNS.UInt8toOctal(this.get('tag').length) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value')),
-    )
-  }
 }

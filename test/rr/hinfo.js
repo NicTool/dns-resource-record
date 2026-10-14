@@ -5,9 +5,9 @@ import * as base from '../base.js'
 
 import HINFO from '../../rr/hinfo.js'
 
-const defaults = { class: 'IN', ttl: 86400, type: 'HINFO' }
+const defaults = { ttl: 86400 }
 
-const validRecords = [
+const valid = [
   {
     ...defaults,
     owner: 'server-under-my-desk.example.com.',
@@ -26,9 +26,6 @@ const validRecords = [
   },
   {
     owner: 'hinfo.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'HINFO',
     cpu: 'Intel-Xeon',
     os: 'Linux',
     testB: 'hinfo.nictool.tnpi.net.\t3600\tIN\tHINFO\t"Intel-Xeon"\t"Linux"\n',
@@ -38,55 +35,36 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     ...defaults,
     owner: 'www.example.com.',
     address: '',
-    msg: /Cannot read proper/,
+    msg: /HINFO: cpu is required/,
   },
+  ...['cpu', 'os'].flatMap((f) =>
+    ['a'.repeat(256), 'é'.repeat(128)].map((v) => ({
+      owner: 'h.example.',
+      cpu: 'x',
+      os: 'x',
+      [f]: v,
+      msg: /must be <=255 bytes/,
+    })),
+  ),
 ]
 
 describe('HINFO record', function () {
-  base.valid(HINFO, validRecords)
-  base.invalid(HINFO, invalidRecords)
+  base.suite(HINFO, { typeId: 13, fields: ['cpu', 'os'], valid, invalid })
 
-  base.getDescription(HINFO)
-  base.getRFCs(HINFO, validRecords[0])
-  base.getFields(HINFO, ['cpu', 'os'])
-  base.getCanonical(HINFO)
-  base.getTypeId(HINFO, 13)
-  base.getTags(HINFO)
+  it('counts UTF-8 bytes against the 255 limit', function () {
+    assert.equal(
+      new HINFO({ owner: 'h.example.', ttl: 60, cpu: 'é'.repeat(127), os: 'x' }).get('cpu'),
+      'é'.repeat(127),
+    )
+  })
 
-  base.toBind(HINFO, validRecords)
-  base.toWire(HINFO, validRecords)
-  base.toTinydns(HINFO, validRecords)
-
-  base.fromBind(HINFO, validRecords)
-  base.fromTinydns(HINFO, validRecords)
-  base.fromWire(HINFO, validRecords)
-
-  for (const val of validRecords) {
-    if (!val.testT) continue
-    it(`imports tinydns HINFO (generic) record (${val.owner})`, async function () {
-      const r = HINFO.fromTinydns(val.testT)
-      if (process.env.DEBUG) console.dir(r)
-      for (const f of ['owner', 'address', 'ttl']) {
-        assert.deepEqual(r.get(f), val[f], `${f}: ${r.get(f)} !== ${val[f]}`)
-      }
-    })
-  }
-
-  for (const f of ['os', 'cpu']) {
-    it(`rejects ${f} value longer than 255 chars`, async () => {
-      const tooLong =
-        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
-      const r = new HINFO(null)
-      try {
-        assert.fail(r[`set${r.ucFirst(f)}`](tooLong))
-      } catch (e) {
-        assert.ok(/cannot exceed 255 chars/.test(e.message))
-      }
-    })
-  }
+  it('exports MaraDNS csv2 as two ;-separated chunks, payload quotes intact', function () {
+    const r = new HINFO({ owner: 'h.example.', ttl: 60, cpu: '"x"', os: "it's" })
+    assert.equal(r.toMaraDNS(), `h.example.\t+60\tHINFO\t'"x"';'it'\\x27's' ~\n`)
+  })
 })

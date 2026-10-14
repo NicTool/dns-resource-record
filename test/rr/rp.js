@@ -3,12 +3,9 @@ import * as base from '../base.js'
 
 import RP from '../../rr/rp.js'
 
-const validRecords = [
+const valid = [
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'RP',
     mbox: 'admin.example.com.',
     txt: 'info.example.com.',
     testB: 'example.com.\t3600\tIN\tRP\tadmin.example.com.\tinfo.example.com.\n',
@@ -17,8 +14,6 @@ const validRecords = [
   {
     owner: 'host.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'RP',
     mbox: 'hostmaster.example.com.',
     txt: '.',
     testB: 'host.example.com.\t86400\tIN\tRP\thostmaster.example.com.\t.\n',
@@ -26,9 +21,6 @@ const validRecords = [
   },
   {
     owner: 'nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'RP',
     mbox: 'hostmaster.tnpi.net.',
     txt: 'contact.nictool.tnpi.net.',
     testB: 'nictool.tnpi.net.\t3600\tIN\tRP\thostmaster.tnpi.net.\tcontact.nictool.tnpi.net.\n',
@@ -39,30 +31,21 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'RP',
     mbox: '',
     txt: 'info.example.com.',
     msg: /mbox is required/,
   },
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'RP',
     mbox: 'admin.example.com.',
     txt: '',
     msg: /txt is required/,
   },
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'RP',
     mbox: 'admin.example.com',
     txt: 'info.example.com.',
     msg: /mbox must be fully qualified/,
@@ -70,21 +53,5 @@ const invalidRecords = [
 ]
 
 describe('RP record', function () {
-  base.valid(RP, validRecords)
-  base.invalid(RP, invalidRecords)
-
-  base.getDescription(RP)
-  base.getRFCs(RP, validRecords[0])
-  base.getFields(RP, ['mbox', 'txt'])
-  base.getCanonical(RP)
-  base.getTypeId(RP, 17)
-  base.getTags(RP)
-
-  base.toBind(RP, validRecords)
-  base.toWire(RP, validRecords)
-  base.toTinydns(RP, validRecords)
-
-  base.fromBind(RP, validRecords)
-  base.fromTinydns(RP, validRecords)
-  base.fromWire(RP, validRecords)
+  base.suite(RP, { typeId: 17, fields: ['mbox', 'txt'], valid, invalid })
 })

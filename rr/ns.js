@@ -17,10 +17,10 @@ export default class NS extends RR {
     if (!val) this.throwHelp(`NS: dname is required`)
 
     this.isFullyQualified('NS', 'dname', val)
-    this.isValidHostname('NS', 'dname', val)
+    this.isValidName('NS', 'dname', val)
 
     // RFC 4034: letters in the DNS names are lower cased
-    this.set('dname', val.toLowerCase())
+    this.set('dname', this.lowercaseName(val))
   }
 
   getDescription() {
@@ -44,8 +44,8 @@ export default class NS extends RR {
 
     return new NS({
       type: 'NS',
-      owner: this.fullyQualify(fqdn),
-      dname: this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
+      owner: this.fromTinyFQDN(fqdn),
+      dname: this.fromTinyFQDN(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
@@ -53,9 +53,6 @@ export default class NS extends RR {
   }
 
   /******  EXPORTERS   *******/
-  getWireRdata() {
-    return this.wirePackDomain(this.get('dname'))
-  }
 
   toTinydns() {
     return `&${this.getTinyFQDN('owner')}::${this.getTinyFQDN('dname')}:${this.getTinydnsPostamble()}\n`

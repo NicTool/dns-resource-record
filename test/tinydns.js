@@ -2,175 +2,81 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import A from '../rr/a.js'
+import CAA from '../rr/caa.js'
+import CNAME from '../rr/cname.js'
+import HINFO from '../rr/hinfo.js'
+import SRV from '../rr/srv.js'
+import TXT from '../rr/txt.js'
 
 describe('TINYDNS', function () {
-  const b64cases = {
-    '0sAQPeOwAGDPLrDebL1q5Lg8XW9B/d9MnxqlzIYKXhvZPWEHNYGP7AwART/tmkeDNn7HPMtgM6GIwQ4p0KGLfSRoUKbjtPlRVeWYLbsnNXeFU5bchyYef0efYiKlxZdo':
-      '\\322\\300\\020\\075\\343\\260\\000\\140\\317.\\260\\336l\\275j\\344\\270\\074\\135oA\\375\\337L\\237\\032\\245\\314\\206\\012\\136\\033\\331\\075a\\0075\\201\\217\\354\\014\\000E\\077\\355\\232G\\2036\\176\\307\\074\\313\\1403\\241\\210\\301\\016\\051\\320\\241\\213\\175\\044hP\\246\\343\\264\\371QU\\345\\230-\\273\\0475w\\205S\\226\\334\\207\\046\\036\\177G\\237b\\042\\245\\305\\227h',
+  it('escapes only the octets that are unprintable or end or escape a field', function () {
+    assert.equal(
+      TINYDNS.bytesToTinydnsText(Uint8Array.from([0x61, 0x20, 0x3a, 0x5c, 0x7f, 0x00, 0xff])),
+      'a \\072\\134\\177\\000\\377',
+    )
+  })
+
+  for (const target of ['a\\.b.example.', 'sp\\032ace.example.', 'x\\195\\169.example.']) {
+    it(`round trips an escaped name through a generic line: ${target}`, function () {
+      const r = new SRV({ owner: '_x._tcp.example.', ttl: 60, priority: 1, weight: 2, port: 3, target })
+      assert.equal(SRV.fromTinydns(r.toTinydns()).get('target'), target)
+    })
   }
 
-  describe('base64toOctal', function () {
-    for (const c in b64cases) {
-      it('octal escapes a base64 encoded string', async function () {
-        assert.equal(TINYDNS.base64toOctal(c), b64cases[c])
+  // djbdns reads \ooo in a name as octal, and ':' ends a field; verified
+  // against tinydns-data and tinydns-get
+  it('writes and reads names with djbdns escapes', function () {
+    for (const [owner, tinydns, imported = owner] of [
+      ['sp\\032ace.example.', 'sp\\040ace.example'],
+      ['co\\058lon.example.', 'co\\072lon.example'],
+      ['a\\.b.example.', 'a\\.b.example'],
+      ['a\\046b.example.', 'a\\056b.example', 'a\\.b.example.'],
+      ['x\\195\\169.example.', 'x\\303\\251.example'],
+      ['école.example.', 'école.example'],
+      ['back\\\\slash.example.', 'back\\134slash.example', 'back\\092slash.example.'],
+      ['st\\042ar.example.', 'st\\052ar.example'],
+      ['*.w.example.', '*.w.example'],
+      ['ctl\\001.example.', 'ctl\\001.example'],
+      ['host\\..', 'host\\.'],
+    ]) {
+      const a = new A({ owner, ttl: 60, address: '192.0.2.1' })
+      assert.equal(a.toTinydns(), `+${tinydns}:192.0.2.1:60::\n`)
+      assert.equal(A.fromTinydns(a.toTinydns()).get('owner'), imported)
+      const cname = new CNAME({ owner: 'c.example.', ttl: 60, cname: owner })
+      assert.equal(CNAME.fromTinydns(cname.toTinydns()).get('cname'), imported)
+    }
+    // \X is X, and a short octal escape is still octal
+    assert.equal(A.fromTinydns('+a\\;b\\40c.example:192.0.2.1:60::').get('owner'), 'a\\059b\\032c.example.')
+  })
+
+  it('rejects a TXT line with no fields as invalid, not with a crash', function () {
+    assert.throws(() => TXT.fromTinydns("'x.example"), { name: 'Error' })
+  })
+
+  it('reads text between octal escapes as UTF-8, as tinydns-data does', function () {
+    assert.deepEqual([...TINYDNS.octalRdataToBytes('caf\u00e9\\041')], [0x63, 0x61, 0x66, 0xc3, 0xa9, 0x21])
+    assert.equal(TXT.fromTinydns("'x.example:caf\u00e9:60::").get('data'), 'caf\u00e9')
+  })
+
+  describe('generic character-string rdata', function () {
+    for (const [C, line] of [
+      [TXT, ':x:16:\\001\\377:60::'],
+      [HINFO, ':x:13:\\001\\377\\001a:60::'],
+      [CAA, ':x:257:\\000\\005issue\\377:60::'],
+    ]) {
+      it(`rejects ${C.typeName} octets that are not UTF-8`, function () {
+        assert.throws(() => C.fromTinydns(line), /is not UTF-8/)
       })
     }
-  })
 
-  describe('octalToBase64', function () {
-    for (const c in b64cases) {
-      it('converts octal escaped to base64 encoded string', async function () {
-        assert.deepEqual(TINYDNS.octalToBase64(b64cases[c]), c)
+    for (const r of [
+      new CAA({ owner: 'x.', ttl: 60, flags: 0, tag: 'issue', value: 'é.example' }),
+      new HINFO({ owner: 'x.', ttl: 60, cpu: 'é', os: 'a' }),
+    ]) {
+      it(`round trips UTF-8 ${r.get('type')} rdata byte for byte`, function () {
+        assert.deepEqual(r.constructor.fromTinydns(r.toTinydns()).getWireRdata(), r.getWireRdata())
       })
     }
-  })
-
-  describe('escapeOctal', function () {
-    const rdataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-    it('escapes tinydns rdata special chars', async function () {
-      const e = TINYDNS.escapeOctal(
-        rdataRe,
-        'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN/nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64/cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn/LAf+3kzW58AjsERpsNCSTD2RquxbnyoR/1wdGKb8cUlD/EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
-      )
-      assert.equal(
-        e,
-        'v=DKIM1;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoyUzGOTSOmakY8BcxXgi0mN\\057nFegLBPs7aaGQUtjHfa8yUrt9T2j6GSXgdjLuG3R43WjePQv3RHzc+bwwOkdw0XDOXiztn5mhrlaflbVr5PMSTrv64\\057cpFQKLtgQx8Vgqp7Dh3jw13rLomRTqJFgMrMHdhIibZEa69gtuAfDqoeXo6QDSGk5JuBAeRHEH27FriHulg5ob4F4lmh7fMFVsDGkQEF6jaIVYqvRjDyyQed3R3aTJX3fpb3QrtRqvfn\\057LAf+3kzW58AjsERpsNCSTD2RquxbnyoR\\0571wdGKb8cUlD\\057EXvqtvpVnOzHeSeMEqex3kQI8HOGsEehWZlKd+GqwIDAQAB',
-      )
-    })
-
-    const specialChars = {
-      '/': '\\057',
-      '\\': '\\134',
-      ':': '\\072',
-    }
-
-    for (const c of Object.keys(specialChars)) {
-      it(`escapes tinydns rdata special char ${c}`, function () {
-        assert.equal(TINYDNS.escapeOctal(rdataRe, c), specialChars[c])
-      })
-    }
-  })
-
-  describe('octaltoChar', function () {
-    it('converts a string of octal escapes to characters', async () => {})
-  })
-
-  describe('octalToHex', function () {
-    it('unescapes octal to hex digits', function () {
-      assert.equal(
-        TINYDNS.octalToHex(
-          '\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001',
-        ),
-        '00000000000000000000000000000001',
-      )
-    })
-  })
-
-  describe('UInt16toOctal', function () {
-    it('converts a 16-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.UInt16toOctal(65535), '\\377\\377')
-    })
-
-    it('converts a 16-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.UInt16toOctal(1), '\\000\\001')
-    })
-  })
-
-  describe('octalToUInt16', function () {
-    it('converts a 16-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.octalToUInt16('\\377\\377'), 65535)
-    })
-
-    it('converts a 16-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.octalToUInt16('\\000\\001'), 1)
-    })
-  })
-
-  describe('UInt32toOctal', function () {
-    it('converts a 32-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.UInt32toOctal(2319310648), '\\212\\075\\337\\070')
-    })
-
-    it('converts a 32-bit number to escaped octal', function () {
-      assert.equal(TINYDNS.UInt32toOctal(1706988648), '\\145\\276\\224\\150')
-    })
-  })
-
-  describe('octalToUInt32', function () {
-    it('converts escaped octal to 32-bit integer', function () {
-      assert.equal(TINYDNS.octalToUInt32('\\145\\276\\224\\150'), 1706988648)
-    })
-  })
-
-  describe('unpackDomainName', function () {
-    it(`extracts domain name from wire format`, async () => {
-      const r = TINYDNS.unpackDomainName('\\006sipdir\\006online\\004lync\\003com\\000')
-      assert.equal(r[0], 'sipdir.online.lync.com.')
-      assert.equal(r[1], 39)
-    })
-  })
-
-  const cases = {
-    '0.0.0.0': '\\000\\000\\000\\000',
-    '192.0.2.127': '\\300\\000\\002\\177',
-    '255.255.255.255': '\\377\\377\\377\\377',
-  }
-
-  describe('ipv4toOctal', function () {
-    for (const c in cases) {
-      it(`converts dotted quad IPv4 to octal escaped integer ${c}`, async () => {
-        assert.equal(TINYDNS.ipv4toOctal(c), cases[c])
-      })
-    }
-  })
-
-  describe('octalToIPv4', function () {
-    for (const c in cases) {
-      it(`converts octal escaped integer to dotted quad IPv4 ${cases[c]}`, async () => {
-        assert.equal(TINYDNS.octalToIPv4(cases[c]), c)
-      })
-    }
-  })
-
-  describe('packString', function () {
-    it(`packs a string to wire format`, async () => {
-      assert.equal(TINYDNS.packString('matt wuz here'), '\\015matt wuz here')
-    })
-  })
-
-  describe('uppackString', function () {
-    it(`uppacks a string from wire format`, async () => {
-      assert.deepEqual(TINYDNS.unpackString('\\015matt wuz here'), ['matt wuz here'])
-    })
-  })
-
-  describe('UInt8toOctal', function () {
-    it('rejects values above 255 with a clear Latin-1 error', function () {
-      assert.throws(() => TINYDNS.UInt8toOctal(256), /Latin-1.*0xFF/i)
-      assert.throws(() => TINYDNS.UInt8toOctal('é'.charCodeAt(0) + 1000), /exceeds 255/i)
-    })
-  })
-
-  describe('unescapeOctal', function () {
-    it('converts octal-escaped string to characters', function () {
-      assert.equal(TINYDNS.unescapeOctal('\\110\\145\\154\\154\\157'), 'Hello')
-    })
-  })
-
-  describe('octalToIPv6', function () {
-    it('converts octal-escaped bytes to IPv6 address string', function () {
-      assert.equal(
-        TINYDNS.octalToIPv6(
-          '\\040\\001\\015\\270\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\001',
-        ),
-        '2001:0db8:0000:0000:0000:0000:0000:0001',
-      )
-    })
-  })
-
-  describe('base64toOctal error handling', function () {
-    it('throws for invalid base64 input', function () {
-      assert.throws(() => TINYDNS.base64toOctal('not valid!!!'), /Invalid character/)
-    })
   })
 })

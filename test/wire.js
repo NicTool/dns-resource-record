@@ -7,455 +7,191 @@ import {
   decompressRdata,
   buildQuery,
   parseResponse,
+  svcParamsFromWire,
   svcParamsToWire,
   wirePackDomain,
   wirePackDomainCompressed,
 } from '../lib/wire.js'
 
-// ── encodeName ────────────────────────────────────────────────────────────────
+const hex = (bytes) => Buffer.from(bytes).toString('hex')
+const bytes = (h) => Buffer.from(h, 'hex')
+const label63 = `3f${'61'.repeat(63)}`
 
-describe('encodeName', () => {
-  test('single-label FQDN', () => {
-    const buf = encodeName('example.')
-    // \x07 e x a m p l e \x00
-    assert.deepEqual([...buf], [7, 101, 120, 97, 109, 112, 108, 101, 0])
-  })
-
-  test('multi-label FQDN', () => {
-    const buf = encodeName('www.example.com.')
-    assert.deepEqual([...buf], [3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0])
-  })
-
-  test('root label produces empty-label + root terminator', () => {
-    // '.' → strip dot → '' → split → [''] → length-0 label + trailing \x00
-    const buf = encodeName('.')
-    assert.deepEqual([...buf], [0, 0])
-  })
-
-  test('strips trailing dot before encoding', () => {
-    const a = encodeName('example.')
-    const b = encodeName('example')
-    assert.deepEqual([...a], [...b])
-  })
+test('encodeName', () => {
+  for (const [name, expected] of [
+    ['example.', '076578616d706c6500'],
+    ['example', '076578616d706c6500'],
+    ['www.example.com.', '03777777076578616d706c6503636f6d00'],
+    ['.', '00'],
+  ]) {
+    assert.equal(hex(encodeName(name)), expected, name)
+  }
 })
-
-// ── readWireName ──────────────────────────────────────────────────────────────
 
 describe('readWireName', () => {
-  test('reads a non-compressed name', () => {
-    // \x03 f o o \x03 b a r \x00
-    const packet = Buffer.from([3, 102, 111, 111, 3, 98, 97, 114, 0])
-    const { bytes, end } = readWireName(packet, 0)
-    assert.deepEqual([...bytes], [3, 102, 111, 111, 3, 98, 97, 114, 0])
-    assert.equal(end, 9)
-  })
-
-  test('follows a pointer-compressed name', () => {
-    // packet: [0] \x03foo\x00  [5] \xc0\x00  (pointer back to offset 0)
-    const packet = Buffer.from([3, 102, 111, 111, 0, 0xc0, 0x00])
-    const { bytes, end } = readWireName(packet, 5)
-    assert.deepEqual([...bytes], [3, 102, 111, 111, 0])
-    assert.equal(end, 7) // end is just after the pointer (offset 5 + 2)
-  })
-
-  test('records end after first pointer', () => {
-    // offset 0: \x03bar\x00  offset 5: \x03baz\x00  offset 10: \xc0\x00
-    const packet = Buffer.from([3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 0xc0, 0x00])
-    const { end } = readWireName(packet, 10)
-    assert.equal(end, 12) // two bytes consumed for the pointer
-  })
-
-  test('rejects a self-referential pointer', () => {
-    // offset 0: \xc0\x00 — points to itself
-    const packet = Buffer.from([0xc0, 0x00])
-    assert.throws(() => readWireName(packet, 0), /pointer cycle detected/)
-  })
-
-  test('rejects a two-pointer cycle', () => {
-    // offset 0: \xc0\x02   offset 2: \xc0\x00
-    const packet = Buffer.from([0xc0, 0x02, 0xc0, 0x00])
-    assert.throws(() => readWireName(packet, 0), /pointer cycle detected/)
-  })
-
-  test('rejects an over-long pointer chain', () => {
-    // 200 unique-offset pointers, each pointing to the next two bytes ahead.
-    // Final slot terminates with a zero byte so a non-protected reader would
-    // still finish; the guard fires on chain length.
-    const len = 200 * 2 + 1
-    const packet = Buffer.alloc(len)
-    for (let i = 0; i < 200; i++) {
-      const next = (i + 1) * 2
-      packet[i * 2] = 0xc0 | ((next >> 8) & 0x3f)
-      packet[i * 2 + 1] = next & 0xff
+  test('reads plain and pointer-compressed names', () => {
+    for (const [packet, offset, name, end] of [
+      ['03666f6f0362617200', 0, '03666f6f0362617200', 9],
+      ['03666f6f00c000', 5, '03666f6f00', 7],
+      ['03626172000362617a00c000', 10, '0362617200', 12],
+    ]) {
+      const r = readWireName(bytes(packet), offset)
+      assert.deepEqual([hex(r.bytes), r.end], [name, end], packet)
     }
-    // last pointer (offset 398) points to offset 400 which holds \x00
-    packet[400] = 0
-    assert.throws(() => readWireName(packet, 0), /pointer chain too long/)
   })
 
-  test('rejects a name longer than 255 bytes', () => {
-    // 5 chained 63-byte labels (5 * 64 = 320 bytes) + terminator
-    const label = Buffer.concat([Buffer.from([63]), Buffer.alloc(63, 0x61)])
-    const packet = Buffer.concat([label, label, label, label, label, Buffer.from([0])])
-    assert.throws(() => readWireName(packet, 0), /name exceeds 255 bytes/)
-  })
+  test('rejects malformed names', () => {
+    // 200 pointers, each to the next, ending in a root label
+    const chain = Buffer.alloc(401)
+    for (let i = 0; i < 200; i++) chain.writeUInt16BE(0xc000 | ((i + 1) * 2), i * 2)
 
-  test('rejects a truncated pointer (high byte at end of packet)', () => {
-    // Single 0xc0 byte with no second byte
-    const packet = Buffer.from([0xc0])
-    assert.throws(() => readWireName(packet, 0), /truncated pointer/)
-  })
-
-  test('rejects a pointer whose target is past the packet end', () => {
-    // 0xc0 0x80 → target offset 0x80 = 128, packet is only 2 bytes
-    const packet = Buffer.from([0xc0, 0x80])
-    assert.throws(() => readWireName(packet, 0), /pointer target out of bounds/)
-  })
-
-  test('rejects a truncated label (declared length exceeds packet)', () => {
-    // \x05 with only 2 bytes following — declared label longer than packet
-    const packet = Buffer.from([5, 0x61, 0x61])
-    assert.throws(() => readWireName(packet, 0), /truncated label/)
-  })
-
-  test('rejects an unterminated name (no zero, no pointer)', () => {
-    // \x02 a a — well-formed label, no terminator, no pointer
-    const packet = Buffer.from([2, 0x61, 0x61])
-    assert.throws(() => readWireName(packet, 0), /unterminated name/)
-  })
-
-  test('rejects a reserved label-type code (top two bits = 01 or 10)', () => {
-    // \x40 is binary 01000000 — reserved per RFC 1035 §4.1.4
-    const packet = Buffer.from([0x40, 0, 0])
-    assert.throws(() => readWireName(packet, 0), /reserved label type/)
-  })
-
-  test('rejects offset out of bounds', () => {
-    const packet = Buffer.from([0])
-    assert.throws(() => readWireName(packet, 5), /offset out of bounds/)
-  })
-
-  test('rejects a name whose total wire length equals 256 octets (255 labels + terminator)', () => {
-    // 4 × 63-byte labels: 4 × 64 = 256 octets before the terminator → 257 with it.
-    // Even before adding the terminator, 256 > 255 trips the §3.1 cap.
-    const label = Buffer.concat([Buffer.from([63]), Buffer.alloc(63, 0x61)])
-    const packet = Buffer.concat([label, label, label, label, Buffer.from([0])])
-    assert.throws(() => readWireName(packet, 0), /name exceeds 255 bytes/)
+    for (const [packet, msg, offset = 0] of [
+      ['c000', /pointer cycle detected/],
+      ['c002c000', /pointer cycle detected/],
+      [hex(chain), /pointer chain too long/],
+      [`${label63.repeat(5)}00`, /name exceeds 255 bytes/],
+      // RFC 1035 §3.1: 4 × 64 octets is 256 before the terminator
+      [`${label63.repeat(4)}00`, /name exceeds 255 bytes/],
+      ['c0', /truncated pointer/],
+      ['c080', /pointer target out of bounds/],
+      ['056161', /truncated label/],
+      ['026161', /unterminated name/],
+      ['400000', /reserved label type/], // RFC 1035 §4.1.4
+      ['00', /offset out of bounds/, 5],
+    ]) {
+      assert.throws(() => readWireName(bytes(packet), offset), msg, packet.slice(0, 20))
+    }
   })
 })
 
-// ── wirePackDomainCompressed ──────────────────────────────────────────────────
+test('wirePackDomainCompressed points at earlier names', () => {
+  const dict = new Map()
+  const first = wirePackDomainCompressed('www.example.com.', dict, 12)
+  assert.equal(hex(first), hex(wirePackDomain('www.example.com.')))
+  // example.com. starts after \x03www, at 16
+  assert.equal(hex(wirePackDomainCompressed('mail.example.com.', dict, 12 + first.length)), '046d61696cc010')
+  assert.equal(hex(wirePackDomainCompressed('www.example.com.', dict, 50)), 'c00c')
+  assert.equal(hex(wirePackDomainCompressed('.', new Map([['.', 0]]), 50)), '00')
 
-describe('wirePackDomainCompressed', () => {
-  test('first name writes uncompressed and matches wirePackDomain', () => {
-    const dict = new Map()
-    const buf = wirePackDomainCompressed('www.example.com.', dict, 12)
-    assert.deepEqual([...buf], [...wirePackDomain('www.example.com.')])
-  })
-
-  test('second name with shared suffix emits a pointer', () => {
-    const dict = new Map()
-    // First, place "www.example.com." at offset 12.
-    const first = wirePackDomainCompressed('www.example.com.', dict, 12)
-    // Second name shares the "example.com." suffix.
-    const second = wirePackDomainCompressed('mail.example.com.', dict, 12 + first.length)
-    // Second name should be: \x04 m a i l <pointer to "example.com." inside first>
-    // "example.com." starts at offset 12 + 4 (skip "\x03www") = 16.
-    assert.deepEqual([...second.slice(0, 5)], [4, 0x6d, 0x61, 0x69, 0x6c])
-    assert.equal(second[5], 0xc0)
-    assert.equal(second[6], 16)
-    assert.equal(second.length, 7)
-  })
-
-  test('full-name reuse emits only a pointer', () => {
-    const dict = new Map()
-    const first = wirePackDomainCompressed('example.com.', dict, 12)
-    const second = wirePackDomainCompressed('example.com.', dict, 12 + first.length)
-    assert.equal(second.length, 2)
-    assert.equal(second[0], 0xc0)
-    assert.equal(second[1], 12)
-  })
-
-  test('root name (".") encodes as a single zero byte without compression', () => {
-    const dict = new Map([['.', 0]])
-    const buf = wirePackDomainCompressed('.', dict, 50)
-    assert.deepEqual([...buf], [0])
-  })
-
-  test('round-trips through readWireName', () => {
-    const dict = new Map()
-    const a = wirePackDomainCompressed('foo.example.com.', dict, 0)
-    const b = wirePackDomainCompressed('bar.example.com.', dict, a.length)
-    const packet = Buffer.concat([Buffer.from(a), Buffer.from(b)])
-    const read1 = readWireName(packet, 0)
-    const read2 = readWireName(packet, a.length)
-    // Both decoded names should round-trip to the original uncompressed wire form.
-    assert.deepEqual([...read1.bytes], [...wirePackDomain('foo.example.com.')])
-    assert.deepEqual([...read2.bytes], [...wirePackDomain('bar.example.com.')])
-  })
+  const d2 = new Map()
+  const a = wirePackDomainCompressed('foo.example.com.', d2, 0)
+  const packet = Buffer.concat([a, wirePackDomainCompressed('bar.example.com.', d2, a.length)])
+  assert.equal(hex(readWireName(packet, a.length).bytes), hex(wirePackDomain('bar.example.com.')))
 })
 
-// ── decompressRdata ───────────────────────────────────────────────────────────
-
-describe('decompressRdata', () => {
-  // Build a packet where \x03ns1\x07example\x03com\x00 lives at offset 12
-  // and the rdata is a pointer \xc0\x0c back to it.
-
-  function makePacket(rdataBytes) {
-    // 12 bytes of header padding + rdata
-    return Buffer.concat([Buffer.alloc(12), rdataBytes])
+test('decompressRdata copies rdata with inline names by type', () => {
+  for (const [typeId, rdata] of [
+    [99, '01020304'], // unknown: raw slice
+    [2, '036e733100'], // NS
+    [5, '04686f737400'], // CNAME
+    [15, '000a046d61696c00'], // MX
+    [33, '0001000000500377777700'], // SRV
+    [6, `026e73000561646d696e00${'00'.repeat(20)}`], // SOA
+    [17, '046d61696c000374787400'], // RP
+    [35, '000000000155035349500000'], // NAPTR
+  ]) {
+    const packet = Buffer.concat([Buffer.alloc(12), bytes(rdata)])
+    assert.equal(hex(decompressRdata(packet, 12, rdata.length / 2, typeId)), rdata, String(typeId))
   }
-
-  test('unknown type returns raw slice', () => {
-    const rdata = Buffer.from([1, 2, 3, 4])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, 4, 99)
-    assert.deepEqual([...result], [1, 2, 3, 4])
-  })
-
-  test('type 2 (NS) decompresses single name', () => {
-    // Inline name \x03ns1\x00 in rdata
-    const nameBytes = Buffer.from([3, 110, 115, 49, 0])
-    const packet = makePacket(nameBytes)
-    const result = decompressRdata(packet, 12, nameBytes.length, 2)
-    assert.deepEqual([...result], [...nameBytes])
-  })
-
-  test('type 5 (CNAME) decompresses single name', () => {
-    const nameBytes = Buffer.from([4, 104, 111, 115, 116, 0])
-    const packet = makePacket(nameBytes)
-    const result = decompressRdata(packet, 12, nameBytes.length, 5)
-    assert.deepEqual([...result], [...nameBytes])
-  })
-
-  test('type 15 (MX) decompresses pref + name', () => {
-    // pref=10, name=\x04mail\x00
-    const pref = Buffer.from([0, 10])
-    const name = Buffer.from([4, 109, 97, 105, 108, 0])
-    const rdata = Buffer.concat([pref, name])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, rdata.length, 15)
-    assert.deepEqual([...result], [...pref, ...name])
-  })
-
-  test('type 33 (SRV) decompresses 6-byte head + name', () => {
-    // priority=1, weight=0, port=80, name=\x03www\x00
-    const head = Buffer.from([0, 1, 0, 0, 0, 80])
-    const name = Buffer.from([3, 119, 119, 119, 0])
-    const rdata = Buffer.concat([head, name])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, rdata.length, 33)
-    assert.deepEqual([...result], [...head, ...name])
-  })
-
-  test('type 6 (SOA) decompresses mname + rname + tail', () => {
-    const mname = Buffer.from([2, 110, 115, 0]) // \x02ns\x00
-    const rname = Buffer.from([5, 97, 100, 109, 105, 110, 0]) // \x05admin\x00
-    const tail = Buffer.alloc(20, 0)
-    const rdata = Buffer.concat([mname, rname, tail])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, rdata.length, 6)
-    assert.deepEqual([...result], [...mname, ...rname, ...tail])
-  })
-
-  test('type 17 (RP) decompresses two names', () => {
-    const mbox = Buffer.from([4, 109, 97, 105, 108, 0])
-    const txt = Buffer.from([3, 116, 120, 116, 0])
-    const rdata = Buffer.concat([mbox, txt])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, rdata.length, 17)
-    assert.deepEqual([...result], [...mbox, ...txt])
-  })
-
-  test('type 35 (NAPTR) decompresses header + 3 strings + name', () => {
-    // order=0, pref=0, flags=\x01U, svc=\x03SIP, regexp=\x00, name=\x00
-    const head = Buffer.from([0, 0, 0, 0])
-    const flags = Buffer.from([1, 85]) // length 1, 'U'
-    const svc = Buffer.from([3, 83, 73, 80]) // length 3, 'SIP'
-    const regexp = Buffer.from([0]) // length 0
-    const name = Buffer.from([0]) // root
-    const rdata = Buffer.concat([head, flags, svc, regexp, name])
-    const packet = makePacket(rdata)
-    const result = decompressRdata(packet, 12, rdata.length, 35)
-    assert.deepEqual([...result], [...head, ...flags, ...svc, ...regexp, ...name])
-  })
 })
 
-// ── buildQuery ────────────────────────────────────────────────────────────────
-
-describe('buildQuery', () => {
-  test('returns a Buffer', () => {
-    const q = buildQuery('example.com', 1)
-    assert.ok(Buffer.isBuffer(q))
-  })
-
-  test('QDCOUNT is 1', () => {
-    const q = buildQuery('example.com', 1)
-    assert.equal(q.readUInt16BE(4), 1)
-  })
-
-  test('ARCOUNT is 1 (OPT record)', () => {
-    const q = buildQuery('example.com', 1)
-    assert.equal(q.readUInt16BE(10), 1)
-  })
-
-  test('question section contains encoded name', () => {
-    const q = buildQuery('example.com', 1)
-    const expectedName = encodeName('example.com')
-    const questionStart = 12
-    assert.deepEqual([...q.slice(questionStart, questionStart + expectedName.length)], [...expectedName])
-  })
-
-  test('OPT record type is 41', () => {
-    const q = buildQuery('example.com', 1)
-    const nameLen = encodeName('example.com').length
-    // OPT record starts after header(12) + name + qtype(2) + qclass(2) + opt owner(1)
-    const optTypeOffset = 12 + nameLen + 4 + 1
-    assert.equal(q.readUInt16BE(optTypeOffset), 41)
-  })
-
-  test('RD flag is set', () => {
-    const q = buildQuery('example.com', 1)
-    assert.equal((q.readUInt16BE(2) >> 8) & 1, 1)
-  })
+test('buildQuery writes one question, RD, and an OPT record', () => {
+  const q = buildQuery('example.com', 1)
+  const name = encodeName('example.com')
+  assert.ok(Buffer.isBuffer(q))
+  assert.equal((q.readUInt16BE(2) >> 8) & 1, 1, 'RD')
+  assert.equal(q.readUInt16BE(4), 1, 'QDCOUNT')
+  assert.equal(q.readUInt16BE(10), 1, 'ARCOUNT')
+  assert.deepEqual(q.subarray(12, 12 + name.length), Buffer.from(name))
+  assert.equal(q.readUInt16BE(12 + name.length + 4 + 1), 41, 'OPT type')
 })
 
-// ── parseResponse ─────────────────────────────────────────────────────────────
+test('parseResponse', () => {
+  const nxdomain = bytes('000083030000000000000000')
+  assert.deepEqual(parseResponse(nxdomain), { rcode: 3, answers: [] })
 
-describe('parseResponse', () => {
-  test('non-zero rcode returns empty answers', () => {
-    const packet = Buffer.alloc(12)
-    packet.writeUInt16BE(0x8003, 2) // QR=1, RCODE=3 (NXDOMAIN)
-    const result = parseResponse(packet)
-    assert.equal(result.rcode, 3)
-    assert.deepEqual(result.answers, [])
-  })
-
-  test('parses a minimal A record response', () => {
-    // Build a minimal response: header + answer with owner=\x00 (root) A 1.2.3.4
-    const header = Buffer.alloc(12)
-    header.writeUInt16BE(0x8000, 2) // QR=1, RCODE=0
-    header.writeUInt16BE(0, 4) // QDCOUNT=0
-    header.writeUInt16BE(1, 6) // ANCOUNT=1
-
-    // Owner: root (\x00), type=1(A), class=1(IN), ttl=300, rdlen=4, rdata=1.2.3.4
-    const answer = Buffer.from([
-      0x00, // owner = root
-      0x00,
-      0x01, // type = A
-      0x00,
-      0x01, // class = IN
-      0x00,
-      0x00,
-      0x01,
-      0x2c, // ttl = 300
-      0x00,
-      0x04, // rdlen = 4
-      1,
-      2,
-      3,
-      4, // rdata
-    ])
-
-    const packet = Buffer.concat([header, answer])
-    const { rcode, answers } = parseResponse(packet)
-    assert.equal(rcode, 0)
-    assert.equal(answers.length, 1)
-    assert.equal(answers[0].typeId, 1)
-    assert.equal(answers[0].cls, 1)
-    assert.deepEqual([...answers[0].rdataBytes], [1, 2, 3, 4])
-  })
+  // header (QR, ANCOUNT=1) + root A IN ttl 300 rdata 1.2.3.4
+  const { rcode, answers } = parseResponse(
+    bytes('000080000000000100000000' + '00000100010000012c000401020304'),
+  )
+  assert.equal(rcode, 0)
+  assert.equal(answers.length, 1)
+  assert.equal(answers[0].typeId, 1)
+  assert.equal(answers[0].cls, 1)
+  assert.equal(hex(answers[0].rdataBytes), '01020304')
 })
 
-// ── svcParamsToWire ───────────────────────────────────────────────────────────
-
-describe('svcParamsToWire', () => {
-  test('empty string returns zero-length Uint8Array', () => {
-    assert.equal(svcParamsToWire('').length, 0)
-    assert.ok(svcParamsToWire('') instanceof Uint8Array)
+describe('svcParams (RFC 9460)', () => {
+  test('encodes params sorted by key, with escapes decoded as BIND does (Appendix A.1)', () => {
+    for (const [params, expected] of [
+      ['', ''],
+      [null, ''],
+      [undefined, ''],
+      ['no-default-alpn', '00020000'],
+      ['port=8443', '0003000220fb'],
+      ['alpn="h2,h3"', '00010006026832026833'],
+      ['ipv4hint=1.2.3.4', '0004000401020304'],
+      ['ipv4hint=1.2.3.4,5.6.7.8', '000400080102030405060708'],
+      ['ipv6hint=::1', `00060010${'00'.repeat(15)}01`],
+      ['port=443 alpn="h2"', '000100030268320003000201bb'],
+      ['mandatory=port,alpn alpn=h2 port=443', '0000000400010003000100030268320003000201bb'],
+      ['key1234=te\\032st', '04d200057465207374'],
+      ['alpn=h2\\,draft', '00010009026832056472616674'],
+      ['alpn=h2\\\\,draft', '000100090868322c6472616674'],
+      ['alpn="f\\\\\\\\oo\\\\,bar,h2"', '0001000c08665c6f6f2c626172026832'],
+      ['key1234="a\\"b"', '04d20003612262'],
+      ['key1234=a\\ b', '04d20003612062'],
+    ]) {
+      const wire = svcParamsToWire(params)
+      assert.ok(wire instanceof Uint8Array)
+      assert.equal(hex(wire), expected, params)
+      assert.deepEqual(svcParamsToWire(svcParamsFromWire(wire)), wire, `${params} round trips`)
+    }
   })
 
-  test('null/undefined returns zero-length Uint8Array', () => {
-    assert.equal(svcParamsToWire(null).length, 0)
-    assert.equal(svcParamsToWire(undefined).length, 0)
+  test('keyNNNN and mandatory round trip through wire', () => {
+    for (const params of ['key1234=test', 'key65000=a\\032b', 'mandatory=alpn,key9 alpn="h2" key9=x']) {
+      assert.equal(svcParamsFromWire(svcParamsToWire(params)), params)
+    }
   })
 
-  test('unknown key is silently skipped', () => {
-    const result = svcParamsToWire('unknownkey=foo')
-    assert.equal(result.length, 0)
+  test('rejects values the encoder would otherwise coerce (§7)', () => {
+    for (const [params, msg] of [
+      ['unknownkey=foo', /unknown SvcParamKey: unknownkey/], // §2.1
+      ['port=bogus', /port must be 0-65535/],
+      ['port=65536', /port must be 0-65535/],
+      ['ipv4hint=999.2.3.4', /invalid IPv4 address/],
+      ['ipv6hint=::1::2', /invalid IPv6 address/],
+      ['alpn=h2 alpn=h3', /duplicate SvcParamKey/],
+      ['mandatory=mandatory', /may not list itself/],
+      ['no-default-alpn=x', /takes no value/],
+      ['key65535=x', /reserved/],
+      ['ech=AQ', /ech must be base64/],
+      ['alpn="h2', /unterminated quoted value for alpn/],
+      ['alpn="h2"x', /text after the quoted value of alpn/],
+      [`key9=${'a'.repeat(65536)}`, /over 65535/],
+    ]) {
+      assert.throws(() => svcParamsToWire(params), msg, params.slice(0, 30))
+    }
   })
 
-  test('no-default-alpn (key 2) encodes 4-byte header with zero-length value', () => {
-    const result = svcParamsToWire('no-default-alpn')
-    assert.equal(result.length, 4)
-    const dv = new DataView(result.buffer)
-    assert.equal(dv.getUint16(0), 2) // key ID
-    assert.equal(dv.getUint16(2), 0) // value length
+  test('tokenizes in linear time', () => {
+    const start = Date.now()
+    assert.throws(() => svcParamsToWire(`${'!='.repeat(50000)}!`), /unknown SvcParamKey/)
+    assert.ok(Date.now() - start < 1000)
   })
 
-  test('port (key 3) encodes as uint16 big-endian', () => {
-    const result = svcParamsToWire('port=8443')
-    assert.equal(result.length, 6) // 4-byte header + 2-byte value
-    const dv = new DataView(result.buffer)
-    assert.equal(dv.getUint16(0), 3) // key ID
-    assert.equal(dv.getUint16(2), 2) // value length
-    assert.equal(dv.getUint16(4), 8443) // port value
-  })
-
-  test('alpn (key 1) encodes comma-separated list with length prefixes', () => {
-    const result = svcParamsToWire('alpn="h2,h3"')
-    // h2 = [2, 104, 50], h3 = [2, 104, 51]  → 6 bytes value
-    // 4-byte header + 6 bytes = 10
-    assert.equal(result.length, 10)
-    const dv = new DataView(result.buffer)
-    assert.equal(dv.getUint16(0), 1) // key ID = alpn
-    assert.equal(dv.getUint16(2), 6) // value length
-    // first entry: length=2, 'h', '2'
-    assert.equal(result[4], 2)
-    assert.equal(result[5], 104) // 'h'
-    assert.equal(result[6], 50) // '2'
-    // second entry: length=2, 'h', '3'
-    assert.equal(result[7], 2)
-    assert.equal(result[8], 104) // 'h'
-    assert.equal(result[9], 51) // '3'
-  })
-
-  test('ipv4hint (key 4) encodes each address as 4 bytes', () => {
-    const result = svcParamsToWire('ipv4hint=1.2.3.4')
-    assert.equal(result.length, 8) // 4-byte header + 4 bytes
-    const dv = new DataView(result.buffer)
-    assert.equal(dv.getUint16(0), 4)
-    assert.equal(dv.getUint16(2), 4)
-    assert.deepEqual([...result.slice(4)], [1, 2, 3, 4])
-  })
-
-  test('ipv4hint with multiple addresses', () => {
-    const result = svcParamsToWire('ipv4hint=1.2.3.4,5.6.7.8')
-    assert.equal(result.length, 12) // 4-byte header + 8 bytes
-    assert.deepEqual([...result.slice(4)], [1, 2, 3, 4, 5, 6, 7, 8])
-  })
-
-  test('ipv6hint (key 6) encodes ::1 as 16 bytes', () => {
-    const result = svcParamsToWire('ipv6hint=::1')
-    assert.equal(result.length, 20) // 4-byte header + 16 bytes
-    const dv = new DataView(result.buffer)
-    assert.equal(dv.getUint16(0), 6)
-    assert.equal(dv.getUint16(2), 16)
-    // ::1 = 15 zero bytes + 1
-    assert.deepEqual([...result.slice(4, 19)], new Array(15).fill(0))
-    assert.equal(result[19], 1)
-  })
-
-  test('params are sorted ascending by key ID (RFC 9460)', () => {
-    // port (3) before alpn (1) in input — output must be alpn first
-    const result = svcParamsToWire('port=443 alpn="h2"')
-    const dv = new DataView(result.buffer)
-    // First param key ID should be 1 (alpn), second should be 3 (port)
-    const firstKeyId = dv.getUint16(0)
-    assert.equal(firstKeyId, 1)
-    // skip past first param: 4 header + value length
-    const firstValLen = dv.getUint16(2)
-    const secondKeyId = dv.getUint16(4 + firstValLen)
-    assert.equal(secondKeyId, 3)
+  test('decoder rejects malformed params instead of truncating them', () => {
+    for (const [wire, msg] of [
+      ['000300', /inside a key header/],
+      ['0003000500', /value is truncated/],
+      ['00030003000102', /invalid length 3/],
+      ['000300021f40000100020268', /out of order or repeated/],
+      ['0001000303683200', /malformed alpn/],
+      ['0000000400030001', /mandatory key 1 is out of order/],
+      ['0000000400010001', /mandatory key 1 is out of order or repeated/],
+    ]) {
+      assert.throws(() => svcParamsFromWire(bytes(wire)), msg, wire)
+    }
   })
 })

@@ -1,8 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-import * as BINARY from '../lib/binary.js'
-
 export default class CERT extends RR {
   static typeName = 'CERT'
   static typeId = 37
@@ -72,8 +69,10 @@ export default class CERT extends RR {
     if (val === undefined || val === null || val === '') {
       this.throwHelp('certificate is required and cannot be empty')
     }
-    this.isBase64('CERT', 'certificate', val.replace(/[\s()]/g, ''))
-    this.set('certificate', val)
+    this.isString('CERT', 'certificate', val)
+    const certificate = val.replace(/[\s()]/g, '')
+    this.isBase64('CERT', 'certificate', certificate)
+    this.set('certificate', certificate)
   }
 
   getDescription() {
@@ -95,62 +94,5 @@ export default class CERT extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('CERT fromTinydns, invalid n')
-
-    const bytes = TINYDNS.octalRdataToBytes(rdata)
-    const typeNum = (bytes[0] << 8) | bytes[1]
-
-    const certType = CERT.CERT_TYPES_REVERSE[typeNum] ?? typeNum
-
-    return new CERT({
-      owner,
-      ttl,
-      type: 'CERT',
-      'cert type': certType,
-      'key tag': (bytes[2] << 8) | bytes[3],
-      algorithm: bytes[4],
-      certificate: BINARY.bytesToBase64(bytes.subarray(5)),
-      timestamp,
-      location,
-    })
-  }
-
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  CERT  certtype, keytag, algo, cert
-    const [owner, ttl, c, type, certtype, keytag, algo, certificate] = bindline.split(/\s+/)
-    return new CERT({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      'cert type': /^[0-9]+$/.test(certtype) ? parseInt(certtype, 10) : certtype,
-      'key tag': parseInt(keytag, 10),
-      algorithm: parseInt(algo, 10),
-      certificate,
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt16toOctal(this.getCertTypeValue(this.get('cert type'))) +
-        TINYDNS.UInt16toOctal(this.get('key tag')) +
-        TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.base64toOctal(this.get('certificate').replace(/[\s()]/g, '')),
-    )
-  }
-
-  getWireRdata() {
-    const certBytes = BINARY.base64ToBytes(this.get('certificate').replace(/[\s()]/g, ''))
-    const bytes = new Uint8Array(5 + certBytes.length)
-    const dv = new DataView(bytes.buffer, bytes.byteOffset)
-    dv.setUint16(0, this.getCertTypeValue(this.get('cert type')))
-    dv.setUint16(2, this.get('key tag'))
-    bytes[4] = this.get('algorithm')
-    bytes.set(certBytes, 5)
-    return bytes
-  }
 }

@@ -1,7 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-
 const WELL_KNOWN_PORTS = {
   echo: 7,
   discard: 9,
@@ -91,32 +89,34 @@ const WELL_KNOWN_PORTS = {
   ldap: 389,
 }
 
+const PROTOCOLS = { TCP: 'TCP', UDP: 'UDP', 6: 'TCP', 17: 'UDP' }
+
 export default class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
   static RFCs = [883, 1035]
-  static rdataFields = ['address', 'protocol', 'bit map']
+  static rdataFields = [
+    ['address', 'ipv4'],
+    ['protocol', 'u8'],
+    ['bit map', 'list'],
+  ]
   static tags = ['obsolete']
 
-  constructor(opts) {
-    super(opts)
-  }
-
   /****** Resource record specific setters   *******/
-  setAddress(val) {
-    if (!val) this.throwHelp('WKS: address is required')
-    if (!this.isIPv4(val)) this.throwHelp('WKS address must be IPv4')
-    this.set('address', val)
-  }
-
   setProtocol(val) {
     if (!val) this.throwHelp('WKS: protocol is required')
-    const upper = typeof val === 'string' ? val.toUpperCase() : val
-    if (!['TCP', 'UDP', 6, 17].includes(upper)) this.throwHelp('WKS protocol must be TCP or UDP')
-    this.set('protocol', upper)
+    const protocol = PROTOCOLS[String(val).toUpperCase()]
+    if (!protocol) this.throwHelp('WKS protocol must be TCP or UDP (6 or 17)')
+    this.set('protocol', protocol)
   }
 
   setBitMap(val) {
+    if (val != null) this.isString('WKS', 'bit map', val)
+    for (const entry of (val ?? '').trim().split(/\s+/).filter(Boolean)) {
+      const port = portNumber(entry)
+      if (port === undefined || port > 65535)
+        this.throwHelp(`WKS: bit map entry must be a known service or a port 0-65535: ${entry}`)
+    }
     this.set('bit map', val ?? '')
   }
 
@@ -138,48 +138,8 @@ export default class WKS extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromBind({ bindline }) {
-    // test.example.com  3600  IN  WKS 192.168.1.1 TCP ftp smtp
-    const parts = bindline.split(/\s+/)
-    const [owner, ttl, c, type, address, protocol] = parts
-    return new WKS({
-      owner,
-      ttl: parseInt(ttl, 10),
-      class: c,
-      type,
-      address,
-      protocol,
-      'bit map': parts.slice(6).join(' ').trim(),
-    })
-  }
-
-  fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    const binary = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const address = [binary[0], binary[1], binary[2], binary[3]].join('.')
-    const protoNum = binary[4]
-    const protoMap = { 6: 'TCP', 17: 'UDP' }
-    const protocol = protoMap[protoNum] ?? protoNum
-    const bitmap = new TextDecoder().decode(binary.subarray(5))
-
-    return new WKS({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      type: 'WKS',
-      address,
-      protocol,
-      'bit map': bitmap,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const address = [...rdata.subarray(0, 4)].join('.')
-    const protoNum = rdata[4]
-    const protoMap = { 6: 'TCP', 17: 'UDP' }
-    const protocol = protoMap[protoNum] ?? String(protoNum)
     const PORT_NAMES = Object.fromEntries(Object.entries(WELL_KNOWN_PORTS).map(([k, v]) => [v, k]))
     const bitmap = rdata.subarray(5)
     const ports = []
@@ -197,38 +157,33 @@ export default class WKS extends RR {
       class: cls,
       type: 'WKS',
       address,
-      protocol,
+      protocol: rdata[4],
       'bit map': ports.join(' '),
     })
   }
 
   /******  EXPORTERS   *******/
 
-  toTinydns() {
-    const dataRe = new RegExp(/[\r\n\t:\\/]/, 'g')
-    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 }
-    const protoNum = protoMap[this.get('protocol')]
+  getProtocolNumber() {
+    return { TCP: 6, UDP: 17 }[this.get('protocol')]
+  }
 
-    return this.getTinydnsGeneric(
-      TINYDNS.ipv4toOctal(this.get('address')) +
-        TINYDNS.UInt8toOctal(protoNum) +
-        TINYDNS.escapeOctal(dataRe, this.get('bit map')),
-    )
+  getPorts() {
+    return this.get('bit map').trim().split(/\s+/).filter(Boolean).map(portNumber)
+  }
+
+  // csv2(5): "IP protocol port,port,...", at most 10 ports, none above 1023.
+  toMaraDNS() {
+    const ports = this.getPorts()
+    if (ports.length === 0 || ports.length > 10 || ports.some((p) => p > 1023)) return this.toMaraGeneric()
+    this.assertClassIN('MaraDNS')
+    return `${this.get('owner')}\t+${this.get('ttl')}\tWKS\t${this.get('address')} ${this.getProtocolNumber()} ${ports.join(',')} ~\n`
   }
 
   getWireRdata() {
-    const protoMap = { TCP: 6, UDP: 17, 6: 6, 17: 17 }
     const addrBytes = this.get('address').split('.').map(Number)
-    const protoNum = protoMap[this.get('protocol')]
-
-    const portNums = this.get('bit map')
-      .trim()
-      .split(/\s+/)
-      .map((s) => {
-        if (/^\d+$/.test(s)) return parseInt(s, 10)
-        return WELL_KNOWN_PORTS[s.toLowerCase()]
-      })
-      .filter((p) => p !== undefined)
+    const protoNum = this.getProtocolNumber()
+    const portNums = this.getPorts()
 
     if (portNums.length === 0) return new Uint8Array([...addrBytes, protoNum])
 
@@ -243,4 +198,8 @@ export default class WKS extends RR {
     result.set(bitmap, 5)
     return result
   }
+}
+
+function portNumber(entry) {
+  return /^\d+$/.test(entry) ? Number(entry) : WELL_KNOWN_PORTS[entry.toLowerCase()]
 }

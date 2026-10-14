@@ -3,11 +3,8 @@ import * as base from '../base.js'
 
 import CNAME from '../../rr/cname.js'
 
-const defaults = { class: 'IN', ttl: 3600, type: 'CNAME' }
-
-const validRecords = [
+const valid = [
   {
-    ...defaults,
     owner: 'ns1.example.com.',
     cname: 'ns2.example.com.',
     testB: 'ns1.example.com.\t3600\tIN\tCNAME\tns2.example.com.\n',
@@ -15,7 +12,6 @@ const validRecords = [
     testW: '036e7331076578616d706c6503636f6d000005000100000e100011036e7332076578616d706c6503636f6d00',
   },
   {
-    ...defaults,
     owner: '*.example.com.',
     cname: 'www.example.com.',
     testB: '*.example.com.\t3600\tIN\tCNAME\twww.example.com.\n',
@@ -24,9 +20,6 @@ const validRecords = [
   },
   {
     owner: 'ftp.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'CNAME',
     cname: 'www.nictool.tnpi.net.',
     testB: 'ftp.nictool.tnpi.net.\t3600\tIN\tCNAME\twww.nictool.tnpi.net.\n',
     testT: 'Cftp.nictool.tnpi.net:www.nictool.tnpi.net:3600::\n',
@@ -35,9 +28,6 @@ const validRecords = [
   },
   {
     owner: 'webmail.nictool.tnpi.net.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'CNAME',
     cname: 'mail.nictool.tnpi.net.',
     testB: 'webmail.nictool.tnpi.net.\t3600\tIN\tCNAME\tmail.nictool.tnpi.net.\n',
     testT: 'Cwebmail.nictool.tnpi.net:mail.nictool.tnpi.net:3600::\n',
@@ -46,9 +36,8 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
-    ...defaults,
     owner: 'example.com.',
     cname: '192.0.2.4', // FQDN required
     msg: /cname must be a domain name/,
@@ -56,21 +45,5 @@ const invalidRecords = [
 ]
 
 describe('CNAME record', function () {
-  base.valid(CNAME, validRecords)
-  base.invalid(CNAME, invalidRecords)
-
-  base.getDescription(CNAME)
-  base.getRFCs(CNAME, validRecords[0])
-  base.getFields(CNAME, ['cname'])
-  base.getCanonical(CNAME)
-  base.getTypeId(CNAME, 5)
-  base.getTags(CNAME)
-
-  base.toBind(CNAME, validRecords)
-  base.toWire(CNAME, validRecords)
-  base.toTinydns(CNAME, validRecords)
-
-  base.fromTinydns(CNAME, validRecords)
-  base.fromBind(CNAME, validRecords)
-  base.fromWire(CNAME, validRecords)
+  base.suite(CNAME, { typeId: 5, fields: ['cname'], valid, invalid })
 })

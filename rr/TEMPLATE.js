@@ -46,7 +46,8 @@ export default class TEMPLATE extends RR {
   static RFCs = []
   static tags = []
 
-  // The character used in tinydns format (optional)
+  // The tinydns line type, for types with a native line. Without one, records
+  // take the generic `:` line, encoded and decoded through the wire format.
   static tinydnsType = 'T'
 
   // Define the RDATA fields.
@@ -55,10 +56,6 @@ export default class TEMPLATE extends RR {
     ['field1', 'u16'],
     ['field2', 'fqdn'],
   ]
-
-  constructor(opts) {
-    super(opts)
-  }
 
   /****** Resource record specific setters   *******/
 
@@ -95,30 +92,17 @@ export default class TEMPLATE extends RR {
   /******  IMPORTERS / EXPORTERS (Recommended) *******/
 
   /*
-  // Optional: Override if generic implementation in RR.js is insufficient
+  // Only for a native tinydns line; generic `:` lines need no code.
   fromTinydns({ tinyline }) {
      // Implementation...
   }
   */
 
   /*
-  // Optional: Override if generic implementation in RR.js is insufficient
-  toTinydns() {
-    // Implementation...
+  // Wire format comes from the rdataFields types in both directions. Override
+  // getWireRdata() and fromWire() only for rdata those types can't describe.
+  getWireRdata() {
+    // Returns a Uint8Array.
   }
   */
-
-  getWireRdata() {
-    // MUST be implemented for binary/wire format support.
-    // Returns a Uint8Array.
-    // Example:
-    /*
-    const domain = this.wirePackDomain(this.get('field2'))
-    const result = new Uint8Array(2 + domain.length)
-    new DataView(result.buffer).setUint16(0, this.get('field1'))
-    result.set(domain, 2)
-    return result
-    */
-    throw new Error('getWireRdata not implemented')
-  }
 }

@@ -8,17 +8,14 @@ const publicKey =
   'AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwIXAqcOTiW7iHnQt5hwVAAAAA=='
 
 const hipT =
-  ':example.com:55:\\020\\002\\000\\117\\040\\001\\000\\020\\173\\032\\164\\337\\066\\126\\071\\314\\071\\361\\325\\170\\003\\001\\000\\001\\267\\161\\312\\023\\156\\112\\353\\134\\344\\103\\063\\305\\073\\075\\054\\023\\302\\042\\103\\205\\037\\307\\010\\274\\316\\051\\367\\342\\353\\127\\207\\265\\365\\154\\312\\323\\117\\202\\043\\254\\301\\011\\004\\335\\265\\153\\056\\304\\246\\326\\043\\057\\073\\120\\352\\011\\117\\002\\027\\002\\247\\016\\116\\045\\273\\210\\171\\320\\267\\230\\160\\124\\000\\000\\000:3600::\n'
+  ':example.com:55:\\020\\002\\000O \\001\\000\\020{\\032t\\3376V9\\3149\\361\\325x\\003\\001\\000\\001\\267q\\312\\023nJ\\353\\134\\344C3\\305;=,\\023\\302"C\\205\\037\\307\\010\\274\\316)\\367\\342\\353W\\207\\265\\365l\\312\\323O\\202#\\254\\301\\011\\004\\335\\265k.\\304\\246\\326#/;P\\352\\011O\\002\\027\\002\\247\\016N%\\273\\210y\\320\\267\\230pT\\000\\000\\000:3600::\n'
 
 const hipRvsT =
-  ':host.example.com:55:\\020\\002\\000\\117\\040\\001\\000\\020\\173\\032\\164\\337\\066\\126\\071\\314\\071\\361\\325\\170\\003\\001\\000\\001\\267\\161\\312\\023\\156\\112\\353\\134\\344\\103\\063\\305\\073\\075\\054\\023\\302\\042\\103\\205\\037\\307\\010\\274\\316\\051\\367\\342\\353\\127\\207\\265\\365\\154\\312\\323\\117\\202\\043\\254\\301\\011\\004\\335\\265\\153\\056\\304\\246\\326\\043\\057\\073\\120\\352\\011\\117\\002\\027\\002\\247\\016\\116\\045\\273\\210\\171\\320\\267\\230\\160\\124\\000\\000\\000\\003rvs\\007example\\003com\\000:86400::\n'
+  ':host.example.com:55:\\020\\002\\000O \\001\\000\\020{\\032t\\3376V9\\3149\\361\\325x\\003\\001\\000\\001\\267q\\312\\023nJ\\353\\134\\344C3\\305;=,\\023\\302"C\\205\\037\\307\\010\\274\\316)\\367\\342\\353W\\207\\265\\365l\\312\\323O\\202#\\254\\301\\011\\004\\335\\265k.\\304\\246\\326#/;P\\352\\011O\\002\\027\\002\\247\\016N%\\273\\210y\\320\\267\\230pT\\000\\000\\000\\003rvs\\007example\\003com\\000:86400::\n'
 
-const validRecords = [
+const valid = [
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'HIP',
     'pk algorithm': 2,
     hit: '200100107B1A74DF365639CC39F1D578',
     'public key': publicKey,
@@ -31,8 +28,6 @@ const validRecords = [
   {
     owner: 'host.example.com.',
     ttl: 86400,
-    class: 'IN',
-    type: 'HIP',
     'pk algorithm': 2,
     hit: '200100107B1A74DF365639CC39F1D578',
     'public key': publicKey,
@@ -42,23 +37,17 @@ const validRecords = [
   },
 ]
 
-const invalidRecords = [
+const invalid = [
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'HIP',
     'pk algorithm': undefined,
     hit: '200100107B1A74DF365639CC39F1D578',
     'public key': publicKey,
     'rendezvous servers': '',
-    msg: /pk algorithm is required/,
+    msg: /pk algorithm must be a 8-bit integer/,
   },
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'HIP',
     'pk algorithm': 2,
     hit: '',
     'public key': publicKey,
@@ -67,45 +56,52 @@ const invalidRecords = [
   },
   {
     owner: 'example.com.',
-    ttl: 3600,
-    class: 'IN',
-    type: 'HIP',
     'pk algorithm': 2,
     hit: '200100107B1A74DF365639CC39F1D578',
     'public key': '',
     'rendezvous servers': '',
     msg: /public key is required/,
   },
+  // RFC 8005 §5, §6
+  ...[
+    [{ hit: 'xyz' }, /hit must be hex octets/],
+    [{ hit: 'ab'.repeat(256) }, /hit must be <=255 bytes/],
+    [{ 'public key': 'not base64!' }, /public key must be a valid base64/],
+    [
+      { 'rendezvous servers': 'rvs.example.com. bad;name.example.' },
+      /rendezvous servers has an unescaped delimiter/,
+    ],
+  ].map(([fields, msg]) => ({ ...valid[1], ...fields, msg })),
+  {
+    bindline: `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${publicKey.slice(0, 40)} ${publicKey.slice(40)} rvs.example.com.`,
+    msg: /rendezvous servers must be fully qualified/,
+  },
 ]
 
 describe('HIP record', function () {
-  base.valid(HIP, validRecords)
-  base.invalid(HIP, invalidRecords)
+  base.suite(HIP, {
+    typeId: 55,
+    fields: ['pk algorithm', 'hit', 'public key', 'rendezvous servers'],
+    valid,
+    invalid,
+  })
 
-  base.getDescription(HIP)
-  base.getRFCs(HIP, validRecords[0])
-  base.getFields(HIP, ['pk algorithm', 'hit', 'public key', 'rendezvous servers'])
-  base.getCanonical(HIP)
-  base.getTypeId(HIP, 55)
-  base.getTags(HIP)
+  test('stores the HIT uppercase and rendezvous servers lowercase', () => {
+    const r = new HIP({
+      ...valid[1],
+      hit: 'abcd',
+      'rendezvous servers': 'RVS1.Example.com.   rvs2.example.com.',
+    })
+    assert.equal(r.get('hit'), 'ABCD')
+    assert.equal(r.get('rendezvous servers'), 'rvs1.example.com. rvs2.example.com.')
+  })
 
-  base.toBind(HIP, validRecords)
-  base.toWire(HIP, validRecords)
-  base.toTinydns(HIP, validRecords)
-
-  base.fromBind(HIP, validRecords)
-  base.fromTinydns(HIP, validRecords)
-  base.fromWire(HIP, validRecords)
-
-  test('fromBind reassembles space-joined multi-chunk base64 key and separates RVS', () => {
-    // Simulates the zone parser joining a parenthesized multi-line HIP record.
-    // The public key is split into 3 space-separated tokens; rvs.example.com. is the RVS.
-    const chunk1 = publicKey.slice(0, 40)
-    const chunk2 = publicKey.slice(40, 80)
-    const chunk3 = publicKey.slice(80)
-    const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${chunk1} ${chunk2} ${chunk3} rvs.example.com.`
-    const r = HIP.fromBind(bindline)
-    assert.equal(r.get('public key'), publicKey)
-    assert.equal(r.get('rendezvous servers'), 'rvs.example.com.')
+  test('rejects wire rdata whose HIT or key length overruns it', () => {
+    const rdata = new HIP(valid[1]).getWireRdata()
+    rdata[0] = 200
+    assert.throws(
+      () => new HIP(null).fromWire({ owner: 'x.', cls: 'IN', ttl: 60, rdata }),
+      /overrun the rdata/,
+    )
   })
 })
