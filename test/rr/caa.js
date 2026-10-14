@@ -80,6 +80,15 @@ const valid = [
 ]
 
 const invalid = [
+  ...['issue', 'iodef'].flatMap((tag) =>
+    [undefined, 0, {}, []].map((value) => ({
+      owner: 'example.com.',
+      flags: 0,
+      tag,
+      value,
+      msg: /CAA: value (is required|must be a string)/,
+    })),
+  ),
   {
     owner: 'example.com.',
     flags: 128,

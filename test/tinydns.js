@@ -38,6 +38,7 @@ describe('TINYDNS', function () {
       ['st\\042ar.example.', 'st\\052ar.example'],
       ['*.w.example.', '*.w.example'],
       ['ctl\\001.example.', 'ctl\\001.example'],
+      ['host\\..', 'host\\.'],
     ]) {
       const a = new A({ owner, ttl: 60, address: '192.0.2.1' })
       assert.equal(a.toTinydns(), `+${tinydns}:192.0.2.1:60::\n`)

@@ -194,6 +194,11 @@ function presentationBytes(text) {
   return Uint8Array.from(bytes)
 }
 
+// A final \. is a dot inside the last label, unless the backslash is itself escaped.
+function endsWithRoot(name) {
+  return /(?:^|[^\\])(?:\\\\)*\.$/.test(name)
+}
+
 // RFC 4343: only ASCII A-Z fold, and an escaped octet (\X or \DDD) stands for
 // the exact byte written.
 function lowercaseName(name) {
@@ -1786,7 +1791,7 @@ class RR {
   fullyQualify(hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin;
-    if (hostname.endsWith('.')) return lowercaseName(hostname)
+    if (endsWithRoot(hostname)) return lowercaseName(hostname)
     if (origin) return lowercaseName(`${hostname}.${origin}`)
     return `${hostname}.`
   }
@@ -2114,8 +2119,7 @@ class RR {
 
   isFullyQualified(type, field, hostname) {
     this.isString(type, field, hostname);
-    // a final \. is a dot inside the last label, unless the backslash is itself escaped
-    if (/(?:^|[^\\])(?:\\\\)*\.$/.test(hostname)) return true
+    if (endsWithRoot(hostname)) return true
 
     this.throwHelp(`${type}: ${field} must be fully qualified`);
   }
@@ -2521,6 +2525,7 @@ class CAA extends RR {
   }
 
   setValue(val) {
+    this.isString('CAA', 'value', val);
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:'];
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {

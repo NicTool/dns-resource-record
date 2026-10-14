@@ -48,6 +48,7 @@ export default class CAA extends RR {
   }
 
   setValue(val) {
+    this.isString('CAA', 'value', val)
     if (this.get('tag') === 'iodef') {
       const iodefSchemes = ['mailto:', 'http:', 'https:']
       if (!iodefSchemes.filter((s) => val.startsWith(s)).length) {

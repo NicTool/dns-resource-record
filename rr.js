@@ -1,5 +1,5 @@
 import * as TINYDNS from './lib/tinydns.js'
-import { lowercaseName, nameToLabels } from './lib/name.js'
+import { endsWithRoot, lowercaseName, nameToLabels } from './lib/name.js'
 import * as MARADNS from './lib/maradns.js'
 import { canonicalTypeList, typeNameToId } from './lib/binary.js'
 
@@ -250,7 +250,7 @@ export default class RR {
   fullyQualify(hostname, origin) {
     if (!hostname) return hostname
     if (hostname === '@' && origin) hostname = origin
-    if (hostname.endsWith('.')) return lowercaseName(hostname)
+    if (endsWithRoot(hostname)) return lowercaseName(hostname)
     if (origin) return lowercaseName(`${hostname}.${origin}`)
     return `${hostname}.`
   }
@@ -578,8 +578,7 @@ export default class RR {
 
   isFullyQualified(type, field, hostname) {
     this.isString(type, field, hostname)
-    // a final \. is a dot inside the last label, unless the backslash is itself escaped
-    if (/(?:^|[^\\])(?:\\\\)*\.$/.test(hostname)) return true
+    if (endsWithRoot(hostname)) return true
 
     this.throwHelp(`${type}: ${field} must be fully qualified`)
   }
