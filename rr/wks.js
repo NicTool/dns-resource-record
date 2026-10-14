@@ -89,6 +89,8 @@ const WELL_KNOWN_PORTS = {
   ldap: 389,
 }
 
+const PROTOCOLS = { TCP: 'TCP', UDP: 'UDP', 6: 'TCP', 17: 'UDP' }
+
 export default class WKS extends RR {
   static typeName = 'WKS'
   static typeId = 11
@@ -100,22 +102,12 @@ export default class WKS extends RR {
   ]
   static tags = ['obsolete']
 
-  constructor(opts) {
-    super(opts)
-  }
-
   /****** Resource record specific setters   *******/
-  setAddress(val) {
-    if (!val) this.throwHelp('WKS: address is required')
-    if (!this.isIPv4(val)) this.throwHelp('WKS address must be IPv4')
-    this.set('address', val)
-  }
-
   setProtocol(val) {
     if (!val) this.throwHelp('WKS: protocol is required')
-    const upper = typeof val === 'string' ? val.toUpperCase() : val
-    if (!['TCP', 'UDP', 6, 17].includes(upper)) this.throwHelp('WKS protocol must be TCP or UDP')
-    this.set('protocol', upper)
+    const protocol = PROTOCOLS[String(val).toUpperCase()]
+    if (!protocol) this.throwHelp('WKS protocol must be TCP or UDP (6 or 17)')
+    this.set('protocol', protocol)
   }
 
   setBitMap(val) {
@@ -147,9 +139,6 @@ export default class WKS extends RR {
 
   fromWire({ owner, cls, ttl, rdata }) {
     const address = [...rdata.subarray(0, 4)].join('.')
-    const protoNum = rdata[4]
-    const protoMap = { 6: 'TCP', 17: 'UDP' }
-    const protocol = protoMap[protoNum] ?? String(protoNum)
     const PORT_NAMES = Object.fromEntries(Object.entries(WELL_KNOWN_PORTS).map(([k, v]) => [v, k]))
     const bitmap = rdata.subarray(5)
     const ports = []
@@ -167,7 +156,7 @@ export default class WKS extends RR {
       class: cls,
       type: 'WKS',
       address,
-      protocol,
+      protocol: rdata[4],
       'bit map': ports.join(' '),
     })
   }
@@ -175,7 +164,7 @@ export default class WKS extends RR {
   /******  EXPORTERS   *******/
 
   getProtocolNumber() {
-    return { TCP: 6, UDP: 17, 6: 6, 17: 17 }[this.get('protocol')]
+    return { TCP: 6, UDP: 17 }[this.get('protocol')]
   }
 
   getPorts() {

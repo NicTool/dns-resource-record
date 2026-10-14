@@ -26,7 +26,7 @@
     "clean": "rm -rf coverage dist node_modules package-lock.json",
     "format:check": "npm run prettier; npm run lint",
     "format": "npm run prettier -- --write && npm run lint:fix",
-    "lint": "npx eslint **/*.js --no-warn-ignored",
+    "lint": "npx eslint .",
     "interop": "node interop/index.js",
     "lint:fix": "npm run lint -- --fix",
     "prettier": "npx prettier --check .",

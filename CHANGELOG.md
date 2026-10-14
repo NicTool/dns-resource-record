@@ -11,14 +11,20 @@ Notable changes to this project are documented in this file.
 - fix(rr)!: names honor escapes, count octets, stricter wildcards
 - refactor(rr)!: isValidHostname & hasValidLabels -> isValidName
 - fix(rr)!: TTL max is 2^31-1 (RFC 2181)
-- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HINFO, WKS)
+- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HIP, APL, HINFO, WKS, TXT)
+- fix(rr)!: canonical values (uppercase hex, sorted type lists, WKS TCP/UDP)
 - fix(hinfo, caa)!: keep literal quotes in values
 - fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT encoding
+- fix(loc): keep millisecond seconds
 - fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
 - fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
-- fix(tinydns): generic lines carry wire rdata
+- fix(tinydns): generic lines carry wire rdata, text is UTF-8
+- refactor(tinydns)!: drop the octal field helpers; AAAA & SRV generic lines use wire rdata
 - fix(maradns): csv2 quoting, WKS, SOA TTL, root targets
 - feat(rr): `list` and `rrtype` rdata field types
+- feat(wire): rdataFields drive encoding as well as decoding
+- feat(ipseckey): ECDSA, EdDSA and keyless (0) algorithms
+- fix(rr): IPv6 addresses with an embedded IPv4 part
 - test: `npm run interop` checks records against 8 DNS servers
 
 ### [1.9.0] - 2026-07-30

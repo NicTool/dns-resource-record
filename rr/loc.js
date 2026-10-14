@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 
 const REF = {
   // RFC 1876
@@ -76,7 +75,7 @@ export default class LOC extends RR {
         seconds: r[7],
         hemisphere: r[8].toUpperCase(),
       },
-      altitude: r[9] * 100, // m -> cm
+      altitude: Math.round(r[9] * 100), // m -> cm
       size: (r[10] ?? DEFAULT_CM[0] / 100) * 100,
       precision: {
         horizontal: (r[11] ?? DEFAULT_CM[1] / 100) * 100,
@@ -84,40 +83,22 @@ export default class LOC extends RR {
       },
     }
 
+    // RFC 1876 §3
+    const { latitude: lat, longitude: lon } = loc
+    if (lat.degrees > 90 || lon.degrees > 180 || [lat, lon].some((l) => l.minutes >= 60 || l.seconds >= 60))
+      this.throwHelp(`LOC address: latitude or longitude out of range: ${string}`)
+    if (loc.altitude < -REF.ALTITUDE || loc.altitude + REF.ALTITUDE > 0xffffffff)
+      this.throwHelp(`LOC address: altitude out of range: ${string}`)
     return loc
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // LOC via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 29) this.throwHelp('LOC fromTinydns, invalid n')
-
-    // divide by 100 is to convert cm to meters
-    const l = {
-      version: TINYDNS.octalToUInt8(rdata.slice(0, 4)),
-      size: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(4, 8))),
-      precision: {
-        horizontal: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(8, 12))),
-        vertical: this.fromExponent(TINYDNS.octalToUInt8(rdata.slice(12, 16))),
-      },
-      latitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.slice(16, 32)), 'lat'),
-      longitude: this.arcSecToDMS(TINYDNS.octalToUInt32(rdata.slice(32, 48)), 'lon'),
-      altitude: TINYDNS.octalToUInt32(rdata.slice(48, 64)) - REF.ALTITUDE,
-    }
-
-    return new LOC({
-      type: 'LOC',
-      owner: this.fullyQualify(fqdn),
-      address: this.toHuman(l),
-      ttl: parseInt(ttl, 10),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
 
   dmsToArcSec(obj) {
-    let retval = obj.degrees * CONV.deg + (obj.minutes ?? 0) * CONV.min + (obj.seconds ?? 0) * CONV.sec
+    // rounded, since decimal seconds such as 32.123 are inexact in binary
+    let retval = Math.round(
+      obj.degrees * CONV.deg + (obj.minutes ?? 0) * CONV.min + (obj.seconds ?? 0) * CONV.sec,
+    )
     switch (obj.hemisphere.toUpperCase()) {
       case 'W':
       case 'S':
@@ -153,7 +134,7 @@ export default class LOC extends RR {
         this.throwHelp('unknown or missing hemisphere')
     }
 
-    return `${deg} ${min} ${sec}${msec ? '.' + msec : ''} ${hem}`
+    return `${deg} ${min} ${sec}${msec ? `.${String(msec).padStart(3, '0')}` : ''} ${hem}`
   }
 
   fromExponent(prec) {
@@ -188,6 +169,8 @@ export default class LOC extends RR {
   }
 
   fromWire({ owner, cls, ttl, rdata }) {
+    // RFC 1876 §2: version 0 is the only format, 16 octets long
+    if (rdata.length !== 16 || rdata[0] !== 0) throw new Error('LOC: rdata is not version 0, 16 bytes')
     const dv = new DataView(rdata.buffer, rdata.byteOffset)
     const l = {
       size: this.fromExponent(rdata[1]),
@@ -209,22 +192,6 @@ export default class LOC extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    const loc = this.parseLoc(this.get('address'))
-
-    // LOC format declares in meters, tinydns uses cm (hence * 100)
-    let rdata = ''
-    rdata += TINYDNS.UInt8toOctal(0) // version
-    rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.size))
-    rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.precision.horizontal))
-    rdata += TINYDNS.UInt8toOctal(this.toExponent(loc.precision.vertical))
-    rdata += TINYDNS.UInt32toOctal(this.dmsToArcSec(loc.latitude))
-    rdata += TINYDNS.UInt32toOctal(this.dmsToArcSec(loc.longitude))
-    rdata += TINYDNS.UInt32toOctal(loc.altitude + REF.ALTITUDE)
-
-    return this.getTinydnsGeneric(rdata)
-  }
 
   getWireRdata() {
     const loc = this.parseLoc(this.get('address'))

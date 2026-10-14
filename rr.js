@@ -1,18 +1,21 @@
 import * as TINYDNS from './lib/tinydns.js'
 import { lowercaseName, nameToLabels } from './lib/name.js'
 import * as MARADNS from './lib/maradns.js'
-import { typeNameToId } from './lib/binary.js'
+import { canonicalTypeList, typeNameToId } from './lib/binary.js'
 
 const customInspect = Symbol.for('nodejs.util.inspect.custom')
 import {
   wireUnpackDomain,
   wirePackDomain,
-  getWireRdata as wireGetRdata,
   toWire as wireToWire,
   fromWireBytes,
   fromWireGeneric,
-  svcParamKeyId,
-  svcParamKeyIds,
+  ipv6Bytes,
+  ipv6ToPresentation,
+  toWireGeneric,
+  mandatoryKeyIds,
+  parseSvcParams,
+  svcParamKeyName,
   svcParamsFromWire,
   svcParamsToWire,
 } from './lib/wire.js'
@@ -408,7 +411,8 @@ export default class RR {
     this.set(field, val)
   }
 
-  // Hex octets, of an exact length when the field's algorithm fixes one.
+  // Hex octets, of an exact length when the field's algorithm fixes one. Stored
+  // uppercase, as the wire decoder and BIND write them.
   isHexDigest(field, value, bytes) {
     const typeName = this.constructor.typeName
     if (typeof value !== 'string' || !/^([0-9a-fA-F]{2})+$/.test(value))
@@ -492,7 +496,7 @@ export default class RR {
         break
       case 'hex':
         if (!/^[0-9a-fA-F]*$/.test(val)) this.throwHelp(`${typeName}: ${fieldName} must be hexadecimal`)
-        this.set(fieldName, val)
+        this.set(fieldName, val.toUpperCase())
         break
       case 'str':
         if (!val) this.throwHelp(`${typeName}: ${fieldName} is required`)
@@ -502,14 +506,7 @@ export default class RR {
         if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
         this.set(fieldName, val)
         break
-      case 'charstr': {
-        if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
-        const value = String(val)
-        const byteLen = new TextEncoder().encode(value).length
-        if (byteLen > 255) this.throwHelp(`${typeName}: ${fieldName} must be <=255 bytes`)
-        this.set(fieldName, value)
-        break
-      }
+      case 'charstr':
       case 'qcharstr': {
         if (val === undefined || val === null) this.throwHelp(`${typeName}: ${fieldName} is required`)
         const value = String(val)
@@ -536,28 +533,37 @@ export default class RR {
         if (!this.isIPv6(val)) this.throwHelp(`${typeName}: ${fieldName} must be a valid IPv6 address`)
         this.set(fieldName, this.expandIPv6(val.toLowerCase())) // lower case: RFC 5952
         break
+      default:
+        throw new Error(`${typeName}: unknown rdata field type ${type} for ${fieldName}`)
+    }
+  }
+
+  // Stored in ascending type order, so equal type sets compare equal.
+  setTypeList(fieldName, val) {
+    try {
+      this.set(fieldName, canonicalTypeList(val))
+    } catch (e) {
+      this.throwHelp(`${this.constructor.typeName}: ${fieldName}: ${e.message}`)
     }
   }
 
   setSvcParams(fieldName, val) {
     const typeName = this.constructor.typeName
-    let keys
+    let params
     try {
-      keys = svcParamKeyIds(val)
+      params = parseSvcParams(val)
     } catch (e) {
       this.throwHelp(`${typeName}: ${e.message.replace(/^SVCB: /, '')}`)
     }
     // RFC 9460 §2.4.2: BIND rejects params in AliasMode.
-    if (this.get('priority') === 0 && keys.length)
+    if (this.get('priority') === 0 && params.size)
       this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`)
     // RFC 9460 §7.1.1
-    if (keys.includes(2) && !keys.includes(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`)
+    if (params.has(2) && !params.has(1)) this.throwHelp(`${typeName}: no-default-alpn requires alpn`)
     // RFC 9460 §8: every mandatory key must be present.
-    const mandatory = val.match(/(?:^|\s)mandatory="?([^"\s]+)/)?.[1]
-    if (mandatory) {
-      const missing = mandatory.split(',').filter((k) => !keys.includes(svcParamKeyId(k.toLowerCase())))
-      if (missing.length) this.throwHelp(`${typeName}: mandatory keys missing: ${missing.join(', ')}`)
-    }
+    const missing = mandatoryKeyIds(params.get(0) ?? []).filter((id) => !params.has(id))
+    if (missing.length)
+      this.throwHelp(`${typeName}: mandatory keys missing: ${missing.map(svcParamKeyName).join(', ')}`)
     // Stored in the form the wire decodes to, so equal params compare equal.
     this.set(fieldName, svcParamsFromWire(svcParamsToWire(val)))
   }
@@ -585,7 +591,7 @@ export default class RR {
     if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`)
     // Names are stored in presentation form, so master-file delimiters and
     // controls must arrive escaped (\032, \;, \000) or the BIND export breaks.
-    if (/[\s;"()\x00-\x1f\x7f]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
+    if (/[\s;"()\p{Cc}]/u.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
       this.throwHelp(`${type}: ${field} has an unescaped delimiter or control: ${hostname}`)
     return true
   }
@@ -596,13 +602,17 @@ export default class RR {
   }
 
   isIPv6(string) {
-    return /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/gm.test(
-      string,
-    )
+    try {
+      ipv6Bytes(string)
+      return true
+    } catch {
+      return false
+    }
   }
 
-  expandIPv6(val, delimiter) {
-    return TINYDNS.expandIPv6(val, delimiter)
+  // all eight groups, four lowercase digits each (RFC 5952 §4.3)
+  expandIPv6(val, delimiter = ':') {
+    return ipv6ToPresentation(ipv6Bytes(val)).replaceAll(':', delimiter)
   }
 
   compressIPv6(val) {
@@ -650,11 +660,6 @@ export default class RR {
     return `${head}::${tail}`
   }
 
-  octalToUint8Array(octalStr) {
-    const str = TINYDNS.octalToChar(octalStr)
-    return Uint8Array.from(str, (c) => c.charCodeAt(0))
-  }
-
   wireUnpackDomain(bytes, offset = 0) {
     return wireUnpackDomain(bytes, offset)
   }
@@ -664,7 +669,7 @@ export default class RR {
   }
 
   getWireRdata() {
-    return wireGetRdata(this)
+    return toWireGeneric(this)
   }
 
   toWire() {

@@ -30,15 +30,4 @@ export default class HINFO extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    const cpu = new TextEncoder().encode(this.get('cpu'))
-    const os = new TextEncoder().encode(this.get('os'))
-    const result = new Uint8Array(2 + cpu.length + os.length)
-    result[0] = cpu.length
-    result.set(cpu, 1)
-    result[1 + cpu.length] = os.length
-    result.set(os, 2 + cpu.length)
-    return result
-  }
 }

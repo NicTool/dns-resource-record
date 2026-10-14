@@ -33,7 +33,7 @@ const validRecords = [
     address: '192.0.2.3',
     protocol: 'TCP',
     'bit map': '',
-    testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.3\tTCP\t\n',
+    testB: 'host.example.com.\t3600\tIN\tWKS\t192.0.2.3\tTCP\n',
     testT: ':host.example.com:11:\\300\\000\\002\\003\\006:3600::\n',
     testW: '04686f7374076578616d706c6503636f6d00000b000100000e100005c000020306',
   },
@@ -46,7 +46,7 @@ const invalidRecords = [
     address: '',
     protocol: 'TCP',
     'bit map': '',
-    msg: /address is required/,
+    msg: /address must be a valid IPv4 address/,
   },
   {
     ...defaults,
@@ -54,7 +54,7 @@ const invalidRecords = [
     address: 'not-an-ip',
     protocol: 'TCP',
     'bit map': '',
-    msg: /address must be IPv4/,
+    msg: /address must be a valid IPv4 address/,
   },
   {
     ...defaults,
@@ -113,5 +113,13 @@ describe('WKS record', function () {
     for (const entry of ['-1', '70000', 'nosuchservice'])
       assert.throws(() => wks(`ftp ${entry}`), /known service or a port 0-65535/, entry)
     assert.equal(wks('ftp 65535').get('bit map'), 'ftp 65535')
+  })
+
+  it('stores the protocol as TCP or UDP from a name or a number', function () {
+    for (const protocol of ['tcp', 'TCP', 6, '6']) {
+      const r = new WKS({ owner: 'h.example.', ttl: 60, address: '192.0.2.1', protocol, 'bit map': 'smtp' })
+      assert.equal(r.get('protocol'), 'TCP')
+      assert.equal(WKS.fromWire(r.toWire()).get('protocol'), 'TCP')
+    }
   })
 })

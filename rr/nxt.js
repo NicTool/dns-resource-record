@@ -1,34 +1,26 @@
 import RR from '../rr.js'
 
-import { DNS_TYPE_IDS } from '../lib/binary.js'
+import { typeIdToName, typeNameToId } from '../lib/binary.js'
 
 export default class NXT extends RR {
   static typeName = 'NXT'
   static typeId = 30
   static RFCs = [2065]
-  static rdataFields = ['next domain', ['type bit map', 'list']]
+  static rdataFields = [
+    ['next domain', 'fqdn'],
+    ['type bit map', 'list'],
+  ]
   static tags = ['obsolete']
 
-  constructor(opts) {
-    super(opts)
-    if (opts === null) return
-  }
-
   /****** Resource record specific setters   *******/
-  setNextDomain(val) {
-    if (!val) this.throwHelp(`NXT: 'next domain' is required`)
-
-    this.isFullyQualified('NXT', 'next domain', val)
-    this.isValidName('NXT', 'next domain', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('next domain', this.lowercaseName(val))
-  }
 
   setTypeBitMap(val) {
     if (!val) this.throwHelp(`NXT: 'type bit map' is required`)
-
-    this.set('type bit map', val)
+    try {
+      this.set('type bit map', nxtBitmapToTypes(typesToNxtBitmap(val)))
+    } catch (e) {
+      this.throwHelp(e.message)
+    }
   }
 
   getDescription() {
@@ -74,27 +66,23 @@ export default class NXT extends RR {
 }
 
 function nxtBitmapToTypes(bitmap) {
-  const DNS_TYPE_NAMES = Object.fromEntries(Object.entries(DNS_TYPE_IDS).map(([k, v]) => [v, k]))
   const types = []
-  for (let i = 0; i < bitmap.length; i++) {
-    const byte = bitmap[i]
-    for (let bit = 0; bit < 8; bit++) {
-      if (byte & (0x80 >> bit)) {
-        const typeId = i * 8 + bit
-        types.push(DNS_TYPE_NAMES[typeId] ?? `TYPE${typeId}`)
-      }
-    }
+  for (let id = 0; id < bitmap.length * 8; id++) {
+    if (bitmap[id >> 3] & (0x80 >> (id & 7))) types.push(typeIdToName(id))
   }
   return types.join(' ')
 }
 
-function typesToNxtBitmap(typeNamesStr) {
+// RFC 2535 §5.2: one bit per type 1-127, trailing zero octets omitted. Bit 0
+// would announce an extended format that was never defined.
+function typesToNxtBitmap(typeNames) {
   const bitmap = new Uint8Array(16)
-  for (const name of typeNamesStr.trim().split(/\s+/)) {
-    const id = /^TYPE\d+$/i.test(name) ? parseInt(name.slice(4), 10) : DNS_TYPE_IDS[name.toUpperCase()]
-    if (id !== undefined && id < 128) bitmap[Math.floor(id / 8)] |= 0x80 >> (id % 8)
+  let length = 0
+  for (const name of typeNames.trim().split(/\s+/)) {
+    const id = typeNameToId(name)
+    if (id < 1 || id > 127) throw new Error(`NXT: type ${name} is outside 1-127 (RFC 2535 §5.2)`)
+    bitmap[id >> 3] |= 0x80 >> (id & 7)
+    length = Math.max(length, (id >> 3) + 1)
   }
-  let len = bitmap.length
-  while (len > 0 && bitmap[len - 1] === 0) len--
-  return bitmap.slice(0, len)
+  return bitmap.subarray(0, length)
 }

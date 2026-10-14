@@ -16,11 +16,6 @@ export default class NSEC3 extends RR {
   ]
   static tags = ['dnssec']
 
-  constructor(opts) {
-    super(opts)
-    if (opts === null) return
-  }
-
   /****** Resource record specific setters   *******/
   setHashAlgorithm(val) {
     if (val === undefined) this.throwHelp(`NSEC3: 'hash algorithm' is required`)
@@ -40,11 +35,12 @@ export default class NSEC3 extends RR {
     this.set('iterations', val)
   }
 
+  // RFC 5155 §3.3: case-insensitive hex, or "-" for an empty salt.
   setSalt(val) {
-    // RFC 5155 §3.3: case-insensitive hex, or "-" for an empty salt.
-    if (val === undefined || val === '') this.throwHelp(`NSEC3: 'salt' is required, "-" when empty`)
+    const typeName = this.constructor.typeName
+    if (val === undefined || val === '') this.throwHelp(`${typeName}: 'salt' is required, "-" when empty`)
     if (val !== '-' && !/^([0-9a-fA-F]{2}){1,255}$/.test(val))
-      this.throwHelp(`NSEC3: 'salt' must be hex octets or "-"`)
+      this.throwHelp(`${typeName}: 'salt' must be hex octets or "-"`)
     this.set('salt', val.toLowerCase())
   }
 
@@ -66,7 +62,7 @@ export default class NSEC3 extends RR {
 
   setTypeBitMaps(val) {
     // RFC 5155 §3.2: an empty non-terminal has no types.
-    this.set('type bit maps', val ?? '')
+    this.setTypeList('type bit maps', val ?? '')
   }
 
   getDescription() {
@@ -98,7 +94,7 @@ export default class NSEC3 extends RR {
 
   // RFC 5155 §3.2: the salt and hash are length-prefixed binary.
   getWireRdata() {
-    const salt = this.get('salt') === '-' ? new Uint8Array(0) : BINARY.hexToBytes(this.get('salt'))
+    const salt = saltToBytes(this.get('salt'))
     const hash = BINARY.base32hexToBytes(this.get('next hashed owner name'))
     const bitmap = BINARY.typesToBitmap(this.get('type bit maps'))
 
@@ -132,8 +128,16 @@ function unpackRdata(bytes) {
     'hash algorithm': bytes[0],
     flags: bytes[1],
     iterations: new DataView(bytes.buffer, bytes.byteOffset).getUint16(2),
-    salt: saltLen ? BINARY.bytesToHex(bytes.subarray(5, hashLenAt)) : '-',
+    salt: saltFromBytes(bytes.subarray(5, hashLenAt)),
     'next hashed owner name': BINARY.bytesToBase32hex(bytes.subarray(hashStart, hashStart + hashLen)),
     'type bit maps': BINARY.bitmapToTypes(bytes.subarray(hashStart + hashLen)),
   }
+}
+
+export function saltToBytes(salt) {
+  return salt === '-' ? new Uint8Array(0) : BINARY.hexToBytes(salt)
+}
+
+export function saltFromBytes(bytes) {
+  return bytes.length ? BINARY.bytesToHex(bytes) : '-'
 }

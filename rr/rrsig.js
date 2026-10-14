@@ -1,7 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
-import * as WIRE from '../lib/binary.js'
-import * as WIRELIB from '../lib/wire.js'
 import { nameToLabels } from '../lib/name.js'
 
 export default class RRSIG extends RR {
@@ -90,10 +87,11 @@ export default class RRSIG extends RR {
       this.throwHelp(`RRSIG: signers name ${signer} is not the owner or an ancestor of it`)
   }
 
+  // RFC 4034 §3.2: base64, which a master file may split with whitespace
   setSignature(val) {
-    // RFC 4034 §3.2: presentation form is base64; wire form is decoded bytes.
-    this.isBase64('RRSIG', 'signature', String(val).replace(/[\s()]/g, ''))
-    this.set('signature', val)
+    const signature = String(val).replace(/[\s()]/g, '')
+    this.isBase64('RRSIG', 'signature', signature)
+    this.set('signature', signature)
   }
 
   getAlgorithmOptions() {
@@ -143,92 +141,5 @@ export default class RRSIG extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-
-  fromTinydns({ tinyline }) {
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (parseInt(n, 10) !== this.getTypeId()) this.throwHelp('RRSIG fromTinydns, invalid n')
-
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    const typeCovered = dv.getUint16(0)
-    const algorithm = bytes[2]
-    const labels = bytes[3]
-    const originalTtl = dv.getUint32(4)
-    const signatureExpiration = dv.getUint32(8)
-    const signatureInception = dv.getUint32(12)
-    const keyTag = dv.getUint16(16)
-
-    let pos = 18
-    const labelArr = []
-    while (pos < bytes.length) {
-      const len = bytes[pos++]
-      if (len === 0) break
-      labelArr.push(new TextDecoder().decode(bytes.subarray(pos, pos + len)))
-      pos += len
-    }
-    const signersName = `${labelArr.join('.')}.`
-    const signature = WIRE.bytesToBase64(bytes.subarray(pos))
-
-    return new RRSIG({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'RRSIG',
-      'type covered': typeCovered,
-      algorithm,
-      labels,
-      'original ttl': originalTtl,
-      'signature expiration': signatureExpiration,
-      'signature inception': signatureInception,
-      'key tag': keyTag,
-      'signers name': signersName,
-      signature,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   /******  EXPORTERS   *******/
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt16toOctal(this.get('type covered')) +
-        TINYDNS.UInt8toOctal(this.get('algorithm')) +
-        TINYDNS.UInt8toOctal(this.get('labels')) +
-        TINYDNS.UInt32toOctal(this.get('original ttl')) +
-        TINYDNS.UInt32toOctal(this.get('signature expiration')) +
-        TINYDNS.UInt32toOctal(this.get('signature inception')) +
-        TINYDNS.UInt16toOctal(this.get('key tag')) +
-        TINYDNS.packDomainName(this.get('signers name')) +
-        TINYDNS.base64toOctal(this.get('signature').replace(/[\s()]/g, '')),
-    )
-  }
-
-  getWireRdata() {
-    const signerBytes = WIRELIB.wirePackDomain(this.get('signers name'))
-    const sigBytes = WIRE.base64ToBytes(this.get('signature').replace(/[\s()]/g, ''))
-
-    const totalLen = 2 + 1 + 1 + 4 + 4 + 4 + 2 + signerBytes.length + sigBytes.length
-    const bytes = new Uint8Array(totalLen)
-    const dv = new DataView(bytes.buffer, bytes.byteOffset)
-
-    let pos = 0
-    dv.setUint16(pos, this.get('type covered'))
-    pos += 2
-    bytes[pos++] = this.get('algorithm')
-    bytes[pos++] = this.get('labels')
-    dv.setUint32(pos, this.get('original ttl'))
-    pos += 4
-    dv.setUint32(pos, this.get('signature expiration'))
-    pos += 4
-    dv.setUint32(pos, this.get('signature inception'))
-    pos += 4
-    dv.setUint16(pos, this.get('key tag'))
-    pos += 2
-    bytes.set(signerBytes, pos)
-    pos += signerBytes.length
-    bytes.set(sigBytes, pos)
-
-    return bytes
-  }
 }

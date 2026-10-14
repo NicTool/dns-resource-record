@@ -34,7 +34,4 @@ export default class A extends RR {
   }
 
   /******  EXPORTERS   *******/
-  getWireRdata() {
-    return new Uint8Array(this.get('address').split('.').map(Number))
-  }
 }

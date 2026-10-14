@@ -26,7 +26,7 @@ const validRecords = [
     priority: 0,
     'target name': 'foosvc.example.net.',
     params: '',
-    testB: '_8080._foo.example.com.\t3600\tIN\tSVCB\t0\tfoosvc.example.net.\t\n',
+    testB: '_8080._foo.example.com.\t3600\tIN\tSVCB\t0\tfoosvc.example.net.\n',
     testT: ':_8080._foo.example.com:64:\\000\\000\\006foosvc\\007example\\003net\\000:3600::\n',
     testW:
       '055f38303830045f666f6f076578616d706c6503636f6d000040000100000e100016000006666f6f737663076578616d706c65036e657400',
@@ -43,7 +43,7 @@ const validRecords = [
     priority: 1,
     'target name': 'nictool.tnpi.net.',
     params: '',
-    testB: '_443._tcp.nictool.tnpi.net.\t3600\tIN\tSVCB\t1\tnictool.tnpi.net.\t\n',
+    testB: '_443._tcp.nictool.tnpi.net.\t3600\tIN\tSVCB\t1\tnictool.tnpi.net.\n',
     testT: ':_443._tcp.nictool.tnpi.net:64:\\000\\001\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '045f343433045f746370076e6963746f6f6c04746e7069036e6574000040000100000e1000140001076e6963746f6f6c04746e7069036e657400',
@@ -103,6 +103,8 @@ describe('SVCB record', function () {
 
     it('rejects a mandatory key that is absent', function () {
       assert.throws(() => svcb(1, 'mandatory=port alpn=h2'), /mandatory keys missing: port/)
+      assert.throws(() => svcb(1, 'MANDATORY=port alpn=h2'), /mandatory keys missing: port/)
+      assert.throws(() => svcb(1, 'key0=key3 alpn=h2'), /mandatory keys missing: port/)
       assert.equal(svcb(1, 'mandatory=port port=443').get('params'), 'mandatory=port port=443')
     })
 

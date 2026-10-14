@@ -1,6 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
-import * as BINARY from '../lib/binary.js'
 
 export default class OPENPGPKEY extends RR {
   static typeName = 'OPENPGPKEY'
@@ -36,25 +34,5 @@ export default class OPENPGPKEY extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('OPENPGPKEY fromTinydns, invalid n')
-    return new OPENPGPKEY({
-      owner,
-      ttl,
-      type: 'OPENPGPKEY',
-      'public key': TINYDNS.octalToBase64(rdata),
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-  toTinydns() {
-    return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('public key')))
-  }
-
-  getWireRdata() {
-    return BINARY.base64ToBytes(this.get('public key'))
-  }
 }

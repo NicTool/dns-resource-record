@@ -12,7 +12,7 @@ const validRecords = [
     data: 'AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=',
     testB: 'host.example.com.\t3600\tIN\tDHCID\tAAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=\n',
     testT:
-      ':host.example.com:49:\\000\\002\\001co\\300\\270\\047\\034\\202\\202\\133\\261\\254\\134A\\317SQ\\252i\\264\\376\\275\\224\\350\\361\\174\\333\\225\\000\\015\\244\\214\\100:3600::\n',
+      ":host.example.com:49:\\000\\002\\001co\\300\\270'\\034\\202\\202[\\261\\254\\134A\\317SQ\\252i\\264\\376\\275\\224\\350\\361|\\333\\225\\000\\015\\244\\214@:3600::\n",
   },
   {
     owner: 'dhcid.nictool.tnpi.net.',

@@ -75,15 +75,4 @@ export default class CAA extends RR {
   }
 
   /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    const tag = new TextEncoder().encode(this.get('tag'))
-    const value = new TextEncoder().encode(this.get('value'))
-    const result = new Uint8Array(2 + tag.length + value.length)
-    result[0] = this.get('flags')
-    result[1] = tag.length
-    result.set(tag, 2)
-    result.set(value, 2 + tag.length)
-    return result
-  }
 }

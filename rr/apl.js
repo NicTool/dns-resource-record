@@ -1,6 +1,5 @@
 import RR from '../rr.js'
-
-import * as TINYDNS from '../lib/tinydns.js'
+import { ipv4Bytes, ipv6Bytes, ipv6ToPresentation } from '../lib/wire.js'
 
 export default class APL extends RR {
   static typeName = 'APL'
@@ -8,14 +7,16 @@ export default class APL extends RR {
   static RFCs = [3123]
   static rdataFields = [['apl rdata', 'list']]
 
-  constructor(opts) {
-    super(opts)
-  }
-
   /****** Resource record specific setters   *******/
   setAplRdata(val) {
     if (!val) this.throwHelp('APL: apl rdata is required')
-    this.set('apl rdata', val)
+    const items = val.trim().split(/\s+/)
+    try {
+      items.forEach(itemToWire)
+    } catch (e) {
+      this.throwHelp(e.message)
+    }
+    this.set('apl rdata', items.join(' '))
   }
 
   getDescription() {
@@ -33,206 +34,54 @@ export default class APL extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // APL via generic, :fqdn:42:rdata:ttl:timestamp:lo
-    const [fqdn, n, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    if (n != 42) this.throwHelp('APL fromTinydns, invalid n')
 
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const items = []
-    let pos = 0
-
-    while (pos < bytes.length) {
-      const afi = (bytes[pos] << 8) | bytes[pos + 1]
-      pos += 2
-      const prefix = bytes[pos]
-      pos++
-      const adfLenByte = bytes[pos]
-      pos++
-      const neg = (adfLenByte & 0x80) !== 0
-      const addrLen = adfLenByte & 0x7f
-      const addrBytes = bytes.subarray(pos, pos + addrLen)
-      pos += addrLen
-
-      let addr
-      if (afi === 1) {
-        const padded = new Uint8Array(4)
-        padded.set(addrBytes)
-        addr = [...padded].join('.')
-      } else {
-        const padded = new Uint8Array(16)
-        padded.set(addrBytes)
-        const paddedDv = new DataView(padded.buffer)
-        const groups = []
-        for (let i = 0; i < 16; i += 2) groups.push(paddedDv.getUint16(i).toString(16).padStart(4, '0'))
-        addr = this.compressIPv6(groups.join(':'))
-      }
-
-      items.push(`${neg ? '!' : ''}${afi}:${addr}/${prefix}`)
-    }
-
-    return new APL({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'APL',
-      'apl rdata': items.join(' '),
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
+  // RFC 3123 §4: ADDRESSFAMILY(2) PREFIX(1) N|AFDLENGTH(1) AFDPART
   fromWire({ owner, cls, ttl, rdata }) {
     const items = []
-    let pos = 0
-    while (pos < rdata.length) {
+    for (let pos = 0; pos < rdata.length;) {
+      if (pos + 4 > rdata.length) throw new Error('APL: rdata ends inside an item header')
       const afi = (rdata[pos] << 8) | rdata[pos + 1]
-      pos += 2
-      const prefix = rdata[pos++]
-      const adfLenByte = rdata[pos++]
-      const neg = (adfLenByte & 0x80) !== 0
-      const addrLen = adfLenByte & 0x7f
-      const addrBytes = rdata.subarray(pos, pos + addrLen)
-      pos += addrLen
-
-      let addr
-      if (afi === 1) {
-        const padded = new Uint8Array(4)
-        padded.set(addrBytes)
-        addr = [...padded].join('.')
-      } else {
-        const padded = new Uint8Array(16)
-        padded.set(addrBytes)
-        const dv = new DataView(padded.buffer)
-        const groups = []
-        for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
-        addr = this.compressIPv6(groups.join(':'))
-      }
-      items.push(`${neg ? '!' : ''}${afi}:${addr}/${prefix}`)
+      const size = AFD_BYTES[afi]
+      if (!size) throw new Error(`APL: unknown address family ${afi}`)
+      const afdLength = rdata[pos + 3] & 0x7f
+      if (afdLength > size || pos + 4 + afdLength > rdata.length)
+        throw new Error('APL: address part overruns the item')
+      const address = new Uint8Array(size)
+      address.set(rdata.subarray(pos + 4, pos + 4 + afdLength))
+      const text = afi === 1 ? address.join('.') : this.compressIPv6(ipv6ToPresentation(address))
+      items.push(`${rdata[pos + 3] & 0x80 ? '!' : ''}${afi}:${text}/${rdata[pos + 2]}`)
+      pos += 4 + afdLength
     }
-    return new APL({
-      owner,
-      ttl,
-      class: cls,
-      type: 'APL',
-      'apl rdata': items.join(' '),
-    })
+    return new APL({ owner, ttl, class: cls, type: 'APL', 'apl rdata': items.join(' ') })
   }
 
   /******  EXPORTERS   *******/
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      this.get('apl rdata')
-        .split(/\s+/)
-        .map((item) => {
-          const neg = item.startsWith('!')
-          const bare = neg ? item.slice(1) : item
-          const colonIdx = bare.indexOf(':')
-          const afi = parseInt(bare.slice(0, colonIdx), 10)
-          const rest = bare.slice(colonIdx + 1)
-          const slashIdx = rest.lastIndexOf('/')
-          const addr = rest.slice(0, slashIdx)
-          const prefix = parseInt(rest.slice(slashIdx + 1), 10)
-
-          let addrBytes
-          if (afi === 1) {
-            addrBytes = new Uint8Array(addr.split('.').map((n) => parseInt(n, 10)))
-          } else {
-            const dblIdx = addr.indexOf('::')
-            let groups
-            if (dblIdx !== -1) {
-              const left = addr
-                .slice(0, dblIdx)
-                .split(':')
-                .filter((s) => s !== '')
-              const right = addr
-                .slice(dblIdx + 2)
-                .split(':')
-                .filter((s) => s !== '')
-              groups = [...left, ...Array(8 - left.length - right.length).fill('0000'), ...right]
-            } else {
-              groups = addr.split(':')
-            }
-            const hexStr = groups.map((g) => g.padStart(4, '0')).join('')
-            addrBytes = Uint8Array.from({ length: hexStr.length / 2 }, (_, i) =>
-              parseInt(hexStr.slice(i * 2, i * 2 + 2), 16),
-            )
-          }
-
-          let len = addrBytes.length
-          while (len > 0 && addrBytes[len - 1] === 0) len--
-          const afdPart = addrBytes.slice(0, len)
-
-          let r = TINYDNS.UInt16toOctal(afi)
-          r += TINYDNS.UInt8toOctal(prefix)
-          r += TINYDNS.UInt8toOctal((neg ? 0x80 : 0) | afdPart.length)
-          for (const b of afdPart) r += TINYDNS.UInt8toOctal(b)
-          return r
-        })
-        .join(''),
-    )
-  }
 
   getWireRdata() {
-    const items = this.get('apl rdata').split(/\s+/)
-    const rdata = []
-
-    for (const item of items) {
-      const neg = item.startsWith('!')
-      const bare = neg ? item.slice(1) : item
-      const colonIdx = bare.indexOf(':')
-      const afi = parseInt(bare.slice(0, colonIdx), 10)
-      const rest = bare.slice(colonIdx + 1)
-      const slashIdx = rest.lastIndexOf('/')
-      const addr = rest.slice(0, slashIdx)
-      const prefix = parseInt(rest.slice(slashIdx + 1), 10)
-
-      let addrBytes
-      if (afi === 1) {
-        addrBytes = new Uint8Array(addr.split('.').map((n) => parseInt(n, 10)))
-      } else {
-        const dblIdx = addr.indexOf('::')
-        let groups
-        if (dblIdx !== -1) {
-          const left = addr
-            .slice(0, dblIdx)
-            .split(':')
-            .filter((s) => s !== '')
-          const right = addr
-            .slice(dblIdx + 2)
-            .split(':')
-            .filter((s) => s !== '')
-          groups = [...left, ...Array(8 - left.length - right.length).fill('0000'), ...right]
-        } else {
-          groups = addr.split(':')
-        }
-        const hexStr = groups.map((g) => g.padStart(4, '0')).join('')
-        addrBytes = Uint8Array.from({ length: hexStr.length / 2 }, (_, i) =>
-          parseInt(hexStr.slice(i * 2, i * 2 + 2), 16),
-        )
-      }
-
-      let len = addrBytes.length
-      while (len > 0 && addrBytes[len - 1] === 0) len--
-      const afdPart = addrBytes.slice(0, len)
-
-      const itemBytes = new Uint8Array(4 + afdPart.length)
-      const dv = new DataView(itemBytes.buffer, itemBytes.byteOffset)
-      dv.setUint16(0, afi)
-      itemBytes[2] = prefix
-      itemBytes[3] = (neg ? 0x80 : 0) | afdPart.length
-      itemBytes.set(afdPart, 4)
-
-      rdata.push(itemBytes)
-    }
-
-    const totalLen = rdata.reduce((sum, r) => sum + r.length, 0)
-    const bytes = new Uint8Array(totalLen)
-    let pos = 0
-    for (const r of rdata) {
-      bytes.set(r, pos)
-      pos += r.length
-    }
-
-    return bytes
+    return Uint8Array.from(
+      this.get('apl rdata')
+        .split(' ')
+        .flatMap((item) => [...itemToWire(item)]),
+    )
   }
+}
+
+const AFD_BYTES = { 1: 4, 2: 16 }
+
+// RFC 3123 §5: [!]afi:address/prefix, sent without its trailing zero octets
+function itemToWire(item) {
+  const m = item.match(/^(!?)([12]):([^/]+)\/(\d{1,3})$/)
+  if (!m) throw new Error(`APL: item must be [!]1:IPv4/prefix or [!]2:IPv6/prefix: ${item}`)
+  const [, negation, afi, address, prefix] = m
+  const bytes = afi === '1' ? ipv4Bytes(address) : ipv6Bytes(address)
+  if (Number(prefix) > bytes.length * 8) throw new Error(`APL: prefix /${prefix} is too long: ${item}`)
+  let afdLength = bytes.length
+  while (afdLength && bytes[afdLength - 1] === 0) afdLength--
+  return Uint8Array.from([
+    0,
+    Number(afi),
+    Number(prefix),
+    (negation ? 0x80 : 0) | afdLength,
+    ...bytes.subarray(0, afdLength),
+  ])
 }

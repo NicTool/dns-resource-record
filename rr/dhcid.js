@@ -1,7 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-
 export default class DHCID extends RR {
   static typeName = 'DHCID'
   static typeId = 49
@@ -34,32 +32,6 @@ export default class DHCID extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // DHCID via generic, :fqdn:49:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('DHCID fromTinydns, invalid n')
-
-    return new DHCID({
-      owner,
-      ttl,
-      type: 'DHCID',
-      data: TINYDNS.octalToBase64(rdata),
-      timestamp,
-      location,
-    })
-  }
 
   /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    return new Uint8Array(
-      atob(this.get('data'))
-        .split('')
-        .map((c) => c.charCodeAt(0)),
-    )
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(TINYDNS.base64toOctal(this.get('data')))
-  }
 }

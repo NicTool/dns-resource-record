@@ -26,7 +26,7 @@ const validRecords = [
     priority: 0,
     'target name': 'foosvc.example.net.',
     params: '',
-    testB: '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\t\n',
+    testB: '_8080._foo.example.com.\t3600\tIN\tHTTPS\t0\tfoosvc.example.net.\n',
     testT: ':_8080._foo.example.com:65:\\000\\000\\006foosvc\\007example\\003net\\000:3600::\n',
     testW:
       '055f38303830045f666f6f076578616d706c6503636f6d000041000100000e100016000006666f6f737663076578616d706c65036e657400',
@@ -43,7 +43,7 @@ const validRecords = [
     priority: 0,
     'target name': 'nictool.tnpi.net.',
     params: '',
-    testB: 'www.nictool.tnpi.net.\t3600\tIN\tHTTPS\t0\tnictool.tnpi.net.\t\n',
+    testB: 'www.nictool.tnpi.net.\t3600\tIN\tHTTPS\t0\tnictool.tnpi.net.\n',
     testT: ':www.nictool.tnpi.net:65:\\000\\000\\007nictool\\004tnpi\\003net\\000:3600::\n',
     testW:
       '03777777076e6963746f6f6c04746e7069036e6574000041000100000e1000140000076e6963746f6f6c04746e7069036e657400',

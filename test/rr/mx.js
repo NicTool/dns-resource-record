@@ -106,4 +106,11 @@ describe('MX record', function () {
     const mx = new MX({ owner: 'a.example.', ttl: 60, type: 'MX', preference: 0, exchange: '.' })
     assert.equal(mx.toMaraDNS(), 'a.example.\t+60\tRAW 15\t\\x00\\x00\\x00 ~\n')
   })
+
+  it('rejects wire rdata too short for its fixed fields', function () {
+    assert.throws(
+      () => new MX(null).fromWire({ owner: 'a.example.', cls: 'IN', ttl: 60, rdata: Uint8Array.from([0]) }),
+      /MX: rdata is truncated/,
+    )
+  })
 })

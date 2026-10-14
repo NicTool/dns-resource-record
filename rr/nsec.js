@@ -6,29 +6,17 @@ export default class NSEC extends RR {
   static typeName = 'NSEC'
   static typeId = 47
   static RFCs = [4034]
-  static rdataFields = ['next domain', ['type bit maps', 'list']]
+  static rdataFields = [
+    ['next domain', 'fqdn'],
+    ['type bit maps', 'list'],
+  ]
   static tags = ['dnssec']
 
-  constructor(opts) {
-    super(opts)
-    if (opts === null) return
-  }
-
   /****** Resource record specific setters   *******/
-  setNextDomain(val) {
-    if (!val) this.throwHelp(`NSEC: 'next domain' is required:`)
-
-    this.isFullyQualified('NSEC', 'next domain', val)
-    this.isValidName('NSEC', 'next domain', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('next domain', this.lowercaseName(val))
-  }
 
   setTypeBitMaps(val) {
     if (!val) this.throwHelp(`NSEC: 'type bit maps' is required`)
-
-    this.set('type bit maps', val)
+    this.setTypeList('type bit maps', val)
   }
 
   getDescription() {

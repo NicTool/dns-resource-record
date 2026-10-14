@@ -1,8 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-import * as BINARY from '../lib/binary.js'
-
 // RFC 6698 §2.1.3: matching types 1 and 2 are SHA-256 and SHA-512 digests.
 const DIGEST_BYTES = { 1: 32, 2: 64 }
 
@@ -68,7 +65,7 @@ export default class TLSA extends RR {
 
   setCertificateAssociationData(val) {
     this.isHexDigest('certificate association data', val, DIGEST_BYTES[this.get('matching type')])
-    this.set('certificate association data', val)
+    this.set('certificate association data', val.toUpperCase())
   }
 
   getDescription() {
@@ -90,42 +87,5 @@ export default class TLSA extends RR {
 
   /******  IMPORTERS   *******/
 
-  fromTinydns({ tinyline }) {
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('TLSA fromTinydns, invalid n')
-
-    const bytes = TINYDNS.octalRdataToBytes(rdata)
-
-    return new TLSA({
-      owner,
-      ttl,
-      type: 'TLSA',
-      'certificate usage': bytes[0],
-      selector: bytes[1],
-      'matching type': bytes[2],
-      'certificate association data': BINARY.bytesToHex(bytes.subarray(3)),
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt8toOctal(this.get('certificate usage')) +
-        TINYDNS.UInt8toOctal(this.get('selector')) +
-        TINYDNS.UInt8toOctal(this.get('matching type')) +
-        TINYDNS.packHex(this.get('certificate association data').replace(/[\s()]/g, '')),
-    )
-  }
-
-  getWireRdata() {
-    const cadBytes = BINARY.hexToBytes(this.get('certificate association data').replace(/[\s()]/g, ''))
-    const bytes = new Uint8Array(3 + cadBytes.length)
-    bytes[0] = this.get('certificate usage')
-    bytes[1] = this.get('selector')
-    bytes[2] = this.get('matching type')
-    bytes.set(cadBytes, 3)
-    return bytes
-  }
 }

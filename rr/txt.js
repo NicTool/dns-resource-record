@@ -12,13 +12,26 @@ export default class TXT extends RR {
   static rdataFields = [['data', 'charstrs']]
   static tags = ['common']
 
-  constructor(opts) {
-    super(opts)
+  /****** Resource record specific setters   *******/
+  // An array keeps the character-string boundaries it was given (RFC 1035
+  // §3.3.14), so each element must already fit in 255 bytes.
+  setData(val) {
+    const typeName = this.constructor.typeName
+    const strings = Array.isArray(val) ? val : [val]
+    if (!strings.length || strings.some((s) => typeof s !== 'string'))
+      this.throwHelp(`${typeName}: data must be a string or a non-empty array of strings`)
+    if (Array.isArray(val) && val.some((s) => new TextEncoder().encode(s).length > 255))
+      this.throwHelp(
+        `${typeName}: each string in a data array must be <=255 bytes; pass one string to split it`,
+      )
+    this.set('data', val)
   }
 
-  /****** Resource record specific setters   *******/
-  setData(val) {
-    this.set('data', val)
+  // A single string is split into 255-byte character-strings on UTF-8 boundaries.
+  getCharStrings() {
+    const data = this.get('data')
+    if (Array.isArray(data)) return data
+    return data === '' ? [''] : chunkByBytes(data, 255)
   }
 
   getDescription() {
@@ -60,43 +73,14 @@ export default class TXT extends RR {
 
   /******  EXPORTERS   *******/
   toBind(zone_opts) {
-    return `${this.getPrefix(zone_opts)}\t"${asQuotedStrings(this.get('data'))}"\n`
+    return `${this.getPrefix(zone_opts)}\t"${this.getCharStrings().map(escapeCharString).join('" "')}"\n`
   }
 
   toMaraDNS() {
     this.assertClassIN('MaraDNS')
     // csv2_txt(5): an unquoted ';' separates chunks.
-    const data = asQuotedStrings(this.get('data'), { quote: quoteCharString, delimiter: ';' })
+    const data = this.getCharStrings().map(quoteCharString).join(';')
     return `${this.get('owner')}\t+${this.get('ttl')}\t${this.get('type')}\t${data} ~\n`
-  }
-
-  getWireRdata() {
-    // RFC 1035 §3.3.14: TXT rdata is one or more <character-string>s, each up
-    // to 255 bytes. An array preserves explicit boundaries between strings;
-    // each element MUST be <= 255 UTF-8 bytes, otherwise we would silently
-    // split it and the boundary the caller asked us to preserve would be lost.
-    // A single string is auto-chunked at 255-byte UTF-8 boundaries.
-    const data = this.get('data')
-    if (Array.isArray(data)) {
-      const enc = new TextEncoder()
-      const buffers = data.map((s, i) => {
-        if (enc.encode(s).length > 255) {
-          this.throwHelp(
-            `TXT: array element ${i} exceeds 255 bytes; split it yourself or pass a single string to auto-chunk`,
-          )
-        }
-        return packStringWire(s)
-      })
-      const total = buffers.reduce((n, b) => n + b.length, 0)
-      const out = new Uint8Array(total)
-      let off = 0
-      for (const b of buffers) {
-        out.set(b, off)
-        off += b.length
-      }
-      return out
-    }
-    return packStringWire(data)
   }
 
   // A ' line can hold only one string of 1 to 127 bytes, since tinydns-data
@@ -108,21 +92,6 @@ export default class TXT extends RR {
       return this.getTinydnsGeneric(TINYDNS.bytesToTinydnsText(this.getWireRdata()))
     return `'${this.getTinyFQDN('owner')}:${TINYDNS.bytesToTinydnsText(bytes)}:${this.getTinydnsPostamble()}\n`
   }
-}
-
-// RFC 1035 character-strings are 255 bytes max. The limit counts wire bytes,
-// so chunk the unescaped value by UTF-8 bytes and escape each chunk afterwards.
-function asQuotedStrings(data, { quote = escapeCharString, delimiter = '" "' } = {}) {
-  const enc = new TextEncoder()
-
-  if (Array.isArray(data)) {
-    const anyTooLong = data.some((s) => enc.encode(s).length > 255)
-    if (!anyTooLong) return data.map(quote).join(delimiter)
-    return chunkByBytes(data.join(''), 255).map(quote).join(delimiter)
-  }
-
-  if (enc.encode(data).length <= 255) return quote(data)
-  return chunkByBytes(data, 255).map(quote).join(delimiter)
 }
 
 function chunkByBytes(str, maxBytes) {
@@ -138,21 +107,6 @@ function chunkByBytes(str, maxBytes) {
     start = end
   }
   return chunks
-}
-
-function packStringWire(str) {
-  if (str === '') return new Uint8Array([0])
-
-  const enc = new TextEncoder()
-  const chunks = chunkByBytes(str, 255).map((c) => enc.encode(c))
-  const buf = new Uint8Array(chunks.reduce((n, c) => n + 1 + c.length, 0))
-  let offset = 0
-  for (const chunk of chunks) {
-    buf[offset++] = chunk.length
-    buf.set(chunk, offset)
-    offset += chunk.length
-  }
-  return buf
 }
 
 const TINYDNS_TXT_CHUNK = 127

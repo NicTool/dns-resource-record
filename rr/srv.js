@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 
 export default class SRV extends RR {
   static typeName = 'SRV'
@@ -52,24 +51,11 @@ export default class SRV extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    const str = tinyline
-    let fqdn, addr, port, pri, weight, ttl, ts, loc, n, rdata
+  fromTinydns(opts) {
+    if (opts.tinyline[0] === ':') return this.fromTinydnsWire(opts)
 
-    if (str[0] === 'S') {
-      // patched tinydns with S records
-      ;[fqdn, addr, port, pri, weight, ttl, ts, loc] = str.slice(1).split(':')
-    } else {
-      // tinydns generic record format
-      ;[fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
-      if (n != 33) this.throwHelp('SRV fromTinydns: invalid n')
-
-      pri = TINYDNS.octalToUInt16(rdata.slice(0, 8))
-      weight = TINYDNS.octalToUInt16(rdata.slice(8, 16))
-      port = TINYDNS.octalToUInt16(rdata.slice(16, 24))
-      addr = TINYDNS.unpackDomainName(rdata.slice(24))[0]
-    }
-
+    // patched tinydns with S records
+    const [fqdn, addr, port, pri, weight, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     return new SRV({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
@@ -81,30 +67,5 @@ export default class SRV extends RR {
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
-  }
-
-  /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    const target = this.wirePackDomain(this.get('target'))
-    const result = new Uint8Array(6 + target.length)
-    const dv = new DataView(result.buffer)
-    dv.setUint16(0, this.get('priority'))
-    dv.setUint16(2, this.get('weight'))
-    dv.setUint16(4, this.get('port'))
-    result.set(target, 6)
-    return result
-  }
-
-  toTinydns() {
-    let rdata = ''
-
-    for (const e of ['priority', 'weight', 'port']) {
-      rdata += TINYDNS.UInt16toOctal(this.get(e))
-    }
-
-    rdata += TINYDNS.packDomainName(this.get('target'))
-
-    return this.getTinydnsGeneric(rdata)
   }
 }

@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 import * as BINARY from '../lib/binary.js'
 import * as WIRE from '../lib/wire.js'
 
@@ -18,11 +17,6 @@ export default class TSIG extends RR {
     BADALG: 21,
     BADTRUNC: 22,
     BADCOOKIE: 23,
-  }
-
-  constructor(opts) {
-    super(opts)
-    if (opts === null) return
   }
 
   /****** Resource record specific setters   *******/
@@ -58,8 +52,7 @@ export default class TSIG extends RR {
   }
 
   setAlgorithmName(val) {
-    if (!val) this.throwHelp(`TSIG: 'algorithm name' is required`)
-    this.set('algorithm name', val)
+    this.setTypedValue('fqdn', 'algorithm name', val)
   }
 
   setTimeSigned(val) {
@@ -150,34 +143,6 @@ export default class TSIG extends RR {
     })
   }
 
-  fromTinydns({ tinyline }) {
-    const [owner, _typeId, rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-
-    const algUnpacked = TINYDNS.unpackDomainName(rdata)
-    const algBinaryLen = algUnpacked[2]
-
-    const bytes = Uint8Array.from(TINYDNS.octalToChar(rdata), (c) => c.charCodeAt(0))
-    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-
-    const { timeSigned, fudge, mac, originalId, error, other } = unpackTail(bytes, dv, algBinaryLen)
-
-    return new TSIG({
-      owner: this.fullyQualify(owner),
-      ttl: parseInt(ttl, 10),
-      class: 'ANY',
-      type: 'TSIG',
-      'algorithm name': algUnpacked[0],
-      'time signed': timeSigned,
-      fudge,
-      mac,
-      'original id': originalId,
-      error,
-      other,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   fromWire({ owner, cls, ttl, rdata }) {
     const { fqdn: algorithmName, end } = this.wireUnpackDomain(rdata, 0)
     const dv = new DataView(rdata.buffer, rdata.byteOffset, rdata.byteLength)
@@ -249,22 +214,6 @@ export default class TSIG extends RR {
     bytes.set(otherBytes, pos)
 
     return bytes
-  }
-
-  toTinydns() {
-    const time = this.get('time signed')
-    return this.getTinydnsGeneric(
-      TINYDNS.packDomainName(this.get('algorithm name')) +
-        TINYDNS.UInt16toOctal(Math.floor(time / 2 ** 32)) +
-        TINYDNS.UInt32toOctal(time % 2 ** 32) +
-        TINYDNS.UInt16toOctal(this.get('fudge')) +
-        TINYDNS.UInt16toOctal(BINARY.base64ToBytes(this.get('mac')).length) +
-        TINYDNS.base64toOctal(this.get('mac')) +
-        TINYDNS.UInt16toOctal(this.get('original id')) +
-        TINYDNS.UInt16toOctal(this.get('error')) +
-        TINYDNS.UInt16toOctal(BINARY.base64ToBytes(this.get('other')).length) +
-        TINYDNS.base64toOctal(this.get('other')),
-    )
   }
 }
 

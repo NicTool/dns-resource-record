@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 
 export default class AAAA extends RR {
   static typeName = 'AAAA'
@@ -39,53 +38,25 @@ export default class AAAA extends RR {
   }
 
   /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    const str = tinyline
-    let fqdn, ip, n, rdata, ttl, ts, loc
+  fromTinydns(opts) {
+    if (opts.tinyline[0] === ':') return this.fromTinydnsWire(opts)
 
-    switch (str[0]) {
-      case ':':
-        // GENERIC  =>  :fqdn:28:rdata:ttl:timestamp:lo
-        ;[fqdn, n, rdata, ttl, ts, loc] = str.slice(1).split(':')
-        if (n != 28) this.throwHelp('AAAA fromTinydns, invalid n')
-        ip = TINYDNS.octalToHex(rdata)
-          .match(/([0-9a-fA-F]{4})/g)
-          .join(':')
-        break
-      case '3':
-      case '6':
-        // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
-        // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
-        ;[fqdn, rdata, ttl, ts, loc] = str.slice(1).split(':')
-        ip = rdata.match(/(.{4})/g).join(':')
-        break
-    }
-
+    // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
+    // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
+    const [fqdn, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     return new AAAA({
       owner: this.fullyQualify(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'AAAA',
-      address: ip,
+      address: rdata.match(/(.{4})/g).join(':'),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
   }
 
   /******  EXPORTERS   *******/
-  getWireRdata() {
-    const hex = this.expandIPv6(this.get('address'), '')
-    const arr = new Uint8Array(hex.length / 2)
-    for (let i = 0; i < arr.length; i++) arr[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-    return arr
-  }
 
   toBind(zone_opts) {
     return `${this.getPrefix(zone_opts)}\t${this.getCompressed()}\n`
-  }
-
-  toTinydns() {
-    // from AAAA notation (8 groups of 4 hex digits) to 16 escaped octals
-    const rdata = TINYDNS.packHex(this.expandIPv6(this.get('address'), ''))
-    return this.getTinydnsGeneric(rdata)
   }
 }

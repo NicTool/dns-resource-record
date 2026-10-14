@@ -28,7 +28,7 @@ const validRecords = [
     target: 'sipdir.online.lync.com.',
     testB: '_sip._tls.example.com.\t3600\tIN\tSRV\t100\t1\t443\tsipdir.online.lync.com.\n',
     testT:
-      ':_sip._tls.example.com:33:\\000\\144\\000\\001\\001\\273\\006sipdir\\006online\\004lync\\003com\\000:3600::\n',
+      ':_sip._tls.example.com:33:\\000d\\000\\001\\001\\273\\006sipdir\\006online\\004lync\\003com\\000:3600::\n',
   },
   {
     owner: '_imaps._tcp.nictool.tnpi.net.',

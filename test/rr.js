@@ -230,6 +230,24 @@ describe('RR', function () {
     })
   })
 
+  describe('isIPv6', function () {
+    it('rejects text after an address on another line', function () {
+      assert.equal(r.isIPv6('::1'), true)
+      assert.equal(r.isIPv6('::1\nnot an address'), false)
+    })
+  })
+
+  describe('getWireRdata', function () {
+    it('throws for a field the generic encoder has no type for', function () {
+      class NOENC extends RR {
+        static typeName = 'NOENC'
+        static rdataFields = ['blob']
+      }
+      const r = new NOENC(null).set('blob', 'x')
+      assert.throws(() => r.getWireRdata(), /NOENC: no generic wire encoder for blob \(untyped\)/)
+    })
+  })
+
   describe('isValidName', function () {
     for (const n of [
       'x.',

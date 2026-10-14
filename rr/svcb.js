@@ -1,7 +1,5 @@
 import RR from '../rr.js'
 
-import * as WIRE from '../lib/wire.js'
-
 export default class SVCB extends RR {
   static typeName = 'SVCB'
   static typeId = 64
@@ -12,29 +10,13 @@ export default class SVCB extends RR {
     ['params', 'svcparams'],
   ]
 
-  constructor(opts) {
-    super(opts)
-  }
-
   /****** Resource record specific setters   *******/
   setPriority(val) {
-    this.is16bitInt('SVCB', 'priority', val)
+    const typeName = this.constructor.typeName
+    this.is16bitInt(typeName, 'priority', val)
     // RFC 9460 §2.4.2
-    if (val === 0 && this.get('params')) this.throwHelp(`SVCB: AliasMode (priority 0) takes no params`)
+    if (val === 0 && this.get('params')) this.throwHelp(`${typeName}: AliasMode (priority 0) takes no params`)
     this.set('priority', val)
-  }
-
-  setTargetName(val) {
-    if (!val) this.throwHelp('SVCB: target name is required')
-    this.isFullyQualified('SVCB', 'target name', val)
-    this.isValidName('SVCB', 'target name', val)
-
-    // RFC 4034: letters in the DNS names are lower cased
-    this.set('target name', this.lowercaseName(val))
-  }
-
-  setParams(val) {
-    this.setTypedValue('svcparams', 'params', val)
   }
 
   getDescription() {
@@ -56,14 +38,4 @@ export default class SVCB extends RR {
   /******  IMPORTERS   *******/
 
   /******  EXPORTERS   *******/
-
-  getWireRdata() {
-    const targetBytes = this.wirePackDomain(this.get('target name'))
-    const paramsBytes = WIRE.svcParamsToWire(this.get('params'))
-    const result = new Uint8Array(2 + targetBytes.length + paramsBytes.length)
-    new DataView(result.buffer).setUint16(0, this.get('priority'))
-    result.set(targetBytes, 2)
-    result.set(paramsBytes, 2 + targetBytes.length)
-    return result
-  }
 }

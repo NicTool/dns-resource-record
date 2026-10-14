@@ -59,13 +59,6 @@ export default class MX extends RR {
   }
 
   /******  EXPORTERS   *******/
-  getWireRdata() {
-    const domain = this.wirePackDomain(this.get('exchange'))
-    const result = new Uint8Array(2 + domain.length)
-    new DataView(result.buffer).setUint16(0, this.get('preference'))
-    result.set(domain, 2)
-    return result
-  }
 
   toTinydns() {
     return `@${this.getTinyFQDN('owner')}::${this.getTinyFQDN('exchange')}:${this.get('preference')}:${this.getTinydnsPostamble()}\n`

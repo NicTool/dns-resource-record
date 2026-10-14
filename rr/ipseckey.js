@@ -16,10 +16,6 @@ export default class IPSECKEY extends RR {
   ]
   static tags = ['security']
 
-  constructor(opts) {
-    super(opts)
-  }
-
   /****** Resource record specific setters   *******/
   setPrecedence(val) {
     // an 8-bit precedence for this record.
@@ -49,10 +45,14 @@ export default class IPSECKEY extends RR {
     this.set('algorithm', val)
   }
 
+  // IANA IPSECKEY Resource Record Parameters, Algorithm Type Field
   getAlgorithmOptions() {
     return new Map([
-      [1, 'DSA'],
-      [2, 'RSA'],
+      [0, 'No key is present'],
+      [1, 'DSA'], // RFC 4025
+      [2, 'RSA'], // RFC 4025
+      [3, 'ECDSA'], // RFC 8005
+      [4, 'EdDSA'], // RFC 9373
     ])
   }
 
@@ -70,14 +70,19 @@ export default class IPSECKEY extends RR {
         if (!this.isIPv6(val)) throw gwErr
         val = this.expandIPv6(val.toLowerCase())
         break
+      case 3:
+        this.isFqdnValue('IPSECKEY', 'gateway', val)
+        val = this.lowercaseName(val)
+        break
     }
 
     this.set('gateway', val)
   }
 
+  // RFC 4025 §2.4: algorithm 0 carries no key
   setPublickey(val) {
-    if (val) this.isBase64('IPSECKEY', 'publickey', val)
-    this.set('publickey', val)
+    if (val || this.get('algorithm') !== 0) this.isBase64('IPSECKEY', 'publickey', val)
+    this.set('publickey', val ?? '')
   }
 
   getDescription() {
@@ -114,14 +119,10 @@ export default class IPSECKEY extends RR {
         gateway = [...rdata.subarray(3, 7)].join('.')
         keyStart = 7
         break
-      case 2: {
-        const dv = new DataView(rdata.buffer, rdata.byteOffset + 3)
-        const groups = []
-        for (let i = 0; i < 16; i += 2) groups.push(dv.getUint16(i).toString(16).padStart(4, '0'))
-        gateway = groups.join(':')
+      case 2:
+        gateway = WIRE.ipv6ToPresentation(rdata.subarray(3, 19))
         keyStart = 19
         break
-      }
       case 3: {
         const { fqdn, end } = this.wireUnpackDomain(rdata, 3)
         gateway = fqdn
@@ -129,6 +130,7 @@ export default class IPSECKEY extends RR {
         break
       }
     }
+    if (rdata.length < 3 || keyStart > rdata.length) throw new Error('IPSECKEY: rdata is truncated')
     const publickey = BINARY.bytesToBase64(rdata.subarray(keyStart))
     return new IPSECKEY({
       owner,
@@ -155,25 +157,10 @@ export default class IPSECKEY extends RR {
         gwBytes = new Uint8Array(0)
         break
       case 1:
-        gwBytes = new Uint8Array(4)
-        this.get('gateway')
-          .split('.')
-          .forEach((part, i) => {
-            gwBytes[i] = parseInt(part, 10)
-          })
+        gwBytes = WIRE.ipv4Bytes(this.get('gateway'))
         break
       case 2:
-        gwBytes = new Uint8Array(16)
-        {
-          const parts = this.get('gateway').split(':')
-          let pos = 0
-          for (const part of parts) {
-            if (part === '') continue
-            const val = parseInt(part, 16)
-            gwBytes[pos++] = (val >>> 8) & 0xff
-            gwBytes[pos++] = val & 0xff
-          }
-        }
+        gwBytes = WIRE.ipv6Bytes(this.get('gateway'))
         break
       case 3:
         gwBytes = WIRE.wirePackDomain(this.get('gateway'))

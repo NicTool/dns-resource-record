@@ -209,9 +209,7 @@ Parse from one format, export to another:
 
 ```js
 // tinydns → BIND
-const fromTiny = RR.CAA.fromTinydns(
-  ':ns1.example.com:257:\\000\\005issue"http\\072\\057\\057letsencrypt.org":3600::\n',
-)
+const fromTiny = RR.CAA.fromTinydns(':ns1.example.com:257:\\000\\005issuehttp\\072//letsencrypt.org:3600::\n')
 console.log(fromTiny.toBind())
 // ns1.example.com.	3600	IN	CAA	0	issue	"http://letsencrypt.org"
 ```

@@ -162,20 +162,16 @@ describe('TXT record', function () {
     })
 
     it('rejects an array element longer than 255 bytes (boundary not preservable)', function () {
-      const r = new TXT({
-        owner,
-        ttl: 3600,
-        class: 'IN',
-        type: 'TXT',
-        data: ['ok', 'x'.repeat(256)],
-      })
-      assert.throws(() => r.getWireRdata(), /exceeds 255 bytes/)
+      const txt = (data) => new TXT({ owner, ttl: 3600, class: 'IN', type: 'TXT', data })
+      assert.throws(() => txt(['ok', 'x'.repeat(256)]), /each string in a data array must be <=255 bytes/)
+      assert.throws(() => txt([]), /non-empty array of strings/)
+      assert.throws(() => txt(undefined), /must be a string/)
     })
 
     it('fromTinydns rejects a truncated len-prefixed segment', function () {
       // tinydns generic with declared length 5 but only 2 trailing bytes.
       const truncated = ':example.com:16:\\005ab:3600::\n'
-      assert.throws(() => TXT.fromTinydns(truncated), /truncated character-string/)
+      assert.throws(() => TXT.fromTinydns(truncated), /TXT: rdata is truncated/)
     })
 
     it('fromWire rejects a truncated charstr in rdata', function () {
@@ -195,7 +191,7 @@ describe('TXT record', function () {
         Buffer.from([0x00, 0x04]), // rdlen 4
         Buffer.from([5, 0x61, 0x62, 0x63]), // declared len 5, only 3 chars
       ])
-      assert.throws(() => TXT.fromWire(wire), /truncated character-string/)
+      assert.throws(() => TXT.fromWire(wire), /TXT: rdata is truncated/)
     })
   })
 })

@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import NXT from '../../rr/nxt.js'
@@ -41,4 +42,12 @@ describe('NXT record', function () {
   base.fromBind(NXT, validRecords)
   base.fromTinydns(NXT, validRecords)
   base.fromWire(NXT, validRecords)
+
+  it('rejects types the NXT bit map cannot hold (RFC 2535 §5.2)', function () {
+    const nxt = (types) =>
+      new NXT({ owner: 'a.example.', ttl: 60, 'next domain': 'b.example.', 'type bit map': types })
+    assert.throws(() => nxt('A CAA'), /type CAA is outside 1-127/)
+    assert.throws(() => nxt('A BOGUS'), /invalid DNS type: BOGUS/)
+    assert.equal(nxt('nxt a').get('type bit map'), 'A NXT')
+  })
 })

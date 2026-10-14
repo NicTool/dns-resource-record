@@ -131,24 +131,6 @@ export default class SOA extends RR {
       .join('\t')} ~\n`
   }
 
-  getWireRdata() {
-    const mname = this.wirePackDomain(this.get('mname'))
-    const rname = this.wirePackDomain(this.get('rname'))
-    const result = new Uint8Array(mname.length + rname.length + 20)
-    let offset = 0
-    result.set(mname, offset)
-    offset += mname.length
-    result.set(rname, offset)
-    offset += rname.length
-    const view = new DataView(result.buffer, offset)
-    view.setUint32(0, this.get('serial'))
-    view.setUint32(4, this.get('refresh'))
-    view.setUint32(8, this.get('retry'))
-    view.setUint32(12, this.get('expire'))
-    view.setUint32(16, this.get('minimum'))
-    return result
-  }
-
   toTinydns() {
     return `Z${this.getTinyFQDN('owner')}:${this.getTinyFQDN('mname')}:${this.getTinyFQDN('rname')}:${this.getEmpty('serial')}:${this.getEmpty('refresh')}:${this.getEmpty('retry')}:${this.getEmpty('expire')}:${this.getEmpty('minimum')}:${this.getTinydnsPostamble()}\n`
   }

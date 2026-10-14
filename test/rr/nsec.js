@@ -1,4 +1,5 @@
-import { describe } from 'node:test'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 import * as base from '../base.js'
 
 import NSEC from '../../rr/nsec.js'
@@ -42,4 +43,11 @@ describe('NSEC record', function () {
   base.fromBind(NSEC, validRecords)
   base.fromTinydns(NSEC, validRecords)
   base.fromWire(NSEC, validRecords)
+
+  it('stores the type list in type order and rejects unknown types', function () {
+    const nsec = (types) =>
+      new NSEC({ owner: 'a.example.', ttl: 60, 'next domain': 'b.example.', 'type bit maps': types })
+    assert.equal(nsec('rrsig nsec A').get('type bit maps'), 'A RRSIG NSEC')
+    assert.throws(() => nsec('A BOGUS'), /type bit maps: invalid DNS type: BOGUS/)
+  })
 })

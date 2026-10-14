@@ -68,7 +68,7 @@ const invalidRecords = [
     flags: 0,
     iterations: 0,
     salt: 'XYZ', // not valid hex or dash
-    msg: /must be hex or/i,
+    msg: /must be hex octets or/i,
   },
 ]
 
@@ -92,6 +92,12 @@ describe('NSEC3PARAM record', function () {
   base.fromWire(NSEC3PARAM, validRecords)
 
   it('throws when fromTinydns RDATA is too short', function () {
-    assert.throws(() => NSEC3PARAM.fromTinydns(':example.com:51:AB:3600::\n'), /RDATA too short/)
+    assert.throws(() => NSEC3PARAM.fromTinydns(':example.com:51:AB:3600::\n'), /salt length does not match/)
+  })
+
+  it('rejects an odd-length or missing salt, as NSEC3 does', function () {
+    const base = { owner: 'example.com.', ttl: 3600, 'hash algorithm': 1, flags: 0, iterations: 0 }
+    assert.throws(() => new NSEC3PARAM({ ...base, salt: 'abc' }), /must be hex octets/)
+    assert.throws(() => new NSEC3PARAM({ ...base }), /'salt' is required/)
   })
 })

@@ -11,34 +11,34 @@ const validRecords = [
   {
     ...defaults,
     owner: 'test.example.',
-    'algorithm name': 'SAMPLE-ALG.EXAMPLE.',
+    'algorithm name': 'sample-alg.example.',
     'time signed': 853804800,
     fudge: 300,
     mac: '',
     'original id': 0,
     error: 0,
     other: '',
-    testB: 'test.example.\t0\tANY\tTSIG\tSAMPLE-ALG.EXAMPLE.\t853804800\t300\t0\t0\t0\t0\n',
+    testB: 'test.example.\t0\tANY\tTSIG\tsample-alg.example.\t853804800\t300\t0\t0\t0\t0\n',
     testT:
-      ':test.example:250:\\012SAMPLE-ALG\\007EXAMPLE\\000\\000\\000\\062\\344\\007\\000\\001\\054\\000\\000\\000\\000\\000\\000\\000\\000:0::\n',
+      ':test.example:250:\\012sample-alg\\007example\\000\\000\\000\\062\\344\\007\\000\\001\\054\\000\\000\\000\\000\\000\\000\\000\\000:0::\n',
     testW:
-      '0474657374076578616d706c650000fa00ff0000000000240a53414d504c452d414c47074558414d504c4500000032e40700012c0000000000000000',
+      '0474657374076578616d706c650000fa00ff0000000000240a73616d706c652d616c67076578616d706c6500000032e40700012c0000000000000000',
   },
   {
     ...defaults,
     owner: 'test.example.',
-    'algorithm name': 'HMAC-SHA256.',
+    'algorithm name': 'hmac-sha256.',
     'time signed': 853804800,
     fudge: 300,
     mac: '3q2+7w==',
     'original id': 12345,
     error: 0,
     other: '',
-    testB: 'test.example.\t0\tANY\tTSIG\tHMAC-SHA256.\t853804800\t300\t4\t3q2+7w==\t12345\t0\t0\n',
+    testB: 'test.example.\t0\tANY\tTSIG\thmac-sha256.\t853804800\t300\t4\t3q2+7w==\t12345\t0\t0\n',
     testT:
-      ':test.example:250:\\013HMAC-SHA256\\000\\000\\000\\062\\344\\007\\000\\001\\054\\000\\004\\336\\255\\276\\357\\060\\071\\000\\000\\000\\000:0::\n',
+      ':test.example:250:\\013hmac-sha256\\000\\000\\000\\062\\344\\007\\000\\001\\054\\000\\004\\336\\255\\276\\357\\060\\071\\000\\000\\000\\000:0::\n',
     testW:
-      '0474657374076578616d706c650000fa00ff0000000000210b484d41432d53484132353600000032e40700012c0004deadbeef303900000000',
+      '0474657374076578616d706c650000fa00ff0000000000210b686d61632d73686132353600000032e40700012c0004deadbeef303900000000',
   },
 ]
 
@@ -53,14 +53,14 @@ const invalidRecords = [
   {
     ...defaults,
     owner: 'test.example.',
-    'algorithm name': 'SAMPLE-ALG.EXAMPLE.',
+    'algorithm name': 'sample-alg.example.',
     // missing time signed
     msg: /time signed/i,
   },
   {
     ...defaults,
     owner: 'not-fqdn',
-    'algorithm name': 'SAMPLE-ALG.EXAMPLE.',
+    'algorithm name': 'sample-alg.example.',
     'time signed': 853804800,
     msg: /must be fully qualified/i,
   },
