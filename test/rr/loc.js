@@ -79,9 +79,23 @@ describe('LOC record', function () {
     ]) {
       assert.throws(() => loc(address), /out of range/, address)
     }
-    const rdata = loc(valid[0].address).getWireRdata()
-    rdata[0] = 1
-    assert.throws(() => fromRdata(rdata), /version 0/)
+    for (const address of [
+      '. 0 0 N 0 0 0 E 0m',
+      '0 0 1..2 N 0 0 0 E 0m',
+      '0 0 0 N 0 0 0 E .m',
+      '0 0 0 N 0 0 0 E 0m 1..2m',
+    ]) {
+      assert.throws(() => loc(address), /LOC address: invalid format/, address)
+    }
+    for (const [offset, octet, msg] of [
+      [0, 1, /version 0/],
+      [1, 0xa2, /nibble over 9/],
+      [2, 0x1f, /nibble over 9/],
+    ]) {
+      const rdata = loc(valid[0].address).getWireRdata()
+      rdata[offset] = octet
+      assert.throws(() => fromRdata(rdata), msg, `${offset}: ${octet}`)
+    }
     assert.throws(
       () => LOC.fromBind('a.example. 60 IN LOC 42 21 54 N 71 6 18 W -24m trailing'),
       /LOC address: invalid format/,

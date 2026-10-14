@@ -44,7 +44,8 @@ describe('RR', function () {
       r.setClass(input)
       assert.equal(r.get('class'), expected, input)
     }
-    for (const bad of ['matt', 'CLASS99999']) assert.throws(() => r.setClass(bad), /invalid class/, bad)
+    for (const bad of ['matt', 'CLASS99999', 0, 1])
+      assert.throws(() => r.setClass(bad), /invalid class/, String(bad))
   })
 
   it('getClassId resolves mnemonics and CLASSnnn', function () {
@@ -201,8 +202,11 @@ describe('RR', function () {
     assert.equal(A.fromWire(a({ class: 'CLASS32' }).toWire()).get('class'), 'CLASS32') // RFC 3597
   })
 
-  it('fromBind keeps the class and rejoins opaque rdata split across whitespace', function () {
+  it('fromBind keeps the class, takes a default TTL, and rejoins opaque rdata split across whitespace', function () {
     assert.equal(TXT.fromBind('version.bind. 0 CH TXT "9.18.1"').get('class'), 'CH')
+    for (const line of ['a.example. IN A 192.0.2.1', 'a.example. IN A \\# 4 c0000201'])
+      assert.equal(A.fromBind(line, { default: { ttl: 300 } }).get('ttl'), 300, line)
+    assert.equal(A.fromBind('a.example. 60 IN A 192.0.2.1', { default: { ttl: 300 } }).get('ttl'), 60)
     // RFC 4034 §5.4 writes the digest in two whitespace separated halves
     const ds = DS.fromBind(
       'dskey.example.com. 86400 IN DS 60485 5 1 2BB183AF5F22588179A53B0A 98631FAD1A292118',

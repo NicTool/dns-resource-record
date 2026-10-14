@@ -68,6 +68,7 @@ export default class RR {
     if (opts.default !== undefined) instance.default = opts.default
     const parsed = this.parseBindLine(line)
     if (!parsed) return null
+    parsed.ttl ??= opts.default?.ttl
     if (parsed.rdata[0]?.text === '\\#' && !parsed.rdata[0].quoted) return bindFrom3597(instance, parsed) // RFC 3597 §5
     bindAssertType(parsed.type, this)
     return instance.fromBind({ ...opts, ...parsed })
@@ -158,6 +159,7 @@ export default class RR {
       this.set('class', 'IN')
       return
     }
+    if (typeof c !== 'string') this.throwHelp(`invalid class ${c}`)
     if (RR.CLASSES[c.toUpperCase()]) {
       this.set('class', c.toUpperCase())
       return

@@ -51,11 +51,13 @@ export default class LOC extends RR {
   }
 
   parseLoc(string) {
+    const num = '\\d+(?:\\.\\d+)?'
+
     // d1 [m1 [s1]]
-    const dms = '(\\d+)\\s+(?:(\\d+)\\s+)?(?:([\\d.]+)\\s+)?'
+    const dms = `(\\d+)\\s+(?:(\\d+)\\s+)?(?:(${num})\\s+)?`
 
     // alt["m"] [siz["m"] [hp["m"] [vp["m"]]]]
-    const alt = '(-?[\\d.]+)m?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?(?:\\s+([\\d.]+)m?)?'
+    const alt = `(-?${num})m?(?:\\s+(${num})m?)?(?:\\s+(${num})m?)?(?:\\s+(${num})m?)?`
 
     // put them all together
     const locRe = new RegExp(`^${dms}(N|S)\\s+${dms}(E|W)\\s+${alt}$`, 'i')
@@ -138,8 +140,11 @@ export default class LOC extends RR {
   }
 
   fromExponent(prec) {
-    const mantissa = ((prec >> 4) & 0x0f) % 10
-    const exponent = ((prec >> 0) & 0x0f) % 10
+    const mantissa = prec >> 4
+    const exponent = prec & 0x0f
+    // RFC 1876 §2: both nibbles are 0-9
+    if (mantissa > 9 || exponent > 9)
+      this.throwHelp(`LOC: SIZE or precision octet 0x${prec.toString(16)} has a nibble over 9`)
     return mantissa * Math.pow(10, exponent)
   }
 

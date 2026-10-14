@@ -15,7 +15,8 @@ Notable changes to this project are documented in this file.
 - fix(rr)!: canonical values (uppercase hex, sorted type lists, WKS TCP/UDP)
 - fix(hinfo, caa)!: keep literal quotes in values
 - fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT encoding
-- fix(loc): keep millisecond seconds
+- fix(loc): keep millisecond seconds, reject malformed numbers and SIZE/precision octets
+- fix(rr): fromBind honors `default.ttl`, setClass rejects non-strings
 - fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
 - fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
 - fix(tinydns): generic lines carry wire rdata, text is UTF-8
@@ -26,6 +27,7 @@ Notable changes to this project are documented in this file.
 - feat(ipseckey): ECDSA, EdDSA and keyless (0) algorithms
 - fix(rr): IPv6 addresses with an embedded IPv4 part
 - test: `npm run interop` checks records against 8 DNS servers
+- test: shared per-type suite, tabular cases
 
 ### [1.9.0] - 2026-07-30
 
