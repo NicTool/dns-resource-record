@@ -4,6 +4,10 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [2.0.0] - 2026-10-13
+
+- bind: improve the BIND lexer/tokenizer robustness (#70)
+
 - dep(node)!: require node 22+
 - fix(bind)!: RFC 1035 lexer and one generic importer; rejects missing, surplus and mistyped rdata; no `bindline`
 - fix(rr)!: names honor escapes, count octets, stricter wildcards; isValidHostname & hasValidLabels -> isValidName
@@ -478,3 +482,4 @@ Notable changes to this project are documented in this file.
 [1.8.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.1
 [1.8.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.2
 [1.9.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.9.0
+[2.0.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v2.0.0
