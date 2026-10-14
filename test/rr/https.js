@@ -125,4 +125,17 @@ describe('HTTPS record', function () {
   it('throws when fromTinydns RDATA is too short', function () {
     assert.throws(() => HTTPS.fromTinydns(':example.com:65:AB:3600::\n'), /wire name runs past the end/)
   })
+
+  it('rejects switching a record with params to AliasMode', function () {
+    const r = new HTTPS({
+      owner: 'a.example.',
+      ttl: 60,
+      type: 'HTTPS',
+      priority: 1,
+      'target name': '.',
+      params: 'alpn=h2',
+    })
+    assert.throws(() => r.setPriority(0), /AliasMode \(priority 0\) takes no params/)
+    assert.equal(r.get('priority'), 1)
+  })
 })

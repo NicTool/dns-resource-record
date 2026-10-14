@@ -2,6 +2,9 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import CAA from '../rr/caa.js'
+import HINFO from '../rr/hinfo.js'
+import TXT from '../rr/txt.js'
 
 describe('TINYDNS', function () {
   const b64cases = {
@@ -152,18 +155,6 @@ describe('TINYDNS', function () {
     }
   })
 
-  describe('packString', function () {
-    it(`packs a string to wire format`, async () => {
-      assert.equal(TINYDNS.packString('matt wuz here'), '\\015matt wuz here')
-    })
-  })
-
-  describe('uppackString', function () {
-    it(`uppacks a string from wire format`, async () => {
-      assert.deepEqual(TINYDNS.unpackString('\\015matt wuz here'), ['matt wuz here'])
-    })
-  })
-
   describe('UInt8toOctal', function () {
     it('rejects values above 255 with a clear Latin-1 error', function () {
       assert.throws(() => TINYDNS.UInt8toOctal(256), /Latin-1.*0xFF/i)
@@ -192,5 +183,26 @@ describe('TINYDNS', function () {
     it('throws for invalid base64 input', function () {
       assert.throws(() => TINYDNS.base64toOctal('not valid!!!'), /Invalid character/)
     })
+  })
+
+  describe('generic character-string rdata', function () {
+    for (const [C, line] of [
+      [TXT, ':x:16:\\001\\377:60::'],
+      [HINFO, ':x:13:\\001\\377\\001a:60::'],
+      [CAA, ':x:257:\\000\\005issue\\377:60::'],
+    ]) {
+      it(`rejects ${C.typeName} octets that are not UTF-8`, function () {
+        assert.throws(() => C.fromTinydns(line), /is not UTF-8/)
+      })
+    }
+
+    for (const r of [
+      new CAA({ owner: 'x.', ttl: 60, flags: 0, tag: 'issue', value: 'é.example' }),
+      new HINFO({ owner: 'x.', ttl: 60, cpu: 'é', os: 'a' }),
+    ]) {
+      it(`round trips UTF-8 ${r.get('type')} rdata byte for byte`, function () {
+        assert.deepEqual(r.constructor.fromTinydns(r.toTinydns()).getWireRdata(), r.getWireRdata())
+      })
+    }
   })
 })

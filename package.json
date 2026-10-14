@@ -62,7 +62,7 @@
   },
   "homepage": "https://github.com/NicTool/dns-resource-record#readme",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "browserslist": [
     "chrome >= 74",

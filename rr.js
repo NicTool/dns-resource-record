@@ -375,19 +375,6 @@ export default class RR {
       this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`)
   }
 
-  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
-  // name 255 octets on the wire, length octets and root included.
-  hasValidLabels(hostname) {
-    let labels
-    try {
-      labels = nameToLabels(hostname)
-    } catch (e) {
-      this.throwHelp(`${e.message}, RFC 2181`)
-    }
-    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1)
-    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`)
-  }
-
   is8bitInt(type, field, value) {
     if (Number.isInteger(value) && value >= 0 && value <= 255) return true
 
@@ -585,8 +572,17 @@ export default class RR {
     this.throwHelp(`${type}: ${field} must be fully qualified`)
   }
 
+  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
+  // name 255 octets on the wire, length octets and root included.
   isValidName(type, field, hostname) {
-    this.hasValidLabels(hostname)
+    let labels
+    try {
+      labels = nameToLabels(hostname)
+    } catch (e) {
+      this.throwHelp(`${e.message}, RFC 2181`)
+    }
+    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1)
+    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`)
     // Names are stored in presentation form, so master-file delimiters and
     // controls must arrive escaped (\032, \;, \000) or the BIND export breaks.
     if (/[\s;"()\x00-\x1f\x7f]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))

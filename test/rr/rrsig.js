@@ -160,6 +160,17 @@ describe('RRSIG record', function () {
     assert.equal(r.get('signers name'), signer)
   })
 
+  it('revalidates the signer when labels or owner change', function () {
+    const r = new RRSIG({ ...defaults, 'type covered': 1 })
+    const { owner, labels } = r.toJSON()
+    assert.throws(() => r.setLabels(1), /signers name has 2 labels, more than labels \(1\)/)
+    assert.throws(() => r.setOwner('other.test.'), /not the owner or an ancestor/)
+    assert.equal(r.get('labels'), labels)
+    assert.equal(r.get('owner'), owner)
+    r.setOwner('www.example.com.')
+    assert.equal(r.get('owner'), 'www.example.com.')
+  })
+
   it('rejects an unassigned algorithm', function () {
     assert.throws(() => new RRSIG({ ...defaults, 'type covered': 1, algorithm: 99 }), /algorithm invalid/i)
   })

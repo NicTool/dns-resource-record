@@ -1,7 +1,5 @@
 import RR from '../rr.js'
 
-import * as TINYDNS from '../lib/tinydns.js'
-
 export default class HINFO extends RR {
   static typeName = 'HINFO'
   static typeId = 13
@@ -31,23 +29,6 @@ export default class HINFO extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, , rdata, ttl, ts, loc] = tinyline.slice(1).split(':')
-    const [cpu, os] = [...TINYDNS.unpackString(rdata)]
-
-    return new this.constructor({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'HINFO',
-      cpu,
-      os,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   /******  EXPORTERS   *******/
 
   getWireRdata() {
@@ -59,11 +40,5 @@ export default class HINFO extends RR {
     result[1 + cpu.length] = os.length
     result.set(os, 2 + cpu.length)
     return result
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      [TINYDNS.packString(this.get('cpu')), TINYDNS.packString(this.get('os'))].join(''),
-    )
   }
 }

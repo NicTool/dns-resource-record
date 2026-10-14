@@ -101,4 +101,16 @@ describe('HIP record', function () {
     const bindline = `example.com.\t3600\tIN\tHIP\t2\t200100107B1A74DF365639CC39F1D578\t${publicKey.slice(0, 40)} ${publicKey.slice(40)} rvs.example.com.`
     assert.throws(() => HIP.fromBind(bindline), /rendezvous servers must be fully qualified/)
   })
+
+  test('validates and lowercases each rendezvous server', () => {
+    const hip = (servers) => new HIP({ ...validRecords[1], 'rendezvous servers': servers })
+    assert.throws(
+      () => hip('rvs.example.com. bad;name.example.'),
+      /rendezvous servers has an unescaped delimiter/,
+    )
+    assert.equal(
+      hip('RVS1.Example.com.   rvs2.example.com.').get('rendezvous servers'),
+      'rvs1.example.com. rvs2.example.com.',
+    )
+  })
 })

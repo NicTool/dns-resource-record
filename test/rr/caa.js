@@ -15,7 +15,7 @@ const validRecords = [
     tag: 'issue',
     value: 'http://letsencrypt.org',
     testB: 'ns1.example.com.\t3600\tIN\tCAA\t0\tissue\t"http://letsencrypt.org"\n',
-    testT: ':ns1.example.com:257:\\000\\005issuehttp\\072\\057\\057letsencrypt.org:3600::\n',
+    testT: ':ns1.example.com:257:\\000\\005issuehttp\\072//letsencrypt.org:3600::\n',
     testW:
       '036e7331076578616d706c6503636f6d000101000100000e10001d00056973737565687474703a2f2f6c657473656e63727970742e6f7267',
   },
@@ -40,7 +40,7 @@ const validRecords = [
     tag: 'issuewild',
     value: 'https://letsencrypt.org',
     testB: 'example.net.\t86400\tIN\tCAA\t0\tissuewild\t"https://letsencrypt.org"\n',
-    testT: ':example.net:257:\\000\\011issuewildhttps\\072\\057\\057letsencrypt.org:86400::\n',
+    testT: ':example.net:257:\\000\\011issuewildhttps\\072//letsencrypt.org:86400::\n',
     testW:
       '076578616d706c65036e657400010100010001518000220009697373756577696c6468747470733a2f2f6c657473656e63727970742e6f7267',
   },

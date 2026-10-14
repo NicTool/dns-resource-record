@@ -32,11 +32,12 @@ export default class HIP extends RR {
   }
 
   setRendezvousServers(val) {
-    for (const name of (val ?? '').split(/\s+/).filter(Boolean)) {
+    const names = (val ?? '').split(/\s+/).filter(Boolean)
+    for (const name of names) {
       this.isFullyQualified('HIP', 'rendezvous servers', name)
-      this.hasValidLabels(name)
+      this.isValidName('HIP', 'rendezvous servers', name)
     }
-    this.set('rendezvous servers', val ?? '')
+    this.set('rendezvous servers', names.map((n) => this.lowercaseName(n)).join(' '))
   }
 
   getDescription() {

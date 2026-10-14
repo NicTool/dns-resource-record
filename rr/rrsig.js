@@ -38,13 +38,14 @@ export default class RRSIG extends RR {
     this.set('algorithm', val)
   }
 
-  // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
-  // `*`, and the signer is an ancestor of that owner.
+  setOwner(n) {
+    if (this.get('labels') !== undefined) this.checkNames({ owner: n })
+    super.setOwner(n)
+  }
+
   setLabels(val) {
     this.is8bitInt('RRSIG', 'labels', val)
-    const owner = nameToLabels(this.get('owner'))
-    const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length
-    if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`)
+    this.checkNames({ labels: val })
     this.set('labels', val)
   }
 
@@ -66,18 +67,27 @@ export default class RRSIG extends RR {
 
   setSignersName(val) {
     this.isFqdnValue('RRSIG', 'signers name', val)
-    const signer = nameToLabels(val)
-    if (signer.length > this.get('labels'))
-      this.throwHelp(
-        `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
-      )
-    // the signer is the owner or an ancestor: its labels end the owner's, ASCII case aside
-    const owner = nameToLabels(this.get('owner'))
-    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase())
-    const offset = owner.length - signer.length
-    if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
-      this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`)
+    this.checkNames({ signer: val })
     this.set('signers name', this.lowercaseName(val))
+  }
+
+  // RFC 4034 §3.1.3, §3.1.7: labels counts the owner's labels, less a leading
+  // `*`, and is at least the signer's, which is the owner or an ancestor.
+  checkNames({ owner = this.get('owner'), labels = this.get('labels'), signer = this.get('signers name') }) {
+    if (owner === undefined) return
+    const ownerLabels = nameToLabels(owner)
+    const wildcard = ownerLabels[0]?.length === 1 && ownerLabels[0][0] === 0x2a
+    const max = ownerLabels.length - (wildcard ? 1 : 0)
+    if (labels > max) this.throwHelp(`RRSIG: labels (${labels}) exceeds the owner's ${max}`)
+    if (signer === undefined) return
+
+    const signerLabels = nameToLabels(signer)
+    if (signerLabels.length > labels)
+      this.throwHelp(`RRSIG: signers name has ${signerLabels.length} labels, more than labels (${labels})`)
+    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase())
+    const offset = ownerLabels.length - signerLabels.length
+    if (offset < 0 || signerLabels.some((label, i) => fold(label) !== fold(ownerLabels[offset + i])))
+      this.throwHelp(`RRSIG: signers name ${signer} is not the owner or an ancestor of it`)
   }
 
   setSignature(val) {

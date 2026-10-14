@@ -91,6 +91,12 @@ describe('SVCB record', function () {
       assert.equal(svcb(0, '').get('params'), '')
     })
 
+    it('rejects switching a record with params to AliasMode', function () {
+      const r = svcb(1, 'alpn=h2')
+      assert.throws(() => r.setPriority(0), /AliasMode \(priority 0\) takes no params/)
+      assert.equal(r.get('priority'), 1)
+    })
+
     it('rejects no-default-alpn without alpn', function () {
       assert.throws(() => svcb(1, 'no-default-alpn'), /no-default-alpn requires alpn/)
     })

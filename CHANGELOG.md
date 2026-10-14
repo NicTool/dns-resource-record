@@ -4,11 +4,12 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- dep(node): require node 22+
 - fix(bind): RFC 1035 lexer (escapes, quotes, comments, parens)
 - fix(bind)!: generic importer for all but TSIG & UNKNOWN, no `bindline`
 - fix(bind)!: reject missing/surplus rdata and mismatched types
 - fix(rr)!: names honor escapes, count octets, stricter wildcards
-- refactor(rr)!: rename isValidHostname -> isValidName
+- refactor(rr)!: isValidHostname & hasValidLabels -> isValidName
 - fix(rr)!: TTL max is 2^31-1 (RFC 2181)
 - fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HINFO, WKS)
 - fix(hinfo, caa)!: keep literal quotes in values

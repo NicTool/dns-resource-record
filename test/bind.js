@@ -30,6 +30,10 @@ function roundTrip(type, opts) {
 }
 
 describe('tokenize', function () {
+  it('rejects a second record after a comment', function () {
+    assert.throws(() => tokenize('x. TXT "a" ; comment\ny. TXT "b"'), /text after end of record/)
+  })
+
   it('ends a token at a closing quote', function () {
     assert.deepEqual(tokenize('"a"b'), [
       { text: 'a', quoted: true },

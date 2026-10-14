@@ -1,5 +1,4 @@
 import RR from '../rr.js'
-import * as TINYDNS from '../lib/tinydns.js'
 
 export default class CAA extends RR {
   static typeName = 'CAA'
@@ -75,31 +74,6 @@ export default class CAA extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline)
-    if (typeId != this.getTypeId()) this.throwHelp('CAA fromTinydns, invalid typeId')
-
-    const flags = TINYDNS.octalToUInt8(rdata.slice(0, 4))
-    const taglen = TINYDNS.octalToUInt8(rdata.slice(4, 8))
-
-    const unescaped = TINYDNS.octalToChar(rdata.slice(8))
-    const tag = unescaped.slice(0, taglen)
-    const fingerprint = unescaped.slice(taglen)
-
-    return new CAA({
-      owner,
-      ttl,
-      type: 'CAA',
-      flags,
-      tag,
-      value: fingerprint,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
 
   getWireRdata() {
@@ -111,14 +85,5 @@ export default class CAA extends RR {
     result.set(tag, 2)
     result.set(value, 2 + tag.length)
     return result
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      TINYDNS.UInt8toOctal(this.get('flags')) +
-        TINYDNS.UInt8toOctal(this.get('tag').length) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
-        TINYDNS.escapeOctal(/[\r\n\t:\\/]/, this.get('value')),
-    )
   }
 }

@@ -20,7 +20,8 @@ export default class HTTPS extends RR {
   /****** Resource record specific setters   *******/
   setPriority(val) {
     this.is16bitInt('HTTPS', 'priority', val)
-
+    // RFC 9460 §2.4.2
+    if (val === 0 && this.get('params')) this.throwHelp(`HTTPS: AliasMode (priority 0) takes no params`)
     this.set('priority', val)
   }
 

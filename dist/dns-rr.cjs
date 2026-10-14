@@ -173,29 +173,6 @@ function octalToUInt32(str) {
   return ((b0 << 24) | (b1 << 16) | (b2 << 8) | b3) >>> 0
 }
 
-function packString(str) {
-  return str
-    .match(/(.{1,255})/g)
-    .map((s) => `${UInt8toOctal(s.length)}${s}`)
-    .join('')
-}
-
-function unpackString(str) {
-  const asBuf = Uint8Array.from(octalToChar(str.toString()), (c) => c.charCodeAt(0));
-  const dec = new TextDecoder();
-  const res = [];
-  let pos = 0;
-  let len;
-  while ((len = asBuf[pos])) {
-    // encoded length byte
-    pos++;
-    res.push(dec.decode(asBuf.subarray(pos, pos + len)));
-    pos = +(pos + len);
-    if (pos >= asBuf.length) break
-  }
-  return res
-}
-
 function packDomainName(fqdn) {
   let packed = '';
   for (const label of nameToLabels(fqdn)) {
@@ -683,6 +660,16 @@ function fromWireBytes(RRConstructor, wireBytes, wireUnpackFn) {
   return instance.fromWire({ owner, cls, ttl, rdata, typeId })
 }
 
+// Text fields are JS strings, so octets that are not UTF-8 cannot round trip.
+const utf8 = new TextDecoder('utf-8', { fatal: true });
+function decodeText(bytes, fieldName) {
+  try {
+    return utf8.decode(bytes)
+  } catch (e) {
+    throw new Error(`fromWireGeneric: ${fieldName} is not UTF-8`, { cause: e })
+  }
+}
+
 /**
  * Generic fromWire decoder driven by rdataFields type annotations.
  * Supports u8, u16, u32, fqdn, hex, base64, str, qstr, charstr, qcharstr, charstrs, svcparams, ipv4, ipv6.
@@ -735,22 +722,22 @@ function fromWireGeneric(rrInstance, { owner, cls, ttl, rdata }) {
         pos = rdata.length;
         break
       case 'str':
-        result[fieldName] = new TextDecoder().decode(rdata.subarray(pos));
+        result[fieldName] = decodeText(rdata.subarray(pos), fieldName);
         pos = rdata.length;
         break
       case 'qstr':
-        result[fieldName] = new TextDecoder().decode(rdata.subarray(pos));
+        result[fieldName] = decodeText(rdata.subarray(pos), fieldName);
         pos = rdata.length;
         break
       case 'charstr': {
         const strLen = rdata[pos++];
-        result[fieldName] = new TextDecoder().decode(rdata.subarray(pos, pos + strLen));
+        result[fieldName] = decodeText(rdata.subarray(pos, pos + strLen), fieldName);
         pos += strLen;
         break
       }
       case 'qcharstr': {
         const strLen = rdata[pos++];
-        result[fieldName] = new TextDecoder().decode(rdata.subarray(pos, pos + strLen));
+        result[fieldName] = decodeText(rdata.subarray(pos, pos + strLen), fieldName);
         pos += strLen;
         break
       }
@@ -763,7 +750,7 @@ function fromWireGeneric(rrInstance, { owner, cls, ttl, rdata }) {
           if (pos + strLen > rdata.length) {
             throw new Error('fromWireGeneric: truncated character-string in rdata')
           }
-          parts.push(new TextDecoder().decode(rdata.subarray(pos, pos + strLen)));
+          parts.push(decodeText(rdata.subarray(pos, pos + strLen), fieldName));
           pos += strLen;
         }
         result[fieldName] = parts.length > 1 ? parts : (parts[0] ?? '');
@@ -1998,19 +1985,6 @@ class RR {
       this.throwHelp(`${format} supports only class IN, got ${this.get('class')}`);
   }
 
-  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
-  // name 255 octets on the wire, length octets and root included.
-  hasValidLabels(hostname) {
-    let labels;
-    try {
-      labels = nameToLabels(hostname);
-    } catch (e) {
-      this.throwHelp(`${e.message}, RFC 2181`);
-    }
-    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1);
-    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`);
-  }
-
   is8bitInt(type, field, value) {
     if (Number.isInteger(value) && value >= 0 && value <= 255) return true
 
@@ -2208,8 +2182,17 @@ class RR {
     this.throwHelp(`${type}: ${field} must be fully qualified`);
   }
 
+  // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
+  // name 255 octets on the wire, length octets and root included.
   isValidName(type, field, hostname) {
-    this.hasValidLabels(hostname);
+    let labels;
+    try {
+      labels = nameToLabels(hostname);
+    } catch (e) {
+      this.throwHelp(`${e.message}, RFC 2181`);
+    }
+    const wireLength = labels.reduce((n, label) => n + 1 + label.length, 1);
+    if (wireLength > 255) this.throwHelp(`Domain names must have 1-255 octets, got ${wireLength}: RFC 2181`);
     // Names are stored in presentation form, so master-file delimiters and
     // controls must arrive escaped (\032, \;, \000) or the BIND export breaks.
     if (/[\s;"()\x00-\x1f\x7f]/.test(hostname.replace(/\\(?:[0-9]{3}|.)/g, '_')))
@@ -2802,31 +2785,6 @@ class CAA extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // CAA via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const { owner, typeId, rdata, ttl, timestamp, location } = this.parseTinydnsLine(tinyline);
-    if (typeId != this.getTypeId()) this.throwHelp('CAA fromTinydns, invalid typeId');
-
-    const flags = octalToUInt8(rdata.slice(0, 4));
-    const taglen = octalToUInt8(rdata.slice(4, 8));
-
-    const unescaped = octalToChar(rdata.slice(8));
-    const tag = unescaped.slice(0, taglen);
-    const fingerprint = unescaped.slice(taglen);
-
-    return new CAA({
-      owner,
-      ttl,
-      type: 'CAA',
-      flags,
-      tag,
-      value: fingerprint,
-      timestamp,
-      location,
-    })
-  }
-
   /******  EXPORTERS   *******/
 
   getWireRdata() {
@@ -2838,15 +2796,6 @@ class CAA extends RR {
     result.set(tag, 2);
     result.set(value, 2 + tag.length);
     return result
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      UInt8toOctal(this.get('flags')) +
-        UInt8toOctal(this.get('tag').length) +
-        escapeOctal(/[\r\n\t:\\/]/, this.get('tag')) +
-        escapeOctal(/[\r\n\t:\\/]/, this.get('value')),
-    )
   }
 }
 
@@ -3457,23 +3406,6 @@ class HINFO extends RR {
     }
   }
 
-  /******  IMPORTERS   *******/
-  fromTinydns({ tinyline }) {
-    // HINFO via generic, :fqdn:n:rdata:ttl:timestamp:lo
-    const [fqdn, , rdata, ttl, ts, loc] = tinyline.slice(1).split(':');
-    const [cpu, os] = [...unpackString(rdata)];
-
-    return new this.constructor({
-      owner: this.fullyQualify(fqdn),
-      ttl: parseInt(ttl, 10),
-      type: 'HINFO',
-      cpu,
-      os,
-      timestamp: ts,
-      location: loc?.trim() ?? '',
-    })
-  }
-
   /******  EXPORTERS   *******/
 
   getWireRdata() {
@@ -3485,12 +3417,6 @@ class HINFO extends RR {
     result[1 + cpu.length] = os.length;
     result.set(os, 2 + cpu.length);
     return result
-  }
-
-  toTinydns() {
-    return this.getTinydnsGeneric(
-      [packString(this.get('cpu')), packString(this.get('os'))].join(''),
-    )
   }
 }
 
@@ -3522,11 +3448,12 @@ class HIP extends RR {
   }
 
   setRendezvousServers(val) {
-    for (const name of (val ?? '').split(/\s+/).filter(Boolean)) {
+    const names = (val ?? '').split(/\s+/).filter(Boolean);
+    for (const name of names) {
       this.isFullyQualified('HIP', 'rendezvous servers', name);
-      this.hasValidLabels(name);
+      this.isValidName('HIP', 'rendezvous servers', name);
     }
-    this.set('rendezvous servers', val ?? '');
+    this.set('rendezvous servers', names.map((n) => this.lowercaseName(n)).join(' '));
   }
 
   getDescription() {
@@ -3688,7 +3615,8 @@ class HTTPS extends RR {
   /****** Resource record specific setters   *******/
   setPriority(val) {
     this.is16bitInt('HTTPS', 'priority', val);
-
+    // RFC 9460 §2.4.2
+    if (val === 0 && this.get('params')) this.throwHelp(`HTTPS: AliasMode (priority 0) takes no params`);
     this.set('priority', val);
   }
 
@@ -5261,13 +5189,14 @@ class RRSIG extends RR {
     this.set('algorithm', val);
   }
 
-  // RFC 4034 §3.1.3: labels counts the original owner's labels, less a leading
-  // `*`, and the signer is an ancestor of that owner.
+  setOwner(n) {
+    if (this.get('labels') !== undefined) this.checkNames({ owner: n });
+    super.setOwner(n);
+  }
+
   setLabels(val) {
     this.is8bitInt('RRSIG', 'labels', val);
-    const owner = nameToLabels(this.get('owner'));
-    const ownerLabels = owner[0]?.length === 1 && owner[0][0] === 0x2a ? owner.length - 1 : owner.length;
-    if (val > ownerLabels) this.throwHelp(`RRSIG: labels (${val}) exceeds the owner's ${ownerLabels}`);
+    this.checkNames({ labels: val });
     this.set('labels', val);
   }
 
@@ -5289,18 +5218,27 @@ class RRSIG extends RR {
 
   setSignersName(val) {
     this.isFqdnValue('RRSIG', 'signers name', val);
-    const signer = nameToLabels(val);
-    if (signer.length > this.get('labels'))
-      this.throwHelp(
-        `RRSIG: signers name has ${signer.length} labels, more than labels (${this.get('labels')})`,
-      );
-    // the signer is the owner or an ancestor: its labels end the owner's, ASCII case aside
-    const owner = nameToLabels(this.get('owner'));
-    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase());
-    const offset = owner.length - signer.length;
-    if (offset < 0 || signer.some((label, i) => fold(label) !== fold(owner[offset + i])))
-      this.throwHelp(`RRSIG: signers name ${val} is not the owner or an ancestor of it`);
+    this.checkNames({ signer: val });
     this.set('signers name', this.lowercaseName(val));
+  }
+
+  // RFC 4034 §3.1.3, §3.1.7: labels counts the owner's labels, less a leading
+  // `*`, and is at least the signer's, which is the owner or an ancestor.
+  checkNames({ owner = this.get('owner'), labels = this.get('labels'), signer = this.get('signers name') }) {
+    if (owner === undefined) return
+    const ownerLabels = nameToLabels(owner);
+    const wildcard = ownerLabels[0]?.length === 1 && ownerLabels[0][0] === 0x2a;
+    const max = ownerLabels.length - (wildcard ? 1 : 0);
+    if (labels > max) this.throwHelp(`RRSIG: labels (${labels}) exceeds the owner's ${max}`);
+    if (signer === undefined) return
+
+    const signerLabels = nameToLabels(signer);
+    if (signerLabels.length > labels)
+      this.throwHelp(`RRSIG: signers name has ${signerLabels.length} labels, more than labels (${labels})`);
+    const fold = (label) => String.fromCharCode(...label).replace(/[A-Z]/g, (c) => c.toLowerCase());
+    const offset = ownerLabels.length - signerLabels.length;
+    if (offset < 0 || signerLabels.some((label, i) => fold(label) !== fold(ownerLabels[offset + i])))
+      this.throwHelp(`RRSIG: signers name ${signer} is not the owner or an ancestor of it`);
   }
 
   setSignature(val) {
@@ -6342,7 +6280,8 @@ class SVCB extends RR {
   /****** Resource record specific setters   *******/
   setPriority(val) {
     this.is16bitInt('SVCB', 'priority', val);
-
+    // RFC 9460 §2.4.2
+    if (val === 0 && this.get('params')) this.throwHelp(`SVCB: AliasMode (priority 0) takes no params`);
     this.set('priority', val);
   }
 
