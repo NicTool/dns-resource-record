@@ -108,11 +108,11 @@ export default class SOA extends RR {
     const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = tinyline.slice(1).split(':')
 
     return new SOA({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SOA',
-      mname: this.fullyQualify(mname),
-      rname: this.fullyQualify(rname),
+      mname: this.fromTinyFQDN(mname),
+      rname: this.fromTinyFQDN(rname),
       serial: parseInt(ser ?? this.default?.serial, 10),
       refresh: parseInt(ref, 10) || 16384,
       retry: parseInt(ret, 10) || 2048,

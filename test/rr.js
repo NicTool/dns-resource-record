@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import RR from '../rr.js'
+import * as RRTypes from '../index.js'
 import A from '../rr/a.js'
 import DS from '../rr/ds.js'
 import HINFO from '../rr/hinfo.js'
@@ -27,6 +28,42 @@ describe('RR', function () {
       assert.throws(() => r.setTtl(ttl), /TTL/, String(ttl))
     r.setTtl(2147483647)
     assert.equal(r.get('ttl'), 2147483647)
+  })
+
+  it('requires a TTL for every type', function () {
+    for (const type of ['SOA', 'SSHFP', 'RRSIG']) {
+      const { ttl, ...noTtl } = new RRTypes[type](null).getCanonical()
+      assert.ok(ttl !== undefined)
+      assert.throws(() => new RRTypes[type](noTtl), /TTL is required/, type)
+    }
+  })
+
+  it('rejects non-string values as invalid, not with a crash', function () {
+    for (const [type, field] of [
+      ['PTR', 'dname'],
+      ['NS', 'dname'],
+      ['CNAME', 'cname'],
+      ['RP', 'txt'],
+      ['NSEC', 'next domain'],
+      ['NAPTR', 'flags'],
+      ['APL', 'apl rdata'],
+      ['HIP', 'rendezvous servers'],
+      ['WKS', 'bit map'],
+      ['KEY', 'publickey'],
+      ['DNSKEY', 'publickey'],
+      ['CERT', 'certificate'],
+      ['LOC', 'address'],
+      ['TSIG', 'mac'],
+      ['TSIG', 'other'],
+    ]) {
+      const T = RRTypes[type]
+      for (const value of [0, -1, 9007199254740991, {}, []])
+        assert.throws(
+          () => new T({ ...new T(null).getCanonical(), [field]: value }),
+          { name: 'Error' },
+          `${type} ${field} ${value}`,
+        )
+    }
   })
 
   it('setClass accepts mnemonics and RFC 3597 §5 CLASSnnn', function () {
@@ -79,6 +116,9 @@ describe('RR', function () {
     assert.equal(r.fullyQualify('example.com'), 'example.com.')
     assert.equal(r.isFullyQualified('$type', '$field', 'host.example.com.'), true)
     assert.throws(() => r.isFullyQualified('$type', '$field', 'host.example.com'), /must be fully qualified/)
+    // RFC 1035 §5.1: \. is a dot inside a label
+    assert.throws(() => r.isFullyQualified('$type', '$field', 'host\\.'), /must be fully qualified/)
+    assert.equal(r.isFullyQualified('$type', '$field', 'back\\\\.'), true)
 
     const rr = new RR(null)
     rr.set('owner', 'www.example.com') // bypass FQ check

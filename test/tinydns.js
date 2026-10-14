@@ -2,7 +2,9 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import * as TINYDNS from '../lib/tinydns.js'
+import A from '../rr/a.js'
 import CAA from '../rr/caa.js'
+import CNAME from '../rr/cname.js'
 import HINFO from '../rr/hinfo.js'
 import SRV from '../rr/srv.js'
 import TXT from '../rr/txt.js'
@@ -21,6 +23,35 @@ describe('TINYDNS', function () {
       assert.equal(SRV.fromTinydns(r.toTinydns()).get('target'), target)
     })
   }
+
+  // djbdns reads \ooo in a name as octal, and ':' ends a field; verified
+  // against tinydns-data and tinydns-get
+  it('writes and reads names with djbdns escapes', function () {
+    for (const [owner, tinydns, imported = owner] of [
+      ['sp\\032ace.example.', 'sp\\040ace.example'],
+      ['co\\058lon.example.', 'co\\072lon.example'],
+      ['a\\.b.example.', 'a\\.b.example'],
+      ['a\\046b.example.', 'a\\056b.example', 'a\\.b.example.'],
+      ['x\\195\\169.example.', 'x\\303\\251.example'],
+      ['école.example.', 'école.example'],
+      ['back\\\\slash.example.', 'back\\134slash.example', 'back\\092slash.example.'],
+      ['st\\042ar.example.', 'st\\052ar.example'],
+      ['*.w.example.', '*.w.example'],
+      ['ctl\\001.example.', 'ctl\\001.example'],
+    ]) {
+      const a = new A({ owner, ttl: 60, address: '192.0.2.1' })
+      assert.equal(a.toTinydns(), `+${tinydns}:192.0.2.1:60::\n`)
+      assert.equal(A.fromTinydns(a.toTinydns()).get('owner'), imported)
+      const cname = new CNAME({ owner: 'c.example.', ttl: 60, cname: owner })
+      assert.equal(CNAME.fromTinydns(cname.toTinydns()).get('cname'), imported)
+    }
+    // \X is X, and a short octal escape is still octal
+    assert.equal(A.fromTinydns('+a\\;b\\40c.example:192.0.2.1:60::').get('owner'), 'a\\059b\\032c.example.')
+  })
+
+  it('rejects a TXT line with no fields as invalid, not with a crash', function () {
+    assert.throws(() => TXT.fromTinydns("'x.example"), { name: 'Error' })
+  })
 
   it('reads text between octal escapes as UTF-8, as tinydns-data does', function () {
     assert.deepEqual([...TINYDNS.octalRdataToBytes('caf\u00e9\\041')], [0x63, 0x61, 0x66, 0xc3, 0xa9, 0x21])

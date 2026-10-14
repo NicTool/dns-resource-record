@@ -2,6 +2,61 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+// Presentation names (RFC 1035 §5.1) escape an octet as decimal \DDD, but
+// djbdns (dns_domain_fromdot) reads \ooo as octal, and ':' ends a tinydns
+// field. Both keep other characters as written.
+const SAFE_OCTET = /[A-Za-z0-9\-_/]/;
+const octal = (b) => `\\${b.toString(8).padStart(3, '0')}`;
+const decimal = (b) => `\\${String(b).padStart(3, '0')}`;
+
+function nameToTinydns(name) {
+  let out = '';
+  for (let i = 0; i < name.length; i++) {
+    if (name[i] !== '\\') {
+      out += name[i] === ':' ? octal(0x3a) : name[i];
+      continue
+    }
+    if (/^[0-9]{3}$/.test(name.slice(i + 1, i + 4))) {
+      const b = Number(name.slice(i + 1, i + 4));
+      out += SAFE_OCTET.test(String.fromCharCode(b)) ? String.fromCharCode(b) : octal(b);
+      i += 3;
+      continue
+    }
+    const x = String.fromCodePoint(name.codePointAt(i + 1));
+    if (x === '.') out += '\\.';
+    else out += SAFE_OCTET.test(x) || x.codePointAt(0) > 0x7f ? x : octal(x.charCodeAt(0));
+    i += x.length;
+  }
+  return out
+}
+
+const presentOctet = (b) =>
+  b === 0x2e ? '\\.' : SAFE_OCTET.test(String.fromCharCode(b)) ? String.fromCharCode(b) : decimal(b);
+// RFC 1035 §5.1: these would end or escape a presentation label
+const presentChar = (c) =>
+  /[\s;"()\\\p{Cc}]/u.test(c) ? [...new TextEncoder().encode(c)].map(decimal).join('') : c;
+
+function nameFromTinydns(text) {
+  if (!text) return text
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '\\') {
+      out += presentChar(text[i]);
+      continue
+    }
+    const digits = /^[0-7]{1,3}/.exec(text.slice(i + 1))?.[0];
+    if (digits) {
+      out += presentOctet(parseInt(digits, 8) & 0xff);
+      i += digits.length;
+    } else if (i + 1 < text.length) {
+      const x = String.fromCodePoint(text.codePointAt(++i));
+      out += x === '.' ? '\\.' : presentChar(x);
+      i += x.length - 1;
+    }
+  }
+  return out
+}
+
 const octalRe = new RegExp(/\\(?:[1-7][0-7]{0,2}|[0-7]{2,3})/, 'g');
 
 function parseFields(tinyline, rdataCount) {
@@ -51,7 +106,7 @@ function fromGeneric(rrInstance, { tinyline }) {
   const { owner, rdata, ttl, timestamp, location } = parseFields(tinyline, fields.length);
 
   const result = {
-    owner: rrInstance.fullyQualify(owner),
+    owner: rrInstance.fromTinyFQDN(owner),
     type: rrInstance.constructor.typeName,
     ttl: parseInt(ttl, 10),
     timestamp: timestamp,
@@ -60,7 +115,7 @@ function fromGeneric(rrInstance, { tinyline }) {
 
   for (let i = 0; i < fields.length; i++) {
     const val = rdata[i];
-    result[fields[i]] = rrInstance.isFqdnField(fields[i]) ? rrInstance.fullyQualify(val) : val;
+    result[fields[i]] = rrInstance.isFqdnField(fields[i]) ? rrInstance.fromTinyFQDN(val) : val;
   }
 
   return new rrInstance.constructor(result)
@@ -1365,6 +1420,7 @@ function escapeCharString(str) {
 // A list field is the rest of the rdata, kept in presentation form for the
 // RR's own setter to parse: type bit maps, APL items, SVCB params.
 const listTypes = new Set(['list', 'svcparams']);
+const opaqueTypes = new Set(['str', 'hex', 'base64']);
 
 function joinList(tokens) {
   return tokens
@@ -1436,11 +1492,13 @@ function fromBind(rrInstance, opts) {
 
   const fields = rrInstance.getFields('rdata');
   const rdataDefs = rrInstance.constructor.rdataFields ?? [];
-  const opaqueTypes = new Set(['str', 'hex', 'base64']);
   const lastType = fieldTypeOf(rdataDefs.at(-1));
   const lastIsList = listTypes.has(lastType);
 
-  const required = lastIsList ? fields.length - 1 : fields.length;
+  // A trailing list or opaque field may have no token (IPSECKEY with no key,
+  // RFC 4025 §2.5); its setter decides whether empty is valid.
+  const lastIsOptional = lastIsList || opaqueTypes.has(lastType);
+  const required = lastIsOptional ? fields.length - 1 : fields.length;
   if (rdata.length < required)
     throw new Error(`${typeName}: missing rdata: ${fields.slice(rdata.length).join(', ')}`)
   const lastIsVariadic = opaqueTypes.has(lastType) || lastType === 'charstrs' || lastIsList;
@@ -1497,9 +1555,9 @@ function toBind(rrInstance, zone_opts) {
     if (fieldTypeOf(def) === 'rrtype') return typeIdToName(rrInstance.get(f))
     return rrInstance.get(f)
   });
-  // an empty trailing list (no rendezvous servers, an empty non-terminal) has no token
-  if (listTypes.has(fieldTypeOf(rrInstance.constructor.rdataFields?.at(-1))) && rdata.at(-1) === '')
-    rdata.pop();
+  // an empty trailing list or opaque field (no rendezvous servers, no key) has no token
+  const lastType = fieldTypeOf(rrInstance.constructor.rdataFields?.at(-1));
+  if ((listTypes.has(lastType) || opaqueTypes.has(lastType)) && rdata.at(-1) === '') rdata.pop();
   return `${[rrInstance.getPrefix(zone_opts), ...rdata].join('\t')}\n`
 }
 
@@ -1688,10 +1746,7 @@ class RR {
 
   setTtl(t) {
     t = t ?? this.default?.ttl;
-    if (t === undefined) {
-      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
-      this.throwHelp('TTL is required, no default available');
-    }
+    if (t === undefined) this.throwHelp('TTL is required, no default available');
 
     if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`);
 
@@ -1833,13 +1888,12 @@ class RR {
 
   getTinyFQDN(field) {
     const val = this.get(field);
-    if (val === '') return val // empty
-    if (val === '.') return val // null MX
+    if (val === '' || val === '.') return val // empty, null MX
+    return nameToTinydns(val.endsWith('.') ? val.slice(0, -1) : val)
+  }
 
-    // strip off trailing ., tinydns doesn't require it for FQDN
-    if (val.endsWith('.')) return val.slice(0, -1)
-
-    return val
+  fromTinyFQDN(name) {
+    return this.fullyQualify(nameFromTinydns(name))
   }
 
   getTinydnsGeneric(rdata) {
@@ -2052,8 +2106,16 @@ class RR {
     return lowercaseName(name)
   }
 
+  isString(type, field, val) {
+    if (val === undefined || val === null) this.throwHelp(`${type}: ${field} is required`);
+    if (typeof val !== 'string') this.throwHelp(`${type}: ${field} must be a string`);
+    return true
+  }
+
   isFullyQualified(type, field, hostname) {
-    if (hostname.endsWith('.')) return true
+    this.isString(type, field, hostname);
+    // a final \. is a dot inside the last label, unless the backslash is itself escaped
+    if (/(?:^|[^\\])(?:\\\\)*\.$/.test(hostname)) return true
 
     this.throwHelp(`${type}: ${field} must be fully qualified`);
   }
@@ -2061,6 +2123,7 @@ class RR {
   // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
   // name 255 octets on the wire, length octets and root included.
   isValidName(type, field, hostname) {
+    this.isString(type, field, hostname);
     let labels;
     try {
       labels = nameToLabels(hostname);
@@ -2162,7 +2225,7 @@ class RR {
 
   parseTinydnsLine(tinyline) {
     const parsed = parseGenericLine(tinyline);
-    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
+    return { ...parsed, owner: this.fromTinyFQDN(parsed.owner) }
   }
 
   toTinydns() {
@@ -2301,13 +2364,14 @@ class AAAA extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
-    if (opts.tinyline[0] === ':') return this.fromTinydnsWire(opts)
+    if (!'36'.includes(opts.tinyline[0] || ':')) return this.fromTinydnsWire(opts)
 
     // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
     // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
     const [fqdn, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':');
+    if (!/^[0-9a-f]{32}$/i.test(rdata)) this.throwHelp(`AAAA fromTinydns: address must be 32 hex digits`);
     return new AAAA({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'AAAA',
       address: rdata.match(/(.{4})/g).join(':'),
@@ -2332,6 +2396,7 @@ class APL extends RR {
   /****** Resource record specific setters   *******/
   setAplRdata(val) {
     if (!val) this.throwHelp('APL: apl rdata is required');
+    this.isString('APL', 'apl rdata', val);
     const items = val.trim().split(/\s+/);
     try {
       items.forEach(itemToWire);
@@ -2554,6 +2619,7 @@ class CERT extends RR {
     if (val === undefined || val === null || val === '') {
       this.throwHelp('certificate is required and cannot be empty');
     }
+    this.isString('CERT', 'certificate', val);
     const certificate = val.replace(/[\s()]/g, '');
     this.isBase64('CERT', 'certificate', certificate);
     this.set('certificate', certificate);
@@ -2765,6 +2831,7 @@ class DNSKEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`DNSKEY: publickey is required`);
+    this.isString('DNSKEY', 'publickey', val);
     const key = val.replace(/[\s()]/g, '');
     this.isBase64('DNSKEY', 'publickey', key);
     this.set('publickey', key);
@@ -2933,6 +3000,7 @@ class HIP extends RR {
   }
 
   setRendezvousServers(val) {
+    if (val != null) this.isString('HIP', 'rendezvous servers', val);
     const names = (val ?? '').split(/\s+/).filter(Boolean);
     for (const name of names) {
       this.isFullyQualified('HIP', 'rendezvous servers', name);
@@ -3310,6 +3378,7 @@ class KEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`KEY: publickey is required`);
+    this.isString('KEY', 'publickey', val);
     const key = val.replace(/[\s()]/g, '');
     this.isBase64('KEY', 'publickey', key);
     this.set('publickey', key);
@@ -3412,6 +3481,7 @@ class LOC extends RR {
   /****** Resource record specific setters   *******/
   setAddress(val) {
     if (!val) this.throwHelp('LOC: address is required');
+    this.isString('LOC', 'address', val);
 
     /*
     ... LOC ( d1 [m1 [s1]] {"N"|"S"} d2 [m2 [s2]]
@@ -3654,8 +3724,8 @@ class MX extends RR {
 
     return new MX({
       type: 'MX',
-      owner: this.fullyQualify(owner),
-      exchange: this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
+      owner: this.fromTinyFQDN(owner),
+      exchange: this.fromTinyFQDN(/\./.test(x) ? x : `${x}.mx.${owner}`),
       preference: parseInt(preference, 10) || 0,
       ttl: parseInt(ttl, 10),
       timestamp: ts,
@@ -3718,6 +3788,7 @@ class NAPTR extends RR {
   }
 
   setFlags(val) {
+    this.isString('NAPTR', 'flags', val);
     if (!this.getFlagsOptions().has(val.toUpperCase())) this.throwHelp(`NAPTR flags are invalid`);
 
     this.set('flags', val.toUpperCase());
@@ -3788,8 +3859,8 @@ class NS extends RR {
 
     return new NS({
       type: 'NS',
-      owner: this.fullyQualify(fqdn),
-      dname: this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
+      owner: this.fromTinyFQDN(fqdn),
+      dname: this.fromTinyFQDN(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',
@@ -4674,11 +4745,11 @@ class SOA extends RR {
     const [fqdn, mname, rname, ser, ref, ret, exp, min, ttl, ts, loc] = tinyline.slice(1).split(':');
 
     return new SOA({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SOA',
-      mname: this.fullyQualify(mname),
-      rname: this.fullyQualify(rname),
+      mname: this.fromTinyFQDN(mname),
+      rname: this.fromTinyFQDN(rname),
       serial: parseInt(ser ?? this.default?.serial, 10),
       refresh: parseInt(ref, 10) || 16384,
       retry: parseInt(ret, 10) || 2048,
@@ -4752,7 +4823,7 @@ class TXT extends RR {
 
     // 'fqdn:s:ttl:timestamp:lo, which tinydns-data stores as strings of at most 127 bytes
     const [fqdn, s, ttl, ts, loc] = tinyline.slice(1).split(':');
-    const bytes = octalRdataToBytes(s);
+    const bytes = octalRdataToBytes(s ?? '');
     const utf8 = new TextDecoder('utf-8', { fatal: true });
     const strings = [];
     for (let i = 0; i < bytes.length; i += TINYDNS_TXT_CHUNK) {
@@ -4760,7 +4831,7 @@ class TXT extends RR {
     }
 
     return new this.constructor({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'TXT',
       data: strings.length > 1 ? strings : (strings[0] ?? ''),
@@ -4891,13 +4962,13 @@ class SRV extends RR {
     // patched tinydns with S records
     const [fqdn, addr, port, pri, weight, ttl, ts, loc] = opts.tinyline.slice(1).split(':');
     return new SRV({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SRV',
       priority: parseInt(pri, 10),
       weight: parseInt(weight, 10),
       port: parseInt(port, 10),
-      target: this.fullyQualify(addr),
+      target: this.fromTinyFQDN(addr),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })
@@ -5137,7 +5208,7 @@ class TSIG extends RR {
   }
 
   setMac(val) {
-    if (val) this.isBase64('TSIG', 'mac', val);
+    if ((val ?? '') !== '') this.isBase64('TSIG', 'mac', val);
     this.set('mac', val ?? '');
   }
 
@@ -5152,7 +5223,7 @@ class TSIG extends RR {
   }
 
   setOther(val) {
-    if (val) this.isBase64('TSIG', 'other', val);
+    if ((val ?? '') !== '') this.isBase64('TSIG', 'other', val);
     this.set('other', val ?? '');
   }
 
@@ -5620,6 +5691,7 @@ class WKS extends RR {
   }
 
   setBitMap(val) {
+    if (val != null) this.isString('WKS', 'bit map', val);
     for (const entry of (val ?? '').trim().split(/\s+/).filter(Boolean)) {
       const port = portNumber(entry);
       if (port === undefined || port > 65535)

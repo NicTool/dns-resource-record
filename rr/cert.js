@@ -69,6 +69,7 @@ export default class CERT extends RR {
     if (val === undefined || val === null || val === '') {
       this.throwHelp('certificate is required and cannot be empty')
     }
+    this.isString('CERT', 'certificate', val)
     const certificate = val.replace(/[\s()]/g, '')
     this.isBase64('CERT', 'certificate', certificate)
     this.set('certificate', certificate)

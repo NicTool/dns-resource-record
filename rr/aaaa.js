@@ -39,13 +39,14 @@ export default class AAAA extends RR {
 
   /******  IMPORTERS   *******/
   fromTinydns(opts) {
-    if (opts.tinyline[0] === ':') return this.fromTinydnsWire(opts)
+    if (!'36'.includes(opts.tinyline[0] || ':')) return this.fromTinydnsWire(opts)
 
     // AAAA     =>  3fqdn:ip:x:ttl:timestamp:lo
     // AAAA,PTR =>  6fqdn:ip:x:ttl:timestamp:lo
     const [fqdn, rdata, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
+    if (!/^[0-9a-f]{32}$/i.test(rdata)) this.throwHelp(`AAAA fromTinydns: address must be 32 hex digits`)
     return new AAAA({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'AAAA',
       address: rdata.match(/(.{4})/g).join(':'),

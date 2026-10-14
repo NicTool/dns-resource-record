@@ -4,30 +4,23 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
-- dep(node): require node 22+
-- fix(bind): RFC 1035 lexer (escapes, quotes, comments, parens)
-- fix(bind)!: generic importer for all but TSIG & UNKNOWN, no `bindline`
-- fix(bind)!: reject missing/surplus rdata and mismatched types
-- fix(rr)!: names honor escapes, count octets, stricter wildcards
-- refactor(rr)!: isValidHostname & hasValidLabels -> isValidName
-- fix(rr)!: TTL max is 2^31-1 (RFC 2181)
-- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HIP, APL, HINFO, WKS, TXT)
+- dep(node)!: require node 22+
+- fix(bind)!: RFC 1035 lexer and one generic importer; rejects missing, surplus and mistyped rdata; no `bindline`
+- fix(rr)!: names honor escapes, count octets, stricter wildcards; isValidHostname & hasValidLabels -> isValidName
+- fix(wire): rdataFields drive encoding as well as decoding; fixes LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT
+- fix(tinydns)!: generic lines carry wire rdata, text is UTF-8, names use djbdns octal escapes; octal field helpers removed
+- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HIP, APL, HINFO, WKS, TXT, LOC); setters reject non-strings
 - fix(rr)!: canonical values (uppercase hex, sorted type lists, WKS TCP/UDP)
-- fix(hinfo, caa)!: keep literal quotes in values
-- fix(wire): LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT encoding
-- fix(loc): keep millisecond seconds, reject malformed numbers and SIZE/precision octets
-- fix(rr): fromBind honors `default.ttl`, setClass rejects non-strings
-- fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
+- fix(rr)!: TTL required for every type, at most 2^31-1 (RFC 2181)
 - fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
-- fix(tinydns): generic lines carry wire rdata, text is UTF-8
-- refactor(tinydns)!: drop the octal field helpers; AAAA & SRV generic lines use wire rdata
+- fix(hinfo, caa)!: keep literal quotes in values
+- fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
 - fix(maradns): csv2 quoting, WKS, SOA TTL, root targets
-- feat(rr): `list` and `rrtype` rdata field types
-- feat(wire): rdataFields drive encoding as well as decoding
 - feat(ipseckey): ECDSA, EdDSA and keyless (0) algorithms
-- fix(rr): IPv6 addresses with an embedded IPv4 part
-- test: `npm run interop` checks records against 8 DNS servers
-- test: shared per-type suite, tabular cases
+- fix(loc): keep millisecond seconds
+- fix(rr): IPv6 with an embedded IPv4 part, a final `\.` is not fully qualified, fromBind honors `default.ttl`
+- feat(rr): `list` and `rrtype` rdata field types
+- test: `npm run interop` checks records against 8 DNS servers; shared per-type suite; fuzzer flags crashes
 
 ### [1.9.0] - 2026-07-30
 

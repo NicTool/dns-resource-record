@@ -160,6 +160,11 @@ describe('IPSECKEY record', function () {
     const keyless = new IPSECKEY({ ...canonical, algorithm: 0, publickey: undefined })
     assert.equal(IPSECKEY.fromWire(keyless.toWire()).get('publickey'), '')
     assert.equal(
+      keyless.toBind(),
+      `${canonical.owner}\t${canonical.ttl}\tIN\tIPSECKEY\t10\t1\t0\t${canonical.gateway}\n`,
+    )
+    assert.equal(IPSECKEY.fromBind(keyless.toBind()).toBind(), keyless.toBind())
+    assert.equal(
       new IPSECKEY({ ...canonical, 'gateway type': 3, gateway: 'GW.Example.' }).get('gateway'),
       'gw.example.',
     )

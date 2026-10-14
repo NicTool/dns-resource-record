@@ -44,8 +44,8 @@ export default class NS extends RR {
 
     return new NS({
       type: 'NS',
-      owner: this.fullyQualify(fqdn),
-      dname: this.fullyQualify(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
+      owner: this.fromTinyFQDN(fqdn),
+      dname: this.fromTinyFQDN(/\./.test(dname) ? dname : `${dname}.ns.${fqdn}`),
       ttl: parseInt(ttl, 10),
       timestamp: ts,
       location: loc?.trim() ?? '',

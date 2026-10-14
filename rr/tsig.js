@@ -69,7 +69,7 @@ export default class TSIG extends RR {
   }
 
   setMac(val) {
-    if (val) this.isBase64('TSIG', 'mac', val)
+    if ((val ?? '') !== '') this.isBase64('TSIG', 'mac', val)
     this.set('mac', val ?? '')
   }
 
@@ -84,7 +84,7 @@ export default class TSIG extends RR {
   }
 
   setOther(val) {
-    if (val) this.isBase64('TSIG', 'other', val)
+    if ((val ?? '') !== '') this.isBase64('TSIG', 'other', val)
     this.set('other', val ?? '')
   }
 

@@ -57,13 +57,13 @@ export default class SRV extends RR {
     // patched tinydns with S records
     const [fqdn, addr, port, pri, weight, ttl, ts, loc] = opts.tinyline.slice(1).split(':')
     return new SRV({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'SRV',
       priority: parseInt(pri, 10),
       weight: parseInt(weight, 10),
       port: parseInt(port, 10),
-      target: this.fullyQualify(addr),
+      target: this.fromTinyFQDN(addr),
       timestamp: ts,
       location: loc?.trim() ?? '',
     })

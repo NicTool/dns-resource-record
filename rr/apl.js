@@ -10,6 +10,7 @@ export default class APL extends RR {
   /****** Resource record specific setters   *******/
   setAplRdata(val) {
     if (!val) this.throwHelp('APL: apl rdata is required')
+    this.isString('APL', 'apl rdata', val)
     const items = val.trim().split(/\s+/)
     try {
       items.forEach(itemToWire)

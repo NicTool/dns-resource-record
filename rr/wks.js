@@ -111,6 +111,7 @@ export default class WKS extends RR {
   }
 
   setBitMap(val) {
+    if (val != null) this.isString('WKS', 'bit map', val)
     for (const entry of (val ?? '').trim().split(/\s+/).filter(Boolean)) {
       const port = portNumber(entry)
       if (port === undefined || port > 65535)

@@ -210,10 +210,7 @@ export default class RR {
 
   setTtl(t) {
     t = t ?? this.default?.ttl
-    if (t === undefined) {
-      if (['SOA', 'SSHFP', 'RRSIG'].includes(this.get('type'))) return
-      this.throwHelp('TTL is required, no default available')
-    }
+    if (t === undefined) this.throwHelp('TTL is required, no default available')
 
     if (typeof t !== 'number') this.throwHelp(`TTL must be numeric (${typeof t})`)
 
@@ -355,13 +352,12 @@ export default class RR {
 
   getTinyFQDN(field) {
     const val = this.get(field)
-    if (val === '') return val // empty
-    if (val === '.') return val // null MX
+    if (val === '' || val === '.') return val // empty, null MX
+    return TINYDNS.nameToTinydns(val.endsWith('.') ? val.slice(0, -1) : val)
+  }
 
-    // strip off trailing ., tinydns doesn't require it for FQDN
-    if (val.endsWith('.')) return val.slice(0, -1)
-
-    return val
+  fromTinyFQDN(name) {
+    return this.fullyQualify(TINYDNS.nameFromTinydns(name))
   }
 
   getTinydnsGeneric(rdata) {
@@ -574,8 +570,16 @@ export default class RR {
     return lowercaseName(name)
   }
 
+  isString(type, field, val) {
+    if (val === undefined || val === null) this.throwHelp(`${type}: ${field} is required`)
+    if (typeof val !== 'string') this.throwHelp(`${type}: ${field} must be a string`)
+    return true
+  }
+
   isFullyQualified(type, field, hostname) {
-    if (hostname.endsWith('.')) return true
+    this.isString(type, field, hostname)
+    // a final \. is a dot inside the last label, unless the backslash is itself escaped
+    if (/(?:^|[^\\])(?:\\\\)*\.$/.test(hostname)) return true
 
     this.throwHelp(`${type}: ${field} must be fully qualified`)
   }
@@ -583,6 +587,7 @@ export default class RR {
   // RFC 2181 §11: any binary string can be a label, 1-63 octets, and the
   // name 255 octets on the wire, length octets and root included.
   isValidName(type, field, hostname) {
+    this.isString(type, field, hostname)
     let labels
     try {
       labels = nameToLabels(hostname)
@@ -684,7 +689,7 @@ export default class RR {
 
   parseTinydnsLine(tinyline) {
     const parsed = TINYDNS.parseGenericLine(tinyline)
-    return { ...parsed, owner: this.fullyQualify(parsed.owner) }
+    return { ...parsed, owner: this.fromTinyFQDN(parsed.owner) }
   }
 
   toTinydns() {

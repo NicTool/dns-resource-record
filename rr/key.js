@@ -53,6 +53,7 @@ export default class KEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`KEY: publickey is required`)
+    this.isString('KEY', 'publickey', val)
     const key = val.replace(/[\s()]/g, '')
     this.isBase64('KEY', 'publickey', key)
     this.set('publickey', key)

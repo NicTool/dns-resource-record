@@ -49,8 +49,8 @@ export default class MX extends RR {
 
     return new MX({
       type: 'MX',
-      owner: this.fullyQualify(owner),
-      exchange: this.fullyQualify(/\./.test(x) ? x : `${x}.mx.${owner}`),
+      owner: this.fromTinyFQDN(owner),
+      exchange: this.fromTinyFQDN(/\./.test(x) ? x : `${x}.mx.${owner}`),
       preference: parseInt(preference, 10) || 0,
       ttl: parseInt(ttl, 10),
       timestamp: ts,

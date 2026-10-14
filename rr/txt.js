@@ -54,7 +54,7 @@ export default class TXT extends RR {
 
     // 'fqdn:s:ttl:timestamp:lo, which tinydns-data stores as strings of at most 127 bytes
     const [fqdn, s, ttl, ts, loc] = tinyline.slice(1).split(':')
-    const bytes = TINYDNS.octalRdataToBytes(s)
+    const bytes = TINYDNS.octalRdataToBytes(s ?? '')
     const utf8 = new TextDecoder('utf-8', { fatal: true })
     const strings = []
     for (let i = 0; i < bytes.length; i += TINYDNS_TXT_CHUNK) {
@@ -62,7 +62,7 @@ export default class TXT extends RR {
     }
 
     return new this.constructor({
-      owner: this.fullyQualify(fqdn),
+      owner: this.fromTinyFQDN(fqdn),
       ttl: parseInt(ttl, 10),
       type: 'TXT',
       data: strings.length > 1 ? strings : (strings[0] ?? ''),

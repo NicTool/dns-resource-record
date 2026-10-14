@@ -26,6 +26,7 @@ export default class HIP extends RR {
   }
 
   setRendezvousServers(val) {
+    if (val != null) this.isString('HIP', 'rendezvous servers', val)
     const names = (val ?? '').split(/\s+/).filter(Boolean)
     for (const name of names) {
       this.isFullyQualified('HIP', 'rendezvous servers', name)

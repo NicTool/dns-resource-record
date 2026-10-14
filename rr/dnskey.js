@@ -80,6 +80,7 @@ export default class DNSKEY extends RR {
 
   setPublickey(val) {
     if (!val) this.throwHelp(`DNSKEY: publickey is required`)
+    this.isString('DNSKEY', 'publickey', val)
     const key = val.replace(/[\s()]/g, '')
     this.isBase64('DNSKEY', 'publickey', key)
     this.set('publickey', key)

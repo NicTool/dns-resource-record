@@ -25,6 +25,7 @@ export default class LOC extends RR {
   /****** Resource record specific setters   *******/
   setAddress(val) {
     if (!val) this.throwHelp('LOC: address is required')
+    this.isString('LOC', 'address', val)
 
     /*
     ... LOC ( d1 [m1 [s1]] {"N"|"S"} d2 [m2 [s2]]

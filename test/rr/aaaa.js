@@ -69,6 +69,9 @@ const invalid = [
   { ttl: -299, msg: /TTL must be an integer from 0 to 2147483647/ },
   { ttl: 2147483648, msg: /TTL must be an integer from 0 to 2147483647/ },
   { owner: 'a.example.', address: '::ffff:192.0.2.300', msg: /IPv6/ },
+  { tinyline: '3a.example:2001:3600::', msg: /address must be 32 hex digits/ },
+  { tinyline: '', msg: /AAAA/ },
+  { tinyline: 'garbage', msg: /AAAA/ },
 ]
 
 for (let i = 0; i < invalid.length; i++) {
