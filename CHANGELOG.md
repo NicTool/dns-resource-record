@@ -4,23 +4,29 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+### [2.0.0] - 2026-10-13
+
+- bind: improve the BIND lexer/tokenizer robustness (#70)
+
 - dep(node)!: require node 22+
-- fix(bind)!: RFC 1035 lexer and one generic importer; rejects missing, surplus and mistyped rdata; no `bindline`
-- fix(rr)!: names honor escapes, count octets, stricter wildcards; isValidHostname & hasValidLabels -> isValidName
-- fix(wire): rdataFields drive encoding as well as decoding; fixes LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT
-- fix(tinydns)!: generic lines carry wire rdata, text is UTF-8, names use djbdns octal escapes; octal field helpers removed
-- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HIP, APL, HINFO, WKS, TXT, LOC); setters reject non-strings
+- fix(bind)!: RFC 1035 lexer and one generic importer; rejects missing, surplus and mistyped rdata
+- fix(rr)!: names honor escapes, count octets, stricter wildcards
+- fix(wire): rdataFields drive encoding as well as decoding
+  - fixes LOC, IPSECKEY, NSEC3, SIG, SVCB/HTTPS, TXT
+- fix(tinydns)!: generic lines carry wire rdata, text is UTF-8,
+  names use djbdns octal escapes; octal field helpers removed
+- fix(rr)!: stricter rdata validation (digests, SVCB, RRSIG, NSEC, HIP, APL, HINFO, WKS, TXT, LOC)
 - fix(rr)!: canonical values (uppercase hex, sorted type lists, WKS TCP/UDP)
 - fix(rr)!: TTL required for every type, at most 2^31-1 (RFC 2181)
+- fix(rr): IPv6 with an embedded IPv4 part, a final `\.` is not fully qualified
 - fix(tsig)!: RFC 8945 wire format, MAC & Other stored as base64
 - fix(hinfo, caa)!: keep literal quotes in values
 - fix(rrsig, sig): type covered mnemonic, YYYYMMDDHHmmSS times
 - fix(maradns): csv2 quoting, WKS, SOA TTL, root targets
 - feat(ipseckey): ECDSA, EdDSA and keyless (0) algorithms
 - fix(loc): keep millisecond seconds
-- fix(rr): IPv6 with an embedded IPv4 part, a final `\.` is not fully qualified, fromBind honors `default.ttl`
 - feat(rr): `list` and `rrtype` rdata field types
-- test: `npm run interop` checks records against 8 DNS servers; shared per-type suite; fuzzer flags crashes
+- test: `npm run interop` checks records against 8 DNS servers; shared per-type suite
 
 ### [1.9.0] - 2026-07-30
 
@@ -478,3 +484,4 @@ Notable changes to this project are documented in this file.
 [1.8.1]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.1
 [1.8.2]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.8.2
 [1.9.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v1.9.0
+[2.0.0]: https://github.com/NicTool/dns-resource-record/releases/tag/v2.0.0
