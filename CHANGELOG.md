@@ -4,6 +4,8 @@ Notable changes to this project are documented in this file.
 
 #### Unreleased
 
+- feat(nictool): map RRSIG rdata to and from `address`, as BIND text the way NicTool 2 stores it
+
 ### [2.0.0] - 2026-10-13
 
 - bind: improve the BIND lexer/tokenizer robustness (#70)

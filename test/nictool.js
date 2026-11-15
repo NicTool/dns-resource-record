@@ -7,7 +7,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { applyMap, getMap, unApplyMap } from '../index.js'
+import { applyMap, getMap, RRSIG, unApplyMap } from '../index.js'
 
 /** Storage shape -> RFC shape, as a reader does. */
 const toRfc = (row) => {
@@ -31,7 +31,7 @@ const assertHas = (obj, expected, msg) => {
 // too, which is where you notice it needs a mapping test.
 const MAPPED_TYPES = [
   ...'CAA CERT CNAME DNAME DNSKEY DS HINFO HTTPS IPSECKEY KEY MX NAPTR NS NSEC'.split(' '),
-  ...'NSEC3 NSEC3PARAM NXT OPENPGPKEY PTR SMIMEA SOA SPF SSHFP SRV SVCB TLSA TXT URI'.split(' '),
+  ...'NSEC3 NSEC3PARAM NXT OPENPGPKEY PTR RRSIG SMIMEA SOA SPF SSHFP SRV SVCB TLSA TXT URI'.split(' '),
 ]
 
 describe('getMap', () => {
@@ -230,4 +230,106 @@ it('round trips between storage and RFC shapes', () => {
     minimum: 3600,
   }
   assert.deepEqual(toRfc(toStorage(soa)), soa)
+})
+
+describe('RRSIG records', () => {
+  // RFC 4034 3.3, as v2 stores it: the rdata as BIND text in address
+  const v2row = {
+    type: 'RRSIG',
+    address:
+      'A 5 3 86400 20030322173103 ( 20030220173103 2642 example.com. ' +
+      'oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTr PYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o ' +
+      'B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3t GNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG ' +
+      'J5D6fwFm8nN+6pBzeDQfsS3Ap3o= )',
+  }
+  const canonical = () => {
+    const rdata = { ...new RRSIG(null).getCanonical() }
+    for (const f of ['owner', 'ttl', 'class']) delete rdata[f]
+    return rdata
+  }
+  const bind = (rdata) => new RRSIG({ ...rdata, owner: 'host.example.com.', ttl: 3600 }).toBind()
+
+  it('reads a v2 row into fields its RR class takes', () => {
+    const rdata = toRfc(v2row)
+    assertHas(rdata, {
+      'type covered': 'A',
+      algorithm: 5,
+      labels: 3,
+      'original ttl': 86400,
+      'signature expiration': '20030322173103',
+      'signature inception': '20030220173103',
+      'key tag': 2642,
+      'signers name': 'example.com.',
+      address: undefined,
+    })
+    assert.match(rdata.signature, /^oJB1W6WN\S+Ap3o=$/)
+    // 2003-03-22 17:31:03 and 2003-02-20 17:31:03 UTC, in seconds
+    assert.match(bind(rdata), /RRSIG\s+A\s+5\s+3\s+86400\s+1048354263\s+1045762263\s+2642\s+example\.com\./)
+  })
+
+  it('writes the tokens where v2 exports read them', () => {
+    const row = toStorage(toRfc(v2row))
+    const [covered, , , , expiration, paren, inception] = row.address.split(/\s+/)
+    assert.deepEqual([covered, expiration, paren, inception], ['A', '20030322173103', '(', '20030220173103'])
+    assert.ok(row.address.endsWith(' )'))
+    assert.deepEqual(toRfc(row), toRfc(v2row))
+  })
+
+  it('stores a type number and seconds in v2 form, meaning the same record', () => {
+    const rdata = canonical()
+    const row = toStorage(rdata)
+    assert.match(row.address, /^A 5 2 3600 20030212123200 \( 20030113123200 12345 example\.com\. /)
+    assert.equal(bind(toRfc(row)), bind(rdata))
+  })
+
+  it('keeps text fields as given through storage', () => {
+    const rdata = {
+      ...canonical(),
+      'type covered': 'A',
+      'signature expiration': '20030212123200',
+      'signature inception': '20030113123200',
+    }
+    assert.deepEqual(toRfc(toStorage(rdata)), rdata)
+  })
+
+  it('stores a stamp given as a number, and seconds past 2038', () => {
+    const row = toStorage({
+      ...canonical(),
+      'signature expiration': 20030212123200,
+      'signature inception': 2208988800,
+    })
+    assert.match(row.address, / 20030212123200 \( 20400101000000 /)
+  })
+
+  it('keeps escapes in the signer, and drops spaces from the signature', () => {
+    const rdata = { ...canonical(), 'type covered': 'A', 'signers name': String.raw`a\(b\ c.example.` }
+    rdata['signature expiration'] = '20030212123200'
+    rdata['signature inception'] = '20030113123200'
+    assert.deepEqual(toRfc(toStorage(rdata)), rdata)
+    assert.equal(toRfc(toStorage({ ...rdata, signature: 'AQID BAUG' })).signature, 'AQIDBAUG')
+  })
+
+  it('leaves a type it cannot name for the RR class to refuse', () => {
+    const row = toStorage({ ...canonical(), 'type covered': 'NOPE' })
+    assert.match(row.address, /^NOPE /)
+    assert.equal(toRfc(row)['type covered'], 'NOPE')
+  })
+
+  it('reads times stored as seconds as numbers', () => {
+    const rdata = toRfc({
+      type: 'RRSIG',
+      address: 'A 5 2 3600 1045053120 ( 1042461120 12345 example.com. AQIDBAUG )',
+    })
+    assertHas(rdata, { 'signature expiration': 1045053120, 'signature inception': 1042461120 })
+    assert.match(bind(rdata), /\s1045053120\s+1042461120\s/)
+  })
+
+  it('reads a row without the parentheses', () => {
+    const flat = { type: 'RRSIG', address: v2row.address.replace(/[()]/g, ' ') }
+    assert.deepEqual(toRfc(flat), toRfc(v2row))
+  })
+
+  it('leaves SIG unmapped, as v2 has no export for it', () => {
+    assert.deepEqual(getMap('SIG'), {})
+  })
 })
