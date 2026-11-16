@@ -329,6 +329,26 @@ describe('RRSIG records', () => {
     assert.deepEqual(toRfc(flat), toRfc(v2row))
   })
 
+  it('leaves a malformed row in address for the RR class to refuse', () => {
+    for (const address of [
+      v2row.address.slice(0, -1),
+      v2row.address.replace('2642', '2642 ;'),
+      v2row.address.replace(/[()]/g, ' ').replace('2642 ', '2642\n'),
+    ]) {
+      const rdata = toRfc({ type: 'RRSIG', address })
+      assert.equal(rdata.address, address)
+      assert.throws(() => new RRSIG({ ...rdata, owner: 'host.example.com.', ttl: 3600 }))
+    }
+  })
+
+  it('passes a time that is not all digits through for the RR class to refuse', () => {
+    for (const time of ['', 'abc', undefined]) {
+      const rdata = { ...canonical(), 'signature expiration': time }
+      assert.doesNotMatch(toStorage(rdata).address, /19700101000000/)
+      assert.throws(() => new RRSIG({ ...toRfc(toStorage(rdata)), owner: 'host.example.com.', ttl: 3600 }))
+    }
+  })
+
   it('leaves SIG unmapped, as v2 has no export for it', () => {
     assert.deepEqual(getMap('SIG'), {})
   })
